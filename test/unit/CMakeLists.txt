@@ -39,6 +39,7 @@ endif()
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC )
     list(REMOVE_ITEM SFCGAL_UNIT_TEST_SOURCES ${CMAKE_SOURCE_DIR}/test/unit/SFCGAL/algorithm/AlphaShapesTest.cpp)
+    list(REMOVE_ITEM SFCGAL_UNIT_TEST_SOURCES ${CMAKE_SOURCE_DIR}/test/unit/SFCGAL/algorithm/AlphaShapes3DTest.cpp)
 endif()
 
 add_executable( unit-test-SFCGAL ${SFCGAL_UNIT_TEST_SOURCES} )
