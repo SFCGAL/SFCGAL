@@ -16,11 +16,11 @@
 
 #include <CGAL/Polygon_mesh_processing/clip.h>
 #include <CGAL/Polygon_mesh_processing/compute_normal.h>
-#include <CGAL/Polygon_mesh_processing/triangulate_faces.h>
+#include <CGAL/Polygon_mesh_processing/merge_border_vertices.h>
 #include <CGAL/Polygon_mesh_processing/repair.h>
 #include <CGAL/Polygon_mesh_processing/repair_degeneracies.h>
 #include <CGAL/Polygon_mesh_processing/stitch_borders.h>
-#include <CGAL/Polygon_mesh_processing/merge_border_vertices.h>
+#include <CGAL/Polygon_mesh_processing/triangulate_faces.h>
 #include <CGAL/Polygon_mesh_processing/triangulate_hole.h>
 
 #include <map>
@@ -108,7 +108,7 @@ normalize(const Kernel::Vector_3 &v) -> Kernel::Vector_3
  * @return Bisector plane
  */
 auto
-computeBisectorPlane(const Kernel::Point_3 &cornerVertex,
+computeBisectorPlane(const Kernel::Point_3  &cornerVertex,
                      const Kernel::Vector_3 &edgeDir1,
                      const Kernel::Vector_3 &edgeDir2) -> Kernel::Plane_3
 {
@@ -129,8 +129,7 @@ computeBisectorPlane(const Kernel::Point_3 &cornerVertex,
  * @return Intersection point
  */
 auto
-intersectSegmentPlane(const Kernel::Point_3 &p1,
-                      const Kernel::Point_3 &p2,
+intersectSegmentPlane(const Kernel::Point_3 &p1, const Kernel::Point_3 &p2,
                       const Kernel::Plane_3 &plane) -> Kernel::Point_3
 {
   Kernel::Vector_3 v = p2 - p1;
@@ -140,9 +139,8 @@ intersectSegmentPlane(const Kernel::Point_3 &p1,
   // Substitute: a(p1.x + t*v.x) + b(p1.y + t*v.y) + c(p1.z + t*v.z) + d = 0
   // Solve for t: t = -(a*p1.x + b*p1.y + c*p1.z + d) / (a*v.x + b*v.y + c*v.z)
 
-  double denominator = CGAL::to_double(plane.a() * v.x() +
-                                        plane.b() * v.y() +
-                                        plane.c() * v.z());
+  double denominator = CGAL::to_double(plane.a() * v.x() + plane.b() * v.y() +
+                                       plane.c() * v.z());
 
   if (std::abs(denominator) < EPSILON) {
     // Line is parallel to plane, return midpoint as fallback
@@ -152,24 +150,23 @@ intersectSegmentPlane(const Kernel::Point_3 &p1,
         (CGAL::to_double(p1.z()) + CGAL::to_double(p2.z())) / 2.0);
   }
 
-  double numerator = -CGAL::to_double(plane.a() * p1.x() +
-                                       plane.b() * p1.y() +
-                                       plane.c() * p1.z() +
-                                       plane.d());
-  double t = numerator / denominator;
+  double numerator = -CGAL::to_double(plane.a() * p1.x() + plane.b() * p1.y() +
+                                      plane.c() * p1.z() + plane.d());
+  double t         = numerator / denominator;
 
-  return Kernel::Point_3(
-      CGAL::to_double(p1.x()) + t * CGAL::to_double(v.x()),
-      CGAL::to_double(p1.y()) + t * CGAL::to_double(v.y()),
-      CGAL::to_double(p1.z()) + t * CGAL::to_double(v.z()));
+  return Kernel::Point_3(CGAL::to_double(p1.x()) + t * CGAL::to_double(v.x()),
+                         CGAL::to_double(p1.y()) + t * CGAL::to_double(v.y()),
+                         CGAL::to_double(p1.z()) + t * CGAL::to_double(v.z()));
 }
 
 /**
- * @brief Check if a triangle is degenerate (has repeated or nearly-coincident vertices)
+ * @brief Check if a triangle is degenerate (has repeated or nearly-coincident
+ * vertices)
  */
 auto
 isTriangleDegenerate(const Kernel::Point_3 &p0, const Kernel::Point_3 &p1,
-                     const Kernel::Point_3 &p2, double tolerance = EPSILON) -> bool
+                     const Kernel::Point_3 &p2, double tolerance = EPSILON)
+    -> bool
 {
   // Check for repeated vertices
   if (pointsApproxEqual(p0, p1, tolerance) ||
@@ -178,10 +175,10 @@ isTriangleDegenerate(const Kernel::Point_3 &p0, const Kernel::Point_3 &p1,
     return true;
   }
   // Check for collinear vertices (zero-area triangle)
-  Kernel::Vector_3 v1 = p1 - p0;
-  Kernel::Vector_3 v2 = p2 - p0;
+  Kernel::Vector_3 v1    = p1 - p0;
+  Kernel::Vector_3 v2    = p2 - p0;
   Kernel::Vector_3 cross = CGAL::cross_product(v1, v2);
-  double area2 = CGAL::to_double(cross.squared_length());
+  double           area2 = CGAL::to_double(cross.squared_length());
   return area2 < tolerance * tolerance;
 }
 
@@ -192,14 +189,15 @@ auto
 cleanDegenerateFaces(const Solid &solid) -> std::unique_ptr<Solid>
 {
   // Get the exterior shell and create a new one without degenerate faces
-  const PolyhedralSurface &shell = solid.exteriorShell();
-  auto cleanShell = std::make_unique<PolyhedralSurface>();
+  const PolyhedralSurface &shell      = solid.exteriorShell();
+  auto                     cleanShell = std::make_unique<PolyhedralSurface>();
 
   for (size_t i = 0; i < shell.numPolygons(); ++i) {
-    const Polygon &poly = shell.polygonN(i);
+    const Polygon    &poly = shell.polygonN(i);
     const LineString &ring = poly.exteriorRing();
 
-    // For triangulated surfaces, each polygon should have exactly 4 points (3 + closing)
+    // For triangulated surfaces, each polygon should have exactly 4 points (3 +
+    // closing)
     if (ring.numPoints() >= 4) {
       const Point &pt0 = ring.pointN(0);
       const Point &pt1 = ring.pointN(1);
@@ -219,7 +217,8 @@ cleanDegenerateFaces(const Solid &solid) -> std::unique_ptr<Solid>
 }
 
 /**
- * @brief Detect if an edge is concave (reflex) using the perpendicular cross-product test
+ * @brief Detect if an edge is concave (reflex) using the perpendicular
+ * cross-product test
  *
  * For a truly concave edge (reflex, > 180° exterior angle):
  * - (perp1 × perp2) · edgeDir > 0
@@ -236,8 +235,7 @@ cleanDegenerateFaces(const Solid &solid) -> std::unique_ptr<Solid>
  * @return true if the edge is truly concave (reflex)
  */
 auto
-isConcaveEdge(const Kernel::Vector_3 &perp1,
-              const Kernel::Vector_3 &perp2,
+isConcaveEdge(const Kernel::Vector_3 &perp1, const Kernel::Vector_3 &perp2,
               const Kernel::Vector_3 &edgeDir) -> bool
 {
   // Cross product of the two perpendiculars (which point into the solid)
@@ -247,7 +245,7 @@ isConcaveEdge(const Kernel::Vector_3 &perp1,
   double dot = CGAL::to_double(cross * edgeDir);
 
   // Positive dot means concave (reflex edge)
-  return dot > 0.01;  // Small threshold to handle numerical precision
+  return dot > 0.01; // Small threshold to handle numerical precision
 }
 
 /**
@@ -287,8 +285,8 @@ removeDegenerateFaces(Surface_mesh_3 &mesh)
 
     // Check for collinear points (zero-area triangle)
     if (points.size() == 3) {
-      Kernel::Vector_3 v1 = points[1] - points[0];
-      Kernel::Vector_3 v2 = points[2] - points[0];
+      Kernel::Vector_3 v1    = points[1] - points[0];
+      Kernel::Vector_3 v2    = points[2] - points[0];
       Kernel::Vector_3 cross = CGAL::cross_product(v1, v2);
       double           area2 = CGAL::to_double(cross.squared_length());
       if (area2 < EPSILON * EPSILON) {
@@ -332,9 +330,9 @@ createConcaveFillWedge(const Kernel::Point_3  &edgeStart,
   // - The chamfer face is the hypotenuse of the triangular cross-section
 
   // Ensure start/end are ordered correctly relative to edgeDir
-  Kernel::Point_3 orderedStart = edgeStart;
-  Kernel::Point_3 orderedEnd = edgeEnd;
-  Kernel::Vector_3 actualDir = edgeEnd - edgeStart;
+  Kernel::Point_3  orderedStart = edgeStart;
+  Kernel::Point_3  orderedEnd   = edgeEnd;
+  Kernel::Vector_3 actualDir    = edgeEnd - edgeStart;
   if (CGAL::to_double(actualDir * edgeDir) < 0) {
     // Edge points are reversed relative to edgeDir, swap them
     std::swap(orderedStart, orderedEnd);
@@ -351,7 +349,7 @@ createConcaveFillWedge(const Kernel::Point_3  &edgeStart,
   // - Vertex 2: offset by d2 along perp2 (on face 2 cut line)
 
   // Inset toward solid for clean union - must be large enough to ensure overlap
-  double          inset = std::min(d1, d2) * 0.3;
+  double           inset    = std::min(d1, d2) * 0.3;
   Kernel::Vector_3 insetDir = normalize(perp1 + perp2);
 
   // Vertices at start of edge
@@ -424,7 +422,8 @@ createConcaveFillWedge(const Kernel::Point_3  &edgeStart,
 }
 
 /**
- * @brief Create a bounded subtraction wedge for convex edges using actual mesh endpoints
+ * @brief Create a bounded subtraction wedge for convex edges using actual mesh
+ * endpoints
  *
  * This is used when infinite plane clipping would fail due to complex geometry.
  * The wedge is bounded to the actual edge extent without extension, to avoid
@@ -441,12 +440,11 @@ createConcaveFillWedge(const Kernel::Point_3  &edgeStart,
  */
 auto
 createBoundedSubtractionWedge(const Kernel::Point_3  &edgeStart,
-                               const Kernel::Point_3  &edgeEnd,
-                               const Kernel::Vector_3 &edgeDir,
-                               const Kernel::Vector_3 &perp1,
-                               const Kernel::Vector_3 &perp2,
-                               double d1, double d2)
-    -> std::unique_ptr<Solid>
+                              const Kernel::Point_3  &edgeEnd,
+                              const Kernel::Vector_3 &edgeDir,
+                              const Kernel::Vector_3 &perp1,
+                              const Kernel::Vector_3 &perp2, double d1,
+                              double d2) -> std::unique_ptr<Solid>
 {
   // The wedge cross-section is a right triangle that cuts the corner:
   // - Vertex 0: at the edge (slightly beyond to ensure clean cut)
@@ -456,7 +454,8 @@ createBoundedSubtractionWedge(const Kernel::Point_3  &edgeStart,
   // Compute the chamfer plane normal
   Kernel::Vector_3 chamferNormal = normalize(perp1 * d2 + perp2 * d1);
 
-  // Small extension beyond edge for robust boolean (but bounded to edge endpoints)
+  // Small extension beyond edge for robust boolean (but bounded to edge
+  // endpoints)
   double edgeExtension = std::min(d1, d2) * 0.1;
 
   // Vertices at start of edge (NO extension beyond actual endpoint)
@@ -529,7 +528,111 @@ createBoundedSubtractionWedge(const Kernel::Point_3  &edgeStart,
 }
 
 /**
- * @brief Create a subtraction wedge with optional bisector plane clipping for miter joints
+ * @brief Create a bounded subtraction wedge with inner corner awareness
+ *
+ * For edges at inner corners, this function uses the exact corner vertex
+ * (without the chamferNormal offset) so that wedges at the same corner
+ * share the exact same vertex. This enables clean miter joints.
+ *
+ * @param edgeStart Start point of the edge
+ * @param edgeEnd End point of the edge
+ * @param edgeDir Normalized edge direction
+ * @param perp1 Perpendicular direction in face 1 plane
+ * @param perp2 Perpendicular direction in face 2 plane
+ * @param d1 Chamfer distance on face 1
+ * @param d2 Chamfer distance on face 2
+ * @param startIsInnerCorner True if start is at an inner corner
+ * @param endIsInnerCorner True if end is at an inner corner
+ * @return A Solid representing the subtraction wedge
+ */
+auto
+createBoundedSubtractionWedgeForInnerCorner(
+    const Kernel::Point_3 &edgeStart, const Kernel::Point_3 &edgeEnd,
+    const Kernel::Vector_3 &edgeDir, const Kernel::Vector_3 &perp1,
+    const Kernel::Vector_3 &perp2, double d1, double d2,
+    bool startIsInnerCorner, bool endIsInnerCorner) -> std::unique_ptr<Solid>
+{
+  // Compute the chamfer plane normal
+  Kernel::Vector_3 chamferNormal = normalize(perp1 * d2 + perp2 * d1);
+
+  // Small extension for robust boolean
+  double edgeExtension = std::min(d1, d2) * 0.1;
+
+  // For inner corners: use exact corner vertex (no offset)
+  // For regular endpoints: use offset for robust boolean
+  Kernel::Point_3 s0 = startIsInnerCorner
+                           ? edgeStart
+                           : (edgeStart - chamferNormal * edgeExtension);
+  Kernel::Point_3 s1 = edgeStart + perp1 * d1;
+  Kernel::Point_3 s2 = edgeStart + perp2 * d2;
+
+  Kernel::Point_3 e0 =
+      endIsInnerCorner ? edgeEnd : (edgeEnd - chamferNormal * edgeExtension);
+  Kernel::Point_3 e1 = edgeEnd + perp1 * d1;
+  Kernel::Point_3 e2 = edgeEnd + perp2 * d2;
+
+  // Create triangular prism solid
+  auto ps = std::make_unique<PolyhedralSurface>();
+
+  // Front triangle face (at start)
+  {
+    auto *ring = new LineString();
+    ring->addPoint(Point(s0));
+    ring->addPoint(Point(s1));
+    ring->addPoint(Point(s2));
+    ring->addPoint(Point(s0));
+    ps->addPatch(Polygon(ring));
+  }
+
+  // Back triangle face (at end)
+  {
+    auto *ring = new LineString();
+    ring->addPoint(Point(e0));
+    ring->addPoint(Point(e2));
+    ring->addPoint(Point(e1));
+    ring->addPoint(Point(e0));
+    ps->addPatch(Polygon(ring));
+  }
+
+  // Face 1 side (s0-e0-e1-s1)
+  {
+    auto *ring = new LineString();
+    ring->addPoint(Point(s0));
+    ring->addPoint(Point(e0));
+    ring->addPoint(Point(e1));
+    ring->addPoint(Point(s1));
+    ring->addPoint(Point(s0));
+    ps->addPatch(Polygon(ring));
+  }
+
+  // Face 2 side (s0-s2-e2-e0)
+  {
+    auto *ring = new LineString();
+    ring->addPoint(Point(s0));
+    ring->addPoint(Point(s2));
+    ring->addPoint(Point(e2));
+    ring->addPoint(Point(e0));
+    ring->addPoint(Point(s0));
+    ps->addPatch(Polygon(ring));
+  }
+
+  // Chamfer face (s1-e1-e2-s2)
+  {
+    auto *ring = new LineString();
+    ring->addPoint(Point(s1));
+    ring->addPoint(Point(e1));
+    ring->addPoint(Point(e2));
+    ring->addPoint(Point(s2));
+    ring->addPoint(Point(s1));
+    ps->addPatch(Polygon(ring));
+  }
+
+  return std::make_unique<Solid>(*ps);
+}
+
+/**
+ * @brief Create a subtraction wedge with optional bisector plane clipping for
+ * miter joints
  *
  * This function creates a chamfer wedge that can be clipped at one or both ends
  * by bisector planes, creating proper miter joints at inner corners.
@@ -541,19 +644,20 @@ createBoundedSubtractionWedge(const Kernel::Point_3  &edgeStart,
  * @param perp2 Perpendicular direction in face 2 plane (pointing into solid)
  * @param d1 Chamfer distance on face 1
  * @param d2 Chamfer distance on face 2
- * @param startBisectorPlane Optional bisector plane for start end (nullptr if none)
+ * @param startBisectorPlane Optional bisector plane for start end (nullptr if
+ * none)
  * @param endBisectorPlane Optional bisector plane for end (nullptr if none)
  * @return A Solid representing the subtraction wedge, or nullptr on failure
  */
 auto
 createMiteredSubtractionWedge(const Kernel::Point_3  &edgeStart,
-                               const Kernel::Point_3  &edgeEnd,
-                               const Kernel::Vector_3 &edgeDir,
-                               const Kernel::Vector_3 &perp1,
-                               const Kernel::Vector_3 &perp2,
-                               double d1, double d2,
-                               const Kernel::Plane_3 *startBisectorPlane,
-                               const Kernel::Plane_3 *endBisectorPlane)
+                              const Kernel::Point_3  &edgeEnd,
+                              const Kernel::Vector_3 &edgeDir,
+                              const Kernel::Vector_3 &perp1,
+                              const Kernel::Vector_3 &perp2, double d1,
+                              double                 d2,
+                              const Kernel::Plane_3 *startBisectorPlane,
+                              const Kernel::Plane_3 *endBisectorPlane)
     -> std::unique_ptr<Solid>
 {
   // Compute the chamfer plane normal
@@ -563,9 +667,10 @@ createMiteredSubtractionWedge(const Kernel::Point_3  &edgeStart,
   double edgeExtension = std::min(d1, d2) * 0.1;
 
   // Extended points for wedge construction (extend past corner for miter)
-  double miterExtension = std::max(d1, d2) * 2.0; // Extend significantly for clean miter
+  double miterExtension =
+      std::max(d1, d2) * 2.0; // Extend significantly for clean miter
   Kernel::Point_3 extStart = edgeStart;
-  Kernel::Point_3 extEnd = edgeEnd;
+  Kernel::Point_3 extEnd   = edgeEnd;
 
   if (startBisectorPlane != nullptr) {
     extStart = edgeStart - edgeDir * miterExtension;
@@ -662,16 +767,17 @@ createMiteredSubtractionWedge(const Kernel::Point_3  &edgeStart,
  * @brief Create a corner clipping tetrahedron for vertices where 3 edges meet
  *
  * When chamfering multiple edges that meet at a corner vertex, the edge wedges
- * don't fully remove the corner vertex. This function creates a tetrahedron that
- * clips the remaining corner material.
+ * don't fully remove the corner vertex. This function creates a tetrahedron
+ * that clips the remaining corner material.
  *
  * @param cornerVertex The corner vertex to clip
- * @param chamferPoints Vector of 3 chamfer points (one from each edge meeting at corner)
+ * @param chamferPoints Vector of 3 chamfer points (one from each edge meeting
+ * at corner)
  * @return A Solid tetrahedron for subtraction, or nullptr on failure
  */
 auto
-createCornerClipTetrahedron(const Kernel::Point_3 &cornerVertex,
-                             const std::vector<Kernel::Point_3> &chamferPoints)
+createCornerClipTetrahedron(const Kernel::Point_3              &cornerVertex,
+                            const std::vector<Kernel::Point_3> &chamferPoints)
     -> std::unique_ptr<Solid>
 {
   if (chamferPoints.size() != 3) {
@@ -683,18 +789,24 @@ createCornerClipTetrahedron(const Kernel::Point_3 &cornerVertex,
   const auto &p3 = chamferPoints[2];
 
   // Compute centroid of chamfer points
-  Kernel::Point_3 centroid(
-      (CGAL::to_double(p1.x()) + CGAL::to_double(p2.x()) + CGAL::to_double(p3.x())) / 3.0,
-      (CGAL::to_double(p1.y()) + CGAL::to_double(p2.y()) + CGAL::to_double(p3.y())) / 3.0,
-      (CGAL::to_double(p1.z()) + CGAL::to_double(p2.z()) + CGAL::to_double(p3.z())) / 3.0);
+  Kernel::Point_3 centroid((CGAL::to_double(p1.x()) + CGAL::to_double(p2.x()) +
+                            CGAL::to_double(p3.x())) /
+                               3.0,
+                           (CGAL::to_double(p1.y()) + CGAL::to_double(p2.y()) +
+                            CGAL::to_double(p3.y())) /
+                               3.0,
+                           (CGAL::to_double(p1.z()) + CGAL::to_double(p2.z()) +
+                            CGAL::to_double(p3.z())) /
+                               3.0);
 
   // Direction from centroid to corner
   Kernel::Vector_3 toCorner = cornerVertex - centroid;
 
   // Extend apex significantly beyond corner for clean cut
-  // The extension needs to be large enough to fully encompass the corner material
-  double cornerDist = std::sqrt(CGAL::to_double(toCorner.squared_length()));
-  double extension = cornerDist * 0.5; // 50% extension for robust clip
+  // The extension needs to be large enough to fully encompass the corner
+  // material
+  double cornerDist    = std::sqrt(CGAL::to_double(toCorner.squared_length()));
+  double extension     = cornerDist * 0.5; // 50% extension for robust clip
   Kernel::Point_3 apex = cornerVertex + normalize(toCorner) * extension;
 
   // Create tetrahedron: 4 triangular faces
@@ -703,8 +815,8 @@ createCornerClipTetrahedron(const Kernel::Point_3 &cornerVertex,
   // Base triangle (p1-p2-p3) - check winding with respect to apex
   // Normal should point away from apex
   Kernel::Vector_3 baseNormal = CGAL::cross_product(p2 - p1, p3 - p1);
-  Kernel::Vector_3 toApex = apex - p1;
-  bool flipBase = CGAL::to_double(baseNormal * toApex) > 0;
+  Kernel::Vector_3 toApex     = apex - p1;
+  bool             flipBase   = CGAL::to_double(baseNormal * toApex) > 0;
 
   // Base face
   {
@@ -774,11 +886,12 @@ createCornerClipTetrahedron(const Kernel::Point_3 &cornerVertex,
 }
 
 /**
- * @brief Create a corner clip tetrahedron for vertices where 2 convex edges meet
+ * @brief Create a corner clip tetrahedron for vertices where 2 convex edges
+ * meet
  *
- * When 2 convex edges meet at a vertex (with a concave/reflex edge also present),
- * the chamfer wedges from each edge leave a gap - a tetrahedron-shaped region of
- * material that needs to be removed.
+ * When 2 convex edges meet at a vertex (with a concave/reflex edge also
+ * present), the chamfer wedges from each edge leave a gap - a
+ * tetrahedron-shaped region of material that needs to be removed.
  *
  * The geometry is determined by the perp1/perp2 vectors of each edge's chamfer:
  * - Both edges share one face, so they have the same perp2 direction
@@ -798,32 +911,38 @@ createCornerClipTetrahedron(const Kernel::Point_3 &cornerVertex,
  * @return A Solid tetrahedron for subtraction, or nullptr on failure
  */
 auto
-createTwoEdgeCornerTetrahedron(const Kernel::Point_3 &cornerVertex,
-                                const Kernel::Vector_3 &perp1_e1,
-                                const Kernel::Vector_3 &perp2_shared,
-                                const Kernel::Vector_3 &perp1_e2,
-                                double d)
+createTwoEdgeCornerTetrahedron(const Kernel::Point_3  &cornerVertex,
+                               const Kernel::Vector_3 &perp1_e1,
+                               const Kernel::Vector_3 &perp2_shared,
+                               const Kernel::Vector_3 &perp1_e2, double d)
     -> std::unique_ptr<Solid>
 {
   // Compute the 4 vertices of the tetrahedron
   // The base vertices are the chamfer face corners
-  Kernel::Point_3 v1 = cornerVertex + perp1_e1 * d;    // Edge 1's perp1 offset
+  Kernel::Point_3 v1 = cornerVertex + perp1_e1 * d;     // Edge 1's perp1 offset
   Kernel::Point_3 v2 = cornerVertex + perp2_shared * d; // Shared perp2 offset
-  Kernel::Point_3 v3 = cornerVertex + perp1_e2 * d;    // Edge 2's perp1 offset
+  Kernel::Point_3 v3 = cornerVertex + perp1_e2 * d;     // Edge 2's perp1 offset
 
   // Compute centroid of base triangle
-  Kernel::Point_3 centroid(
-      (CGAL::to_double(v1.x()) + CGAL::to_double(v2.x()) + CGAL::to_double(v3.x())) / 3.0,
-      (CGAL::to_double(v1.y()) + CGAL::to_double(v2.y()) + CGAL::to_double(v3.y())) / 3.0,
-      (CGAL::to_double(v1.z()) + CGAL::to_double(v2.z()) + CGAL::to_double(v3.z())) / 3.0);
+  Kernel::Point_3 centroid((CGAL::to_double(v1.x()) + CGAL::to_double(v2.x()) +
+                            CGAL::to_double(v3.x())) /
+                               3.0,
+                           (CGAL::to_double(v1.y()) + CGAL::to_double(v2.y()) +
+                            CGAL::to_double(v3.y())) /
+                               3.0,
+                           (CGAL::to_double(v1.z()) + CGAL::to_double(v2.z()) +
+                            CGAL::to_double(v3.z())) /
+                               3.0);
 
   // Direction from centroid to corner (outward direction)
   Kernel::Vector_3 toCorner = cornerVertex - centroid;
   double cornerDist = std::sqrt(CGAL::to_double(toCorner.squared_length()));
 
-  // Extend apex significantly beyond corner for clean cut (50% like 3-edge case)
-  double ext = cornerDist * 0.5;
-  Kernel::Point_3 v0 = cornerVertex + normalize(toCorner) * ext; // Apex extended beyond corner
+  // Extend apex significantly beyond corner for clean cut (50% like 3-edge
+  // case)
+  double          ext = cornerDist * 0.5;
+  Kernel::Point_3 v0 =
+      cornerVertex + normalize(toCorner) * ext; // Apex extended beyond corner
 
   // Create tetrahedron: 4 triangular faces
   auto ps = std::make_unique<PolyhedralSurface>();
@@ -831,8 +950,8 @@ createTwoEdgeCornerTetrahedron(const Kernel::Point_3 &cornerVertex,
   // Determine correct winding by checking face normals point outward
   // Base triangle (v1-v2-v3) - check winding with respect to v0
   Kernel::Vector_3 baseNormal = CGAL::cross_product(v2 - v1, v3 - v1);
-  Kernel::Vector_3 toApex = v0 - v1;
-  bool flipBase = CGAL::to_double(baseNormal * toApex) > 0;
+  Kernel::Vector_3 toApex     = v0 - v1;
+  bool             flipBase   = CGAL::to_double(baseNormal * toApex) > 0;
 
   // Base face: v1-v2-v3
   {
@@ -947,15 +1066,16 @@ Chamfer3D::fromSurfaceMesh(const Surface_mesh_3 &mesh) const
 /**
  * @brief Extract edges from original geometry patches (not triangulated mesh)
  *
- * This avoids including internal diagonal edges that are artifacts of triangulation.
- * A cube has 12 real edges, but triangulation creates 6 additional diagonal edges.
+ * This avoids including internal diagonal edges that are artifacts of
+ * triangulation. A cube has 12 real edges, but triangulation creates 6
+ * additional diagonal edges.
  */
 auto
 Chamfer3D::extractOriginalEdges() const -> std::vector<EdgeIdentifier>
 {
   std::set<EdgeIdentifier> edgeSet;
 
-  const PolyhedralSurface* ps = nullptr;
+  const PolyhedralSurface *ps = nullptr;
   if (_isSolid) {
     ps = &_geometry->as<Solid>().exteriorShell();
   } else {
@@ -964,12 +1084,12 @@ Chamfer3D::extractOriginalEdges() const -> std::vector<EdgeIdentifier>
 
   // Extract edges from each polygon patch
   for (size_t i = 0; i < ps->numPatches(); ++i) {
-    const Polygon& patch = ps->patchN(i);
-    const LineString& ring = patch.exteriorRing();
+    const Polygon    &patch = ps->patchN(i);
+    const LineString &ring  = patch.exteriorRing();
 
     for (size_t j = 0; j < ring.numPoints() - 1; ++j) {
-      const Point& p1 = ring.pointN(j);
-      const Point& p2 = ring.pointN(j + 1);
+      const Point &p1 = ring.pointN(j);
+      const Point &p2 = ring.pointN(j + 1);
       edgeSet.emplace(p1.toPoint_3(), p2.toPoint_3());
     }
   }
@@ -993,7 +1113,7 @@ Chamfer3D::resolveEdges(const EdgeSelector &selector) const
 }
 
 auto
-Chamfer3D::findHalfedge(const Surface_mesh_3  &mesh,
+Chamfer3D::findHalfedge(const Surface_mesh_3 &mesh,
                         const EdgeIdentifier &edge) const
     -> Surface_mesh_3::Halfedge_index
 {
@@ -1013,23 +1133,23 @@ Chamfer3D::findHalfedge(const Surface_mesh_3  &mesh,
     }
   }
 
-  // Second pass: find edges with same direction that lie on the original edge line
-  // This handles cases where previous chamfers have shortened the edge
+  // Second pass: find edges with same direction that lie on the original edge
+  // line This handles cases where previous chamfers have shortened the edge
   Kernel::Vector_3 edgeDir = edge.end - edge.start;
-  double           edgeLen = std::sqrt(CGAL::to_double(edgeDir.squared_length()));
+  double edgeLen = std::sqrt(CGAL::to_double(edgeDir.squared_length()));
   if (edgeLen < EPSILON) {
     return Surface_mesh_3::null_halfedge();
   }
   edgeDir = edgeDir / edgeLen;
 
-  Surface_mesh_3::Halfedge_index bestHe = Surface_mesh_3::null_halfedge();
+  Surface_mesh_3::Halfedge_index bestHe    = Surface_mesh_3::null_halfedge();
   double                         bestScore = std::numeric_limits<double>::max();
 
   for (auto he : mesh.halfedges()) {
-    auto            v1  = mesh.source(he);
-    auto            v2  = mesh.target(he);
-    Kernel::Point_3 p1  = mesh.point(v1);
-    Kernel::Point_3 p2  = mesh.point(v2);
+    auto            v1 = mesh.source(he);
+    auto            v2 = mesh.target(he);
+    Kernel::Point_3 p1 = mesh.point(v1);
+    Kernel::Point_3 p2 = mesh.point(v2);
 
     Kernel::Vector_3 heDir = p2 - p1;
     double           heLen = std::sqrt(CGAL::to_double(heDir.squared_length()));
@@ -1045,14 +1165,14 @@ Chamfer3D::findHalfedge(const Surface_mesh_3  &mesh,
     }
 
     // Check if midpoint of this edge lies on the original edge line
-    Kernel::Point_3  midPt    = CGAL::midpoint(p1, p2);
-    Kernel::Vector_3 toMid    = midPt - edge.start;
-    double           proj     = CGAL::to_double(toMid * edgeDir);
+    Kernel::Point_3  midPt = CGAL::midpoint(p1, p2);
+    Kernel::Vector_3 toMid = midPt - edge.start;
+    double           proj  = CGAL::to_double(toMid * edgeDir);
 
     // Distance from midpoint to the original edge line
-    Kernel::Vector_3 projVec  = edgeDir * proj;
-    Kernel::Vector_3 perpVec  = toMid - projVec;
-    double           perpDist = std::sqrt(CGAL::to_double(perpVec.squared_length()));
+    Kernel::Vector_3 projVec = edgeDir * proj;
+    Kernel::Vector_3 perpVec = toMid - projVec;
+    double perpDist = std::sqrt(CGAL::to_double(perpVec.squared_length()));
 
     // Must be close to the original edge line
     if (perpDist > edgeLen * 0.5) {
@@ -1078,13 +1198,14 @@ Chamfer3D::findSharpEdges(double angleThreshold) const
   std::vector<EdgeIdentifier> sharpEdges;
 
   // For each original edge, compute dihedral angle and filter
-  for (const auto& edge : originalEdges) {
+  for (const auto &edge : originalEdges) {
     double angle = computeDihedralAngle(edge);
     if (angle < 0) {
       continue; // Boundary edge or not found
     }
 
-    // A "sharp" edge has a dihedral angle that deviates significantly from flat (PI)
+    // A "sharp" edge has a dihedral angle that deviates significantly from flat
+    // (PI)
     double deviation = std::abs(angle - M_PI);
     if (deviation > angleThreshold) {
       sharpEdges.push_back(edge);
@@ -1125,7 +1246,7 @@ Chamfer3D::computeDihedralAngle(const EdgeIdentifier &edge) const -> double
 auto
 Chamfer3D::chamferEdgeDirect(Surface_mesh_3                &mesh,
                              Surface_mesh_3::Halfedge_index he,
-                             const ChamferParameters       &params) const -> bool
+                             const ChamferParameters &params) const -> bool
 {
   if (he == Surface_mesh_3::null_halfedge()) {
     return false;
@@ -1176,8 +1297,9 @@ Chamfer3D::chamferEdgeDirect(Surface_mesh_3                &mesh,
   Kernel::Vector_3 perp2 = normalize(CGAL::cross_product(n2, edgeDir));
 
   double d1 = params.distance1;
-  double d2 = (params.type == ChamferParameters::Type::SYMMETRIC) ? params.distance1
-                                                                   : params.distance2;
+  double d2 = (params.type == ChamferParameters::Type::SYMMETRIC)
+                  ? params.distance1
+                  : params.distance2;
 
   // Compute chamfer vertices
   // c1_start and c1_end are on the face 1 side
@@ -1246,19 +1368,22 @@ Chamfer3D::createChamferWedge(const EdgeIdentifier    &edge,
 
   // Compute inward-facing perpendicular directions in each face plane
   // n1 and n2 are OUTWARD normals, so we need to negate the cross products
-  // to get vectors pointing INTO the solid (away from the edge toward solid interior)
+  // to get vectors pointing INTO the solid (away from the edge toward solid
+  // interior)
   Kernel::Vector_3 perp1 = -normalize(CGAL::cross_product(edgeDir, n1));
   Kernel::Vector_3 perp2 = -normalize(CGAL::cross_product(n2, edgeDir));
 
   double d1 = params.distance1;
-  double d2 = (params.type == ChamferParameters::Type::SYMMETRIC) ? params.distance1
-                                                                   : params.distance2;
+  double d2 = (params.type == ChamferParameters::Type::SYMMETRIC)
+                  ? params.distance1
+                  : params.distance2;
 
   // Extend edge slightly beyond endpoints for robust boolean
-  double           edgeLen   = std::sqrt(CGAL::to_double(CGAL::squared_distance(edge.start, edge.end)));
-  double           extension = std::max(edgeLen * 0.05, d1 * 0.5); // 5% or half d1
-  Kernel::Point_3  extStart  = edge.start - edgeDir * extension;
-  Kernel::Point_3  extEnd    = edge.end + edgeDir * extension;
+  double edgeLen =
+      std::sqrt(CGAL::to_double(CGAL::squared_distance(edge.start, edge.end)));
+  double extension = std::max(edgeLen * 0.05, d1 * 0.5); // 5% or half d1
+  Kernel::Point_3 extStart = edge.start - edgeDir * extension;
+  Kernel::Point_3 extEnd   = edge.end + edgeDir * extension;
 
   // The wedge is a triangular prism that cuts the corner
   // Its cross-section is a triangle with:
@@ -1276,8 +1401,8 @@ Chamfer3D::createChamferWedge(const EdgeIdentifier    &edge,
   // Wedge vertices at start of edge
   // s0 extends slightly beyond the edge in the direction opposite to chamfer
   Kernel::Point_3 s0 = extStart - chamferNormal * edgeExtension;
-  Kernel::Point_3 s1 = extStart + perp1 * d1;       // Offset by d1 on face 1
-  Kernel::Point_3 s2 = extStart + perp2 * d2;       // Offset by d2 on face 2
+  Kernel::Point_3 s1 = extStart + perp1 * d1; // Offset by d1 on face 1
+  Kernel::Point_3 s2 = extStart + perp2 * d2; // Offset by d2 on face 2
 
   // Wedge vertices at end of edge
   Kernel::Point_3 e0 = extEnd - chamferNormal * edgeExtension;
@@ -1285,7 +1410,8 @@ Chamfer3D::createChamferWedge(const EdgeIdentifier    &edge,
   Kernel::Point_3 e2 = extEnd + perp2 * d2;
 
   // Create triangular prism solid
-  // All faces must have counterclockwise winding when viewed from outside (outward normals)
+  // All faces must have counterclockwise winding when viewed from outside
+  // (outward normals)
   auto ps = std::make_unique<PolyhedralSurface>();
 
   // Front triangle face (at start, normal toward -edgeDir)
@@ -1332,7 +1458,8 @@ Chamfer3D::createChamferWedge(const EdgeIdentifier    &edge,
     ps->addPatch(Polygon(ring));
   }
 
-  // Chamfer face (s1-s2-e2-e1): normal toward chamfer direction (outward from wedge)
+  // Chamfer face (s1-s2-e2-e1): normal toward chamfer direction (outward from
+  // wedge)
   {
     auto *ring = new LineString();
     ring->addPoint(Point(s1));
@@ -1347,8 +1474,7 @@ Chamfer3D::createChamferWedge(const EdgeIdentifier    &edge,
 }
 
 auto
-Chamfer3D::chamferEdgeBoolean(const Geometry          &geom,
-                              const EdgeIdentifier    &edge,
+Chamfer3D::chamferEdgeBoolean(const Geometry &geom, const EdgeIdentifier &edge,
                               const ChamferParameters &params) const
     -> std::unique_ptr<Geometry>
 {
@@ -1415,10 +1541,12 @@ Chamfer3D::chamferEdgeBoolean(const Geometry          &geom,
 
   // Check if the found halfedge direction matches the original edge direction
   // If they point in opposite directions, swap the face normals
-  Kernel::Vector_3 heDir = mesh.point(mesh.target(he)) - mesh.point(mesh.source(he));
+  Kernel::Vector_3 heDir =
+      mesh.point(mesh.target(he)) - mesh.point(mesh.source(he));
   Kernel::Vector_3 reqDir = edge.end - edge.start;
   if (CGAL::to_double(heDir * reqDir) < 0) {
-    // Halfedge is in opposite direction - swap normals so they match the expected orientation
+    // Halfedge is in opposite direction - swap normals so they match the
+    // expected orientation
     std::swap(n1, n2);
   }
 
@@ -1430,7 +1558,6 @@ Chamfer3D::chamferEdgeBoolean(const Geometry          &geom,
     return workGeom->clone();
   }
 
-
   // Chamfer distances
   double d1 = params.distance1;
   double d2 = (params.type == ChamferParameters::Type::SYMMETRIC)
@@ -1438,14 +1565,15 @@ Chamfer3D::chamferEdgeBoolean(const Geometry          &geom,
                   : params.distance2;
 
   // Get ACTUAL edge coordinates from the mesh
-  // This is critical for multi-edge chamfers where previous chamfers have modified vertices
+  // This is critical for multi-edge chamfers where previous chamfers have
+  // modified vertices
   Kernel::Point_3 heStart = mesh.point(mesh.source(he));
-  Kernel::Point_3 heEnd = mesh.point(mesh.target(he));
+  Kernel::Point_3 heEnd   = mesh.point(mesh.target(he));
 
   // Use ORIGINAL edge direction for consistency in perpendicular calculations
   // This ensures the chamfer is computed with the intended orientation
   Kernel::Vector_3 originalDir = edge.end - edge.start;
-  double           originalLen = std::sqrt(CGAL::to_double(originalDir.squared_length()));
+  double originalLen = std::sqrt(CGAL::to_double(originalDir.squared_length()));
   if (originalLen < EPSILON) {
     return workGeom->clone();
   }
@@ -1456,15 +1584,19 @@ Chamfer3D::chamferEdgeBoolean(const Geometry          &geom,
   Kernel::Point_3 actualStart = heStart;
 
   // Compute perpendicular directions in each face plane
-  // cross(edgeDir, n) gives a vector perpendicular to edge, lying in the face plane
+  // cross(edgeDir, n) gives a vector perpendicular to edge, lying in the face
+  // plane
   Kernel::Vector_3 perp1_raw = CGAL::cross_product(edgeDir, n1);
   Kernel::Vector_3 perp2_raw = CGAL::cross_product(n2, edgeDir);
 
-  // Ensure perpendiculars point INTO the solid (toward the dihedral angle interior)
-  // For a convex edge, perp1 should point somewhat toward face 2's interior (same direction as -n2)
-  // For a convex edge, perp2 should point somewhat toward face 1's interior (same direction as -n1)
-  Kernel::Vector_3 perp1 = (CGAL::to_double(perp1_raw * (-n2)) >= 0) ? perp1_raw : -perp1_raw;
-  Kernel::Vector_3 perp2 = (CGAL::to_double(perp2_raw * (-n1)) >= 0) ? perp2_raw : -perp2_raw;
+  // Ensure perpendiculars point INTO the solid (toward the dihedral angle
+  // interior) For a convex edge, perp1 should point somewhat toward face 2's
+  // interior (same direction as -n2) For a convex edge, perp2 should point
+  // somewhat toward face 1's interior (same direction as -n1)
+  Kernel::Vector_3 perp1 =
+      (CGAL::to_double(perp1_raw * (-n2)) >= 0) ? perp1_raw : -perp1_raw;
+  Kernel::Vector_3 perp2 =
+      (CGAL::to_double(perp2_raw * (-n1)) >= 0) ? perp2_raw : -perp2_raw;
 
   perp1 = normalize(perp1);
   perp2 = normalize(perp2);
@@ -1476,9 +1608,11 @@ Chamfer3D::chamferEdgeBoolean(const Geometry          &geom,
   Kernel::Point_3 chamferPt2 = actualStart + perp2 * d2;
 
   // The chamfer plane passes through the two chamfer lines
-  // Normal is computed from edge direction and the line connecting chamfer points
+  // Normal is computed from edge direction and the line connecting chamfer
+  // points
   Kernel::Vector_3 chamferDir = chamferPt2 - chamferPt1;
-  Kernel::Vector_3 chamferNormal = normalize(CGAL::cross_product(edgeDir, chamferDir));
+  Kernel::Vector_3 chamferNormal =
+      normalize(CGAL::cross_product(edgeDir, chamferDir));
 
   // PMP::clip keeps the NEGATIVE half-space (where normal points away from)
   // We want to REMOVE the corner (at actualStart) and KEEP the solid body
@@ -1509,21 +1643,22 @@ Chamfer3D::chamferEdgeBoolean(const Geometry          &geom,
     }
 
     // Check all mesh vertices not adjacent to the edge
-    // If any are on the "removed" side of the plane (positive side where normal points),
-    // then this chamfer would damage distant parts of the geometry
+    // If any are on the "removed" side of the plane (positive side where normal
+    // points), then this chamfer would damage distant parts of the geometry
     bool wouldClipNonAdjacent = false;
     for (auto v : mesh.vertices()) {
       if (adjacentVerts.count(v) > 0) {
         continue; // Skip adjacent vertices
       }
 
-      Kernel::Point_3  pt     = mesh.point(v);
-      Kernel::Vector_3 toVert = pt - chamferPt1;
+      Kernel::Point_3  pt         = mesh.point(v);
+      Kernel::Vector_3 toVert     = pt - chamferPt1;
       double           signedDist = CGAL::to_double(chamferNormal * toVert);
 
-      // If vertex is on the positive side (will be clipped) by more than a small tolerance
-      // relative to chamfer distance, this edge should be skipped
-      // Use a larger threshold to avoid false positives from nearby chamfered vertices
+      // If vertex is on the positive side (will be clipped) by more than a
+      // small tolerance relative to chamfer distance, this edge should be
+      // skipped Use a larger threshold to avoid false positives from nearby
+      // chamfered vertices
       double threshold = std::max(d1, d2) * 2.0;
       if (signedDist > threshold) {
         wouldClipNonAdjacent = true;
@@ -1532,16 +1667,17 @@ Chamfer3D::chamferEdgeBoolean(const Geometry          &geom,
     }
 
     if (wouldClipNonAdjacent) {
-      // Determine if edge is truly concave using the perpendicular cross-product test
-      // Use edgeDir (from original user-specified edge) for consistent direction
+      // Determine if edge is truly concave using the perpendicular
+      // cross-product test Use edgeDir (from original user-specified edge) for
+      // consistent direction
       bool isTrueConcave = isConcaveEdge(perp1, perp2, edgeDir);
 
       if (isTrueConcave) {
         // This is a CONCAVE edge - ADD material by creating a fill wedge
         // For concave edges, perp1/perp2 point INTO the solid
         // For the fill wedge, we need them pointing INTO THE VOID (negate)
-        auto fillWedge = createConcaveFillWedge(
-            heStart, heEnd, edgeDir, -perp1, -perp2, d1, d2);
+        auto fillWedge = createConcaveFillWedge(heStart, heEnd, edgeDir, -perp1,
+                                                -perp2, d1, d2);
 
         if (fillWedge && !fillWedge->isEmpty()) {
           try {
@@ -1601,7 +1737,8 @@ Chamfer3D::chamferEdgeBoolean(const Geometry          &geom,
   PMP::merge_duplicated_vertices_in_boundary_cycles(mesh);
 
   // Fill any remaining holes in the mesh
-  // This is critical for multi-edge chamfers where the clip operation may leave holes
+  // This is critical for multi-edge chamfers where the clip operation may leave
+  // holes
   std::vector<Surface_mesh_3::Halfedge_index> borderCycles;
   PMP::extract_boundary_cycles(mesh, std::back_inserter(borderCycles));
   for (auto borderHe : borderCycles) {
@@ -1653,7 +1790,7 @@ Chamfer3D::chamferVertexDirect(Surface_mesh_3                &mesh,
   for (auto he : mesh.halfedges_around_target(startHe)) {
     incidentHalfedges.push_back(he);
 
-    auto           source    = mesh.source(he);
+    auto            source    = mesh.source(he);
     Kernel::Point_3 sourcePos = mesh.point(source);
 
     // Direction from vertex to source (along the edge)
@@ -1665,7 +1802,7 @@ Chamfer3D::chamferVertexDirect(Surface_mesh_3                &mesh,
     }
 
     // Cut point at distance from vertex
-    double          cutDist  = std::min(params.distance, len * 0.9); // Don't exceed 90%
+    double cutDist = std::min(params.distance, len * 0.9); // Don't exceed 90%
     Kernel::Point_3 cutPoint = vertexPos + normalize(dir) * cutDist;
     cutPoints.push_back(cutPoint);
   }
@@ -1718,9 +1855,10 @@ Chamfer3D::chamferEdges(const EdgeSelector      &selector,
     return _geometry->clone();
   }
 
-  // Classify edges as concave or convex based on the perpendicular cross-product test
-  // Process CONCAVE edges FIRST (fill wedges), then CONVEX edges (subtraction)
-  // This ensures fill wedges establish corner geometry before subtractions
+  // Classify edges as concave or convex based on the perpendicular
+  // cross-product test Process CONCAVE edges FIRST (fill wedges), then CONVEX
+  // edges (subtraction) This ensures fill wedges establish corner geometry
+  // before subtractions
   std::vector<EdgeIdentifier> concaveEdges;
   std::vector<EdgeIdentifier> convexEdges;
   {
@@ -1735,9 +1873,9 @@ Chamfer3D::chamferEdges(const EdgeSelector      &selector,
 
     for (const auto &edge : edges) {
       auto he = findHalfedge(mesh, edge);
-      if (he == Surface_mesh_3::null_halfedge() ||
-          mesh.is_border(he) || mesh.is_border(mesh.opposite(he))) {
-        convexEdges.push_back(edge);  // Default to convex for unmatched edges
+      if (he == Surface_mesh_3::null_halfedge() || mesh.is_border(he) ||
+          mesh.is_border(mesh.opposite(he))) {
+        convexEdges.push_back(edge); // Default to convex for unmatched edges
         continue;
       }
 
@@ -1745,7 +1883,8 @@ Chamfer3D::chamferEdges(const EdgeSelector      &selector,
       Kernel::Vector_3 n2 = fnormals[mesh.face(mesh.opposite(he))];
 
       // Check if halfedge direction matches original edge direction
-      Kernel::Vector_3 heDir = mesh.point(mesh.target(he)) - mesh.point(mesh.source(he));
+      Kernel::Vector_3 heDir =
+          mesh.point(mesh.target(he)) - mesh.point(mesh.source(he));
       Kernel::Vector_3 reqDir = edge.end - edge.start;
       if (CGAL::to_double(heDir * reqDir) < 0) {
         std::swap(n1, n2);
@@ -1754,12 +1893,13 @@ Chamfer3D::chamferEdges(const EdgeSelector      &selector,
       Kernel::Vector_3 edgeDir = normalize(edge.end - edge.start);
 
       // Concavity test using cross product of face normals
-      // Cross product of normals gives the edge direction (for convex) or opposite (for concave)
-      // For convex edge: cross(n1,n2) · edgeDir > 0 (right-hand rule from n1 to n2)
-      // For concave edge: cross(n1,n2) · edgeDir < 0
-      Kernel::Vector_3 normalCross = CGAL::cross_product(n1, n2);
-      double crossDotEdge = CGAL::to_double(normalCross * edgeDir);
-      bool isConcave = crossDotEdge < -0.01;
+      // Cross product of normals gives the edge direction (for convex) or
+      // opposite (for concave) For convex edge: cross(n1,n2) · edgeDir > 0
+      // (right-hand rule from n1 to n2) For concave edge: cross(n1,n2) ·
+      // edgeDir < 0
+      Kernel::Vector_3 normalCross  = CGAL::cross_product(n1, n2);
+      double           crossDotEdge = CGAL::to_double(normalCross * edgeDir);
+      bool             isConcave    = crossDotEdge < -0.01;
 
       if (isConcave) {
         concaveEdges.push_back(edge);
@@ -1773,9 +1913,8 @@ Chamfer3D::chamferEdges(const EdgeSelector      &selector,
   auto vertexKey = [](const Kernel::Point_3 &p) {
     auto round = [](double v) { return std::round(v * 10000.0) / 10000.0; };
     std::ostringstream oss;
-    oss << round(CGAL::to_double(p.x())) << ","
-        << round(CGAL::to_double(p.y())) << ","
-        << round(CGAL::to_double(p.z()));
+    oss << round(CGAL::to_double(p.x())) << "," << round(CGAL::to_double(p.y()))
+        << "," << round(CGAL::to_double(p.z()));
     return oss.str();
   };
 
@@ -1793,12 +1932,15 @@ Chamfer3D::chamferEdges(const EdgeSelector      &selector,
   };
 
   // Sort convex edges: vertical first, then horizontal (bottom before top)
-  // This improves chamfer quality at corners where vertical and horizontal edges meet
+  // This improves chamfer quality at corners where vertical and horizontal
+  // edges meet
   std::stable_sort(convexEdges.begin(), convexEdges.end(),
-                   [&isVerticalEdge, &getEdgeZ](const EdgeIdentifier &a, const EdgeIdentifier &b) {
+                   [&isVerticalEdge, &getEdgeZ](const EdgeIdentifier &a,
+                                                const EdgeIdentifier &b) {
                      bool aVert = isVerticalEdge(a);
                      bool bVert = isVerticalEdge(b);
-                     if (aVert != bVert) return aVert; // Vertical first
+                     if (aVert != bVert)
+                       return aVert; // Vertical first
                      if (!aVert && !bVert) {
                        // Both horizontal: bottom (lower Z) before top
                        return getEdgeZ(a) < getEdgeZ(b);
@@ -1806,66 +1948,64 @@ Chamfer3D::chamferEdges(const EdgeSelector      &selector,
                      return false;
                    });
 
-  // BATCH PROCESSING: Create all wedges on ORIGINAL geometry, then single boolean
-  // This avoids accumulated numerical errors from sequential boolean operations
+  // BATCH PROCESSING: Create all wedges on ORIGINAL geometry, then single
+  // boolean This avoids accumulated numerical errors from sequential boolean
+  // operations
 
   // Get mesh and normals from ORIGINAL geometry (only once)
   Surface_mesh_3 originalMesh = toSurfaceMesh();
   PMP::stitch_borders(originalMesh);
 
   auto fnormals =
-      originalMesh.add_property_map<Surface_mesh_3::Face_index, Kernel::Vector_3>(
+      originalMesh
+          .add_property_map<Surface_mesh_3::Face_index, Kernel::Vector_3>(
               "f:normals", CGAL::NULL_VECTOR)
           .first;
   PMP::compute_face_normals(originalMesh, fnormals);
 
-  // Collect all fill wedges (for concave edges) and subtraction wedges (for convex edges)
+  // Collect all fill wedges (for concave edges) and subtraction wedges (for
+  // convex edges)
   std::vector<std::unique_ptr<Solid>> fillWedges;
   std::vector<std::unique_ptr<Solid>> subtractionWedges;
 
   double d1 = params.distance1;
-  double d2 = (params.type == ChamferParameters::Type::SYMMETRIC) ? params.distance1 : params.distance2;
+  double d2 = (params.type == ChamferParameters::Type::SYMMETRIC)
+                  ? params.distance1
+                  : params.distance2;
 
   // NOTE: Concave (reflex) edges are automatically SKIPPED
-  // Chamfering concave edges requires adding material (fill wedges) which doesn't
-  // join cleanly with the subtraction wedges of adjacent convex edges at corners.
-  // For clean chamfer results, only convex edges are processed.
+  // Chamfering concave edges requires adding material (fill wedges) which
+  // doesn't join cleanly with the subtraction wedges of adjacent convex edges
+  // at corners. For clean chamfer results, only convex edges are processed.
 
   // =========================================================================
-  // PRE-COMPUTE BISECTOR PLANES FOR INNER CORNERS (2 convex + concave)
-  // This is done BEFORE wedge creation so we can apply miter joints
+  // PRE-COMPUTE BISECTOR PLANES FOR INNER CORNERS (2 convex chamfer edges
+  // meeting) This is done BEFORE wedge creation so we can apply miter joints
+  // Inner corners are detected by finding mesh edges at the junction vertex
+  // that are concave (have dihedral angle > 180°), which indicates an inner
+  // corner.
   // =========================================================================
 
   // Map vertex key -> bisector plane (for inner corners only)
   std::map<std::string, Kernel::Plane_3> innerCornerBisectorPlanes;
   {
-    // Build vertex -> edges maps
+    // Build vertex -> convex chamfer edges map
     std::map<std::string, std::vector<size_t>> vertexToConvexEdges;
     for (size_t i = 0; i < convexEdges.size(); ++i) {
       vertexToConvexEdges[vertexKey(convexEdges[i].start)].push_back(i);
       vertexToConvexEdges[vertexKey(convexEdges[i].end)].push_back(i);
     }
 
-    std::map<std::string, std::vector<size_t>> vertexToConcaveEdges;
-    for (size_t i = 0; i < concaveEdges.size(); ++i) {
-      vertexToConcaveEdges[vertexKey(concaveEdges[i].start)].push_back(i);
-      vertexToConcaveEdges[vertexKey(concaveEdges[i].end)].push_back(i);
-    }
-
-    // Find inner corners: exactly 2 convex edges + at least 1 concave edge
+    // Find inner corners: vertices where exactly 2 convex chamfer edges meet
+    // AND there's a concave edge in the mesh at that vertex
     for (const auto &[vkey, convexEdgeIndices] : vertexToConvexEdges) {
-      if (convexEdgeIndices.size() != 2) continue;
+      if (convexEdgeIndices.size() != 2)
+        continue;
 
-      // Check for concave edge at this vertex
-      auto concaveIt = vertexToConcaveEdges.find(vkey);
-      if (concaveIt == vertexToConcaveEdges.end()) continue;
-      if (concaveIt->second.empty()) continue;
-
-      // This is an inner corner - compute bisector plane
+      // Get the corner vertex
       const EdgeIdentifier &edge1 = convexEdges[convexEdgeIndices[0]];
       const EdgeIdentifier &edge2 = convexEdges[convexEdgeIndices[1]];
 
-      // Find the corner vertex
       Kernel::Point_3 cornerVertex;
       if (vertexKey(edge1.start) == vkey) {
         cornerVertex = edge1.start;
@@ -1873,6 +2013,41 @@ Chamfer3D::chamferEdges(const EdgeSelector      &selector,
         cornerVertex = edge1.end;
       }
 
+      // Check if there's a concave edge in the mesh at this vertex
+      // by scanning all mesh edges incident to this vertex
+      bool hasConcaveEdge = false;
+      for (auto v : originalMesh.vertices()) {
+        if (!pointsApproxEqual(originalMesh.point(v), cornerVertex))
+          continue;
+
+        // Found the vertex - scan incident halfedges for concave edges
+        auto start_he = originalMesh.halfedge(v);
+        auto he       = start_he;
+        do {
+          if (!originalMesh.is_border(he) &&
+              !originalMesh.is_border(originalMesh.opposite(he))) {
+            Kernel::Vector_3 n1 = fnormals[originalMesh.face(he)];
+            Kernel::Vector_3 n2 =
+                fnormals[originalMesh.face(originalMesh.opposite(he))];
+            Kernel::Vector_3 edgeVec =
+                originalMesh.point(originalMesh.target(he)) -
+                originalMesh.point(originalMesh.source(he));
+            Kernel::Vector_3 normalCross = CGAL::cross_product(n1, n2);
+            double crossDotEdge = CGAL::to_double(normalCross * edgeVec);
+            if (crossDotEdge < -0.01) {
+              hasConcaveEdge = true;
+              break;
+            }
+          }
+          he = originalMesh.next_around_target(he);
+        } while (he != start_he);
+        break;
+      }
+
+      if (!hasConcaveEdge)
+        continue;
+
+      // This is an inner corner - compute bisector plane
       // Compute edge directions (pointing AWAY from corner)
       Kernel::Vector_3 edgeDir1, edgeDir2;
       if (vertexKey(edge1.start) == vkey) {
@@ -1887,7 +2062,8 @@ Chamfer3D::chamferEdges(const EdgeSelector      &selector,
       }
 
       // Compute and store bisector plane
-      Kernel::Plane_3 bisectorPlane = computeBisectorPlane(cornerVertex, edgeDir1, edgeDir2);
+      Kernel::Plane_3 bisectorPlane =
+          computeBisectorPlane(cornerVertex, edgeDir1, edgeDir2);
       innerCornerBisectorPlanes[vkey] = bisectorPlane;
     }
   }
@@ -1895,51 +2071,42 @@ Chamfer3D::chamferEdges(const EdgeSelector      &selector,
   // Process only CONVEX edges on the ORIGINAL mesh
   for (const auto &edge : convexEdges) {
     auto he = findHalfedge(originalMesh, edge);
-    if (he == Surface_mesh_3::null_halfedge()) continue;
-    if (originalMesh.is_border(he) || originalMesh.is_border(originalMesh.opposite(he))) continue;
+    if (he == Surface_mesh_3::null_halfedge())
+      continue;
+    if (originalMesh.is_border(he) ||
+        originalMesh.is_border(originalMesh.opposite(he)))
+      continue;
 
     Kernel::Vector_3 n1 = fnormals[originalMesh.face(he)];
-    Kernel::Vector_3 n2 = fnormals[originalMesh.face(originalMesh.opposite(he))];
+    Kernel::Vector_3 n2 =
+        fnormals[originalMesh.face(originalMesh.opposite(he))];
 
     // Check halfedge direction
-    Kernel::Vector_3 heDir = originalMesh.point(originalMesh.target(he)) - originalMesh.point(originalMesh.source(he));
-    if (CGAL::to_double(heDir * (edge.end - edge.start)) < 0) std::swap(n1, n2);
+    Kernel::Vector_3 heDir = originalMesh.point(originalMesh.target(he)) -
+                             originalMesh.point(originalMesh.source(he));
+    if (CGAL::to_double(heDir * (edge.end - edge.start)) < 0)
+      std::swap(n1, n2);
 
     // Skip flat edges
     double dihedralAngle = computeDihedralAngleFromNormals(n1, n2);
-    if (std::abs(dihedralAngle - M_PI) < EPSILON) continue;
+    if (std::abs(dihedralAngle - M_PI) < EPSILON)
+      continue;
 
     Kernel::Point_3 heStart = originalMesh.point(originalMesh.source(he));
-    Kernel::Point_3 heEnd = originalMesh.point(originalMesh.target(he));
-    Kernel::Vector_3 edgeDir = normalize(edge.end - edge.start);
+    Kernel::Point_3 heEnd   = originalMesh.point(originalMesh.target(he));
+    // Use halfedge direction for consistency with heStart/heEnd
+    Kernel::Vector_3 edgeDir = normalize(heEnd - heStart);
 
     Kernel::Vector_3 perp1 = normalize(CGAL::cross_product(edgeDir, n1));
     Kernel::Vector_3 perp2 = normalize(CGAL::cross_product(n2, edgeDir));
-    if (CGAL::to_double(perp1 * (-n2)) < 0) perp1 = -perp1;
-    if (CGAL::to_double(perp2 * (-n1)) < 0) perp2 = -perp2;
+    if (CGAL::to_double(perp1 * (-n2)) < 0)
+      perp1 = -perp1;
+    if (CGAL::to_double(perp2 * (-n1)) < 0)
+      perp2 = -perp2;
 
-    // Check if this edge has inner corner endpoints that need miter joints
-    std::string startKey = vertexKey(edge.start);
-    std::string endKey = vertexKey(edge.end);
-
-    auto startBisectorIt = innerCornerBisectorPlanes.find(startKey);
-    auto endBisectorIt = innerCornerBisectorPlanes.find(endKey);
-
-    const Kernel::Plane_3 *startBisector = (startBisectorIt != innerCornerBisectorPlanes.end())
-                                            ? &startBisectorIt->second : nullptr;
-    const Kernel::Plane_3 *endBisector = (endBisectorIt != innerCornerBisectorPlanes.end())
-                                          ? &endBisectorIt->second : nullptr;
-
-    // Create subtraction wedge (with optional miter joint clipping)
-    std::unique_ptr<Solid> subWedge;
-    if (startBisector != nullptr || endBisector != nullptr) {
-      // Use mitered wedge for inner corner joints
-      subWedge = createMiteredSubtractionWedge(heStart, heEnd, edgeDir, perp1, perp2, d1, d2,
-                                                startBisector, endBisector);
-    } else {
-      // Use regular bounded wedge
-      subWedge = createBoundedSubtractionWedge(heStart, heEnd, edgeDir, perp1, perp2, d1, d2);
-    }
+    // Create subtraction wedge (bounded to edge endpoints)
+    std::unique_ptr<Solid> subWedge = createBoundedSubtractionWedge(
+        heStart, heEnd, edgeDir, perp1, perp2, d1, d2);
 
     if (subWedge && !subWedge->isEmpty()) {
       subtractionWedges.push_back(std::move(subWedge));
@@ -1969,24 +2136,26 @@ Chamfer3D::chamferEdges(const EdgeSelector      &selector,
     for (const auto &[vkey, convexEdgeIndices] : vertexToConvexEdges) {
       // Find the corner vertex
       Kernel::Point_3 cornerVertex;
-      bool foundCorner = false;
+      bool            foundCorner = false;
       for (size_t idx : convexEdgeIndices) {
         const auto &edge = convexEdges[idx];
         if (vertexKey(edge.start) == vkey) {
           cornerVertex = edge.start;
-          foundCorner = true;
+          foundCorner  = true;
           break;
         }
         if (vertexKey(edge.end) == vkey) {
           cornerVertex = edge.end;
-          foundCorner = true;
+          foundCorner  = true;
           break;
         }
       }
-      if (!foundCorner) continue;
+      if (!foundCorner)
+        continue;
 
-      // Compute chamfer data (edgeDir, perp1, perp2) for each convex edge at this corner
-      // This uses the same computation as the main edge processing loop
+      // Compute chamfer data (edgeDir, perp1, perp2) for each convex edge at
+      // this corner This uses the same computation as the main edge processing
+      // loop
       struct EdgeChamferData {
         Kernel::Vector_3 edgeDir;
         Kernel::Vector_3 perp1;
@@ -1994,23 +2163,29 @@ Chamfer3D::chamferEdges(const EdgeSelector      &selector,
       };
       std::vector<EdgeChamferData> edgeChamferData;
       std::vector<Kernel::Point_3> chamferPoints;
-      double dist = (d1 + d2) / 2.0;
+      double                       dist = (d1 + d2) / 2.0;
 
       for (size_t idx : convexEdgeIndices) {
         const auto &edge = convexEdges[idx];
 
         // Find the halfedge in the mesh
         auto he = findHalfedge(originalMesh, edge);
-        if (he == Surface_mesh_3::null_halfedge()) continue;
-        if (originalMesh.is_border(he) || originalMesh.is_border(originalMesh.opposite(he))) continue;
+        if (he == Surface_mesh_3::null_halfedge())
+          continue;
+        if (originalMesh.is_border(he) ||
+            originalMesh.is_border(originalMesh.opposite(he)))
+          continue;
 
         // Get face normals
         Kernel::Vector_3 n1 = fnormals[originalMesh.face(he)];
-        Kernel::Vector_3 n2 = fnormals[originalMesh.face(originalMesh.opposite(he))];
+        Kernel::Vector_3 n2 =
+            fnormals[originalMesh.face(originalMesh.opposite(he))];
 
         // Check halfedge direction matches edge direction
-        Kernel::Vector_3 heDir = originalMesh.point(originalMesh.target(he)) - originalMesh.point(originalMesh.source(he));
-        if (CGAL::to_double(heDir * (edge.end - edge.start)) < 0) std::swap(n1, n2);
+        Kernel::Vector_3 heDir = originalMesh.point(originalMesh.target(he)) -
+                                 originalMesh.point(originalMesh.source(he));
+        if (CGAL::to_double(heDir * (edge.end - edge.start)) < 0)
+          std::swap(n1, n2);
 
         // Compute edge direction (pointing away from corner)
         Kernel::Vector_3 edgeVec;
@@ -2020,40 +2195,164 @@ Chamfer3D::chamferEdges(const EdgeSelector      &selector,
           edgeVec = edge.start - edge.end;
         }
         double edgeLen = std::sqrt(CGAL::to_double(edgeVec.squared_length()));
-        if (edgeLen < 1e-10) continue;
+        if (edgeLen < 1e-10)
+          continue;
         Kernel::Vector_3 edgeDir = edgeVec * (1.0 / edgeLen);
 
         // Compute perp1 and perp2 (same as in main edge processing loop)
         Kernel::Vector_3 perp1 = normalize(CGAL::cross_product(edgeDir, n1));
         Kernel::Vector_3 perp2 = normalize(CGAL::cross_product(n2, edgeDir));
-        if (CGAL::to_double(perp1 * (-n2)) < 0) perp1 = -perp1;
-        if (CGAL::to_double(perp2 * (-n1)) < 0) perp2 = -perp2;
+        if (CGAL::to_double(perp1 * (-n2)) < 0)
+          perp1 = -perp1;
+        if (CGAL::to_double(perp2 * (-n1)) < 0)
+          perp2 = -perp2;
 
         edgeChamferData.push_back({edgeDir, perp1, perp2});
         chamferPoints.push_back(cornerVertex + edgeDir * dist);
       }
 
       if (convexEdgeIndices.size() == 3 && chamferPoints.size() == 3) {
-        // 3-edge corner (external corner like cube vertex): create tetrahedron clip
-        auto cornerClip = createCornerClipTetrahedron(cornerVertex, chamferPoints);
+        // 3-edge corner (external corner like cube vertex): create tetrahedron
+        // clip
+        auto cornerClip =
+            createCornerClipTetrahedron(cornerVertex, chamferPoints);
         if (cornerClip && !cornerClip->isEmpty()) {
           subtractionWedges.push_back(std::move(cornerClip));
         }
+      } else if (convexEdgeIndices.size() == 2 && edgeChamferData.size() == 2) {
+        // 2-edge inner corner: check if this is an inner corner (has concave
+        // edge)
+        bool hasInnerConcaveEdge = false;
+        for (auto v : originalMesh.vertices()) {
+          if (!pointsApproxEqual(originalMesh.point(v), cornerVertex))
+            continue;
+          auto start_he = originalMesh.halfedge(v);
+          auto he       = start_he;
+          do {
+            if (!originalMesh.is_border(he) &&
+                !originalMesh.is_border(originalMesh.opposite(he))) {
+              Kernel::Vector_3 n1 = fnormals[originalMesh.face(he)];
+              Kernel::Vector_3 n2 =
+                  fnormals[originalMesh.face(originalMesh.opposite(he))];
+              Kernel::Vector_3 edgeVec =
+                  originalMesh.point(originalMesh.target(he)) -
+                  originalMesh.point(originalMesh.source(he));
+              Kernel::Vector_3 normalCross = CGAL::cross_product(n1, n2);
+              double crossDotEdge = CGAL::to_double(normalCross * edgeVec);
+              if (crossDotEdge < -0.01) {
+                hasInnerConcaveEdge = true;
+                break;
+              }
+            }
+            he = originalMesh.next_around_target(he);
+          } while (he != start_he);
+          break;
+        }
+
+        if (hasInnerConcaveEdge && edgeChamferData.size() == 2) {
+          // Create inner corner miter tetrahedron
+          // This simple tetrahedron removes the corner and creates the diagonal
+          // miter face.
+          //
+          // Vertices:
+          // - cornerVertex: the original corner point
+          // - chamfer1: chamfer offset for edge 1 (cornerVertex + perp1_1 * d1)
+          // - chamfer2: chamfer offset for edge 2 (cornerVertex + perp1_2 * d1)
+          // - apex: shared apex below corner (cornerVertex + perp2 * d2)
+          //
+          // The miter face is the triangle (chamfer1, chamfer2, apex)
+
+          const auto &data1 = edgeChamferData[0];
+          const auto &data2 = edgeChamferData[1];
+
+          // Chamfer surface points
+          Kernel::Point_3 chamfer1 = cornerVertex + data1.perp1 * d1;
+          Kernel::Point_3 chamfer2 = cornerVertex + data2.perp1 * d1;
+
+          // Shared apex
+          Kernel::Point_3 apex = cornerVertex + data1.perp2 * d2;
+
+          // Create tetrahedron (4 vertices, 4 triangular faces)
+          auto ps = std::make_unique<PolyhedralSurface>();
+
+          // Compute centroid for face orientation
+          double cx =
+              (CGAL::to_double(cornerVertex.x()) +
+               CGAL::to_double(chamfer1.x()) + CGAL::to_double(chamfer2.x()) +
+               CGAL::to_double(apex.x())) /
+              4.0;
+          double cy =
+              (CGAL::to_double(cornerVertex.y()) +
+               CGAL::to_double(chamfer1.y()) + CGAL::to_double(chamfer2.y()) +
+               CGAL::to_double(apex.y())) /
+              4.0;
+          double cz =
+              (CGAL::to_double(cornerVertex.z()) +
+               CGAL::to_double(chamfer1.z()) + CGAL::to_double(chamfer2.z()) +
+               CGAL::to_double(apex.z())) /
+              4.0;
+          Kernel::Point_3 centroid(cx, cy, cz);
+
+          auto addTriangle = [&](const Kernel::Point_3 &a,
+                                 const Kernel::Point_3 &b,
+                                 const Kernel::Point_3 &c) {
+            Kernel::Vector_3 ab     = b - a;
+            Kernel::Vector_3 ac     = c - a;
+            Kernel::Vector_3 normal = CGAL::cross_product(ab, ac);
+            Kernel::Point_3  faceCenter(
+                (CGAL::to_double(a.x()) + CGAL::to_double(b.x()) +
+                 CGAL::to_double(c.x())) /
+                    3.0,
+                (CGAL::to_double(a.y()) + CGAL::to_double(b.y()) +
+                 CGAL::to_double(c.y())) /
+                    3.0,
+                (CGAL::to_double(a.z()) + CGAL::to_double(b.z()) +
+                 CGAL::to_double(c.z())) /
+                    3.0);
+            Kernel::Vector_3 toCentroid = centroid - faceCenter;
+            auto            *ring       = new LineString();
+            if (CGAL::to_double(normal * toCentroid) > 0) {
+              ring->addPoint(Point(a));
+              ring->addPoint(Point(c));
+              ring->addPoint(Point(b));
+            } else {
+              ring->addPoint(Point(a));
+              ring->addPoint(Point(b));
+              ring->addPoint(Point(c));
+            }
+            ring->addPoint(ring->pointN(0));
+            ps->addPatch(Polygon(ring));
+          };
+
+          // 4 triangular faces of the tetrahedron:
+          // Face 1: top face (cornerVertex - chamfer2 - chamfer1)
+          addTriangle(cornerVertex, chamfer2, chamfer1);
+          // Face 2: side face 1 (cornerVertex - chamfer1 - apex)
+          addTriangle(cornerVertex, chamfer1, apex);
+          // Face 3: side face 2 (cornerVertex - apex - chamfer2)
+          addTriangle(cornerVertex, apex, chamfer2);
+          // Face 4: miter face (chamfer1 - chamfer2 - apex)
+          addTriangle(chamfer1, chamfer2, apex);
+
+          auto innerCornerTet = std::make_unique<Solid>(*ps);
+          if (innerCornerTet && !innerCornerTet->isEmpty()) {
+            subtractionWedges.push_back(std::move(innerCornerTet));
+          }
+        }
       }
-      // NOTE: 2-edge inner corners (with concave edge) are now handled by
-      // miter joints in the wedge creation, no tetrahedron clip needed.
     }
   }
 
   // Now perform batch boolean operations
-  // Ensure we start with a Solid (not PolyhedralSurface) for proper boolean operations
+  // Ensure we start with a Solid (not PolyhedralSurface) for proper boolean
+  // operations
   std::unique_ptr<Geometry> result;
   if (_isSolid) {
     result = _geometry->clone();
   } else {
     // Convert PolyhedralSurface to Solid
     const auto &ps = _geometry->as<PolyhedralSurface>();
-    result = std::make_unique<Solid>(ps);
+    result         = std::make_unique<Solid>(ps);
   }
 
   // Step 1: Union all fill wedges with original
@@ -2179,7 +2478,7 @@ Chamfer3D::chamferVertices(const std::vector<Kernel::Point_3> &vertices,
   }
 
   // Apply small chamfer to all incident edges
-  auto edgeParams = ChamferParameters::symmetric(params.distance * 0.5);
+  auto edgeParams   = ChamferParameters::symmetric(params.distance * 0.5);
   auto edgeSelector = EdgeSelector::explicit_(incidentEdges);
 
   return chamferEdges(edgeSelector, edgeParams);
@@ -2190,9 +2489,8 @@ Chamfer3D::chamferVertices(const std::vector<Kernel::Point_3> &vertices,
 // ============================================================================
 
 auto
-chamfer3D(const Geometry                    &geometry,
-          const std::vector<EdgeIdentifier> &edges,
-          const ChamferParameters           &params) -> std::unique_ptr<Geometry>
+chamfer3D(const Geometry &geometry, const std::vector<EdgeIdentifier> &edges,
+          const ChamferParameters &params) -> std::unique_ptr<Geometry>
 {
   Chamfer3D op(geometry);
   auto      selector = EdgeSelector::explicit_(edges);
