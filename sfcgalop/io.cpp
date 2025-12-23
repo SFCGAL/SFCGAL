@@ -4,8 +4,10 @@
 #include "io.hpp"
 
 #include <SFCGAL/io/OBJ.h>
+#include <SFCGAL/io/STL.h>
 #include <SFCGAL/io/ewkt.h>
 #include <SFCGAL/io/geojson.h>
+#include <SFCGAL/io/vtk.h>
 #include <SFCGAL/io/wkb.h>
 #include <SFCGAL/io/wkt.h>
 
@@ -148,10 +150,12 @@ load_geometry(const std::string &source) -> std::unique_ptr<SFCGAL::Geometry>
                             static_cast<unsigned char>(data[0]) == 0x01)) {
         return SFCGAL::io::readWkb(data);
       }
-      if (std::any_of(data.begin(), data.end(), [](unsigned char character) {
-            return character < 0x09 || (character < 0x20 && character != '\n' &&
-                                        character != '\r' && character != '\t');
-          })) {
+      if (std::any_of(data.begin(), data.end(),
+                      [](unsigned char character) -> bool {
+                        return character < 0x09 ||
+                               (character < 0x20 && character != '\n' &&
+                                character != '\r' && character != '\t');
+                      })) {
         return SFCGAL::io::readWkb(data);
       }
 
@@ -166,7 +170,7 @@ load_geometry(const std::string &source) -> std::unique_ptr<SFCGAL::Geometry>
         // Plain hex digits (even length)
         else if (data.length() % 2 == 0 &&
                  std::all_of(data.begin(), data.end(),
-                             [](unsigned char character) {
+                             [](unsigned char character) -> bool {
                                return std::isxdigit(character) != 0;
                              })) {
           is_hex = true;
@@ -245,7 +249,7 @@ print_result(const std::optional<OperationResult> &result, OutputFormat format,
   }
 
   std::visit(
-      [format, precision, &out](auto &&arg) {
+      [format, precision, &out](auto &&arg) -> auto {
         using T = std::decay_t<decltype(arg)>;
 
         if constexpr (std::is_same_v<T, std::unique_ptr<SFCGAL::Geometry>>) {
@@ -266,6 +270,11 @@ print_result(const std::optional<OperationResult> &result, OutputFormat format,
               break;
             case OutputFormat::GEOJSON:
               out << SFCGAL::io::writeGeoJSON(*arg) << "\n";
+            case OutputFormat::STL:
+              out << SFCGAL::io::STL::saveToString(*arg);
+              break;
+            case OutputFormat::VTK:
+              out << SFCGAL::io::VTK::saveToString(*arg);
               break;
             }
           }
@@ -315,6 +324,10 @@ parse_output_format(const char *format_str, OutputFormat &format) -> bool
     format = OutputFormat::OBJ;
   } else if (fmt == "geojson" || fmt == "json") {
     format = OutputFormat::GEOJSON;
+  } else if (fmt == "stl") {
+    format = OutputFormat::STL;
+  } else if (fmt == "vtk") {
+    format = OutputFormat::VTK;
   } else {
     return false;
   }
