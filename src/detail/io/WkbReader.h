@@ -258,9 +258,8 @@ private:
     }
 
     if (!isValidGeometryType(geometryType)) {
-      BOOST_THROW_EXCEPTION(
-          Exception("WkbReader: invalid geometry type '" +
-                    std::to_string(geometryType) + "'"));
+      BOOST_THROW_EXCEPTION(Exception("WkbReader: invalid geometry type '" +
+                                      std::to_string(geometryType) + "'"));
     }
 
     return static_cast<GeometryType>(geometryType);

@@ -132,8 +132,8 @@ save(const Geometry &geom, std::ostream &out)
   // Write points
   out << "POINTS " << all_points.size() << " float\n";
   for (const auto &point : all_points) {
-    out << point.x() << " " << point.y() << " " << (point.is3D() ? point.z() : 0.0)
-        << "\n";
+    out << point.x() << " " << point.y() << " "
+        << (point.is3D() ? point.z() : 0.0) << "\n";
   }
 
   // Write cells
