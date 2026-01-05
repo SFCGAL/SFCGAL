@@ -4,6 +4,11 @@
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
 #include "SFCGAL/io/vtk.h"
+#include "SFCGAL/Exception.h"
+#include "SFCGAL/MultiLineString.h"
+#include "SFCGAL/MultiPoint.h"
+#include "SFCGAL/PolyhedralSurface.h"
+#include "SFCGAL/TriangulatedSurface.h"
 #include "SFCGAL/io/wkt.h"
 #include <filesystem>
 #include <fstream>
@@ -234,6 +239,160 @@ BOOST_AUTO_TEST_CASE(test_complex_geometry)
                          "7\n";
 
   BOOST_CHECK_EQUAL(result, expected);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(SFCGAL_io_VTKReaderTest)
+
+BOOST_AUTO_TEST_CASE(test_load_point)
+{
+  std::string vtk_content = "# vtk DataFile Version 2.0\n"
+                            "Test\n"
+                            "ASCII\n"
+                            "DATASET UNSTRUCTURED_GRID\n"
+                            "POINTS 1 float\n"
+                            "1 2 3\n"
+                            "CELLS 1 2\n"
+                            "1 0\n"
+                            "CELL_TYPES 1\n"
+                            "1\n";
+
+  std::unique_ptr<SFCGAL::Geometry> geom = SFCGAL::io::VTK::load(vtk_content);
+
+  BOOST_CHECK_EQUAL(geom->geometryType(), "MultiPoint");
+  const auto &mp = geom->as<SFCGAL::MultiPoint>();
+  BOOST_CHECK_EQUAL(mp.numGeometries(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(test_load_line)
+{
+  std::string vtk_content = "# vtk DataFile Version 2.0\n"
+                            "Test\n"
+                            "ASCII\n"
+                            "DATASET UNSTRUCTURED_GRID\n"
+                            "POINTS 2 float\n"
+                            "0 0 0\n"
+                            "1 1 1\n"
+                            "CELLS 1 3\n"
+                            "2 0 1\n"
+                            "CELL_TYPES 1\n"
+                            "4\n";
+
+  std::unique_ptr<SFCGAL::Geometry> geom = SFCGAL::io::VTK::load(vtk_content);
+
+  BOOST_CHECK_EQUAL(geom->geometryType(), "MultiLineString");
+}
+
+BOOST_AUTO_TEST_CASE(test_load_triangle)
+{
+  std::string vtk_content = "# vtk DataFile Version 2.0\n"
+                            "Test\n"
+                            "ASCII\n"
+                            "DATASET UNSTRUCTURED_GRID\n"
+                            "POINTS 3 float\n"
+                            "0 0 0\n"
+                            "1 0 0\n"
+                            "0 1 0\n"
+                            "CELLS 1 4\n"
+                            "3 0 1 2\n"
+                            "CELL_TYPES 1\n"
+                            "5\n";
+
+  std::unique_ptr<SFCGAL::Geometry> geom = SFCGAL::io::VTK::load(vtk_content);
+
+  BOOST_CHECK_EQUAL(geom->geometryType(), "TriangulatedSurface");
+  const auto &tin = geom->as<SFCGAL::TriangulatedSurface>();
+  BOOST_CHECK_EQUAL(tin.numTriangles(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(test_load_polygon)
+{
+  std::string vtk_content = "# vtk DataFile Version 2.0\n"
+                            "Test\n"
+                            "ASCII\n"
+                            "DATASET UNSTRUCTURED_GRID\n"
+                            "POINTS 4 float\n"
+                            "0 0 0\n"
+                            "1 0 0\n"
+                            "1 1 0\n"
+                            "0 1 0\n"
+                            "CELLS 1 5\n"
+                            "4 0 1 2 3\n"
+                            "CELL_TYPES 1\n"
+                            "7\n";
+
+  std::unique_ptr<SFCGAL::Geometry> geom = SFCGAL::io::VTK::load(vtk_content);
+
+  BOOST_CHECK_EQUAL(geom->geometryType(), "PolyhedralSurface");
+}
+
+BOOST_AUTO_TEST_CASE(test_roundtrip_triangle)
+{
+  std::string wkt = "TRIANGLE Z ((0 0 0, 1 0 0, 0 1 0, 0 0 0))";
+  std::unique_ptr<SFCGAL::Geometry> original(SFCGAL::io::readWkt(wkt));
+
+  // Save to VTK
+  std::string vtk = SFCGAL::io::VTK::saveToString(*original);
+
+  // Load back
+  std::unique_ptr<SFCGAL::Geometry> loaded = SFCGAL::io::VTK::load(vtk);
+
+  BOOST_CHECK_EQUAL(loaded->geometryType(), "TriangulatedSurface");
+}
+
+BOOST_AUTO_TEST_CASE(test_load_from_file)
+{
+  std::string filename =
+      std::string(SFCGAL_TEST_DIRECTORY) + "/data/vtkfiles/trianglez.vtk";
+  std::unique_ptr<SFCGAL::Geometry> geom =
+      SFCGAL::io::VTK::loadFromFile(filename);
+
+  BOOST_CHECK_EQUAL(geom->geometryType(), "TriangulatedSurface");
+}
+
+BOOST_AUTO_TEST_CASE(test_error_invalid_point_index)
+{
+  std::string vtk_content = "# vtk DataFile Version 2.0\n"
+                            "Test\n"
+                            "ASCII\n"
+                            "DATASET UNSTRUCTURED_GRID\n"
+                            "POINTS 1 float\n"
+                            "0 0 0\n"
+                            "CELLS 1 4\n"
+                            "3 0 1 2\n"
+                            "CELL_TYPES 1\n"
+                            "5\n";
+
+  BOOST_CHECK_THROW(SFCGAL::io::VTK::load(vtk_content), SFCGAL::Exception);
+}
+
+BOOST_AUTO_TEST_CASE(test_smart_triangulated_surface)
+{
+  // Multiple triangles should become TriangulatedSurface
+  std::string vtk_content = "# vtk DataFile Version 2.0\n"
+                            "Test\n"
+                            "ASCII\n"
+                            "DATASET UNSTRUCTURED_GRID\n"
+                            "POINTS 6 float\n"
+                            "0 0 0\n"
+                            "1 0 0\n"
+                            "0 1 0\n"
+                            "1 0 0\n"
+                            "1 1 0\n"
+                            "0 1 0\n"
+                            "CELLS 2 8\n"
+                            "3 0 1 2\n"
+                            "3 3 4 5\n"
+                            "CELL_TYPES 2\n"
+                            "5\n"
+                            "5\n";
+
+  std::unique_ptr<SFCGAL::Geometry> geom = SFCGAL::io::VTK::load(vtk_content);
+
+  BOOST_CHECK_EQUAL(geom->geometryType(), "TriangulatedSurface");
+  const auto &tin = geom->as<SFCGAL::TriangulatedSurface>();
+  BOOST_CHECK_EQUAL(tin.numTriangles(), 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
