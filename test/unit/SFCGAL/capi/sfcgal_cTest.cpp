@@ -2743,4 +2743,57 @@ BOOST_AUTO_TEST_CASE(testReadObj)
   sfcgal_geometry_delete(copied_geometry);
 }
 
+BOOST_AUTO_TEST_CASE(testExtrudeUntil)
+{
+  // Create a rectangular footprint at z=0
+  std::vector<Point> points;
+  points.emplace_back(0.0, 0.0, 0.0);
+  points.emplace_back(10.0, 0.0, 0.0);
+  points.emplace_back(10.0, 6.0, 0.0);
+  points.emplace_back(0.0, 6.0, 0.0);
+  points.emplace_back(0.0, 0.0, 0.0);
+  const LineString exteriorRing(points);
+  const Polygon    footprint(exteriorRing);
+
+  // Create a flat roof at z=5
+  PolyhedralSurface  roof;
+  std::vector<Point> roofPoints;
+  roofPoints.emplace_back(0.0, 0.0, 5.0);
+  roofPoints.emplace_back(10.0, 0.0, 5.0);
+  roofPoints.emplace_back(10.0, 6.0, 5.0);
+  roofPoints.emplace_back(0.0, 6.0, 5.0);
+  roofPoints.emplace_back(0.0, 0.0, 5.0);
+  roof.addPolygon(Polygon(LineString(roofPoints)));
+
+  // Extrude until roof
+  sfcgal_geometry_t *result = sfcgal_geometry_extrude_until(&footprint, &roof);
+
+  // check result
+  BOOST_REQUIRE(result != nullptr);
+  BOOST_CHECK(!sfcgal_geometry_is_empty(result));
+  BOOST_CHECK_EQUAL(sfcgal_geometry_type_id(result), TYPE_SOLID);
+
+  // Verify structure: should have 6 faces (bottom, top, 4 walls)
+  BOOST_CHECK_EQUAL(sfcgal_geometry_num_geometries(result), 1U);
+  const sfcgal_geometry_t *shell = sfcgal_solid_shell_n(result, 0);
+  BOOST_REQUIRE(shell != nullptr);
+  size_t numFaces = sfcgal_polyhedral_surface_num_patches(shell);
+  BOOST_CHECK_EQUAL(numFaces, 6U);
+
+  // Verify volume is correct (10 * 6 * 5 = 300)
+  double volume = sfcgal_geometry_volume(result);
+  BOOST_CHECK_CLOSE(volume, 300.0, 0.01);
+
+  // Verify 3D envelope is correct
+  sfcgal_geometry_t *envelope = sfcgal_geometry_envelope_3d(result);
+  BOOST_REQUIRE(envelope != nullptr);
+  char  *envWkt;
+  size_t envLen;
+  sfcgal_geometry_as_text_decim(envelope, 2, &envWkt, &envLen);
+  std::string envStr(envWkt, envLen);
+  BOOST_CHECK(envStr.find("0.00 0.00 0.00") != std::string::npos);
+  BOOST_CHECK(envStr.find("10.00 6.00 5.00") != std::string::npos);
+  sfcgal_geometry_delete(envelope);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
