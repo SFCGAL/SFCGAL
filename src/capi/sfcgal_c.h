@@ -1717,6 +1717,25 @@ sfcgal_geometry_extrude(const sfcgal_geometry_t *geom, double ex, double ey,
                         double ez);
 
 /**
+ * Extrudes a 2D polygon upward until it meets a roof surface.
+ * @param footprint The building footprint polygon
+ * @param roof The roof geometry (Polygon, Triangle, PolyhedralSurface, or
+ * TriangulatedSurface).
+ * @return Solid representing the extruded building.
+ * @pre footprint must be a 2D polygon
+ * @pre isValid(footprint) == true
+ * @pre roof must be a Polygon, a Triangle, a PolyhedralSurface, or a
+ * TriangulatedSurface
+ * @pre isValid(roof) == true
+ * @post The returned geometry must be deallocated by the caller with
+ * sfcgal_geometry_delete()
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_geometry_extrude_until(const sfcgal_geometry_t *footprint,
+                              const sfcgal_geometry_t *roof);
+
+/**
  * Convert a SFCGAL::PolyhedralSurface to a SFCGAL::Solid
  * @param geom the input geometry
  * @pre isValid(geom) == true

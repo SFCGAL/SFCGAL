@@ -1632,6 +1632,19 @@ sfcgal_geometry_extrude(const sfcgal_geometry_t *geom, double ex, double ey,
   return result.release();
 }
 
+SFCGAL_API
+extern "C" auto
+sfcgal_geometry_extrude_until(const sfcgal_geometry_t *footprint,
+                              const sfcgal_geometry_t *roof)
+    -> sfcgal_geometry_t *
+{
+  SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
+      return SFCGAL::algorithm::extrudeUntil(
+                 *down_const_cast<SFCGAL::Polygon>(footprint),
+                 *static_cast<const SFCGAL::Geometry *>(roof))
+          .release();)
+}
+
 extern "C" auto
 sfcgal_geometry_round(const sfcgal_geometry_t *geom, int scale)
     -> sfcgal_geometry_t *
