@@ -1733,9 +1733,9 @@ SFCGAL_API sfcgal_geometry_t *
 sfcgal_geometry_round(const sfcgal_geometry_t *geom, int r);
 
 /**
- * Returns the minkowski sum geom1 + geom2
+ * Returns the 2D minkowski sum geom1 + geom2
  * @param geom1 the first input geometry
- * @param geom2 the second input geometry
+ * @param geom2 the second input geometry (must be a Polygon)
  * @pre isValid(geom1) == true
  * @pre isValid(geom2) == true
  * @post isValid(return) == true
@@ -1761,6 +1761,27 @@ SFCGAL_API sfcgal_geometry_t *
 sfcgal_geometry_insert_points_within_tolerance(const sfcgal_geometry_t *base,
                                                const sfcgal_geometry_t *source,
                                                double tolerance);
+/**
+ * Returns the 3D minkowski sum geom1 + geom2
+ *
+ * The Minkowski sum of two point sets A and B is defined as:
+ *   A + B = { a + b : a in A, b in B }
+ *
+ * Supports all 3D geometry types including Point, LineString, Polygon,
+ * Triangle, TriangulatedSurface, PolyhedralSurface, Solid, and collections.
+ *
+ * @param geom1 the first input geometry
+ * @param geom2 the second input geometry
+ * @pre isValid(geom1) == true
+ * @pre isValid(geom2) == true
+ * @post isValid(return) == true
+ * @return The 3D minkowski sum of geom1 and geom2 (typically a
+ * PolyhedralSurface)
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_geometry_minkowski_sum_3d(const sfcgal_geometry_t *geom1,
+                                 const sfcgal_geometry_t *geom2);
 
 /**
  * Returns the offset polygon of the given Geometry.
