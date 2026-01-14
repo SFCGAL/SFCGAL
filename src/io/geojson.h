@@ -120,6 +120,7 @@ readGeoJSONPrepared(const nlohmann::json &json)
  * @param geometry Geometry to serialize
  * @param options Serialization options
  * @return GeoJSON string
+ * @note M values are dropped
  */
 SFCGAL_API auto
 writeGeoJSON(const Geometry &geometry, const GeoJSONOptions &options = {})
@@ -131,6 +132,7 @@ writeGeoJSON(const Geometry &geometry, const GeoJSONOptions &options = {})
  * @param geometry Geometry to serialize
  * @param options Serialization options
  * @return nlohmann::json object
+ * @note M values are dropped
  */
 SFCGAL_API auto
 writeGeoJSONObject(const Geometry &geometry, const GeoJSONOptions &options = {})
@@ -143,6 +145,7 @@ writeGeoJSONObject(const Geometry &geometry, const GeoJSONOptions &options = {})
  * @param prepared PreparedGeometry to serialize
  * @param options Serialization options
  * @return GeoJSON string
+ * @note M values are dropped
  */
 SFCGAL_API auto
 writeGeoJSON(const PreparedGeometry &prepared,

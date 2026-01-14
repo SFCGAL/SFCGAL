@@ -1400,6 +1400,7 @@ sfcgal_io_read_binary_prepared(const char *str, size_t len);
  * @param[out] len The size of @p buffer
  * @post @p buffer is returned allocated and must be freed by the caller with
  *       sfcgal_free_buffer()
+ * @note M values are dropped
  * @ingroup capi
  */
 SFCGAL_API void
@@ -1422,6 +1423,7 @@ sfcgal_geometry_as_geojson(const sfcgal_geometry_t *geom, bool strict,
  * @param[out] len The size of @p buffer
  * @post @p buffer is returned allocated and must be freed by the caller with
  *       sfcgal_free_buffer()
+ * @note M values are dropped
  * @ingroup capi
  */
 SFCGAL_API void
