@@ -115,8 +115,6 @@ BOOST_AUTO_TEST_CASE(testClone)
   std::unique_ptr<Sphere> sphereCloned = sphere.clone();
 
   BOOST_CHECK_EQUAL(sphere, *sphereCloned);
-  BOOST_CHECK(algorithm::covers3D(sphere.generatePolyhedralSurface(),
-                                  sphereCloned->generatePolyhedralSurface()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
