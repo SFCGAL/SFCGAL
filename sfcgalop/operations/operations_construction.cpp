@@ -14,6 +14,7 @@
 #include "SFCGAL/algorithm/buffer3D.h"
 #include "SFCGAL/algorithm/centroid.h"
 #include "SFCGAL/algorithm/convexHull.h"
+#include "SFCGAL/algorithm/extrude.h"
 #include "SFCGAL/algorithm/insertPointsWithinTolerance.h"
 #include "SFCGAL/algorithm/lineSubstring.h"
 #include "SFCGAL/algorithm/minkowskiSum.h"
@@ -477,6 +478,24 @@ const std::vector<Operation> operations_construction = {
        // Roof only
        return SFCGAL::algorithm::extrudeStraightSkeleton(*geom_a, height,
                                                          weights, angles);
+     }},
+
+    {.name        = "extrude_until",
+     .category    = "Construction",
+     .description = "Extrude a 2D geometry until it meets another "
+                    "geometry (typically roof) to create a 3D solid",
+     .requires_b  = true,
+     .param_help  = "",
+     .input       = "A, B",
+     .output      = "G",
+     .func =
+         [](const std::string &, const SFCGAL::Geometry *geom_a,
+            const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
+       if (!geom_b) {
+         return std::nullopt;
+       }
+       return SFCGAL::algorithm::extrudeUntil(geom_a->as<SFCGAL::Polygon>(),
+                                              *geom_b);
      }},
 
     {"generate_flat_roof", "Construction",

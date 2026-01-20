@@ -131,108 +131,109 @@ Use `sfcgalop --list` to list all operations
 ║                 SFCGAL Available Operations                  ║
 ╚══════════════════════════════════════════════════════════════╝
 
-╭───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│                                                   Complete Operations Reference                                                   │
-├──────────────────────────────────────┬──────────────┬──────────┬──────────────────────────────────────────────────────────────────┤
-│ Operation                            │ Input        │ Output   │ Description                                                      │
-├──────────────────────────────────────┼──────────────┼──────────┼──────────────────────────────────────────────────────────────────┤
-│ ▶ Analysis                           │              │          │                                                                  │
-│   normal                             │ A            │ G        │ Compute surface normal vector for polygon/triangle               │
-│   orientation                        │ A            │ D        │ Determine polygon ring orientation (clockwise/counter-clockwise) │
-│   partition                          │ A, params    │ G        │ Partition polygon into simpler pieces                            │
-│   visibility                         │ A, params    │ G        │ Compute visibility polygon from a point in polygon               │
-│                                      │              │          │                                                                  │
-│ ▶ Collections                        │              │          │                                                                  │
-│   collect                            │ A, B         │ G        │ Combine two geometries into a collection                         │
-│   collection_extract                 │ A            │ G        │ Extract polygons from geometry collection                        │
-│   collection_homogenize              │ A            │ G        │ Convert collection to appropriate multi-type                     │
-│   collection_to_multi                │ A            │ G        │ Convert collection to multi-geometry type                        │
-│                                      │              │          │                                                                  │
-│ ▶ Construction                       │              │          │                                                                  │
-│   alpha_shapes                       │ A, params    │ G        │ Compute alpha shapes from point cloud                            │
-│   alpha_wrapping_3d                  │ A, params    │ G        │ Create 3D alpha wrapping surface from points                     │
-│   boundary                           │ A            │ G        │ Compute the topological boundary of a geometry                   │
-│   buffer_3d                          │ A, params    │ G        │ Create a 3D buffer around points and lines                       │
-│   centroid                           │ A            │ G        │ Compute the geometric centroid of a geometry                     │
-│   centroid_3d                        │ A            │ G        │ Compute the geometric centroid of a 3D geometry                  │
-│   convex_hull                        │ A            │ G        │ Compute the 2D convex hull of a geometry                         │
-│   constrained_delaunay_triangulation │ A, B         │ G        │ Compute Constrained Delaunay Triangulation of a geometry         │
-│   convex_hull_3d                     │ A            │ G        │ Compute the 3D convex hull of a geometry                         │
-│   delaunay_triangulation             │ A            │ G        │ Compute Delaunay Triangulation of a geometry                     │
-│   envelope                           │ A            │ G        │ Compute the minimum bounding rectangle                           │
-│   extrude                            │ A, params    │ G        │ Extrude a 2D geometry to create a 3D solid                       │
-│   extrude_straight_skeleton          │ A, params    │ G        │ Extrude a polygon using straight skeleton                        │
-│   generate_flat_roof                 │ A, params    │ G        │ Generate a flat roof from a polygon                              │
-│   generate_gable_roof                │ A, params    │ G        │ Generate a gable roof from a polygon                             │
-│   generate_hipped_roof               │ A, params    │ G        │ Generate a hipped roof from a polygon                            │
-│   generate_roof                      │ A, params    │ G        │ Generate a roof from a polygon using a specified type            │
-│   generate_skillion_roof             │ A, params    │ G        │ Generate a skillion (mono-pitch) roof from a polygon             │
-│   insert_points_within_tolerance     │ A, B, params │ G        │ Insert points from geometry B into geometry A within tolerance   │
-│   line_substring                     │ A, params    │ G        │ Extract substring from linestring by fraction                    │
-│   medial_axis                        │ A, params    │ G        │ Compute the approximate medial axis of a polygon                 │
-│   minkowski_sum                      │ A, B         │ G        │ Compute Minkowski sum of two geometries                          │
-│   minkowski_sum_3d                   │ A, B         │ G        │ Compute 3D Minkowski sum of two geometries                       │
-│   offset                             │ A, params    │ G        │ Create an offset polygon at specified distance                   │
-│   straight_skeleton                  │ A, params    │ G        │ Compute the straight skeleton of a polygon                       │
-│   tessellate                         │ A            │ G        │ Tessellate a geometry into triangular faces                      │
-│   triangulate                        │ A            │ G        │ Triangulate a geometry (alias for tessellate)                    │
-│   sweep                              │ A, B, params │ G        │ Sweep a 2D profile along a 3D path to create a 3D surface        │
-│                                      │              │          │                                                                  │
-│ ▶ Constructors                       │              │          │                                                                  │
-│   make_box                           │ params       │ G        │ Create a 3D box primitive                                        │
-│   make_cone                          │ params       │ G        │ Create a 3D cone primitive (supports truncated cones)            │
-│   make_cube                          │ params       │ G        │ Create a 3D cube primitive                                       │
-│   make_cylinder                      │ params       │ G        │ Create a 3D cylinder primitive                                   │
-│   make_sphere                        │ params       │ G        │ Create a 3D sphere primitive using icosahedron subdivision       │
-│   make_torus                         │ params       │ G        │ Create a 3D torus primitive                                      │
-│                                      │              │          │                                                                  │
-│ ▶ Conversions                        │              │          │                                                                  │
-│   to_solid                           │ A            │          │ Convert a PolyhedralSurface to a Solid                           │
-│                                      │              │          │                                                                  │
-│ ▶ Metrics                            │              │          │                                                                  │
-│   area                               │ A            │ D        │ Calculate the 2D area of a geometry                              │
-│   area_3d                            │ A            │ D        │ Calculate the 3D surface area of a geometry                      │
-│   distance                           │ A, B         │ D        │ Calculate the 2D minimum distance between two geometries         │
-│   distance_3d                        │ A, B         │ D        │ Calculate the 3D minimum distance between two geometries         │
-│   length                             │ A            │ D        │ Calculate the 2D length of linear geometries                     │
-│   length_3d                          │ A            │ D        │ Calculate the 3D length of linear geometries                     │
-│   volume                             │ A            │ D        │ Calculate the 3D volume of a solid geometry                      │
-│                                      │              │          │                                                                  │
-│ ▶ Predicates                         │              │          │                                                                  │
-│   covers                             │ A, B         │ B        │ Test if geometry A completely covers geometry B                  │
-│   intersects                         │ A, B         │ B        │ Test if two geometries intersect in 2D                           │
-│   intersects_3d                      │ A, B         │ B        │ Test if two geometries intersect in 3D                           │
-│   is_3d                              │ A            │ B        │ Test if geometry has Z coordinates                               │
-│   is_closed                          │ A            │ B        │ Test if linear geometry forms a closed ring                      │
-│   is_empty                           │ A            │ B        │ Test if geometry contains no points                              │
-│   is_measured                        │ A            │ B        │ Test if geometry has measure (M) coordinates                     │
-│   is_simple                          │ A            │ B        │ Test if geometry has no self-intersections                       │
-│   is_valid                           │ A            │ B        │ Test if geometry is topologically valid                          │
-│                                      │              │          │                                                                  │
-│ ▶ Processing                         │              │          │                                                                  │
-│   chamfer                            │ B            │          │ Apply a chamfer or fillet operation to a solid along an edge     │
-│                                      │              │          │                                                                  │
-│ ▶ Boolean Operations                 │              │          │                                                                  │
-│   difference                         │ A, B         │ G        │ Compute geometry A minus geometry B                              │
-│   difference_3d                      │ A, B         │ G        │ Compute 3D geometry A minus geometry B                           │
-│   intersection                       │ A, B         │ G        │ Compute the geometric intersection of two geometries             │
-│   intersection_3d                    │ A, B         │ G        │ Compute the 3D geometric intersection of two geometries          │
-│   union                              │ A, B         │ G        │ Compute the geometric union of two geometries                    │
-│   union_3d                           │ A, B         │ G        │ Compute the 3D geometric union of two geometries                 │
-│                                      │              │          │                                                                  │
-│ ▶ Transformations                    │              │          │                                                                  │
-│   force_2d                           │ A            │ G        │ Remove Z coordinates to create 2D geometry                       │
-│   force_3d                           │ A, params    │ G        │ Add Z coordinates to create 3D geometry                          │
-│   force_measured                     │ A, params    │ G        │ Add measure coordinates to geometry                              │
-│   force_lhr                          │ A            │ G        │ Force a Left Handed Rule on the given Geometry                   │
-│   force_rhr                          │ A            │ G        │ Force a Right Handed Rule on the given Geometry                  │
-│   rotate                             │ A, params    │ G        │ Rotate geometry around specified axis                            │
-│   scale                              │ A, params    │ G        │ Scale geometry by specified factors                              │
-│   simplify                           │ A, params    │ G        │ Simplify geometry by removing vertices within tolerance          │
-│   split_3d                           │ A, params    │ G        │ Split geometry with a plane                                      │
-│   surface_simplification             │ A, params    │ G        │ Simplify a 3D surface mesh using edge collapse                   │
-│   translate                          │ A, params    │ G        │ Translate geometry by specified offset                           │
-╰──────────────────────────────────────┴──────────────┴──────────┴──────────────────────────────────────────────────────────────────╯
+╭────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                   Complete Operations Reference                                                        │
+├──────────────────────────────────────┬──────────────┬──────────┬───────────────────────────────────────────────────────────────────────┤
+│ Operation                            │ Input        │ Output   │ Description                                                           │
+├──────────────────────────────────────┼──────────────┼──────────┼───────────────────────────────────────────────────────────────────────┤
+│ ▶ Analysis                           │              │          │                                                                       │
+│   normal                             │ A            │ G        │ Compute surface normal vector for polygon/triangle                    │
+│   orientation                        │ A            │ D        │ Determine polygon ring orientation (clockwise/counter-clockwise)      │
+│   partition                          │ A, params    │ G        │ Partition polygon into simpler pieces                                 │
+│   visibility                         │ A, params    │ G        │ Compute visibility polygon from a point in polygon                    │
+│                                      │              │          │                                                                       │
+│ ▶ Collections                        │              │          │                                                                       │
+│   collect                            │ A, B         │ G        │ Combine two geometries into a collection                              │
+│   collection_extract                 │ A            │ G        │ Extract polygons from geometry collection                             │
+│   collection_homogenize              │ A            │ G        │ Convert collection to appropriate multi-type                          │
+│   collection_to_multi                │ A            │ G        │ Convert collection to multi-geometry type                             │
+│                                      │              │          │                                                                       │
+│ ▶ Construction                       │              │          │                                                                       │
+│   alpha_shapes                       │ A, params    │ G        │ Compute alpha shapes from point cloud                                 │
+│   alpha_wrapping_3d                  │ A, params    │ G        │ Create 3D alpha wrapping surface from points                          │
+│   boundary                           │ A            │ G        │ Compute the topological boundary of a geometry                        │
+│   buffer_3d                          │ A, params    │ G        │ Create a 3D buffer around points and lines                            │
+│   centroid                           │ A            │ G        │ Compute the geometric centroid of a geometry                          │
+│   centroid_3d                        │ A            │ G        │ Compute the geometric centroid of a 3D geometry                       │
+│   convex_hull                        │ A            │ G        │ Compute the 2D convex hull of a geometry                              │
+│   constrained_delaunay_triangulation │ A, B         │ G        │ Compute Constrained Delaunay Triangulation of a geometry              │
+│   convex_hull_3d                     │ A            │ G        │ Compute the 3D convex hull of a geometry                              │
+│   delaunay_triangulation             │ A            │ G        │ Compute Delaunay Triangulation of a geometry                          │
+│   envelope                           │ A            │ G        │ Compute the minimum bounding rectangle                                │
+│   extrude                            │ A, params    │ G        │ Extrude a 2D geometry to create a 3D solid                            │
+│   extrude_straight_skeleton          │ A, params    │ G        │ Extrude a polygon using straight skeleton                             │
+│   extrude_until                      │ A, B         │ G        │ Extrude a 2D geometry until it meets another one to create a 3D solid │
+│   generate_flat_roof                 │ A, params    │ G        │ Generate a flat roof from a polygon                                   │
+│   generate_gable_roof                │ A, params    │ G        │ Generate a gable roof from a polygon                                  │
+│   generate_hipped_roof               │ A, params    │ G        │ Generate a hipped roof from a polygon                                 │
+│   generate_roof                      │ A, params    │ G        │ Generate a roof from a polygon using a specified type                 │
+│   generate_skillion_roof             │ A, params    │ G        │ Generate a skillion (mono-pitch) roof from a polygon                  │
+│   insert_points_within_tolerance     │ A, B, params │ G        │ Insert points from geometry B into geometry A within tolerance        │
+│   line_substring                     │ A, params    │ G        │ Extract substring from linestring by fraction                         │
+│   medial_axis                        │ A, params    │ G        │ Compute the approximate medial axis of a polygon                      │
+│   minkowski_sum                      │ A, B         │ G        │ Compute Minkowski sum of two geometries                               │
+│   minkowski_sum_3d                   │ A, B         │ G        │ Compute 3D Minkowski sum of two geometries                            │
+│   offset                             │ A, params    │ G        │ Create an offset polygon at specified distance                        │
+│   straight_skeleton                  │ A, params    │ G        │ Compute the straight skeleton of a polygon                            │
+│   tessellate                         │ A            │ G        │ Tessellate a geometry into triangular faces                           │
+│   triangulate                        │ A            │ G        │ Triangulate a geometry (alias for tessellate)                         │
+│   sweep                              │ A, B, params │ G        │ Sweep a 2D profile along a 3D path to create a 3D surface             │
+│                                      │              │          │                                                                       │
+│ ▶ Constructors                       │              │          │                                                                       │
+│   make_box                           │ params       │ G        │ Create a 3D box primitive                                             │
+│   make_cone                          │ params       │ G        │ Create a 3D cone primitive (supports truncated cones)                 │
+│   make_cube                          │ params       │ G        │ Create a 3D cube primitive                                            │
+│   make_cylinder                      │ params       │ G        │ Create a 3D cylinder primitive                                        │
+│   make_sphere                        │ params       │ G        │ Create a 3D sphere primitive using icosahedron subdivision            │
+│   make_torus                         │ params       │ G        │ Create a 3D torus primitive                                           │
+│                                      │              │          │                                                                       │
+│ ▶ Conversions                        │              │          │                                                                       │
+│   to_solid                           │ A            │          │ Convert a PolyhedralSurface to a Solid                                │
+│                                      │              │          │                                                                       │
+│ ▶ Metrics                            │              │          │                                                                       │
+│   area                               │ A            │ D        │ Calculate the 2D area of a geometry                                   │
+│   area_3d                            │ A            │ D        │ Calculate the 3D surface area of a geometry                           │
+│   distance                           │ A, B         │ D        │ Calculate the 2D minimum distance between two geometries              │
+│   distance_3d                        │ A, B         │ D        │ Calculate the 3D minimum distance between two geometries              │
+│   length                             │ A            │ D        │ Calculate the 2D length of linear geometries                          │
+│   length_3d                          │ A            │ D        │ Calculate the 3D length of linear geometries                          │
+│   volume                             │ A            │ D        │ Calculate the 3D volume of a solid geometry                           │
+│                                      │              │          │                                                                       │
+│ ▶ Predicates                         │              │          │                                                                       │
+│   covers                             │ A, B         │ B        │ Test if geometry A completely covers geometry B                       │
+│   intersects                         │ A, B         │ B        │ Test if two geometries intersect in 2D                                │
+│   intersects_3d                      │ A, B         │ B        │ Test if two geometries intersect in 3D                                │
+│   is_3d                              │ A            │ B        │ Test if geometry has Z coordinates                                    │
+│   is_closed                          │ A            │ B        │ Test if linear geometry forms a closed ring                           │
+│   is_empty                           │ A            │ B        │ Test if geometry contains no points                                   │
+│   is_measured                        │ A            │ B        │ Test if geometry has measure (M) coordinates                          │
+│   is_simple                          │ A            │ B        │ Test if geometry has no self-intersections                            │
+│   is_valid                           │ A            │ B        │ Test if geometry is topologically valid                               │
+│                                      │              │          │                                                                       │
+│ ▶ Processing                         │              │          │                                                                       │
+│   chamfer                            │ B            │          │ Apply a chamfer or fillet operation to a solid along an edge          │
+│                                      │              │          │                                                                       │
+│ ▶ Boolean Operations                 │              │          │                                                                       │
+│   difference                         │ A, B         │ G        │ Compute geometry A minus geometry B                                   │
+│   difference_3d                      │ A, B         │ G        │ Compute 3D geometry A minus geometry B                                │
+│   intersection                       │ A, B         │ G        │ Compute the geometric intersection of two geometries                  │
+│   intersection_3d                    │ A, B         │ G        │ Compute the 3D geometric intersection of two geometries               │
+│   union                              │ A, B         │ G        │ Compute the geometric union of two geometries                         │
+│   union_3d                           │ A, B         │ G        │ Compute the 3D geometric union of two geometries                      │
+│                                      │              │          │                                                                       │
+│ ▶ Transformations                    │              │          │                                                                       │
+│   force_2d                           │ A            │ G        │ Remove Z coordinates to create 2D geometry                            │
+│   force_3d                           │ A, params    │ G        │ Add Z coordinates to create 3D geometry                               │
+│   force_measured                     │ A, params    │ G        │ Add measure coordinates to geometry                                   │
+│   force_lhr                          │ A            │ G        │ Force a Left Handed Rule on the given Geometry                        │
+│   force_rhr                          │ A            │ G        │ Force a Right Handed Rule on the given Geometry                       │
+│   rotate                             │ A, params    │ G        │ Rotate geometry around specified axis                                 │
+│   scale                              │ A, params    │ G        │ Scale geometry by specified factors                                   │
+│   simplify                           │ A, params    │ G        │ Simplify geometry by removing vertices within tolerance               │
+│   split_3d                           │ A, params    │ G        │ Split geometry with a plane                                           │
+│   surface_simplification             │ A, params    │ G        │ Simplify a 3D surface mesh using edge collapse                        │
+│   translate                          │ A, params    │ G        │ Translate geometry by specified offset                                │
+╰──────────────────────────────────────┴──────────────┴──────────┴───────────────────────────────────────────────────────────────────────╯
 
 ℹ Use --help-op=<operation> for detailed help on a specific operation
 ```
