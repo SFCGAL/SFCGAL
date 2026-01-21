@@ -19,7 +19,6 @@
 
 #include "SFCGAL/algorithm/intersection.h"
 #include "SFCGAL/algorithm/isValid.h"
-#include "SFCGAL/algorithm/orientation.h"
 #include "SFCGAL/algorithm/tesselate.h"
 #include "SFCGAL/algorithm/translate.h"
 
@@ -31,7 +30,6 @@
 #include <CGAL/extrude_skeleton.h>
 
 #include <cmath>
-#include <limits>
 #include <memory>
 
 namespace SFCGAL::algorithm {
@@ -541,23 +539,58 @@ approximateMedialAxis(const Geometry &geom, bool projectToEdges)
 
 /// @private
 auto
-extrudeStraightSkeleton(const Polygon &geom, double height)
+extrudeStraightSkeleton(const Polygon &geom, double height,
+                        std::vector<std::vector<Kernel::FT>> angles)
     -> std::unique_ptr<PolyhedralSurface>
 {
+  // Check angles format
+  size_t numRingsAngles = angles.size();
+  if (numRingsAngles == 0) {
+    BOOST_THROW_EXCEPTION(
+        SFCGAL::Exception("Bad format for angles list. List of list needed."));
+  }
+
+  // If angles is not the default (list of size 1 containing 1 empty list)
+  // then check check that we have an angle for exactly each ring segment
+  if (angles[0].size() != 0 || numRingsAngles != 1) {
+    size_t numRings = geom.numRings();
+    if (numRings == numRingsAngles) {
+      for (size_t ringIdx = 0; ringIdx < numRings; ++ringIdx) {
+        size_t numSegments       = geom.ringN(ringIdx).numSegments();
+        size_t numSegmentsAngles = angles[ringIdx].size();
+        if (numSegments != numSegmentsAngles) {
+          BOOST_THROW_EXCEPTION(SFCGAL::Exception(
+              (boost::format("Needs %d angles for ring %d, found %d") %
+               numSegments % ringIdx % numSegmentsAngles)
+                  .str()));
+        }
+      }
+    } else {
+      BOOST_THROW_EXCEPTION(SFCGAL::Exception(
+          (boost::format("Angles list does not contain the correct number of "
+                         "rings (needs %d, found %d=)") %
+           numRings % numRingsAngles)
+              .str()));
+    }
+  }
+
   std::unique_ptr<PolyhedralSurface> polys(new PolyhedralSurface);
   if (geom.isEmpty()) {
     return polys;
   }
   Surface_mesh_3 sm;
-  CGAL::extrude_skeleton(geom.toPolygon_with_holes_2(), sm,
-                         CGAL::parameters::maximum_height(height));
+  CGAL::extrude_skeleton(
+      geom.toPolygon_with_holes_2(), sm,
+      CGAL::parameters::angles(angles).maximum_height(height));
+
   polys = std::make_unique<PolyhedralSurface>(sm);
   return polys;
 }
 
 /// @private
 auto
-extrudeStraightSkeleton(const Geometry &geom, double height)
+extrudeStraightSkeleton(const Geometry &geom, double height,
+                        std::vector<std::vector<Kernel::FT>> angles)
     -> std::unique_ptr<PolyhedralSurface>
 {
   SFCGAL_ASSERT_GEOMETRY_VALIDITY_2D(geom);
@@ -566,7 +599,7 @@ extrudeStraightSkeleton(const Geometry &geom, double height)
     BOOST_THROW_EXCEPTION(Exception("Geometry must be a Polygon"));
   }
   std::unique_ptr<PolyhedralSurface> result(
-      extrudeStraightSkeleton(geom.as<Polygon>(), height));
+      extrudeStraightSkeleton(geom.as<Polygon>(), height, std::move(angles)));
   propagateValidityFlag(*result, true);
   return result;
 }
@@ -574,7 +607,8 @@ extrudeStraightSkeleton(const Geometry &geom, double height)
 /// @private
 auto
 extrudeStraightSkeleton(const Geometry &geom, double building_height,
-                        double roof_height)
+                        double                               roof_height,
+                        std::vector<std::vector<Kernel::FT>> angles)
     -> std::unique_ptr<PolyhedralSurface>
 {
   std::unique_ptr<PolyhedralSurface> result(new PolyhedralSurface);
@@ -584,7 +618,8 @@ extrudeStraightSkeleton(const Geometry &geom, double building_height,
   }
 
   // Create complete roof with base
-  auto completeRoof = extrudeStraightSkeleton(geom, roof_height);
+  auto completeRoof =
+      extrudeStraightSkeleton(geom, roof_height, std::move(angles));
 
   // Create new roof surface
   auto roof = std::make_unique<PolyhedralSurface>();
