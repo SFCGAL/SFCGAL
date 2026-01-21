@@ -88,21 +88,28 @@ BOOST_AUTO_TEST_CASE(testCentroid2D_Triangle3D)
 {
   Triangle const triangle(Point(0.0, 0.0, 0.0), Point(0.0, 0.0, 1.0),
                           Point(0.0, 1.0, 0.0));
-  BOOST_CHECK_EQUAL(triangle.centroid().asText(2),
-                    Point(0.0, 0.33, 0.33).asText(2));
-
-  Triangle const triangle3D(Point(0.0, 0.0, 0.0), Point(0.0, 0.0, 4.0),
-                            Point(0.0, 4.0, 0.0));
-  BOOST_CHECK_EQUAL(triangle3D.centroid().asText(2),
-                    Point(0.0, 1.33, 1.33).asText(2));
+  try {
+    static_cast<void>(triangle.centroid());
+  } catch (InappropriateGeometryException &exception) {
+    // ok
+    BOOST_CHECK_EQUAL(exception.what(),
+                      "SFCGAL::algorithm::Centroid of Triangle without 2D area "
+                      "is not valid.");
+  }
 }
 
 BOOST_AUTO_TEST_CASE(testCentroid2D_Triangle4D)
 {
   Triangle const triangle(Point(0.0, 0.0, 0.0, 0.0), Point(0.0, 0.0, 1.0, 1.0),
                           Point(0.0, 1.0, 0.0, 2.0));
-  BOOST_CHECK_EQUAL(triangle.centroid().asText(2),
-                    Point(0.0, 0.33, 0.33, 1.0).asText(2));
+  try {
+    static_cast<void>(triangle.centroid());
+  } catch (InappropriateGeometryException &exception) {
+    // ok
+    BOOST_CHECK_EQUAL(exception.what(),
+                      "SFCGAL::algorithm::Centroid of Triangle without 2D area "
+                      "is not valid.");
+  }
 }
 
 BOOST_AUTO_TEST_CASE(testCentroid2D_Square2D1x1)

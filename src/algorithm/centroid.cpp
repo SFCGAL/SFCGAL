@@ -180,8 +180,17 @@ auto
 weightedCentroid(const Triangle &triangle, bool enable3DComputation)
     -> WeightedCentroid
 {
-  return weightedCentroid(triangle.vertex(0), triangle.vertex(1),
-                          triangle.vertex(2), enable3DComputation);
+  WeightedCentroid wCentroid =
+      weightedCentroid(triangle.vertex(0), triangle.vertex(1),
+                       triangle.vertex(2), enable3DComputation);
+
+  if (wCentroid.area == 0.0) {
+    BOOST_THROW_EXCEPTION(InappropriateGeometryException(
+        "SFCGAL::algorithm::Centroid of Triangle without 2D area is not "
+        "valid."));
+  }
+
+  return wCentroid;
 }
 
 /// @private
