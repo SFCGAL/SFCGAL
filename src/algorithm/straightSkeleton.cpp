@@ -579,9 +579,19 @@ extrudeStraightSkeleton(const Polygon &geom, double height,
     return polys;
   }
   Surface_mesh_3 sm;
-  CGAL::extrude_skeleton(
-      geom.toPolygon_with_holes_2(), sm,
-      CGAL::parameters::angles(angles).maximum_height(height));
+
+  // Check if angles is the default value (one empty vector)
+  // If so, don't pass angles to CGAL to preserve original behavior
+  const bool useDefaultAngles = (angles.size() == 1 && angles[0].empty());
+
+  if (useDefaultAngles) {
+    CGAL::extrude_skeleton(geom.toPolygon_with_holes_2(), sm,
+                           CGAL::parameters::maximum_height(height));
+  } else {
+    CGAL::extrude_skeleton(
+        geom.toPolygon_with_holes_2(), sm,
+        CGAL::parameters::angles(angles).maximum_height(height));
+  }
 
   polys = std::make_unique<PolyhedralSurface>(sm);
   return polys;
