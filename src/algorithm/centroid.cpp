@@ -8,6 +8,7 @@
 #include "SFCGAL/Curve.h"
 #include "SFCGAL/GeometryCollection.h"
 #include "SFCGAL/LineString.h"
+#include "SFCGAL/MultiPoint.h"
 #include "SFCGAL/Point.h"
 #include "SFCGAL/Polygon.h"
 #include "SFCGAL/PolyhedralSurface.h"
@@ -141,6 +142,9 @@ weightedCentroid(const Geometry &geom, bool enable3DComputation)
     break;
 
   case TYPE_MULTIPOINT:
+    wCent = weightedCentroid(geom.as<MultiPoint>());
+    break;
+
   case TYPE_MULTILINESTRING:
   case TYPE_MULTIPOLYGON:
   case TYPE_MULTISOLID:
@@ -210,6 +214,36 @@ weightedCentroid(const Point &pta, const Point &ptb, const Point &ptc,
 
   return {area, out, m};
 }
+
+/// @private
+auto
+weightedCentroid(const MultiPoint &multipoint) -> WeightedCentroid
+{
+  SFCGAL::Kernel::FT totalPoints = 0.0;
+  SFCGAL::Kernel::FT totalM      = 0.0;
+  Vector_3           totalCentroid;
+
+  for (typename MultiPoint::const_iterator ite = multipoint.begin();
+       ite != multipoint.end(); ite++) {
+    WeightedCentroid wc =
+        WeightedCentroid(0.0, ite->as<Point>().toVector_3(),
+                         (ite->isMeasured() ? ite->as<Point>().m() : 0.0));
+
+    // update totals
+    if (ite == multipoint.begin()) {
+      totalCentroid = wc.centroid;
+    } else {
+      totalCentroid += wc.centroid;
+    }
+    totalM += wc.m;
+    totalPoints += 1;
+  }
+
+  totalCentroid /= totalPoints;
+  totalM /= totalPoints;
+
+  return {0 /* Empty area, by definition of points */, totalCentroid, totalM};
+};
 
 /// @private
 auto

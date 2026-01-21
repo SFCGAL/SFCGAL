@@ -144,6 +144,23 @@ weightedCentroid(const Point &pta, const Point &ptb, const Point &ptc,
                  bool enable3DComputation = false) -> WeightedCentroid;
 
 /**
+ * @brief Computes the centroid for a MultiPoint.
+ *
+ * The centroid is a point whose coordinates are averaged with respect to all
+ * point coordinates in the MultiPoint.
+ *
+ * @param multipoint The MultiPoint to process.
+ * @return WeightedCentroid A struct containing the total area/length (which is
+ * supposed to be 0 for points), the computed centroid (as a Vector_3), and the
+ * averaged M value.
+ * @throws InappropriateGeometryException Thrown when the aggregated total
+ * area/length is zero (invalid LineString for centroid computation).
+ *
+ */
+SFCGAL_API auto
+weightedCentroid(const MultiPoint &multipoint) -> WeightedCentroid;
+
+/**
  * @brief Computes the weighted centroid for a LineString (open polyline or
  * closed ring).
  *

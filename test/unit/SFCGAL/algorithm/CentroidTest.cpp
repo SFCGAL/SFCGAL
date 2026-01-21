@@ -221,6 +221,13 @@ BOOST_AUTO_TEST_CASE(testCentroid3D_Square3D4X4WithHole)
   BOOST_CHECK_EQUAL(g->centroid3D().asText(2), Point(2.0, 2.0, 2.0).asText(2));
 }
 
+BOOST_AUTO_TEST_CASE(testCentroid2D_MultiPoint)
+{
+  std::unique_ptr<Geometry> g(
+      io::readWkt("MULTIPOINT ((0.0 0.0), (0.0 1.0), (1.0 1.0), (1.0 0.0))"));
+  BOOST_CHECK_EQUAL(g->centroid().asText(2), Point(0.5, 0.5).asText(2));
+}
+
 BOOST_AUTO_TEST_CASE(testCentroid2D_PerpendicularSquares)
 {
   std::unique_ptr<Geometry> g(io::readWkt("MULTIPOLYGON (((0.0 0.0 0.0,"
