@@ -298,6 +298,103 @@ parse_params(const std::string &str) -> std::map<std::string, double>
   return params;
 }
 
+/**
+ * @brief Extract the angles parameter from the original string.
+ *
+ * Parses angles in JSON-like format: [[45,45,45,45],[30,30,30]]
+ * Returns a vector of vectors of Kernel::FT values.
+ *
+ * @param param_str Original parameter string
+ * @return Vector of vectors of angles (empty if not found or invalid)
+ */
+auto
+extract_angles_param(const std::string &param_str)
+    -> std::vector<std::vector<SFCGAL::Kernel::FT>>
+{
+  std::vector<std::vector<SFCGAL::Kernel::FT>> result;
+
+  // Find "angles=" in the string
+  auto pos = param_str.find("angles=");
+  if (pos == std::string::npos) {
+    return result; // No angles parameter
+  }
+
+  // Skip "angles="
+  pos += 7;
+
+  // Find the opening '[['
+  if (pos >= param_str.size() || param_str[pos] != '[') {
+    return result;
+  }
+  pos++; // Skip first '['
+
+  // Parse each inner array
+  while (pos < param_str.size()) {
+    // Skip whitespace
+    while (pos < param_str.size() && std::isspace(param_str[pos]) != 0) {
+      pos++;
+    }
+
+    if (pos >= param_str.size()) {
+      break;
+    }
+
+    // Check for end of outer array
+    if (param_str[pos] == ']') {
+      break;
+    }
+
+    // Skip comma between inner arrays
+    if (param_str[pos] == ',') {
+      pos++;
+      continue;
+    }
+
+    // Expect start of inner array
+    if (param_str[pos] != '[') {
+      break;
+    }
+    pos++; // Skip '['
+
+    // Parse values in inner array
+    std::vector<SFCGAL::Kernel::FT> inner;
+    std::string                     num_str;
+
+    while (pos < param_str.size() && param_str[pos] != ']') {
+      char c = param_str[pos];
+      if (c == ',' || c == ']') {
+        if (!num_str.empty()) {
+          inner.emplace_back(parse_double(trim(num_str)));
+          num_str.clear();
+        }
+        if (c == ',') {
+          pos++;
+        }
+      } else if (std::isdigit(c) != 0 || c == '.' || c == '-' || c == '+') {
+        num_str += c;
+        pos++;
+      } else {
+        pos++;
+      }
+    }
+
+    // Don't forget the last number before ']'
+    if (!num_str.empty()) {
+      inner.emplace_back(parse_double(trim(num_str)));
+    }
+
+    if (pos < param_str.size() && param_str[pos] == ']') {
+      pos++; // Skip closing ']'
+    }
+
+    if (!inner.empty()) {
+      result.push_back(std::move(inner));
+    }
+  }
+
+  return result;
+}
+
 // NOLINTNEXTLINE(cert-err58-cpp)
 const std::vector<Operation> operations = {
     // Metrics
@@ -561,6 +658,57 @@ const std::vector<Operation> operations = {
        bool autoOrientation =
            parse_boolean_param(params, "auto_orientation", args, false);
        return SFCGAL::algorithm::straightSkeleton(*geom_a, autoOrientation);
+     }},
+
+    {"extrude_straight_skeleton", "Construction",
+     "Extrude a polygon using straight skeleton", false,
+     "Creates a 3D roof-like surface by extruding a polygon along its straight "
+     "skeleton.\n"
+     "If building_height is specified, creates a building with vertical walls "
+     "and roof.\n\n"
+     "Parameters:\n"
+     "  height=VALUE: Roof extrusion height (required)\n"
+     "  building_height=VALUE: Height of vertical walls (optional, default: 0)\n"
+     "    - If > 0, creates a building with walls + roof\n"
+     "    - If 0 or omitted, creates only the roof surface\n"
+     "  angles=[[a1,a2,...],[b1,b2,...]]: Per-edge angles in degrees "
+     "(optional)\n"
+     "    - Each inner array corresponds to a ring (exterior, then holes)\n"
+     "    - Each value is the angle for one edge segment\n"
+     "    - Valid range: 0 < angle < 180 (90 = vertical)\n\n"
+     "Examples:\n"
+     "  # Roof only\n"
+     "  sfcgalop -a \"POLYGON((0 0,10 0,10 10,0 10,0 0))\" "
+     "extrude_straight_skeleton \"height=5\"\n"
+     "  # Building with walls and roof\n"
+     "  sfcgalop -a \"POLYGON((0 0,10 0,10 10,0 10,0 0))\" "
+     "extrude_straight_skeleton \"height=3,building_height=9\"\n"
+     "  # With custom angles\n"
+     "  sfcgalop -a \"POLYGON((0 0,10 0,10 10,0 10,0 0))\" "
+     "extrude_straight_skeleton \"height=5,angles=[[45,45,45,45]]\"",
+     "A, params", "G",
+     [](const std::string &args, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       auto   params          = parse_params(args);
+       double height          = params.count("height") != 0 ? params["height"] : 1.0;
+       double building_height = params.count("building_height") != 0
+                                    ? params["building_height"]
+                                    : 0.0;
+
+       auto angles = extract_angles_param(args);
+       if (angles.empty()) {
+         // Use default (no custom angles)
+         angles = {{}};
+       }
+
+       if (building_height > 0.0) {
+         // Building with walls + roof
+         return SFCGAL::algorithm::extrudeStraightSkeleton(
+             *geom_a, building_height, height, angles);
+       }
+       // Roof only
+       return SFCGAL::algorithm::extrudeStraightSkeleton(*geom_a, height,
+                                                         angles);
      }},
 
     {"medial_axis", "Construction",
