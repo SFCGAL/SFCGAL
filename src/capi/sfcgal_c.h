@@ -1874,6 +1874,51 @@ sfcgal_geometry_extrude_polygon_straight_skeleton(const sfcgal_geometry_t *geom,
                                                   double roof_height);
 
 /**
+ * Returns the extrude straight skeleton for the given SFCGAL::Geometry
+ * with custom per-edge angles.
+ * @param geom the input geometry
+ * @param height extrusion height
+ * @param angles flattened array of angles (in degrees) for each edge of each
+ * ring
+ * @param angles_per_ring array containing the number of angles for each ring
+ * @param num_rings number of rings (exterior + holes)
+ * @pre geom must be a SFCGAL::Polygon
+ * @pre isValid(geom) == true
+ * @pre height != 0
+ * @pre 0 < angles[i] < 180 for all i
+ * @return The extrude straight skeleton of geom
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_geometry_extrude_straight_skeleton_with_angles(
+    const sfcgal_geometry_t *geom, double height, const double *angles,
+    const size_t *angles_per_ring, size_t num_rings);
+
+/**
+ * Returns the union of the polygon z-extrusion (with respect to
+ * building_height) and the extrude straight skeleton (with respect to
+ * roof_height) of the given SFCGAL::Polygon, with custom per-edge angles.
+ * @param geom the input geometry
+ * @param building_height extrusion height of walls
+ * @param roof_height extrusion height of roof
+ * @param angles flattened array of angles (in degrees) for each edge of each
+ * ring
+ * @param angles_per_ring array containing the number of angles for each ring
+ * @param num_rings number of rings (exterior + holes)
+ * @pre geom must be a SFCGAL::Polygon
+ * @pre isValid(geom) == true
+ * @pre roof_height != 0
+ * @pre 0 < angles[i] < 180 for all i
+ * @return The union of the polygon z-extrusion and the extrude straight
+ * skeleton
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_geometry_extrude_polygon_straight_skeleton_with_angles(
+    const sfcgal_geometry_t *geom, double building_height, double roof_height,
+    const double *angles, const size_t *angles_per_ring, size_t num_rings);
+
+/**
  * Returns the approximate medial axis for the given SFCGAL::Polygon
  * Approximate medial axis is based on straight skeleton
  * @param geom the input geometry

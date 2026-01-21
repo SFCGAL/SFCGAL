@@ -1764,6 +1764,76 @@ sfcgal_geometry_extrude_polygon_straight_skeleton(const sfcgal_geometry_t *geom,
 }
 
 extern "C" auto
+sfcgal_geometry_extrude_straight_skeleton_with_angles(
+    const sfcgal_geometry_t *geom, double height, const double *angles,
+    const size_t *angles_per_ring, size_t num_rings) -> sfcgal_geometry_t *
+{
+  const auto *g1 = reinterpret_cast<const SFCGAL::Geometry *>(geom);
+
+  // Convert C arrays to std::vector<std::vector<Kernel::FT>>
+  std::vector<std::vector<SFCGAL::Kernel::FT>> anglesVec;
+  size_t                                       offset = 0;
+  for (size_t i = 0; i < num_rings; ++i) {
+    std::vector<SFCGAL::Kernel::FT> ringAngles;
+    for (size_t j = 0; j < angles_per_ring[i]; ++j) {
+      ringAngles.emplace_back(angles[offset++]);
+    }
+    anglesVec.push_back(std::move(ringAngles));
+  }
+
+  std::unique_ptr<SFCGAL::PolyhedralSurface> polys;
+
+  try {
+    polys = SFCGAL::algorithm::extrudeStraightSkeleton(*g1, height, anglesVec);
+  } catch (std::exception &e) {
+    SFCGAL_WARNING("During extrude_straight_skeleton_with_angles(A):");
+    SFCGAL_WARNING(
+        "  with A: %s",
+        static_cast<const SFCGAL::Geometry *>(geom)->asText().c_str());
+    SFCGAL_ERROR("%s", e.what());
+    return nullptr;
+  }
+
+  return polys.release();
+}
+
+extern "C" auto
+sfcgal_geometry_extrude_polygon_straight_skeleton_with_angles(
+    const sfcgal_geometry_t *geom, double building_height, double roof_height,
+    const double *angles, const size_t *angles_per_ring, size_t num_rings)
+    -> sfcgal_geometry_t *
+{
+  const auto *g1 = reinterpret_cast<const SFCGAL::Geometry *>(geom);
+
+  // Convert C arrays to std::vector<std::vector<Kernel::FT>>
+  std::vector<std::vector<SFCGAL::Kernel::FT>> anglesVec;
+  size_t                                       offset = 0;
+  for (size_t i = 0; i < num_rings; ++i) {
+    std::vector<SFCGAL::Kernel::FT> ringAngles;
+    for (size_t j = 0; j < angles_per_ring[i]; ++j) {
+      ringAngles.emplace_back(angles[offset++]);
+    }
+    anglesVec.push_back(std::move(ringAngles));
+  }
+
+  std::unique_ptr<SFCGAL::Geometry> polys;
+
+  try {
+    polys = SFCGAL::algorithm::extrudeStraightSkeleton(*g1, building_height,
+                                                       roof_height, anglesVec);
+  } catch (std::exception &e) {
+    SFCGAL_WARNING("During extrude_polygon_straight_skeleton_with_angles(A):");
+    SFCGAL_WARNING(
+        "  with A: %s",
+        static_cast<const SFCGAL::Geometry *>(geom)->asText().c_str());
+    SFCGAL_ERROR("%s", e.what());
+    return nullptr;
+  }
+
+  return polys.release();
+}
+
+extern "C" auto
 sfcgal_geometry_straight_skeleton_distance_in_m(const sfcgal_geometry_t *geom)
     -> sfcgal_geometry_t *
 {
