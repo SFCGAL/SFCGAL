@@ -795,6 +795,52 @@ BOOST_AUTO_TEST_CASE(testStraightSkeletonMultiPolygon)
   sfcgal_geometry_delete(skeleton);
 }
 
+BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonWithAngles)
+{
+  sfcgal_set_error_handlers(printf, on_error);
+
+  std::unique_ptr<Geometry> const polygon(
+      io::readWkt("POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))"));
+
+  // 4 edges, all with 45 degree angle
+  const double angles[]          = {45.0, 45.0, 45.0, 45.0};
+  const size_t angles_per_ring[] = {4};
+  const size_t num_rings         = 1;
+
+  hasError = false;
+  sfcgal_geometry_t *result =
+      sfcgal_geometry_extrude_straight_skeleton_with_angles(
+          polygon.get(), 5.0, angles, angles_per_ring, num_rings);
+  BOOST_CHECK(!hasError);
+  BOOST_CHECK(result != nullptr);
+  BOOST_CHECK_GT(sfcgal_geometry_num_geometries(result), 0);
+
+  sfcgal_geometry_delete(result);
+}
+
+BOOST_AUTO_TEST_CASE(testExtrudePolygonStraightSkeletonWithAngles)
+{
+  sfcgal_set_error_handlers(printf, on_error);
+
+  std::unique_ptr<Geometry> const polygon(
+      io::readWkt("POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))"));
+
+  // 4 edges, all with 45 degree angle
+  const double angles[]          = {45.0, 45.0, 45.0, 45.0};
+  const size_t angles_per_ring[] = {4};
+  const size_t num_rings         = 1;
+
+  hasError = false;
+  sfcgal_geometry_t *result =
+      sfcgal_geometry_extrude_polygon_straight_skeleton_with_angles(
+          polygon.get(), 9.0, 3.0, angles, angles_per_ring, num_rings);
+  BOOST_CHECK(!hasError);
+  BOOST_CHECK(result != nullptr);
+  BOOST_CHECK_GT(sfcgal_geometry_num_geometries(result), 0);
+
+  sfcgal_geometry_delete(result);
+}
+
 BOOST_AUTO_TEST_CASE(testApproximateMedialAxis)
 {
   sfcgal_set_error_handlers(printf, on_error);
