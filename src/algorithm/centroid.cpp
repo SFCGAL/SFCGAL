@@ -47,16 +47,16 @@ std::function<WeightedCentroid(const T &, bool)> weightedCentroidLambda =
 
   for (typename T::const_iterator ite = g.begin(); ite != g.end(); ite++) {
     // compute geometry area+centroid
-    WeightedCentroid wc = weightedCentroid(*ite, enable3DComputation);
+    WeightedCentroid wCentroid = weightedCentroid(*ite, enable3DComputation);
 
     // update totals
     if (ite == g.begin()) {
-      totalWeightedCentroid = wc.area * wc.centroid;
+      totalWeightedCentroid = wCentroid.area * wCentroid.centroid;
     } else {
-      totalWeightedCentroid += wc.area * wc.centroid;
+      totalWeightedCentroid += wCentroid.area * wCentroid.centroid;
     }
-    totalM += wc.area * wc.m;
-    totalArea += wc.area;
+    totalM += wCentroid.area * wCentroid.m;
+    totalArea += wCentroid.area;
   }
 
   totalWeightedCentroid /= totalArea;
@@ -225,17 +225,17 @@ weightedCentroid(const MultiPoint &multipoint) -> WeightedCentroid
 
   for (typename MultiPoint::const_iterator ite = multipoint.begin();
        ite != multipoint.end(); ite++) {
-    WeightedCentroid wc =
+    WeightedCentroid wCentroid =
         WeightedCentroid(0.0, ite->as<Point>().toVector_3(),
                          (ite->isMeasured() ? ite->as<Point>().m() : 0.0));
 
     // update totals
     if (ite == multipoint.begin()) {
-      totalCentroid = wc.centroid;
+      totalCentroid = wCentroid.centroid;
     } else {
-      totalCentroid += wc.centroid;
+      totalCentroid += wCentroid.centroid;
     }
-    totalM += wc.m;
+    totalM += wCentroid.m;
     totalPoints += 1;
   }
 
@@ -270,18 +270,18 @@ weightedCentroid(const LineString &lineString, bool enable3DComputation)
   if (lineString.isClosed()) { // ie. a polygon
     for (size_t i = 1; i < lineString.numPoints() - 2; i++) {
       // compute triangle area+centroid
-      WeightedCentroid wc =
+      WeightedCentroid wCentroid =
           weightedCentroid(lineString.pointN(0), lineString.pointN(i),
                            lineString.pointN(i + 1), enable3DComputation);
 
       // update totals
       if (i == 1) {
-        totalWeightedCentroid = wc.area * wc.centroid;
+        totalWeightedCentroid = wCentroid.area * wCentroid.centroid;
       } else {
-        totalWeightedCentroid += wc.area * wc.centroid;
+        totalWeightedCentroid += wCentroid.area * wCentroid.centroid;
       }
-      totalM += wc.area * wc.m;
-      totalArea += wc.area;
+      totalM += wCentroid.area * wCentroid.m;
+      totalArea += wCentroid.area;
     }
 
   } else { // ie. a linestring
