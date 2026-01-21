@@ -122,6 +122,30 @@ BOOST_AUTO_TEST_CASE(test_convexhull)
   BOOST_CHECK(result.has_value());
 }
 
+/// @brief Test centroid calculation
+BOOST_AUTO_TEST_CASE(test_centroid)
+{
+  std::string wkt  = "MULTIPOINT((0 0),(1 1),(1 0),(0 1))";
+  auto        geom = load_geometry(wkt);
+  BOOST_CHECK(geom != nullptr);
+
+  auto result =
+      Operations::execute_operation("centroid", "", geom.get(), nullptr);
+  BOOST_CHECK(result.has_value());
+}
+
+/// @brief Test centroid calculation
+BOOST_AUTO_TEST_CASE(test_centroid_3d)
+{
+  std::string wkt  = "MULTIPOINT((0 0 0),(1 1 0),(1 0 1),(0 1 1))";
+  auto        geom = load_geometry(wkt);
+  BOOST_CHECK(geom != nullptr);
+
+  auto result =
+      Operations::execute_operation("centroid_3d", "", geom.get(), nullptr);
+  BOOST_CHECK(result.has_value());
+}
+
 /// @brief Test geometry validity checking
 BOOST_AUTO_TEST_CASE(test_is_valid)
 {

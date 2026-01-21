@@ -539,11 +539,23 @@ const std::vector<Operation> operations = {
        return SFCGAL::algorithm::convexHull3D(*geom_a);
      }},
 
-    {"centroid", "Construction", "Compute the geometric centroid of a geometry",
-     false, "", "A", "G",
+    {"centroid", "Construction",
+     "Compute the geometric centroid of a geometry",
+     false,
+     "The computed centroid relies on 2D areas, even if geometries are 3D-defined.\n",
+     "A", "G",
      [](const std::string &, const SFCGAL::Geometry *geom_a,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
        return SFCGAL::algorithm::centroid(*geom_a);
+     }},
+
+    {"centroid_3d", "Construction", "Compute the geometric centroid of a 3D geometry",
+     false,
+     "",
+     "A", "G",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       return SFCGAL::algorithm::centroid3D(*geom_a);
      }},
 
     {"straight_skeleton", "Construction",
