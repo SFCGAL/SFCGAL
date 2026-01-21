@@ -434,6 +434,102 @@ BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonGenerateBuilding)
   BOOST_CHECK_EQUAL(out->asText(2), expectedWKT);
 }
 
+BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonWithAngles)
+{
+  std::unique_ptr<Geometry> const geom(
+      io::readWkt("POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))"));
+
+  // 4 edges, all with 45 degree angle
+  std::vector<std::vector<Kernel::FT>> angles = {
+      {Kernel::FT(45), Kernel::FT(45), Kernel::FT(45), Kernel::FT(45)}};
+
+  std::unique_ptr<PolyhedralSurface> out(
+      algorithm::extrudeStraightSkeleton(*geom, 2.0, angles));
+
+  BOOST_CHECK(!out->isEmpty());
+  BOOST_CHECK(out->is<PolyhedralSurface>());
+  BOOST_CHECK_GT(out->numGeometries(), 0U);
+}
+
+BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonWithAnglesAndHole)
+{
+  // Hole must be clockwise (opposite to exterior ring)
+  std::unique_ptr<Geometry> const geom(
+      io::readWkt("POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), "
+                  "(2 2, 2 8, 8 8, 8 2, 2 2))"));
+
+  // Angles for exterior ring (4 edges) and hole (4 edges)
+  std::vector<std::vector<Kernel::FT>> angles = {
+      {Kernel::FT(45), Kernel::FT(45), Kernel::FT(45), Kernel::FT(45)},
+      {Kernel::FT(45), Kernel::FT(45), Kernel::FT(45), Kernel::FT(45)}};
+
+  std::unique_ptr<PolyhedralSurface> out(
+      algorithm::extrudeStraightSkeleton(*geom, 2.0, angles));
+
+  BOOST_CHECK(!out->isEmpty());
+  BOOST_CHECK(out->is<PolyhedralSurface>());
+}
+
+BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonWithAnglesBuilding)
+{
+  std::unique_ptr<Geometry> const geom(
+      io::readWkt("POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))"));
+
+  std::vector<std::vector<Kernel::FT>> angles = {
+      {Kernel::FT(45), Kernel::FT(45), Kernel::FT(45), Kernel::FT(45)}};
+
+  std::unique_ptr<Geometry> out(
+      algorithm::extrudeStraightSkeleton(*geom, 9.0, 2.0, angles));
+
+  BOOST_CHECK(!out->isEmpty());
+  BOOST_CHECK(out->is<PolyhedralSurface>());
+}
+
+BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonInvalidAnglesCount)
+{
+  std::unique_ptr<Geometry> const geom(
+      io::readWkt("POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))"));
+
+  // Wrong: 3 angles for 4 edges
+  std::vector<std::vector<Kernel::FT>> angles = {
+      {Kernel::FT(45), Kernel::FT(45), Kernel::FT(45)}};
+
+  BOOST_CHECK_THROW(algorithm::extrudeStraightSkeleton(*geom, 2.0, angles),
+                    Exception);
+}
+
+BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonInvalidRingCount)
+{
+  // Hole must be clockwise (opposite to exterior ring)
+  std::unique_ptr<Geometry> const geom(
+      io::readWkt("POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), "
+                  "(2 2, 2 8, 8 8, 8 2, 2 2))"));
+
+  // Wrong: only 1 ring specified instead of 2
+  std::vector<std::vector<Kernel::FT>> angles = {
+      {Kernel::FT(45), Kernel::FT(45), Kernel::FT(45), Kernel::FT(45)}};
+
+  BOOST_CHECK_THROW(algorithm::extrudeStraightSkeleton(*geom, 2.0, angles),
+                    Exception);
+}
+
+BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonDefaultAngles)
+{
+  std::unique_ptr<Geometry> const geom(
+      io::readWkt("POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))"));
+
+  // Call without angles parameter (uses default)
+  std::unique_ptr<PolyhedralSurface> out1(
+      algorithm::extrudeStraightSkeleton(*geom, 2.0));
+
+  // Call with explicit empty angles vector (default value)
+  std::unique_ptr<PolyhedralSurface> out2(
+      algorithm::extrudeStraightSkeleton(*geom, 2.0, {{}}));
+
+  // Both should produce same result
+  BOOST_CHECK_EQUAL(out1->asText(2), out2->asText(2));
+}
+
 BOOST_AUTO_TEST_CASE(testStraightSkeletonPartitionLShapedPolygon)
 {
 
