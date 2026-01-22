@@ -429,6 +429,29 @@ sfcgal_geometry_as_obj(const sfcgal_geometry_t *geom, char **buffer,
                        size_t *len);
 
 /**
+ * Reads a geometry from an OBJ format string.
+ * @param[in] str The OBJ format string
+ * @param[in] len The size of @p str
+ * @post The returned geometry must be deallocated by the caller with
+ * sfcgal_geometry_delete()
+ * @return A SFCGAL::Geometry from the OBJ string, or NULL on error
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_io_read_obj(const char *str, size_t len);
+
+/**
+ * Reads a geometry from an OBJ file.
+ * @param[in] filename The path to the OBJ file
+ * @post The returned geometry must be deallocated by the caller with
+ * sfcgal_geometry_delete()
+ * @return A SFCGAL::Geometry from the OBJ file, or NULL on error
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_io_read_obj_file(const char *filename);
+
+/**
  * Creates a STL string of the given geometry
  * The generated STL string uses the Z-up convention.
  * @param[in] geom the input geometry

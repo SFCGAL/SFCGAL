@@ -659,6 +659,21 @@ sfcgal_geometry_as_obj(const sfcgal_geometry_t *pgeom, char **buffer,
       alloc_and_copy(obj, buffer, len);)
 }
 
+extern "C" auto
+sfcgal_io_read_obj(const char *str, size_t len) -> sfcgal_geometry_t *
+{
+  SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
+      std::string objStr(str, len);
+      return SFCGAL::io::OBJ::load(objStr).release();)
+}
+
+extern "C" auto
+sfcgal_io_read_obj_file(const char *filename) -> sfcgal_geometry_t *
+{
+  SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
+      return SFCGAL::io::OBJ::loadFromFile(filename).release();)
+}
+
 extern "C" void
 sfcgal_geometry_as_geojson(const sfcgal_geometry_t *pgeom, bool strict,
                            int precision, bool include_bbox, char **buffer,
