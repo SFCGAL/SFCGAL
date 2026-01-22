@@ -12,6 +12,7 @@
 
 #include <array>
 #include <boost/test/unit_test.hpp>
+#include <filesystem>
 #include <memory>
 
 using namespace SFCGAL;
@@ -21,6 +22,8 @@ using namespace SFCGAL;
 using namespace boost::unit_test;
 
 BOOST_AUTO_TEST_SUITE(SFCGAL_sfcgal_cTest)
+
+namespace fs = std::filesystem;
 
 bool hasError = false;
 
@@ -2669,6 +2672,75 @@ BOOST_AUTO_TEST_CASE(testMinkowskiSum3D)
   sfcgal_geometry_delete(result);
 
   BOOST_CHECK(!hasError);
+}
+
+BOOST_AUTO_TEST_CASE(testReadObjFile)
+{
+  sfcgal_set_error_handlers(printf, on_error);
+  std::string objFile  = std::string(SFCGAL_TEST_DIRECTORY) + "/data/bunny.obj";
+  fs::path    temp_dir = fs::temp_directory_path() / random_string();
+  fs::create_directories(temp_dir);
+  fs::path copyFile = temp_dir / "bunny_copy.obj";
+
+  // read the input data
+  sfcgal_geometry_t *geometry = sfcgal_io_read_obj_file(objFile.c_str());
+  BOOST_REQUIRE(geometry != nullptr);
+  BOOST_CHECK(!sfcgal_geometry_is_empty(geometry));
+
+  // write it on disk
+  sfcgal_geometry_as_obj_file(geometry, copyFile.c_str());
+
+  // read again
+  sfcgal_geometry_t *copied_geometry =
+      sfcgal_io_read_obj_file(copyFile.c_str());
+  BOOST_REQUIRE(copied_geometry != nullptr);
+
+  // compare both geometries
+  BOOST_CHECK_EQUAL(sfcgal_geometry_num_geometries(geometry),
+                    sfcgal_geometry_num_geometries(copied_geometry));
+
+  sfcgal_geometry_delete(geometry);
+  sfcgal_geometry_delete(copied_geometry);
+
+  // Clean up the temporary directory
+  fs::remove_all(temp_dir);
+}
+
+BOOST_AUTO_TEST_CASE(testReadObj)
+{
+  sfcgal_set_error_handlers(printf, on_error);
+  std::string objFile = std::string(SFCGAL_TEST_DIRECTORY) + "/data/bunny.obj";
+
+  // read file into memory
+  std::ifstream ifs(objFile);
+  BOOST_REQUIRE(ifs.is_open());
+  std::string objStr((std::istreambuf_iterator<char>(ifs)),
+                     std::istreambuf_iterator<char>());
+
+  sfcgal_geometry_t *geometry =
+      sfcgal_io_read_obj(objStr.c_str(), objStr.size());
+  BOOST_REQUIRE(geometry != nullptr);
+  BOOST_CHECK(!sfcgal_geometry_is_empty(geometry));
+
+  // write it into the memory
+  char  *objMem    = nullptr;
+  size_t objMemLen = 0;
+  sfcgal_geometry_as_obj(geometry, &objMem, &objMemLen);
+  BOOST_REQUIRE(objMem != nullptr);
+  BOOST_CHECK(objMemLen > 0);
+
+  // read again
+  sfcgal_geometry_t *copied_geometry = sfcgal_io_read_obj(objMem, objMemLen);
+  BOOST_REQUIRE(copied_geometry != nullptr);
+  BOOST_CHECK(!sfcgal_geometry_is_empty(copied_geometry));
+  free(objMem);
+
+  // compare both geometries
+  BOOST_CHECK_EQUAL(sfcgal_geometry_num_geometries(geometry),
+                    sfcgal_geometry_num_geometries(copied_geometry));
+
+  sfcgal_geometry_delete(geometry);
+  sfcgal_geometry_delete(copied_geometry);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
