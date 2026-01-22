@@ -228,8 +228,11 @@ weightedCentroid(const Point &pta, const Point &ptb, const Point &ptc,
 auto
 weightedCentroid(const MultiPoint &multipoint) -> WeightedCentroid
 {
-  SFCGAL::Kernel::FT totalPoints = 0.0;
-  SFCGAL::Kernel::FT totalM      = 0.0;
+  // Explicit cast to avoid ambiguous GMP constructors and make MSYS/clang CI
+  // happy
+  SFCGAL::Kernel::FT totalPoints =
+      static_cast<long>(multipoint.numGeometries());
+  SFCGAL::Kernel::FT totalM = 0.0;
   Vector_3           totalCentroid;
 
   for (typename MultiPoint::const_iterator ite = multipoint.begin();
@@ -245,7 +248,6 @@ weightedCentroid(const MultiPoint &multipoint) -> WeightedCentroid
       totalCentroid += wCentroid.centroid;
     }
     totalM += wCentroid.m;
-    totalPoints += 1;
   }
 
   totalCentroid /= totalPoints;

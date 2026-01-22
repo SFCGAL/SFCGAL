@@ -228,11 +228,52 @@ BOOST_AUTO_TEST_CASE(testCentroid3D_Square3D4X4WithHole)
   BOOST_CHECK_EQUAL(g->centroid3D().asText(2), Point(2.0, 2.0, 2.0).asText(2));
 }
 
-BOOST_AUTO_TEST_CASE(testCentroid2D_MultiPoint)
+BOOST_AUTO_TEST_CASE(testCentroid2D_MultiPoint2D)
 {
   std::unique_ptr<Geometry> g(
       io::readWkt("MULTIPOINT ((0.0 0.0), (0.0 1.0), (1.0 1.0), (1.0 0.0))"));
   BOOST_CHECK_EQUAL(g->centroid().asText(2), Point(0.5, 0.5).asText(2));
+}
+
+BOOST_AUTO_TEST_CASE(testCentroid2D_MultiPoint3D)
+{
+  std::unique_ptr<Geometry> g(
+      io::readWkt("MULTIPOINT Z ((0.0 0.0 0.0), (0.0 1.0 0.0), (1.0 1.0 1.0), "
+                  "(1.0 0.0 1.0))"));
+  BOOST_CHECK_EQUAL(g->centroid().asText(2), Point(0.5, 0.5, 0.5).asText(2));
+}
+
+BOOST_AUTO_TEST_CASE(testCentroid2D_MultiPoint4D)
+{
+  std::unique_ptr<Geometry> g(
+      io::readWkt("MULTIPOINT ZM ((0.0 0.0 0.0 10.0), (0.0 1.0 0.0 20.0), (1.0 "
+                  "1.0 1.0 30.0), (1.0 0.0 1.0 40.0))"));
+  BOOST_CHECK_EQUAL(g->centroid().asText(2),
+                    Point(0.5, 0.5, 0.5, 25.0).asText(2));
+}
+
+BOOST_AUTO_TEST_CASE(testCentroid3D_MultiPoint2D)
+{
+  std::unique_ptr<Geometry> g(
+      io::readWkt("MULTIPOINT ((0.0 0.0), (0.0 1.0), (1.0 1.0), (1.0 0.0))"));
+  BOOST_CHECK_EQUAL(g->centroid3D().asText(2), Point(0.5, 0.5).asText(2));
+}
+
+BOOST_AUTO_TEST_CASE(testCentroid3D_MultiPoint3D)
+{
+  std::unique_ptr<Geometry> g(
+      io::readWkt("MULTIPOINT Z ((0.0 0.0 0.0), (0.0 1.0 0.0), (1.0 1.0 1.0), "
+                  "(1.0 0.0 1.0))"));
+  BOOST_CHECK_EQUAL(g->centroid3D().asText(2), Point(0.5, 0.5, 0.5).asText(2));
+}
+
+BOOST_AUTO_TEST_CASE(testCentroid3D_MultiPoint4D)
+{
+  std::unique_ptr<Geometry> g(
+      io::readWkt("MULTIPOINT ZM ((0.0 0.0 0.0 10.0), (0.0 1.0 0.0 20.0), (1.0 "
+                  "1.0 1.0 30.0), (1.0 0.0 1.0 40.0))"));
+  BOOST_CHECK_EQUAL(g->centroid3D().asText(2),
+                    Point(0.5, 0.5, 0.5, 25.0).asText(2));
 }
 
 BOOST_AUTO_TEST_CASE(testCentroid2D_PerpendicularSquares)
