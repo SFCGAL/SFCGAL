@@ -2688,11 +2688,11 @@ BOOST_AUTO_TEST_CASE(testReadObjFile)
   BOOST_CHECK(!sfcgal_geometry_is_empty(geometry));
 
   // write it on disk
-  sfcgal_geometry_as_obj_file(geometry, copyFile.c_str());
+  sfcgal_geometry_as_obj_file(geometry, copyFile.string().c_str());
 
   // read again
   sfcgal_geometry_t *copied_geometry =
-      sfcgal_io_read_obj_file(copyFile.c_str());
+      sfcgal_io_read_obj_file(copyFile.string().c_str());
   BOOST_REQUIRE(copied_geometry != nullptr);
 
   // compare both geometries
