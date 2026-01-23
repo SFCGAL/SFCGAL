@@ -1,4 +1,4 @@
-// Copyright (c) 2025-2025, SFCGAL Team.
+// Copyright (c) 2025-2026, SFCGAL Team.
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
 #ifndef SFCGAL_ALGORITHM_SURFACE_SIMPLIFICATION_H

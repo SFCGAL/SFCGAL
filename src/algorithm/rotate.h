@@ -1,4 +1,4 @@
-// Copyright (c) 2024-2024, SFCGAL Contributors and Oslandia.
+// Copyright (c) 2024-2026, SFCGAL Contributors and Oslandia.
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
 #ifndef SFCGAL_ALGORITHM_ROTATE_H_
