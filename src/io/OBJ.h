@@ -6,6 +6,7 @@
 #define SFCGAL_IO_OBJ_H_
 
 #include "SFCGAL/Geometry.h"
+#include <filesystem>
 #include <istream>
 #include <ostream>
 #include <string>
@@ -85,7 +86,8 @@ load(const std::string &obj) -> std::unique_ptr<Geometry>;
  * @throws SFCGAL::Exception If the file cannot be opened or is invalid
  */
 SFCGAL_API auto
-loadFromFile(const std::string &filename) -> std::unique_ptr<Geometry>;
+loadFromFile(const std::filesystem::path &filename)
+    -> std::unique_ptr<Geometry>;
 
 } // namespace SFCGAL::io::OBJ
 

@@ -433,12 +433,12 @@ load(const std::string &obj) -> std::unique_ptr<Geometry>
 }
 
 auto
-loadFromFile(const std::string &filename) -> std::unique_ptr<Geometry>
+loadFromFile(const std::filesystem::path &filename) -> std::unique_ptr<Geometry>
 {
   std::ifstream inOBJ(filename);
   if (!inOBJ) {
-    BOOST_THROW_EXCEPTION(
-        Exception("Unable to open file " + filename + " for reading."));
+    BOOST_THROW_EXCEPTION(Exception("Unable to open file " + filename.string() +
+                                    " for reading."));
   }
   return load(inOBJ);
 }
