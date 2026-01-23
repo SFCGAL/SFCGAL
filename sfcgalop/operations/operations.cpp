@@ -15,12 +15,14 @@
 #include "SFCGAL/algorithm/alphaWrapping3D.h"
 #include "SFCGAL/algorithm/area.h"
 #include "SFCGAL/algorithm/buffer3D.h"
+#include "SFCGAL/algorithm/chamfer3D.h"
 #include "SFCGAL/algorithm/centroid.h"
 #include "SFCGAL/algorithm/collect.h"
 #include "SFCGAL/algorithm/collectionExtract.h"
 #include "SFCGAL/algorithm/collectionHomogenize.h"
 #include "SFCGAL/algorithm/collectionToMulti.h"
 #include "SFCGAL/algorithm/connection.h"
+#include "SFCGAL/algorithm/convexHull.h"
 #include "SFCGAL/algorithm/convexHull.h"
 #include "SFCGAL/algorithm/covers.h"
 #include "SFCGAL/algorithm/difference.h"
@@ -41,6 +43,8 @@
 #include "SFCGAL/algorithm/minkowskiSum3D.h"
 #include "SFCGAL/algorithm/normal.h"
 #include "SFCGAL/algorithm/offset.h"
+#include "SFCGAL/algorithm/orientedPrism.h"
+#include "SFCGAL/primitive3d/Prism.h"
 #include "SFCGAL/algorithm/orientation.h"
 #include "SFCGAL/algorithm/partition_2.h"
 #include "SFCGAL/algorithm/plane.h"
@@ -300,6 +304,46 @@ parse_params(const std::string &str) -> std::map<std::string, double>
 
 // NOLINTNEXTLINE(cert-err58-cpp)
 const std::vector<Operation> operations = {
+    {"chamfer_3d", "Construction",
+     "Computes the chamfer of a solid along specified edges.", true,
+     "Parameters: distance=0.1 (symmetric) or distance1=0.1, distance2=0.2 (asymmetric)\n\n"
+     "Example:\n  sfcgalop -a \"SOLID...\" -b \"LINESTRING...\" chamfer_3d \"distance=0.1\"",
+     "A, B", "G",
+     [](const std::string &params_str, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
+       if (!geom_a || !geom_b) return std::nullopt;
+       auto params = parse_params(params_str);
+
+       double d1, d2;
+       if (params.count("distance")) {
+           d1 = d2 = params["distance"];
+       } else {
+           d1 = params.count("distance1") ? params["distance1"] : 1.0;
+           d2 = params.count("distance2") ? params["distance2"] : 1.0;
+       }
+
+       return SFCGAL::algorithm::chamfer3D(*geom_a, *geom_b, d1, d2);
+     }},
+
+    {"oriented_prism", "Construction",
+     "Constructs a prism oriented along a linestring using incident faces of a solid.",
+     true,
+     "Parameters: dist1=1.0, dist2=1.0\n"
+     "The operation finds the edge in the solid corresponding to the linestring (segment by segment).\n"
+     "It uses the distances to define the prism base on the adjacent faces.\n\n"
+     "Example:\n  sfcgalop -a \"SOLID...\" -b \"LINESTRING...\" -p \"dist1=0.5, dist2=0.5\" oriented_prism",
+     "A, B", "G",
+     [](const std::string &params_str, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
+       if (!geom_a || !geom_b) return std::nullopt;
+
+       auto params = parse_params(params_str);
+       double d1 = params.count("dist1") ? params["dist1"] : 1.0;
+       double d2 = params.count("dist2") ? params["dist2"] : 1.0;
+
+       return SFCGAL::algorithm::orientedPrism(*geom_a, *geom_b, d1, d2);
+     }},
+
     // Metrics
     {"area", "Metrics", "Calculate the 2D area of a geometry", false,
      "No parameters required.\n\nExample:\n  sfcgalop -a \"POLYGON((0 0,3 0,3 "
