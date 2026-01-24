@@ -67,6 +67,18 @@ SFCGAL_API std::unique_ptr<Geometry>
                         NoValidityCheck);
 
 /**
+ * Difference on 3D geometries using Nef polyhedra for robust exact arithmetic
+ * @param geometry1 the first geometry
+ * @param geometry2 the second geometry
+ * @return the 3D difference of the two geometries as a unique_ptr<Geometry>
+ * @note This variant uses CGAL::Nef_polyhedron_3 which avoids vertex coherence
+ *       issues that can occur with thin geometries in the standard
+ * implementation
+ */
+SFCGAL_API std::unique_ptr<Geometry>
+difference3D_nef(const Geometry &geometry1, const Geometry &geometry2);
+
+/**
  * Difference between two geometry sets
  * @param geometrySet1 the first geometry set
  * @param geometrySet2 the second geometry set
