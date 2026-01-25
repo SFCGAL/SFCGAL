@@ -16,6 +16,8 @@
 #include "SFCGAL/algorithm/area.h"
 #include "SFCGAL/algorithm/buffer3D.h"
 #include "SFCGAL/algorithm/chamfer3D.h"
+#include "SFCGAL/algorithm/fillet3D.h"
+#include "SFCGAL/algorithm/sweep.h"
 #include "SFCGAL/algorithm/centroid.h"
 #include "SFCGAL/algorithm/collect.h"
 #include "SFCGAL/algorithm/collectionExtract.h"
@@ -323,6 +325,43 @@ const std::vector<Operation> operations = {
        }
 
        return SFCGAL::algorithm::chamfer3D(*geom_a, *geom_b, d1, d2);
+     }},
+
+    {"sweep", "Construction",
+     "Sweeps a 2D cross-section geometry along a 3D path to create a surface.", true,
+     "Parameters: close_ends=true (optional)\n\n"
+     "Examples:\n"
+     "  - Circle along path → pipe/tube\n"
+     "  - Triangle along edge → chamfer volume\n"
+     "  - Polygon along path → custom sweep\n\n"
+     "  sfcgalop -a \"LINESTRING Z(...)\" -b \"POLYGON(...)\" sweep",
+     "A, B", "G",
+     [](const std::string &params_str, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
+       if (!geom_a || !geom_b) return std::nullopt;
+       auto params = parse_params(params_str);
+
+       bool close_ends = params.count("close_ends") ? (params["close_ends"] != 0.0) : true;
+
+       return SFCGAL::algorithm::sweep(*geom_a, *geom_b, close_ends);
+     }},
+
+    {"fillet_3d", "Construction",
+     "Computes the fillet (rounded edge) of a solid along specified edges.", true,
+     "Parameters: radius=0.1, num_subdivisions=2 (optional)\n\n"
+     "Example:\n  sfcgalop -a \"SOLID...\" -b \"LINESTRING Z(...)\" fillet_3d \"radius=0.2\"",
+     "A, B", "G",
+     [](const std::string &params_str, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
+       if (!geom_a || !geom_b) return std::nullopt;
+       auto params = parse_params(params_str);
+
+       double radius = params.count("radius") ? params["radius"] : 0.1;
+       unsigned int num_subdivisions = params.count("num_subdivisions")
+           ? static_cast<unsigned int>(params["num_subdivisions"])
+           : 2;
+
+       return SFCGAL::algorithm::fillet3D(*geom_a, *geom_b, radius, num_subdivisions);
      }},
 
     {"oriented_prism", "Construction",
