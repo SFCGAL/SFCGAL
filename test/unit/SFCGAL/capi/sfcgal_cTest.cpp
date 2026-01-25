@@ -803,9 +803,11 @@ BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonWithAngles)
       io::readWkt("POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))"));
 
   // 4 edges, all with 45 degree angle
+  // NOLINTNBEGIN(modernize-avoid-c-arrays)
   const double angles[]          = {45.0, 45.0, 45.0, 45.0};
   const size_t angles_per_ring[] = {4};
   const size_t num_rings         = 1;
+  // NOLINTNEND(modernize-avoid-c-arrays)
 
   hasError = false;
   sfcgal_geometry_t *result =
@@ -826,9 +828,11 @@ BOOST_AUTO_TEST_CASE(testExtrudePolygonStraightSkeletonWithAngles)
       io::readWkt("POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))"));
 
   // 4 edges, all with 45 degree angle
+  // NOLINTNBEGIN(modernize-avoid-c-arrays)
   const double angles[]          = {45.0, 45.0, 45.0, 45.0};
   const size_t angles_per_ring[] = {4};
   const size_t num_rings         = 1;
+  // NOLINTNEND(modernize-avoid-c-arrays)
 
   hasError = false;
   sfcgal_geometry_t *result =

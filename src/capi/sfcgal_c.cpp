@@ -1775,6 +1775,7 @@ sfcgal_geometry_extrude_straight_skeleton_with_angles(
   size_t                                       offset = 0;
   for (size_t i = 0; i < num_rings; ++i) {
     std::vector<SFCGAL::Kernel::FT> ringAngles;
+    ringAngles.reserve(angles_per_ring[i]);
     for (size_t j = 0; j < angles_per_ring[i]; ++j) {
       ringAngles.emplace_back(angles[offset++]);
     }
@@ -1810,6 +1811,7 @@ sfcgal_geometry_extrude_polygon_straight_skeleton_with_angles(
   size_t                                       offset = 0;
   for (size_t i = 0; i < num_rings; ++i) {
     std::vector<SFCGAL::Kernel::FT> ringAngles;
+    ringAngles.reserve(angles_per_ring[i]);
     for (size_t j = 0; j < angles_per_ring[i]; ++j) {
       ringAngles.emplace_back(angles[offset++]);
     }
