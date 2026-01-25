@@ -48,8 +48,8 @@
 #include "SFCGAL/algorithm/alphaWrapping3D.h"
 #include "SFCGAL/algorithm/area.h"
 #include "SFCGAL/algorithm/buffer3D.h"
-#include "SFCGAL/algorithm/chamfer3D.h"
 #include "SFCGAL/algorithm/centroid.h"
+#include "SFCGAL/algorithm/chamfer3D.h"
 #include "SFCGAL/algorithm/convexHull.h"
 #include "SFCGAL/algorithm/covers.h"
 #include "SFCGAL/algorithm/difference.h"
@@ -2306,8 +2306,8 @@ sfcgal_geometry_chamfer_3d(const sfcgal_geometry_t *geom, double distance,
 {
   std::unique_ptr<SFCGAL::Geometry> result;
   try {
-    auto edges =
-        extractEdgesFromGeometry(static_cast<const SFCGAL::Geometry *>(edge_geom));
+    auto edges = extractEdgesFromGeometry(
+        static_cast<const SFCGAL::Geometry *>(edge_geom));
     if (edges.empty()) {
       SFCGAL_ERROR("chamfer_3d: edge geometry must be LINESTRING Z or "
                    "MULTILINESTRING Z with at least 2 points");
@@ -2335,11 +2335,12 @@ sfcgal_geometry_chamfer_3d_asymmetric(const sfcgal_geometry_t *geom,
 {
   std::unique_ptr<SFCGAL::Geometry> result;
   try {
-    auto edges =
-        extractEdgesFromGeometry(static_cast<const SFCGAL::Geometry *>(edge_geom));
+    auto edges = extractEdgesFromGeometry(
+        static_cast<const SFCGAL::Geometry *>(edge_geom));
     if (edges.empty()) {
-      SFCGAL_ERROR("chamfer_3d_asymmetric: edge geometry must be LINESTRING Z or "
-                   "MULTILINESTRING Z with at least 2 points");
+      SFCGAL_ERROR(
+          "chamfer_3d_asymmetric: edge geometry must be LINESTRING Z or "
+          "MULTILINESTRING Z with at least 2 points");
       return nullptr;
     }
     auto selector = SFCGAL::algorithm::EdgeSelector::explicit_(edges);
@@ -2349,8 +2350,8 @@ sfcgal_geometry_chamfer_3d_asymmetric(const sfcgal_geometry_t *geom,
         *static_cast<const SFCGAL::Geometry *>(geom));
     result = chamfer.chamferEdges(selector, params);
   } catch (std::exception &e) {
-    SFCGAL_WARNING("During chamfer_3d_asymmetric (A, %g, %g, edge) :", distance1,
-                   distance2);
+    SFCGAL_WARNING("During chamfer_3d_asymmetric (A, %g, %g, edge) :",
+                   distance1, distance2);
     SFCGAL_WARNING(
         "  with A: %s",
         static_cast<const SFCGAL::Geometry *>(geom)->asText().c_str());

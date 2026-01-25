@@ -93,15 +93,15 @@ createUnitCube() -> std::unique_ptr<Solid>
 BOOST_AUTO_TEST_CASE(testChamfer3D_InvalidInput_2D)
 {
   // 2D geometry should throw
-  std::unique_ptr<Geometry> polygon(io::readWkt("POLYGON((0 0, 1 0, 1 1, 0 1, 0 0))"));
+  std::unique_ptr<Geometry> polygon(
+      io::readWkt("POLYGON((0 0, 1 0, 1 1, 0 1, 0 0))"));
 
   std::vector<algorithm::EdgeIdentifier> edges;
   edges.emplace_back(Kernel::Point_3(0, 0, 0), Kernel::Point_3(1, 0, 0));
   auto params = algorithm::ChamferParameters::symmetric(0.1);
 
-  BOOST_CHECK_THROW(
-      algorithm::chamfer3D(*polygon, edges, params),
-      std::invalid_argument);
+  BOOST_CHECK_THROW(algorithm::chamfer3D(*polygon, edges, params),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(testChamfer3D_InvalidInput_Empty)
@@ -112,9 +112,8 @@ BOOST_AUTO_TEST_CASE(testChamfer3D_InvalidInput_Empty)
   edges.emplace_back(Kernel::Point_3(0, 0, 0), Kernel::Point_3(1, 0, 0));
   auto params = algorithm::ChamferParameters::symmetric(0.1);
 
-  BOOST_CHECK_THROW(
-      algorithm::chamfer3D(empty, edges, params),
-      std::invalid_argument);
+  BOOST_CHECK_THROW(algorithm::chamfer3D(empty, edges, params),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(testChamfer3D_InvalidDistance)
@@ -125,14 +124,12 @@ BOOST_AUTO_TEST_CASE(testChamfer3D_InvalidDistance)
   edges.emplace_back(Kernel::Point_3(0, 0, 0), Kernel::Point_3(1, 0, 0));
 
   auto params_zero = algorithm::ChamferParameters::symmetric(0.0);
-  BOOST_CHECK_THROW(
-      algorithm::chamfer3D(*cube, edges, params_zero),
-      std::invalid_argument);
+  BOOST_CHECK_THROW(algorithm::chamfer3D(*cube, edges, params_zero),
+                    std::invalid_argument);
 
   auto params_neg = algorithm::ChamferParameters::symmetric(-0.1);
-  BOOST_CHECK_THROW(
-      algorithm::chamfer3D(*cube, edges, params_neg),
-      std::invalid_argument);
+  BOOST_CHECK_THROW(algorithm::chamfer3D(*cube, edges, params_neg),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(testChamfer3D_SingleEdge)
@@ -172,7 +169,8 @@ BOOST_AUTO_TEST_CASE(testChamfer3D_ComputeDihedralAngle)
   algorithm::Chamfer3D chamfer(*cube);
 
   // Test an edge of the cube - should have 90 degree dihedral angle
-  algorithm::EdgeIdentifier edge(Kernel::Point_3(0, 0, 0), Kernel::Point_3(1, 0, 0));
+  algorithm::EdgeIdentifier edge(Kernel::Point_3(0, 0, 0),
+                                 Kernel::Point_3(1, 0, 0));
 
   double angle = chamfer.computeDihedralAngle(edge);
 
@@ -205,9 +203,9 @@ BOOST_AUTO_TEST_CASE(testChamfer3D_Asymmetric)
   edges.emplace_back(Kernel::Point_3(0, 0, 0), Kernel::Point_3(1, 0, 0));
 
   auto selector = algorithm::EdgeSelector::explicit_(edges);
-  auto params = algorithm::ChamferParameters::asymmetric(0.1, 0.2);
+  auto params   = algorithm::ChamferParameters::asymmetric(0.1, 0.2);
 
-  algorithm::Chamfer3D chamfer(*cube);
+  algorithm::Chamfer3D      chamfer(*cube);
   std::unique_ptr<Geometry> result = chamfer.chamferEdges(selector, params);
 
   BOOST_CHECK(result != nullptr);
@@ -223,7 +221,8 @@ BOOST_AUTO_TEST_CASE(testChamfer3D_VertexChamfer)
 
   auto params = algorithm::VertexChamferParameters::create(0.1);
 
-  std::unique_ptr<Geometry> result = algorithm::chamfer3DVertices(*cube, vertices, params);
+  std::unique_ptr<Geometry> result =
+      algorithm::chamfer3DVertices(*cube, vertices, params);
 
   BOOST_CHECK(result != nullptr);
 }
@@ -269,11 +268,14 @@ BOOST_AUTO_TEST_CASE(testChamfer3D_PolyhedralSurface)
 BOOST_AUTO_TEST_CASE(testChamfer3D_EdgeIdentifier_Equality)
 {
   // Test edge identifier equality (order-independent)
-  algorithm::EdgeIdentifier e1(Kernel::Point_3(0, 0, 0), Kernel::Point_3(1, 0, 0));
-  algorithm::EdgeIdentifier e2(Kernel::Point_3(1, 0, 0), Kernel::Point_3(0, 0, 0));
-  algorithm::EdgeIdentifier e3(Kernel::Point_3(0, 0, 0), Kernel::Point_3(0, 1, 0));
+  algorithm::EdgeIdentifier e1(Kernel::Point_3(0, 0, 0),
+                               Kernel::Point_3(1, 0, 0));
+  algorithm::EdgeIdentifier e2(Kernel::Point_3(1, 0, 0),
+                               Kernel::Point_3(0, 0, 0));
+  algorithm::EdgeIdentifier e3(Kernel::Point_3(0, 0, 0),
+                               Kernel::Point_3(0, 1, 0));
 
-  BOOST_CHECK(e1 == e2); // Same edge, different order
+  BOOST_CHECK(e1 == e2);    // Same edge, different order
   BOOST_CHECK(!(e1 == e3)); // Different edge
 }
 
@@ -312,8 +314,10 @@ BOOST_AUTO_TEST_CASE(testChamfer3D_ContinuousEdges)
 
   // Chamfer two adjacent edges (sharing vertex at (0,0,0))
   std::vector<algorithm::EdgeIdentifier> edges;
-  edges.emplace_back(Kernel::Point_3(0, 0, 0), Kernel::Point_3(1, 0, 0)); // bottom front
-  edges.emplace_back(Kernel::Point_3(0, 0, 0), Kernel::Point_3(0, 1, 0)); // bottom left
+  edges.emplace_back(Kernel::Point_3(0, 0, 0),
+                     Kernel::Point_3(1, 0, 0)); // bottom front
+  edges.emplace_back(Kernel::Point_3(0, 0, 0),
+                     Kernel::Point_3(0, 1, 0)); // bottom left
 
   auto params = algorithm::ChamferParameters::symmetric(0.1);
 

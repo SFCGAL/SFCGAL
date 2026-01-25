@@ -110,8 +110,8 @@ struct SFCGAL_API EdgeSelector {
     ALL       ///< Select all edges
   };
 
-  Mode                        mode{Mode::ALL};      ///< Selection mode
-  std::vector<EdgeIdentifier> edges;                ///< For EXPLICIT mode
+  Mode                        mode{Mode::ALL}; ///< Selection mode
+  std::vector<EdgeIdentifier> edges;           ///< For EXPLICIT mode
   double angleThreshold{M_PI / 4}; ///< For BY_ANGLE mode (radians, default 45
                                    ///< degrees)
 
@@ -166,8 +166,8 @@ struct SFCGAL_API ChamferParameters {
    * @brief Chamfer type enumeration
    */
   enum class Type {
-    SYMMETRIC,  ///< Equal distance from both adjacent faces
-    ASYMMETRIC  ///< Different distances from each adjacent face
+    SYMMETRIC, ///< Equal distance from both adjacent faces
+    ASYMMETRIC ///< Different distances from each adjacent face
   };
 
   Type   type{Type::SYMMETRIC}; ///< Chamfer type
@@ -287,8 +287,8 @@ public:
   computeDihedralAngle(const EdgeIdentifier &edge) const -> double;
 
 private:
-  const Geometry *_geometry;           ///< Input geometry (non-owning)
-  bool            _isSolid{false};     ///< True if input is Solid
+  const Geometry *_geometry;                   ///< Input geometry (non-owning)
+  bool            _isSolid{false};             ///< True if input is Solid
   bool            _isPolyhedralSurface{false}; ///< True if input is
                                                ///< PolyhedralSurface
 
@@ -305,7 +305,8 @@ private:
    * @return Appropriate SFCGAL geometry type
    */
   auto
-  fromSurfaceMesh(const Surface_mesh_3 &mesh) const -> std::unique_ptr<Geometry>;
+  fromSurfaceMesh(const Surface_mesh_3 &mesh) const
+      -> std::unique_ptr<Geometry>;
 
   /**
    * @brief Resolve edge selector to list of edges
@@ -341,9 +342,8 @@ private:
    * @return true if successful, false if modification failed
    */
   auto
-  chamferEdgeDirect(Surface_mesh_3                   &mesh,
-                    Surface_mesh_3::Halfedge_index    he,
-                    const ChamferParameters          &params) const -> bool;
+  chamferEdgeDirect(Surface_mesh_3 &mesh, Surface_mesh_3::Halfedge_index he,
+                    const ChamferParameters &params) const -> bool;
 
   /**
    * @brief Apply chamfer to single edge using boolean subtraction (fallback)
@@ -353,8 +353,7 @@ private:
    * @return New geometry with edge chamfered
    */
   auto
-  chamferEdgeBoolean(const Geometry          &geom,
-                     const EdgeIdentifier    &edge,
+  chamferEdgeBoolean(const Geometry &geom, const EdgeIdentifier &edge,
                      const ChamferParameters &params) const
       -> std::unique_ptr<Geometry>;
 
@@ -381,9 +380,8 @@ private:
    * @return true if successful, false if modification failed
    */
   auto
-  chamferVertexDirect(Surface_mesh_3                     &mesh,
-                      Surface_mesh_3::Vertex_index        v,
-                      const VertexChamferParameters      &params) const -> bool;
+  chamferVertexDirect(Surface_mesh_3 &mesh, Surface_mesh_3::Vertex_index v,
+                      const VertexChamferParameters &params) const -> bool;
 };
 
 // ============================================================================
@@ -400,9 +398,8 @@ private:
  * @throws std::invalid_argument if geometry type is not supported
  */
 SFCGAL_API auto
-chamfer3D(const Geometry                    &geometry,
-          const std::vector<EdgeIdentifier> &edges,
-          const ChamferParameters           &params) -> std::unique_ptr<Geometry>;
+chamfer3D(const Geometry &geometry, const std::vector<EdgeIdentifier> &edges,
+          const ChamferParameters &params) -> std::unique_ptr<Geometry>;
 
 /**
  * @brief Apply vertex chamfer to specific vertices
