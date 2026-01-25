@@ -68,7 +68,7 @@ Prism::Prism(const Kernel::Point_3 &baseVertex0,
 // ----------------------------------------------------------------------------
 // Constructor by extruding a triangle along a vector
 // ----------------------------------------------------------------------------
-Prism::Prism(const Triangle &baseTriangle,
+Prism::Prism(const Triangle         &baseTriangle,
              const Kernel::Vector_3 &extrusionVector)
 {
   // Validate inputs
@@ -174,9 +174,8 @@ Prism::generatePolyhedralSurface() const -> PolyhedralSurface
                                      Point(_baseVertices[1]),
                                      Point(_baseVertices[2])};
 
-  std::array<Point, 3> topPoints = {Point(_topVertices[0]),
-                                    Point(_topVertices[1]),
-                                    Point(_topVertices[2])};
+  std::array<Point, 3> topPoints = {
+      Point(_topVertices[0]), Point(_topVertices[1]), Point(_topVertices[2])};
 
   // -------------------------------------------------------------------------
   // Face construction follows outward-pointing normal convention:
@@ -249,8 +248,8 @@ Prism::volume(bool /*withDiscretization*/) const -> double
 
   // Compute base triangle area using cross product
   // Area = 0.5 * |edge1 x edge2|
-  Kernel::Vector_3 edge1 = _baseVertices[1] - _baseVertices[0];
-  Kernel::Vector_3 edge2 = _baseVertices[2] - _baseVertices[0];
+  Kernel::Vector_3 edge1        = _baseVertices[1] - _baseVertices[0];
+  Kernel::Vector_3 edge2        = _baseVertices[2] - _baseVertices[0];
   Kernel::Vector_3 crossProduct = CGAL::cross_product(edge1, edge2);
 
   // Base area = 0.5 * |cross_product|
