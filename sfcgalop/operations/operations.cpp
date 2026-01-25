@@ -298,6 +298,7 @@ parse_params(const std::string &str) -> std::map<std::string, double>
   return params;
 }
 
+//NOLINTBEGIN(readability-function-cognitive-complexity)
 /**
  * @brief Extract the angles parameter from the original string.
  *
@@ -361,17 +362,17 @@ extract_angles_param(const std::string &param_str)
     std::string                     num_str;
 
     while (pos < param_str.size() && param_str[pos] != ']') {
-      char c = param_str[pos];
-      if (c == ',' || c == ']') {
+      char chr = param_str[pos];
+      if (chr == ',' || chr == ']') {
         if (!num_str.empty()) {
           inner.emplace_back(parse_double(trim(num_str)));
           num_str.clear();
         }
-        if (c == ',') {
+        if (chr == ',') {
           pos++;
         }
-      } else if (std::isdigit(c) != 0 || c == '.' || c == '-' || c == '+') {
-        num_str += c;
+      } else if (std::isdigit(chr) != 0 || chr == '.' || chr == '-' || chr == '+') {
+        num_str += chr;
         pos++;
       } else {
         pos++;
@@ -394,6 +395,7 @@ extract_angles_param(const std::string &param_str)
 
   return result;
 }
+// NOLINTEND(readability-function-cognitive-complexity)
 
 // NOLINTNEXTLINE(cert-err58-cpp)
 const std::vector<Operation> operations = {

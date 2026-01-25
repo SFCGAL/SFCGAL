@@ -552,7 +552,7 @@ extrudeStraightSkeleton(const Polygon &geom, double height,
 
   // If angles is not the default (list of size 1 containing 1 empty list)
   // then check check that we have an angle for exactly each ring segment
-  if (angles[0].size() != 0 || numRingsAngles != 1) {
+  if (!angles[0].empty() || numRingsAngles != 1) {
     size_t numRings = geom.numRings();
     if (numRings == numRingsAngles) {
       for (size_t ringIdx = 0; ringIdx < numRings; ++ringIdx) {
