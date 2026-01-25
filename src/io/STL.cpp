@@ -1,13 +1,19 @@
-// Copyright (c) 2025-2025, SFCGAL team.
+// Copyright (c) 2024-2025, SFCGAL team.
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
 #include "SFCGAL/io/STL.h"
+#include "SFCGAL/Exception.h"
 #include "SFCGAL/GeometryCollection.h"
+#include "SFCGAL/Point.h"
 #include "SFCGAL/Polygon.h"
 #include "SFCGAL/PolyhedralSurface.h"
 #include "SFCGAL/Solid.h"
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/TriangulatedSurface.h"
+#include "SFCGAL/io/io_utils.h"
+#include <algorithm>
+#include <cctype>
+#include <cmath>
 #include <fstream>
 #include <functional>
 #include <sstream>
@@ -130,8 +136,8 @@ save(const Geometry &geom, const std::string &filename) -> void
 {
   std::ofstream out(filename);
   if (!out) {
-    throw std::runtime_error("Unable to open file " + filename +
-                             " for writing.");
+    BOOST_THROW_EXCEPTION(
+        Exception("Unable to open file " + filename + " for writing."));
   }
   save(geom, out);
 }
@@ -148,12 +154,158 @@ auto
 saveToBuffer(const Geometry &geom, char *buffer, size_t *size) -> void
 {
   std::string result = saveToString(geom);
-  if ((buffer != nullptr) && *size >= result.size()) {
+  // Need space for content + null terminator
+  size_t requiredSize = result.size() + 1;
+
+  if ((buffer != nullptr) && *size >= requiredSize) {
     std::copy(result.begin(), result.end(), buffer);
-    *size = result.size();
+    buffer[result.size()] = '\0'; // Null terminate
+    *size                 = requiredSize;
   } else {
-    *size = result.size();
+    *size = requiredSize;
   }
+}
+
+namespace {
+
+/**
+ * @brief Read and validate a keyword (case-insensitive)
+ */
+auto
+expectKeyword(std::istream &in, const std::string &expected) -> bool
+{
+  std::string word;
+  if (!(in >> word)) {
+    return false;
+  }
+  return detail::caseInsensitiveEqual(word, expected);
+}
+
+} // anonymous namespace
+
+auto
+load(std::istream &in) -> std::unique_ptr<Geometry>
+{
+  std::vector<Triangle> triangles;
+
+  // Skip whitespace and check for empty file
+  detail::skipWhitespace(in);
+  if (!in || in.peek() == EOF) {
+    BOOST_THROW_EXCEPTION(Exception("Empty STL file"));
+  }
+
+  // Read "solid" keyword
+  if (!expectKeyword(in, "solid")) {
+    BOOST_THROW_EXCEPTION(Exception("STL file must start with 'solid'"));
+  }
+
+  // Read optional solid name (rest of line)
+  std::string solidName;
+  std::getline(in, solidName);
+
+  // Parse facets
+  while (in) {
+    detail::skipWhitespace(in);
+    if (!in || in.peek() == EOF) {
+      break;
+    }
+
+    std::string keyword;
+    if (!(in >> keyword)) {
+      break;
+    }
+
+    // Convert to lowercase for comparison
+    std::string keywordLower = keyword;
+    std::transform(keywordLower.begin(), keywordLower.end(),
+                   keywordLower.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+
+    if (keywordLower == "endsolid") {
+      // End of solid - success
+      break;
+    }
+
+    if (keywordLower != "facet") {
+      BOOST_THROW_EXCEPTION(
+          Exception("Expected 'facet' or 'endsolid', got: " + keyword));
+    }
+
+    // Parse "normal nx ny nz"
+    if (!expectKeyword(in, "normal")) {
+      BOOST_THROW_EXCEPTION(Exception("Expected 'normal' after 'facet'"));
+    }
+
+    // Read normal (we don't use it for geometry, but validate it)
+    detail::parseDouble(in, "facet normal X");
+    detail::parseDouble(in, "facet normal Y");
+    detail::parseDouble(in, "facet normal Z");
+
+    // Parse "outer loop"
+    if (!expectKeyword(in, "outer")) {
+      BOOST_THROW_EXCEPTION(Exception("Expected 'outer loop'"));
+    }
+    if (!expectKeyword(in, "loop")) {
+      BOOST_THROW_EXCEPTION(Exception("Expected 'loop' after 'outer'"));
+    }
+
+    // Parse 3 vertices
+    std::vector<Point> vertices;
+    vertices.reserve(3);
+    for (int i = 0; i < 3; ++i) {
+      if (!expectKeyword(in, "vertex")) {
+        BOOST_THROW_EXCEPTION(
+            Exception("Expected 'vertex', triangle must have 3 vertices"));
+      }
+      double x = detail::parseDouble(in, "vertex X coordinate");
+      double y = detail::parseDouble(in, "vertex Y coordinate");
+      double z = detail::parseDouble(in, "vertex Z coordinate");
+      vertices.emplace_back(x, y, z);
+    }
+
+    // Parse "endloop"
+    if (!expectKeyword(in, "endloop")) {
+      BOOST_THROW_EXCEPTION(Exception("Expected 'endloop'"));
+    }
+
+    // Parse "endfacet"
+    if (!expectKeyword(in, "endfacet")) {
+      BOOST_THROW_EXCEPTION(Exception("Expected 'endfacet'"));
+    }
+
+    // Create triangle
+    triangles.emplace_back(vertices[0], vertices[1], vertices[2]);
+  }
+
+  if (triangles.empty()) {
+    BOOST_THROW_EXCEPTION(Exception("No triangles found in STL file"));
+  }
+
+  // Create TriangulatedSurface
+  auto tin = std::make_unique<TriangulatedSurface>();
+  for (auto &triangle : triangles) {
+    tin->addTriangle(triangle);
+  }
+
+  return tin;
+}
+
+auto
+load(const std::string &stl) -> std::unique_ptr<Geometry>
+{
+  std::istringstream iss(stl);
+  return load(iss);
+}
+
+auto
+loadFromFile(const std::string &filename) -> std::unique_ptr<Geometry>
+{
+  std::ifstream in(filename);
+  if (!in) {
+    BOOST_THROW_EXCEPTION(
+        Exception("Unable to open file " + filename + " for reading."));
+  }
+  return load(in);
 }
 
 } // namespace SFCGAL::io::STL

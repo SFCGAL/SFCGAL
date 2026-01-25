@@ -404,6 +404,29 @@ sfcgal_geometry_as_vtk_file(const sfcgal_geometry_t *geom,
                             const char              *filename);
 
 /**
+ * Reads a geometry from a VTK format string.
+ * @param[in] str The VTK format string
+ * @param[in] len The size of @p str
+ * @post The returned geometry must be deallocated by the caller with
+ * sfcgal_geometry_delete()
+ * @return A SFCGAL::Geometry from the VTK string, or NULL on error
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_io_read_vtk(const char *str, size_t len);
+
+/**
+ * Reads a geometry from a VTK file.
+ * @param[in] filename The path to the VTK file
+ * @post The returned geometry must be deallocated by the caller with
+ * sfcgal_geometry_delete()
+ * @return A SFCGAL::Geometry from the VTK file, or NULL on error
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_io_read_vtk_file(const char *filename);
+
+/**
  * Creates a OBJ file of the given geometry
  * The generated OBJ file uses the Z-up convention.
  * @param geom the input geometry
@@ -475,6 +498,29 @@ sfcgal_geometry_as_stl(const sfcgal_geometry_t *geom, char **buffer,
 SFCGAL_API void
 sfcgal_geometry_as_stl_file(const sfcgal_geometry_t *geom,
                             const char              *filename);
+
+/**
+ * Reads a geometry from an STL format string.
+ * @param[in] str The STL format string
+ * @param[in] len The size of @p str
+ * @post The returned geometry must be deallocated by the caller with
+ * sfcgal_geometry_delete()
+ * @return A SFCGAL::Geometry from the STL string, or NULL on error
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_io_read_stl(const char *str, size_t len);
+
+/**
+ * Reads a geometry from an STL file.
+ * @param[in] filename The path to the STL file
+ * @post The returned geometry must be deallocated by the caller with
+ * sfcgal_geometry_delete()
+ * @return A SFCGAL::Geometry from the STL file, or NULL on error
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_io_read_stl_file(const char *filename);
 
 /**
  * Creates an empty point

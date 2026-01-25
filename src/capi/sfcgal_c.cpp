@@ -622,6 +622,21 @@ sfcgal_geometry_as_vtk(const sfcgal_geometry_t *pgeom, char **buffer,
 }
 
 extern "C" auto
+sfcgal_io_read_vtk(const char *str, size_t len) -> sfcgal_geometry_t *
+{
+  SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
+      std::string vtkStr(str, len);
+      return SFCGAL::io::VTK::load(vtkStr).release();)
+}
+
+extern "C" auto
+sfcgal_io_read_vtk_file(const char *filename) -> sfcgal_geometry_t *
+{
+  SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
+      return SFCGAL::io::VTK::loadFromFile(filename).release();)
+}
+
+extern "C" auto
 sfcgal_geometry_as_stl_file(const sfcgal_geometry_t *pgeom,
                             const char              *filename) -> void
 {
@@ -638,6 +653,21 @@ sfcgal_geometry_as_stl(const sfcgal_geometry_t *pgeom, char **buffer,
       std::string obj = SFCGAL::io::STL::saveToString(
           *reinterpret_cast<const SFCGAL::Geometry *>(pgeom));
       alloc_and_copy(obj, buffer, len);)
+}
+
+extern "C" auto
+sfcgal_io_read_stl(const char *str, size_t len) -> sfcgal_geometry_t *
+{
+  SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
+      std::string stlStr(str, len);
+      return SFCGAL::io::STL::load(stlStr).release();)
+}
+
+extern "C" auto
+sfcgal_io_read_stl_file(const char *filename) -> sfcgal_geometry_t *
+{
+  SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
+      return SFCGAL::io::STL::loadFromFile(filename).release();)
 }
 
 extern "C" void

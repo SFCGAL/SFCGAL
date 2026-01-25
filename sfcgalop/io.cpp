@@ -127,6 +127,33 @@ load_geometry(const std::string &source) -> std::unique_ptr<SFCGAL::Geometry>
       if (looks_like_obj) {
         return SFCGAL::io::OBJ::load(data);
       }
+
+      // Check if this looks like an STL file (ASCII format starts with "solid")
+      {
+        std::istringstream stl_iss(data);
+        std::string        first_word;
+        stl_iss >> first_word;
+        std::transform(first_word.begin(), first_word.end(), first_word.begin(),
+                       [](unsigned char c) { return std::tolower(c); });
+        if (first_word == "solid") {
+          return SFCGAL::io::STL::load(data);
+        }
+      }
+
+      // Check if this looks like a VTK file (starts with "# vtk DataFile")
+      {
+        std::istringstream vtk_iss(data);
+        std::string        first_line;
+        std::getline(vtk_iss, first_line);
+        std::string first_line_lower = first_line;
+        std::transform(first_line_lower.begin(), first_line_lower.end(),
+                       first_line_lower.begin(),
+                       [](unsigned char c) { return std::tolower(c); });
+        if (first_line_lower.find("# vtk datafile") != std::string::npos) {
+          return SFCGAL::io::VTK::load(data);
+        }
+      }
+
       // Check if this looks like GeoJSON
       // GeoJSON typically starts with '{' and contains "type" field
       if (!data.empty() && data[0] == '{') {

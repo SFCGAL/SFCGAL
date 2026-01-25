@@ -5,6 +5,8 @@
 #define SFCGAL_IO_STL_H_
 
 #include <SFCGAL/Geometry.h>
+#include <istream>
+#include <memory>
 #include <ostream>
 #include <string>
 
@@ -52,6 +54,36 @@ saveToString(const Geometry &geom) -> std::string;
  */
 SFCGAL_API auto
 saveToBuffer(const Geometry &geom, char *buffer, size_t *size) -> void;
+
+/**
+ * @brief Loads a geometry from an STL format stream.
+ *
+ * @param[in] in The input stream
+ * @return The loaded geometry (TriangulatedSurface)
+ * @throws SFCGAL::Exception If the stream is invalid or malformed
+ */
+SFCGAL_API auto
+load(std::istream &in) -> std::unique_ptr<Geometry>;
+
+/**
+ * @brief Loads a geometry from an STL format string.
+ *
+ * @param[in] stl The STL format string
+ * @return The loaded geometry (TriangulatedSurface)
+ * @throws SFCGAL::Exception If the string is invalid or malformed
+ */
+SFCGAL_API auto
+load(const std::string &stl) -> std::unique_ptr<Geometry>;
+
+/**
+ * @brief Loads a geometry from an STL file.
+ *
+ * @param[in] filename The name of the file to load from
+ * @return The loaded geometry (TriangulatedSurface)
+ * @throws SFCGAL::Exception If the file cannot be opened or is invalid
+ */
+SFCGAL_API auto
+loadFromFile(const std::string &filename) -> std::unique_ptr<Geometry>;
 
 } // namespace SFCGAL::io::STL
 

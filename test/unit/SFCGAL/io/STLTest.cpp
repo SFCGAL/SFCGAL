@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
 #include "SFCGAL/io/STL.h"
+#include "SFCGAL/Exception.h"
+#include "SFCGAL/TriangulatedSurface.h"
 #include "SFCGAL/io/wkt.h"
 #include <filesystem>
 #include <fstream>
@@ -157,7 +159,7 @@ BOOST_AUTO_TEST_CASE(test_save_to_buffer)
   char   buffer[1000]; // NOLINT(modernize-avoid-c-arrays)
   SFCGAL::io::STL::saveToBuffer(*geom, buffer, &size);
 
-  std::string result(buffer, size);
+  std::string result(buffer); // Buffer is null-terminated
   std::string expected = "solid SFCGAL_export\n"
                          "  facet normal 0 0 1\n"
                          "    outer loop\n"
@@ -180,10 +182,10 @@ BOOST_AUTO_TEST_CASE(test_buffer_size)
 
   BOOST_CHECK_GT(size, 0);
 
-  char *buffer = new char[size];
-  SFCGAL::io::STL::saveToBuffer(*geom, buffer, &size);
+  std::vector<char> buffer(size);
+  SFCGAL::io::STL::saveToBuffer(*geom, buffer.data(), &size);
 
-  std::string result(buffer, size);
+  std::string result(buffer.data()); // Buffer is null-terminated
   std::string expected = "solid SFCGAL_export\n"
                          "  facet normal 0 0 1\n"
                          "    outer loop\n"
@@ -194,8 +196,6 @@ BOOST_AUTO_TEST_CASE(test_buffer_size)
                          "  endfacet\n"
                          "endsolid SFCGAL_export\n";
   BOOST_CHECK_EQUAL(result, expected);
-
-  delete[] buffer;
 }
 
 BOOST_AUTO_TEST_CASE(test_complex_geometry)
@@ -246,6 +246,168 @@ BOOST_AUTO_TEST_CASE(test_non_stl_geometries)
 
     BOOST_CHECK_EQUAL(result, expected);
   }
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(SFCGAL_io_STLReaderTest)
+
+BOOST_AUTO_TEST_CASE(test_load_single_triangle)
+{
+  std::string stl_content = "solid test\n"
+                            "  facet normal 0 0 1\n"
+                            "    outer loop\n"
+                            "      vertex 0 0 0\n"
+                            "      vertex 1 0 0\n"
+                            "      vertex 0 1 0\n"
+                            "    endloop\n"
+                            "  endfacet\n"
+                            "endsolid test\n";
+
+  std::unique_ptr<SFCGAL::Geometry> geom = SFCGAL::io::STL::load(stl_content);
+
+  BOOST_CHECK_EQUAL(geom->geometryType(), "TriangulatedSurface");
+  const auto &tin = geom->as<SFCGAL::TriangulatedSurface>();
+  BOOST_CHECK_EQUAL(tin.numTriangles(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(test_load_multiple_triangles)
+{
+  std::string stl_content = "solid test\n"
+                            "  facet normal 0 0 1\n"
+                            "    outer loop\n"
+                            "      vertex 0 0 0\n"
+                            "      vertex 1 0 0\n"
+                            "      vertex 0 1 0\n"
+                            "    endloop\n"
+                            "  endfacet\n"
+                            "  facet normal 0 0 1\n"
+                            "    outer loop\n"
+                            "      vertex 1 0 0\n"
+                            "      vertex 1 1 0\n"
+                            "      vertex 0 1 0\n"
+                            "    endloop\n"
+                            "  endfacet\n"
+                            "endsolid test\n";
+
+  std::unique_ptr<SFCGAL::Geometry> geom = SFCGAL::io::STL::load(stl_content);
+
+  BOOST_CHECK_EQUAL(geom->geometryType(), "TriangulatedSurface");
+  const auto &tin = geom->as<SFCGAL::TriangulatedSurface>();
+  BOOST_CHECK_EQUAL(tin.numTriangles(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(test_roundtrip)
+{
+  std::string wkt = "TRIANGLE Z ((0 0 0, 1 0 0, 0 1 0, 0 0 0))";
+  std::unique_ptr<SFCGAL::Geometry> original(SFCGAL::io::readWkt(wkt));
+
+  // Save to STL
+  std::string stl = SFCGAL::io::STL::saveToString(*original);
+
+  // Load back
+  std::unique_ptr<SFCGAL::Geometry> loaded = SFCGAL::io::STL::load(stl);
+
+  BOOST_CHECK_EQUAL(loaded->geometryType(), "TriangulatedSurface");
+  const auto &tin = loaded->as<SFCGAL::TriangulatedSurface>();
+  BOOST_CHECK_EQUAL(tin.numTriangles(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(test_case_insensitive)
+{
+  std::string stl_content = "SOLID TEST\n"
+                            "  FACET NORMAL 0 0 1\n"
+                            "    OUTER LOOP\n"
+                            "      VERTEX 0 0 0\n"
+                            "      VERTEX 1 0 0\n"
+                            "      VERTEX 0 1 0\n"
+                            "    ENDLOOP\n"
+                            "  ENDFACET\n"
+                            "ENDSOLID TEST\n";
+
+  std::unique_ptr<SFCGAL::Geometry> geom = SFCGAL::io::STL::load(stl_content);
+  BOOST_CHECK_EQUAL(geom->geometryType(), "TriangulatedSurface");
+}
+
+BOOST_AUTO_TEST_CASE(test_scientific_notation)
+{
+  std::string stl_content = "solid test\n"
+                            "  facet normal 0 0 1\n"
+                            "    outer loop\n"
+                            "      vertex 1.5e2 -2.3e-1 0\n"
+                            "      vertex 1e3 0 0\n"
+                            "      vertex 0 1.0E+2 0\n"
+                            "    endloop\n"
+                            "  endfacet\n"
+                            "endsolid test\n";
+
+  std::unique_ptr<SFCGAL::Geometry> geom = SFCGAL::io::STL::load(stl_content);
+  BOOST_CHECK_EQUAL(geom->geometryType(), "TriangulatedSurface");
+
+  const auto &tin = geom->as<SFCGAL::TriangulatedSurface>();
+  const auto &tri = tin.triangleN(0);
+  BOOST_CHECK_CLOSE(CGAL::to_double(tri.vertex(0).x()), 150.0, 0.001);
+}
+
+BOOST_AUTO_TEST_CASE(test_load_from_file)
+{
+  std::string filename =
+      std::string(SFCGAL_TEST_DIRECTORY) + "/data/stlfiles/trianglez.stl";
+  std::unique_ptr<SFCGAL::Geometry> geom =
+      SFCGAL::io::STL::loadFromFile(filename);
+
+  BOOST_CHECK_EQUAL(geom->geometryType(), "TriangulatedSurface");
+}
+
+BOOST_AUTO_TEST_CASE(test_error_empty_file)
+{
+  std::string stl_content = "";
+  BOOST_CHECK_THROW(SFCGAL::io::STL::load(stl_content), SFCGAL::Exception);
+}
+
+BOOST_AUTO_TEST_CASE(test_error_no_triangles)
+{
+  std::string stl_content = "solid test\nendsolid test\n";
+  BOOST_CHECK_THROW(SFCGAL::io::STL::load(stl_content), SFCGAL::Exception);
+}
+
+BOOST_AUTO_TEST_CASE(test_error_missing_vertex)
+{
+  std::string stl_content = "solid test\n"
+                            "  facet normal 0 0 1\n"
+                            "    outer loop\n"
+                            "      vertex 0 0 0\n"
+                            "      vertex 1 0 0\n"
+                            "    endloop\n"
+                            "  endfacet\n"
+                            "endsolid test\n";
+
+  BOOST_CHECK_THROW(SFCGAL::io::STL::load(stl_content), SFCGAL::Exception);
+}
+
+BOOST_AUTO_TEST_CASE(test_load_sphericon_stl)
+{
+  // Load the Sphericon STL file - a complex 3D shape
+  std::string filename =
+      std::string(SFCGAL_TEST_DIRECTORY) + "/data/objfiles/Sphericon.stl";
+  std::unique_ptr<SFCGAL::Geometry> geom =
+      SFCGAL::io::STL::loadFromFile(filename);
+
+  // Verify geometry is not empty and is the expected type
+  BOOST_CHECK(!geom->isEmpty());
+  BOOST_CHECK_EQUAL(geom->geometryType(), "TriangulatedSurface");
+
+  const auto &tin = geom->as<SFCGAL::TriangulatedSurface>();
+  // Sphericon has many triangular facets
+  BOOST_CHECK_GT(tin.numTriangles(), 0);
+
+  // Round-trip test: convert to WKT and back
+  std::string wkt = geom->asText();
+  BOOST_CHECK(!wkt.empty());
+
+  std::unique_ptr<SFCGAL::Geometry> reloaded(SFCGAL::io::readWkt(wkt));
+  BOOST_CHECK(!reloaded->isEmpty());
+  BOOST_CHECK_EQUAL(reloaded->geometryType(), "TriangulatedSurface");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
