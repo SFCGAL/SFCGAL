@@ -2743,4 +2743,66 @@ BOOST_AUTO_TEST_CASE(testReadObj)
   sfcgal_geometry_delete(copied_geometry);
 }
 
+BOOST_AUTO_TEST_CASE(testSurfaceSimplificationCount)
+{
+  sfcgal_set_error_handlers(printf, on_error);
+  hasError = false;
+
+  // Create a connected triangulated surface (a tetrahedron)
+  const char *wkt = "TIN Z(((0 0 0, 1 0 0, 0.5 0.5 1, 0 0 0)),"
+                    "((1 0 0, 0 1 0, 0.5 0.5 1, 1 0 0)),"
+                    "((0 1 0, 0 0 0, 0.5 0.5 1, 0 1 0)),"
+                    "((0 0 0, 0 1 0, 1 0 0, 0 0 0)))";
+
+  sfcgal_geometry_t *geom = sfcgal_io_read_wkt(wkt, strlen(wkt));
+  BOOST_CHECK(sfcgal_geometry_type_id(geom) == SFCGAL_TYPE_TRIANGULATEDSURFACE);
+
+  const size_t                     edgeCount(2);
+  sfcgal_simplification_strategy_t strategy =
+      SFCGAL_SIMPLIFICATION_STRATEGY_EDGE_LENGTH;
+
+  sfcgal_geometry_t *result =
+      sfcgal_geometry_simplify_surface_edge_count(geom, edgeCount, strategy);
+  BOOST_REQUIRE(result != nullptr);
+
+  BOOST_CHECK(result);
+  BOOST_CHECK(sfcgal_geometry_type_id(result) ==
+              SFCGAL_TYPE_TRIANGULATEDSURFACE);
+
+  /* --- cleanup --- */
+  sfcgal_geometry_delete(result);
+  sfcgal_geometry_delete(geom);
+}
+
+BOOST_AUTO_TEST_CASE(testSurfaceSimplificationRatio)
+{
+  sfcgal_set_error_handlers(printf, on_error);
+  hasError = false;
+
+  // Create a connected triangulated surface (a tetrahedron)
+  const char *wkt = "TIN Z(((0 0 0, 1 0 0, 0.5 0.5 1, 0 0 0)),"
+                    "((1 0 0, 0 1 0, 0.5 0.5 1, 1 0 0)),"
+                    "((0 1 0, 0 0 0, 0.5 0.5 1, 0 1 0)),"
+                    "((0 0 0, 0 1 0, 1 0 0, 0 0 0)))";
+
+  sfcgal_geometry_t *geom = sfcgal_io_read_wkt(wkt, strlen(wkt));
+  BOOST_CHECK(sfcgal_geometry_type_id(geom) == SFCGAL_TYPE_TRIANGULATEDSURFACE);
+
+  const double                     edgeRatio(0.7);
+  sfcgal_simplification_strategy_t strategy =
+      SFCGAL_SIMPLIFICATION_STRATEGY_EDGE_LENGTH;
+
+  sfcgal_geometry_t *result =
+      sfcgal_geometry_simplify_surface_edge_ratio(geom, edgeRatio, strategy);
+  BOOST_REQUIRE(result != nullptr);
+
+  BOOST_CHECK(result);
+  BOOST_CHECK(sfcgal_geometry_type_id(result) ==
+              SFCGAL_TYPE_TRIANGULATEDSURFACE);
+
+  /* --- cleanup --- */
+  sfcgal_geometry_delete(result);
+  sfcgal_geometry_delete(geom);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

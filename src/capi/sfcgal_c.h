@@ -2406,7 +2406,7 @@ sfcgal_geometry_transform(const sfcgal_geometry_t *geom,
                           const float             *matrix4x4);
 
 /**
- * Simplify a geometry
+ * Simplify a geometry by simplifying the polylines it contains
  * @param geom the geometry to simplify
  * @param threshold threshold parameter
  * @param preserveTopology preserve the topology
@@ -2416,6 +2416,55 @@ sfcgal_geometry_transform(const sfcgal_geometry_t *geom,
 SFCGAL_API sfcgal_geometry_t *
 sfcgal_geometry_simplify(const sfcgal_geometry_t *geom, double threshold,
                          bool preserveTopology);
+
+/**
+ * Simplification strategy for edge collapsing algorithms.
+ * @ingroup capi
+ */
+typedef enum {
+  SFCGAL_SIMPLIFICATION_STRATEGY_EDGE_LENGTH      = 0,
+  SFCGAL_SIMPLIFICATION_STRATEGY_GARLAND_HECKBERT = 1,
+  SFCGAL_SIMPLIFICATION_STRATEGY_LINDSTROM_TURK   = 2
+} sfcgal_simplification_strategy_t;
+
+/**
+ * Simplify a surface mesh using CGAL edge collapse algorithm
+ *
+ * The stop predicate is expressed as an edge quantity.
+ *
+ * @param geometry The input geometry to simplify (must be a surface or solid)
+ * @param edgeCount When to stop the simplification process
+ * @param strategy The cost and placement strategy to use
+ * @return A simplified copy of the input geometry
+ * @pre The input geometry must be valid and non-empty
+ * @pre For EDGE_COUNT_RATIO, the ratio must be in the range (0.0, 1.0)
+ * @pre The geometry must be 3-dimensional
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_geometry_simplify_surface_edge_count(
+    const sfcgal_geometry_t *geometry, size_t edgeCount,
+    sfcgal_simplification_strategy_t strategy);
+
+/**
+ * Simplify a surface mesh using CGAL edge collapse algorithm
+ *
+ * The stop predicate is expressed as a proportion between 0 and 1.
+ *
+ * @param geometry The input geometry to simplify (must be a surface or solid)
+ * @param edgeRatio The simplification process stops when the edge count ratio
+ * is reached
+ * @param strategy The cost and placement strategy to use
+ * @return A simplified copy of the input geometry
+ * @pre The input geometry must be valid and non-empty
+ * @pre For EDGE_COUNT_RATIO, the ratio must be in the range (0.0, 1.0)
+ * @pre The geometry must be 3-dimensional
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_geometry_simplify_surface_edge_ratio(
+    const sfcgal_geometry_t *geometry, double edgeRatio,
+    sfcgal_simplification_strategy_t strategy);
 
 /*--------------------------------------------------------------------------------------*
  *

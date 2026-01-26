@@ -77,6 +77,7 @@
 #include "SFCGAL/algorithm/scale.h"
 #include "SFCGAL/algorithm/simplification.h"
 #include "SFCGAL/algorithm/straightSkeleton.h"
+#include "SFCGAL/algorithm/surfaceSimplification.h"
 #include "SFCGAL/algorithm/tesselate.h"
 #include "SFCGAL/algorithm/translate.h"
 #include "SFCGAL/algorithm/union.h"
@@ -2461,6 +2462,65 @@ sfcgal_geometry_simplify(const sfcgal_geometry_t *geom, double threshold,
 
   std::unique_ptr<SFCGAL::Geometry> out = result->clone();
   return out.release();
+}
+
+namespace {
+auto
+cSimplificationStrategyToCpp(sfcgal_simplification_strategy_t strategy)
+    -> SFCGAL::algorithm::SimplificationStrategy
+{
+  switch (strategy) {
+  case SFCGAL_SIMPLIFICATION_STRATEGY_EDGE_LENGTH:
+    return SFCGAL::algorithm::SimplificationStrategy::EDGE_LENGTH;
+#ifdef SFCGAL_WITH_EIGEN
+  case SFCGAL_SIMPLIFICATION_STRATEGY_GARLAND_HECKBERT:
+    return SFCGAL::algorithm::SimplificationStrategy::GARLAND_HECKBERT;
+  case SFCGAL_SIMPLIFICATION_STRATEGY_LINDSTROM_TURK:
+    return SFCGAL::algorithm::SimplificationStrategy::LINDSTROM_TURK;
+#else
+  case SFCGAL_SIMPLIFICATION_STRATEGY_GARLAND_HECKBERT:
+  case SFCGAL_SIMPLIFICATION_STRATEGY_LINDSTROM_TURK:
+    BOOST_THROW_EXCEPTION(
+        SFCGAL::Exception("The chosen simplification strategy requires SFCGAL "
+                          "to be built with -DSFCGAL_WITH_EIGEN=ON."));
+#endif // SFCGAL_WITH_EIGEN
+  default:
+    return SFCGAL::algorithm::SimplificationStrategy::EDGE_LENGTH;
+  }
+}
+} // anonymous namespace
+
+extern "C" auto
+sfcgal_geometry_simplify_surface_edge_count(
+    const sfcgal_geometry_t *geom, size_t edgeCount,
+    sfcgal_simplification_strategy_t strategy) -> sfcgal_geometry_t *
+{
+  SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
+      const auto *geometry = reinterpret_cast<const SFCGAL::Geometry *>(geom);
+      SFCGAL::algorithm::SimplificationStopPredicate stop_predicate =
+          SFCGAL::algorithm::SimplificationStopPredicate::edgeCount(edgeCount);
+      std::unique_ptr<SFCGAL::Geometry> result =
+          SFCGAL::algorithm::surfaceSimplification(
+              *geometry, stop_predicate,
+              cSimplificationStrategyToCpp(strategy));
+      return result.release();)
+}
+
+extern "C" auto
+sfcgal_geometry_simplify_surface_edge_ratio(
+    const sfcgal_geometry_t *geom, double edgeRatio,
+    sfcgal_simplification_strategy_t strategy) -> sfcgal_geometry_t *
+{
+  SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
+      const auto *geometry = reinterpret_cast<const SFCGAL::Geometry *>(geom);
+      SFCGAL::algorithm::SimplificationStopPredicate stop_predicate =
+          SFCGAL::algorithm::SimplificationStopPredicate::edgeCountRatio(
+              edgeRatio);
+      std::unique_ptr<SFCGAL::Geometry> result =
+          SFCGAL::algorithm::surfaceSimplification(
+              *geometry, stop_predicate,
+              cSimplificationStrategyToCpp(strategy));
+      return result.release();)
 }
 
 extern "C" auto
