@@ -249,13 +249,29 @@ offset(const Polygon &g, const double &radius, Offset_polygon_set_2 &polygonSet)
    * Invoke minkowski_sum_2 for exterior ring
    */
   {
-    Offset_polygon_with_holes_2 const offset = CGAL::approximated_offset_2(
-        g.exteriorRing().toPolygon_2(), radius, SFCGAL_OFFSET_ACCURACY);
+    Offset_polygon_with_holes_2 offset;
 
-    if (polygonSet.is_empty()) {
-      polygonSet.insert(offset);
+    if (radius >= 0) {
+      offset = CGAL::approximated_offset_2(g.exteriorRing().toPolygon_2(),
+                                           radius, SFCGAL_OFFSET_ACCURACY);
+      if (polygonSet.is_empty()) {
+        polygonSet.insert(offset);
+      } else {
+        polygonSet.join(offset);
+      }
     } else {
-      polygonSet.join(offset);
+      std::vector<Offset_polygon_2> polys;
+      CGAL::approximated_inset_2(g.exteriorRing().toPolygon_2(), -radius,
+                                 SFCGAL_OFFSET_ACCURACY,
+                                 std::back_inserter(polys));
+      for (Offset_polygon_2 offset : polys) {
+        offset.reverse_orientation();
+        if (polygonSet.is_empty()) {
+          polygonSet.insert(offset);
+        } else {
+          polygonSet.join(offset);
+        }
+      }
     }
   }
 
