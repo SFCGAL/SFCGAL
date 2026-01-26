@@ -5,6 +5,7 @@
 #include "SFCGAL/algorithm/alphaShapes.h"
 
 #include "SFCGAL/GeometryCollection.h"
+#include "SFCGAL/MultiPolygon.h"
 #include "SFCGAL/Polygon.h"
 
 #include "SFCGAL/detail/GetPointsVisitor.h"
@@ -108,29 +109,46 @@ alphaToGeometry(const Alpha_shape_2 &alphaShape, bool allowHoles)
   Arrangement arr;
 
   CGAL::insert_non_intersecting_curves(arr, segments.begin(), segments.end());
-  auto poly{std::make_unique<Polygon>()};
-  for (auto f = arr.faces_begin(); f != arr.faces_end(); f++) {
-    auto ring{std::make_unique<LineString>()};
-    for (auto h = f->holes_begin(); h != f->holes_end(); h++) {
-      auto he = *h;
-      do {
-        ring->addPoint(he->source()->point());
-      } while (++he != *h);
-    }
 
-    if (ring->numPoints() > 3) {
-      ring->addPoint(ring->startPoint());
-      if (f->is_unbounded()) {
-        poly->setExteriorRing(ring.release());
-      } else if (allowHoles) {
-        poly->addInteriorRing(ring.release());
+  auto multiPolygon = std::make_unique<MultiPolygon>();
+
+  // we are only interested in the face that are holes of the unbounded_face
+  auto unboundedFace = arr.unbounded_face();
+
+  for (auto ubfh = unboundedFace->holes_begin();
+       ubfh != unboundedFace->holes_end(); ++ubfh) {
+    // get the opposite face
+    auto interiorFace = (*ubfh)->twin()->face();
+    auto polygon      = std::make_unique<Polygon>();
+
+    auto hit   = interiorFace->outer_ccb();
+    auto start = hit;
+
+    auto ring = std::make_unique<LineString>();
+    do {
+      ring->addPoint(hit->target()->point());
+    } while (++hit != start);
+    ring->closes();
+    polygon->setExteriorRing(std::move(ring));
+
+    if (allowHoles) {
+      for (auto hole = interiorFace->holes_begin();
+           hole != interiorFace->holes_end(); ++hole) {
+        auto ring = std::make_unique<LineString>();
+        hit       = *hole;
+        start     = hit;
+        do {
+          ring->addPoint(hit->target()->point());
+        } while (++hit != start);
+        ring->closes();
+        polygon->addInteriorRing(std::move(ring));
       }
     }
+
+    multiPolygon->addGeometry(std::move(polygon));
   }
 
-  std::unique_ptr<Geometry> result = std::move(poly);
-
-  return result;
+  return multiPolygon;
 }
 
 /** @endcond */

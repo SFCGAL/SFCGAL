@@ -74,9 +74,9 @@ BOOST_AUTO_TEST_CASE(testAlphaShapes2D_Triangle)
 
   LineString const          lineString(points);
   std::unique_ptr<Geometry> alphaShapes(algorithm::alphaShapes(lineString));
-  BOOST_CHECK(alphaShapes->is<Polygon>());
+  BOOST_CHECK(alphaShapes->is<MultiPolygon>());
   std::string const expectedWkt =
-      "POLYGON ((0.0 0.0,0.0 1.0,0.5 0.5,1.0 0.0,0.0 0.0))";
+      "MULTIPOLYGON (((0.5 0.5,0.0 1.0,0.0 0.0,1.0 0.0,0.5 0.5)))";
   BOOST_CHECK_EQUAL(alphaShapes->asText(1), expectedWkt);
 }
 
@@ -90,9 +90,9 @@ BOOST_AUTO_TEST_CASE(testAlphaShapes2D_Polygon)
 
   LineString const          lineString(points);
   std::unique_ptr<Geometry> alphaShapes(algorithm::alphaShapes(lineString));
-  BOOST_CHECK(alphaShapes->is<Polygon>());
+  BOOST_CHECK(alphaShapes->is<MultiPolygon>());
   std::string const expectedWkt =
-      "POLYGON ((0.0 0.0,0.0 1.0,1.0 1.0,1.0 0.0,0.0 0.0))";
+      "MULTIPOLYGON (((0.0 1.0,0.0 0.0,1.0 0.0,1.0 1.0,0.0 1.0)))";
   BOOST_CHECK_EQUAL(alphaShapes->asText(1), expectedWkt);
 }
 
