@@ -116,25 +116,21 @@ selfIntersects3D(const LineString &lineString) -> bool;
 /**
  * Self intersection test for 2D PolyhedralSurface (false if only point touch)
  * @param surface geometry to check self intersection with
- * @param graph surface graph matching @p surface
  * @return true when @p surface self intersects
  *
  */
 auto
-selfIntersects(const PolyhedralSurface &surface, const SurfaceGraph &graph)
-    -> bool;
+selfIntersects(const PolyhedralSurface &surface) -> bool;
 
 /**
  * Self intersection test for 3D PolyhedralSurface (false if only point touch)
  * @param surface geometry to check self intersection with
- * @param graph surface graph matching @p surface
  * @return true when @p surface self intersects
  *
  */
 
 auto
-selfIntersects3D(const PolyhedralSurface &surface, const SurfaceGraph &graph)
-    -> bool;
+selfIntersects3D(const PolyhedralSurface &surface) -> bool;
 
 /**
  * Self intersection test for 2D TriangulatedSurface (false if only point touch)

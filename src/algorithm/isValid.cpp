@@ -559,8 +559,8 @@ isValid(const PolyhedralSurface &polyhedralsurface, const SurfaceGraph &graph,
     return Validity::invalid("not connected");
   }
 
-  if (polyhedralsurface.is3D() ? selfIntersects3D(polyhedralsurface, graph)
-                               : selfIntersects(polyhedralsurface, graph)) {
+  if (polyhedralsurface.is3D() ? selfIntersects3D(polyhedralsurface)
+                               : selfIntersects(polyhedralsurface)) {
     return Validity::invalid("self intersects");
   }
 

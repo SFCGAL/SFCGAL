@@ -21,9 +21,10 @@
 #include "SFCGAL/detail/GeometrySet.h"
 #include "SFCGAL/detail/triangulate/triangulateInGeometrySet.h"
 
-#include <CGAL/box_intersection_d.h>
-
+#include <CGAL/Polygon_mesh_processing/self_intersections.h>
+#include <CGAL/Polygon_mesh_processing/triangulate_faces.h>
 #include <CGAL/Side_of_triangle_mesh.h>
+#include <CGAL/box_intersection_d.h>
 
 using namespace SFCGAL::detail;
 
@@ -553,69 +554,25 @@ selfIntersects3D(const LineString &lineString) -> bool
 /// @private
 template <int Dim>
 auto
-selfIntersectsImpl(const PolyhedralSurface &surface, const SurfaceGraph &graph)
-    -> bool
+selfIntersectsImpl(const PolyhedralSurface &surface) -> bool
 {
-  size_t const numPatches = surface.numPatches();
-
-  for (size_t pi = 0; pi != numPatches; ++pi) {
-    GeometrySet<Dim> geomSetI(surface.patchN(pi));
-    for (size_t pj = pi + 1; pj < numPatches; ++pj) {
-      GeometrySet<Dim> geomSetJ(surface.patchN(pj));
-      bool             hasIntersection = intersects<Dim>(geomSetI, geomSetJ);
-      if (hasIntersection) {
-        GeometrySet<Dim> geomSetInter;
-        // call intersection() version without recompose:
-        intersection<Dim>(geomSetI, geomSetJ, geomSetInter);
-
-        // two cases:
-        // - neighbors can have a line as intersection
-        // - non neighbors can only have a point or a set of points
-        using Iterator = SurfaceGraph::FaceGraph::adjacency_iterator;
-        std::pair<Iterator, Iterator> const neighbors =
-            boost::adjacent_vertices(pi, graph.faceGraph());
-
-        if (neighbors.second !=
-            std::find(neighbors.first, neighbors.second, pj)) {
-          // neighbor
-          // std::cerr << pi << " " << pj << " neighbor\n";
-
-          // apply recompose code from intersection(const Geometry, const
-          // Geometry, NoValidityCheck):
-          GeometrySet<Dim> filtered;
-          geomSetInter.filterCovered(filtered);
-          std::unique_ptr<Geometry> interRecomposed = filtered.recompose();
-          if (!interRecomposed->is<LineString>()) {
-            return true;
-          }
-        } else {
-          // not a neighbor
-          // std::cerr << pi << " " << pj << " not neighbor\n";
-          if (geomSetInter.dimension() != 0) {
-            return true;
-          }
-        }
-      }
-    }
-  }
-
-  return false;
+  auto poly_ptr = surface.toPolyhedron_3<detail::MarkedPolyhedron>();
+  CGAL::Polygon_mesh_processing::triangulate_faces(*poly_ptr);
+  return CGAL::Polygon_mesh_processing::does_self_intersect(*poly_ptr);
 }
 
 /// @private
 auto
-selfIntersects(const PolyhedralSurface &surface, const SurfaceGraph &graph)
-    -> bool
+selfIntersects(const PolyhedralSurface &surface) -> bool
 {
-  return selfIntersectsImpl<2>(surface, graph);
+  return selfIntersectsImpl<2>(surface);
 }
 
 /// @private
 auto
-selfIntersects3D(const PolyhedralSurface &surface, const SurfaceGraph &graph)
-    -> bool
+selfIntersects3D(const PolyhedralSurface &surface) -> bool
 {
-  return selfIntersectsImpl<3>(surface, graph);
+  return selfIntersectsImpl<3>(surface);
 }
 
 /// @private
