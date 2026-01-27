@@ -478,6 +478,26 @@ selfIntersectsImpl(const LineString &lineString) -> bool
   }
 
   const size_t numSegments = l.numSegments();
+  if (numSegments <= 2)
+    return true;
+
+  if (numSegments == 3) {
+    if (Dim == 2) {
+      return CGAL::collinear(l.pointN(0).toPoint_2(), l.pointN(1).toPoint_2(),
+                             l.pointN(2).toPoint_2());
+    }
+    return CGAL::collinear(l.pointN(0).toPoint_3(), l.pointN(1).toPoint_3(),
+                           l.pointN(2).toPoint_3());
+  }
+
+  if (Dim == 2) {
+    std::vector<Kernel::Point_2> points;
+    points.reserve(numSegments);
+    for (size_t i = 0; i != numSegments; ++i)
+      points.push_back(l.pointN(i).toPoint_2());
+
+    return !CGAL::is_simple_2(points.begin(), points.end());
+  }
 
   // test any two pairs of segments
   for (size_t i = 0; i != numSegments; ++i) {
@@ -487,50 +507,37 @@ selfIntersectsImpl(const LineString &lineString) -> bool
        * be used, but I dont know what to do with Kernel::Segment_Dim and
        * Kernel::Point_Dim
        */
-      std::unique_ptr<Geometry> inter; // null if no intersection
-
-      if (Dim == 2) {
-        const CGAL::Segment_2<Kernel> s1(l.pointN(i).toPoint_2(),
-                                         l.pointN(i + 1).toPoint_2());
-        const CGAL::Segment_2<Kernel> s2(l.pointN(j).toPoint_2(),
-                                         l.pointN(j + 1).toPoint_2());
-        const CGAL::Object            out = CGAL::intersection(s1, s2);
-
-        if (out.is<Kernel::Point_2>()) {
-          inter =
-              std::make_unique<Point>(CGAL::object_cast<Kernel::Point_2>(out));
-        } else if (out.is<Kernel::Segment_2>()) {
-          const Kernel::Segment_2 &s =
-              CGAL::object_cast<Kernel::Segment_2>(out);
-          inter = std::make_unique<LineString>(s.point(0), s.point(1));
-        }
-      } else {
+      {
         const CGAL::Segment_3<Kernel> s1(l.pointN(i).toPoint_3(),
                                          l.pointN(i + 1).toPoint_3());
         const CGAL::Segment_3<Kernel> s2(l.pointN(j).toPoint_3(),
                                          l.pointN(j + 1).toPoint_3());
-        const CGAL::Object            out = CGAL::intersection(s1, s2);
 
-        if (out.is<Kernel::Point_3>()) {
-          inter =
-              std::make_unique<Point>(CGAL::object_cast<Kernel::Point_3>(out));
-        } else if (out.is<Kernel::Segment_3>()) {
-          const Kernel::Segment_3 &s =
-              CGAL::object_cast<Kernel::Segment_3>(out);
-          inter = std::make_unique<LineString>(s.point(0), s.point(1));
+        // first check for overlaps
+        if (CGAL::collinear(s1.source(), s1.target(), s2.source()) &&
+            CGAL::collinear(s1.source(), s1.target(), s2.target())) {
+          Kernel::Less_xyz_3 less_xyz;
+          auto               a = s1.source(), b = s1.target();
+          if (!less_xyz(a, b))
+            std::swap(a, b);
+          auto c = s2.source(), d = s2.target();
+          if (!less_xyz(c, d))
+            std::swap(c, d);
+          if (!less_xyz(a, c)) {
+            std::swap(a, c);
+            std::swap(b, d);
+          }
+
+          if (!CGAL::are_ordered_along_line(a, b, c))
+            return true;
+        } else {
+          if (s1.source() == s2.source() || s1.source() == s2.target() ||
+              s1.target() == s2.source() || s1.target() == s2.target()) {
+            continue;
+          }
+          if (do_intersect(s1, s2))
+            return true;
         }
-      }
-
-      if (inter.get() && inter->is<LineString>()) {
-        return true; // segments overlap
-      }
-      if (inter.get() && inter->is<Point>() &&
-          !(i + 1 == j) // one contact point between consecutive segments is ok
-          && !((i == 0) && (j + 1 == numSegments) &&
-               inter->as<Point>() == l.startPoint() &&
-               inter->as<Point>() == l.endPoint())) {
-        return true; // contact point that is not a contact between startPoint
-                     // and endPoint
       }
     }
   }
