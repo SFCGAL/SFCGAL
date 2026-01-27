@@ -21,7 +21,8 @@
 #include "SFCGAL/detail/triangulate/triangulateInGeometrySet.h"
 
 #include <CGAL/box_intersection_d.h>
-
+#include <CGAL/Polygon_mesh_processing/self_intersections.h>
+#include <CGAL/Polygon_mesh_processing/triangulate_faces.h>
 #include <CGAL/Side_of_triangle_mesh.h>
 
 using namespace SFCGAL::detail;
@@ -527,44 +528,12 @@ selfIntersects3D(const LineString &l) -> bool
 
 template <int Dim>
 auto
-selfIntersectsImpl(const PolyhedralSurface &s, const SurfaceGraph &graph)
+selfIntersectsImpl(const PolyhedralSurface &s, const SurfaceGraph &)
     -> bool
 {
-  size_t const numPolygons = s.numPolygons();
-
-  for (size_t pi = 0; pi != numPolygons; ++pi) {
-    for (size_t pj = pi + 1; pj < numPolygons; ++pj) {
-      std::unique_ptr<Geometry> inter =
-          Dim == 3 ? intersection3D(s.polygonN(pi), s.polygonN(pj))
-                   : intersection(s.polygonN(pi), s.polygonN(pj));
-
-      if (!inter->isEmpty()) {
-        // two cases:
-        // - neighbors can have a line as intersection
-        // - non neighbors can only have a point or a set of points
-        using Iterator = SurfaceGraph::FaceGraph::adjacency_iterator;
-        std::pair<Iterator, Iterator> const neighbors =
-            boost::adjacent_vertices(pi, graph.faceGraph());
-
-        if (neighbors.second !=
-            std::find(neighbors.first, neighbors.second, pj)) {
-          // neighbor
-          // std::cerr << pi << " " << pj << " neighbor\n";
-          if (!inter->is<LineString>()) {
-            return true;
-          }
-        } else {
-          // not a neighbor
-          // std::cerr << pi << " " << pj << " not neighbor\n";
-          if (inter->dimension() != 0) {
-            return true;
-          }
-        }
-      }
-    }
-  }
-
-  return false;
+  auto poly_ptr = s.toPolyhedron_3<Kernel,detail::MarkedPolyhedron>();
+  CGAL::Polygon_mesh_processing::triangulate_faces(*poly_ptr);
+  return  CGAL::Polygon_mesh_processing::does_self_intersect(*poly_ptr);
 }
 
 auto
