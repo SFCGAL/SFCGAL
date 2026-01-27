@@ -47,9 +47,9 @@ BOOST_AUTO_TEST_CASE(testSimple)
   std::unique_ptr<Geometry> const gA(
       io::readWkt("POLYGON ((0 0,10 0,10 10,0 10,0 0))"));
 
-  std::unique_ptr<MultiPolygon> result(algorithm::offset(*gA, 1.0));
+  std::unique_ptr<MultiPolygon> resultPositive(algorithm::offset(*gA, 1.0));
   BOOST_CHECK_EQUAL(
-      result->asText(7),
+      resultPositive->asText(7),
       "MULTIPOLYGON (((-1.0000000 10.0000000,-1.0000000 0.0000000,-0.8750000 "
       "-0.4841229,-0.7500000 -0.6614378,-0.6250000 -0.7806247,-0.5000000 "
       "-0.8660254,-0.3750000 -0.9270248,-0.2500000 -0.9682458,-0.1250000 "
@@ -63,6 +63,13 @@ BOOST_AUTO_TEST_CASE(testSimple)
       "10.9921567,-0.2500000 10.9682458,-0.3750000 10.9270248,-0.5000000 "
       "10.8660254,-0.6250000 10.7806247,-0.7500000 10.6614378,-0.8750000 "
       "10.4841229,-1.0000000 10.0000000)))");
+
+  // negative radius
+  std::unique_ptr<MultiPolygon> resultNegative(algorithm::offset(*gA, -1.0));
+  BOOST_CHECK_EQUAL(
+      resultNegative->asText(7),
+      "MULTIPOLYGON (((1.0000000 9.0000000,1.0000000 1.0000000,9.0000000 "
+      "1.0000000,9.0000000 9.0000000,1.0000000 9.0000000)))");
 }
 
 BOOST_AUTO_TEST_CASE(testHoles)
