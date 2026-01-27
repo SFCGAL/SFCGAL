@@ -45,8 +45,7 @@ SFCGAL_API enum class AlphaShape3DMode {
  * @return A PolyhedralSurface representing the optimal alpha shape
  */
 SFCGAL_API std::unique_ptr<PolyhedralSurface>
-           alphaShapes3D(const Geometry  &geom,
-                         AlphaShape3DMode mode = AlphaShape3DMode::GENERAL);
+           alphaShapes3D(const Geometry  &geom, bool allow_cavities = false);
 
 } // namespace SFCGAL::algorithm
 

@@ -12,6 +12,7 @@
 #include <CGAL/Polygon_mesh_processing/polygon_soup_to_polygon_mesh.h>
 #include <CGAL/Polygon_mesh_processing/repair_polygon_soup.h>
 
+
 namespace SFCGAL::algorithm {
 
 using Vb3  = CGAL::Alpha_shape_vertex_base_3<Kernel>;
@@ -24,7 +25,7 @@ using Point_3       = Kernel::Point_3;
 
 //! Reads the geometry and compute alphaShape
 auto
-buildAlphaShape(const Geometry &geom, AlphaShape3DMode mode)
+buildAlphaShape(const Geometry &geom)
     -> std::unique_ptr<Alpha_shape_3>
 {
   if (geom.isEmpty()) {
@@ -50,10 +51,8 @@ buildAlphaShape(const Geometry &geom, AlphaShape3DMode mode)
   // Create and configure alpha shape
   auto alphaShape =
       std::make_unique<Alpha_shape_3>(points.begin(), points.end());
-  alphaShape->set_mode(mode == AlphaShape3DMode::REGULARIZED
-                           ? Alpha_shape_3::REGULARIZED
-                           : Alpha_shape_3::GENERAL);
-
+  alphaShape->set_mode(Alpha_shape_3::REGULARIZED);
+// find_alpha_solid()
   // Set optimal alpha value for one solid component
   auto optimalAlphaValue = alphaShape->find_optimal_alpha(1);
   alphaShape->set_alpha(*optimalAlphaValue);
@@ -63,44 +62,78 @@ buildAlphaShape(const Geometry &geom, AlphaShape3DMode mode)
 
 //! Converts alphaShape to a PolyhedralSurface
 auto
-alphaShape3D_to_polyhedralSurface(const Alpha_shape_3 &alphaShape)
+alphaShape3D_to_polyhedralSurface(const Alpha_shape_3 &alphaShape, bool allow_cavities)
     -> std::unique_ptr<PolyhedralSurface>
 {
 
   // Iterate through all facets of the alpha shape
   std::vector<Point_3>                    points;
   std::vector<std::array<std::size_t, 3>> polygons;
+  std::map<Alpha_shape_3::Vertex_handle, std::size_t> vids;
+
+  auto getvid = [&points, &vids](Alpha_shape_3::Vertex_handle vh)
+  {
+    auto insert_res = vids.emplace(vh, points.size());
+    if (insert_res.second)
+    {
+      points.push_back(vh->point());
+    }
+    return insert_res.first->second;
+  };
+
+  std::set<Alpha_shape_3::Cell_handle> non_bounded_component;
+
+  if (!allow_cavities)
+  {
+    std::vector<Alpha_shape_3::Cell_handle> stack;
+    stack.push_back(alphaShape.infinite_cell());
+    while(!stack.empty())
+    {
+      auto cell = stack.back();
+      stack.pop_back();
+      if (!non_bounded_component.insert(cell).second)
+        continue;
+      for (int i=0;i<4; ++i)
+      {
+        auto cell_n=cell->neighbor(i);
+        if (alphaShape.classify(cell_n)==Alpha_shape_3::EXTERIOR && non_bounded_component.count(cell_n)==0)
+          stack.push_back(cell_n);
+      }
+    }
+  }
+
   for (auto facetIterator = alphaShape.alpha_shape_facets_begin();
        facetIterator != alphaShape.alpha_shape_facets_end(); ++facetIterator) {
 
     if (alphaShape.classify(*facetIterator) == Alpha_shape_3::REGULAR) {
+      auto facet = *facetIterator;
+
+      // always look at the facet from the outside
+      if (alphaShape.classify(facet.first)!=Alpha_shape_3::EXTERIOR)
+      {
+        facet = alphaShape.mirror_facet(facet);
+      }
+
       // Get facet vertices
-      auto cell     = facetIterator->first;
-      int  facetIdx = facetIterator->second;
+      auto cell     = facet.first;
+      int  facetIdx = facet.second;
 
-      const size_t currentIdx = points.size();
-      polygons.push_back({currentIdx, currentIdx + 1, currentIdx + 2});
-      points.push_back(cell->vertex((facetIdx + 1) & 3)->point());
-      points.push_back(cell->vertex((facetIdx + 2) & 3)->point());
-      points.push_back(cell->vertex((facetIdx + 3) & 3)->point());
+      if (!allow_cavities && non_bounded_component.count(cell)==0)
+        continue;
 
-      // // Create triangle polygon
-      // auto poly = std::make_unique<Polygon>();
-      // auto ring = std::make_unique<LineString>();
+      polygons.push_back(CGAL::make_array(
+        getvid(cell->vertex((facetIdx + 1) % 4)),
+        getvid(cell->vertex((facetIdx + 2) % 4)),
+        getvid(cell->vertex((facetIdx + 3) % 4)))
+      );
 
-      // // create a closed ring
-      // ring->addPoint(Point(pt1));
-      // ring->addPoint(Point(pt2));
-      // ring->addPoint(Point(pt3));
-      // ring->addPoint(Point(pt1));
-
-      // poly->setExteriorRing(ring.release());
-
-      // resultSurface->addPolygon(poly.release());
+      // fix orientation of triangles
+      if (facetIdx%2==0)
+        std::swap(polygons.back()[0], polygons.back()[1]);
     }
   }
 
-  CGAL::Polygon_mesh_processing::repair_polygon_soup(points, polygons);
+  // we need to orient as solid does not imply manifold
   CGAL::Polygon_mesh_processing::orient_polygon_soup(points, polygons);
   CGAL::Surface_mesh<Point_3> surfaceMesh;
   CGAL::Polygon_mesh_processing::polygon_soup_to_polygon_mesh(points, polygons,
@@ -110,14 +143,14 @@ alphaShape3D_to_polyhedralSurface(const Alpha_shape_3 &alphaShape)
 }
 
 auto
-alphaShapes3D(const Geometry &geom, AlphaShape3DMode mode)
+alphaShapes3D(const Geometry &geom, bool allow_cavities)
     -> std::unique_ptr<PolyhedralSurface>
 {
-  std::unique_ptr<Alpha_shape_3> alphaShape = buildAlphaShape(geom, mode);
+  std::unique_ptr<Alpha_shape_3> alphaShape = buildAlphaShape(geom);
   if (!alphaShape) {
     return std::make_unique<PolyhedralSurface>();
   }
-  return alphaShape3D_to_polyhedralSurface(*alphaShape);
+  return alphaShape3D_to_polyhedralSurface(*alphaShape, allow_cavities);
 }
 
 } // namespace SFCGAL::algorithm

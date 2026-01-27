@@ -63,8 +63,6 @@ BOOST_AUTO_TEST_CASE(testAlphaShapes3D_MultiPoint)
 
   std::unique_ptr<Geometry> alphaShapesGeneral(algorithm::alphaShapes3D(geomInput->as<const SFCGAL::Geometry>()));
 
-  // std::cout << alphaShapesGeneral->asText(17);
-
   // check
   try {
     const SFCGAL::Validity validity = SFCGAL::algorithm::isValid(*alphaShapesGeneral);
@@ -77,8 +75,6 @@ BOOST_AUTO_TEST_CASE(testAlphaShapes3D_MultiPoint)
     std::cout << e.what() << "\n";
     exit(1);
   }
-
-  exit(1);
 }
 
 
