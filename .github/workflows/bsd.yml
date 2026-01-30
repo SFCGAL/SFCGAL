@@ -36,7 +36,7 @@ jobs:
                 ;;
             esac
 
-            export CGAL_VERSION=6.1
+            export CGAL_VERSION=6.1.1
             curl -L -o CGAL-${CGAL_VERSION}.tar.gz "https://github.com/CGAL/cgal/archive/refs/tags/v${CGAL_VERSION}.tar.gz"
             tar xzf CGAL-${CGAL_VERSION}.tar.gz
 
