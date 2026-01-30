@@ -1,4 +1,4 @@
-task:
+freebsd_task:
   name: FreeBSD
   alias: test-freebsd
   env:
@@ -27,7 +27,7 @@ task:
       freebsd_instance:
         image_family: freebsd-14-3
 
-task:
+macos_task:
   name: macOS
   alias: test-macos
   test_script:
