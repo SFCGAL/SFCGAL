@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(testAlphaShapes2D_ComputeAlpha)
   LineString const                lineString(points);
   size_t const                    nb_comp = 3;
   std::unique_ptr<Geometry> const alphaShapes(
-      algorithm::optimal_alpha_shapes(lineString, false, nb_comp));
+      algorithm::optimalAlphaShapes(lineString, false, nb_comp));
 }
 
 BOOST_AUTO_TEST_CASE(testAlphaShapes2D_Empty)
@@ -135,13 +135,13 @@ BOOST_AUTO_TEST_CASE(testAlphaShapes2D_MultiPoint)
     // expectedWktOptimal
     std::getline(efsOptimal, expectedWkt_optimal);
     std::unique_ptr<Geometry> alphaShapesOptim(
-        algorithm::optimal_alpha_shapes(g->as<const SFCGAL::Geometry>()));
+        algorithm::optimalAlphaShapes(g->as<const SFCGAL::Geometry>()));
     BOOST_CHECK_EQUAL(alphaShapesOptim->asText(1), expectedWkt_optimal);
 
     // expectedWktOptimalHoles
     std::getline(efsOptimalHoles, expectedWkt_optimal_holes);
     std::unique_ptr<Geometry> alphaShapesOptimHoles(
-        algorithm::optimal_alpha_shapes(g->as<const SFCGAL::Geometry>(), true));
+        algorithm::optimalAlphaShapes(g->as<const SFCGAL::Geometry>(), true));
     BOOST_CHECK_EQUAL(alphaShapesOptimHoles->asText(1),
                       expectedWkt_optimal_holes);
   }

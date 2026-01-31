@@ -47,30 +47,30 @@ using Arrangement = CGAL::Arrangement_2<Traits_2>;
 
 template <class OutputIterator>
 void
-alpha_edges(const Alpha_shape_2 &A, OutputIterator out)
+alphaEdges(const Alpha_shape_2 &alphaShape, OutputIterator out)
 {
-  auto it  = A.alpha_shape_edges_begin();
-  auto end = A.alpha_shape_edges_end();
+  auto it  = alphaShape.alpha_shape_edges_begin();
+  auto end = alphaShape.alpha_shape_edges_end();
   for (; it != end; ++it) {
-    if (A.classify(*it) == 2) {
-      *out++ = A.segment(*it);
+    if (alphaShape.classify(*it) == 2) {
+      *out++ = alphaShape.segment(*it);
     }
   }
 }
 
 static auto
-computeAlpha(const Geometry &g, Alpha_shape_2 &alphaShape, double alpha = 0,
-             size_t nb_components = 1) -> double
+computeAlpha(const Geometry &geometry, Alpha_shape_2 &alphaShape,
+             double alpha = 0, size_t nbComponents = 1) -> double
 {
   using CGAL::object_cast;
   double result = -1.0;
 
-  if (g.isEmpty()) {
+  if (geometry.isEmpty()) {
     return result;
   }
 
   SFCGAL::detail::GetPointsVisitor getPointVisitor;
-  const_cast<Geometry &>(g).accept(getPointVisitor);
+  const_cast<Geometry &>(geometry).accept(getPointVisitor);
 
   // collect points
   if (getPointVisitor.points.size() < 4) {
@@ -87,12 +87,12 @@ computeAlpha(const Geometry &g, Alpha_shape_2 &alphaShape, double alpha = 0,
   std::vector<Segment_2> segments;
   alphaShape.make_alpha_shape(points.begin(), points.end());
   alphaShape.set_alpha(Kernel::FT(alpha));
-  alpha_edges(alphaShape, std::back_inserter(segments));
+  alphaEdges(alphaShape, std::back_inserter(segments));
 
-  // Ensure we compare the iterator from find_optimal_alpha(nb_components)
+  // Ensure we compare the iterator from find_optimal_alpha(nbComponents)
   // against alpha_end() before dereferencing to avoid potential crash when
   // no valid alpha is found.
-  auto it_alpha = alphaShape.find_optimal_alpha(nb_components);
+  auto it_alpha = alphaShape.find_optimal_alpha(nbComponents);
   if (it_alpha != alphaShape.alpha_end()) {
     result = CGAL::to_double(*it_alpha);
   } else {
@@ -105,11 +105,11 @@ computeAlpha(const Geometry &g, Alpha_shape_2 &alphaShape, double alpha = 0,
 }
 
 static auto
-alpha_to_geometry(const Alpha_shape_2 &A, bool allow_holes)
+alphaToGeometry(const Alpha_shape_2 &alphaShape, bool allowHoles)
     -> std::unique_ptr<Geometry>
 {
   std::vector<Segment_2> segments;
-  alpha_edges(A, std::back_inserter(segments));
+  alphaEdges(alphaShape, std::back_inserter(segments));
 
   Arrangement arr;
 
@@ -128,7 +128,7 @@ alpha_to_geometry(const Alpha_shape_2 &A, bool allow_holes)
       ring->addPoint(ring->startPoint());
       if (f->is_unbounded()) {
         poly->setExteriorRing(ring.release());
-      } else if (allow_holes) {
+      } else if (allowHoles) {
         poly->addInteriorRing(ring.release());
       }
     }
@@ -147,32 +147,33 @@ alpha_to_geometry(const Alpha_shape_2 &A, bool allow_holes)
 /// @publicsection
 
 auto
-optimal_alpha_shapes(const Geometry &g, bool allow_holes, size_t nb_components)
-    -> std::unique_ptr<Geometry>
+optimalAlphaShapes(const Geometry &geometry, bool allowHoles,
+                   size_t nbComponents) -> std::unique_ptr<Geometry>
 {
-  Alpha_shape_2 A;
-  const double  optimalAlpha{computeAlpha(g, A, 10000, nb_components)};
+  Alpha_shape_2 alphaShape;
+  const double  optimalAlpha{
+      computeAlpha(geometry, alphaShape, 10000, nbComponents)};
   if (optimalAlpha < 0) {
     return std::unique_ptr<Geometry>(new GeometryCollection());
   }
 
-  A.set_alpha(optimalAlpha);
+  alphaShape.set_alpha(optimalAlpha);
 
-  return alpha_to_geometry(A, allow_holes);
+  return alphaToGeometry(alphaShape, allowHoles);
 }
 
 auto
-alphaShapes(const Geometry &g, double alpha, bool allow_holes)
+alphaShapes(const Geometry &geometry, double alpha, bool allowHoles)
     -> std::unique_ptr<Geometry>
 {
   using CGAL::object_cast;
-  Alpha_shape_2 A;
-  const double  optimalAlpha{computeAlpha(g, A, alpha)};
+  Alpha_shape_2 alphaShape;
+  const double  optimalAlpha{computeAlpha(geometry, alphaShape, alpha)};
   if (optimalAlpha < 0) {
     return std::unique_ptr<Geometry>(new GeometryCollection());
   }
 
-  return alpha_to_geometry(A, allow_holes);
+  return alphaToGeometry(alphaShape, allowHoles);
 }
 
 } // namespace SFCGAL::algorithm

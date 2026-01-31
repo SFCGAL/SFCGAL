@@ -1843,7 +1843,7 @@ sfcgal_geometry_optimal_alpha_shapes(const sfcgal_geometry_t *geom,
   std::unique_ptr<SFCGAL::Geometry> result;
 
   try {
-    result = SFCGAL::algorithm::optimal_alpha_shapes(
+    result = SFCGAL::algorithm::optimalAlphaShapes(
         g1->as<const SFCGAL::Geometry>(), allow_holes, nb_components);
   } catch (std::exception &e) {
     SFCGAL_WARNING("During optimal_alpha_shapes(A, %g %g):",
