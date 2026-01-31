@@ -82,10 +82,8 @@ computeAlpha(const Geometry &geometry, Alpha_shape_2 &alphaShape,
     points.push_back(point->toPoint_2());
   }
 
-  std::vector<Segment_2> segments;
   alphaShape.make_alpha_shape(points.begin(), points.end());
   alphaShape.set_alpha(Kernel::FT(alpha));
-  alphaEdges(alphaShape, std::back_inserter(segments));
 
   // Ensure we compare the iterator from find_optimal_alpha(nbComponents)
   // against alpha_end() before dereferencing to avoid potential crash when
