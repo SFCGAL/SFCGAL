@@ -97,9 +97,7 @@ computeAlpha(const Geometry &geometry, Alpha_shape_2 &alphaShape,
   if (it_alpha != alphaShape.alpha_end()) {
     result = CGAL::to_double(*it_alpha);
   } else {
-    std::ostringstream oss;
-    oss << "Can't find alpha value.";
-    throw std::runtime_error(oss.str());
+    BOOST_THROW_EXCEPTION(Exception("Can't find alpha value."));
   }
 
   return result;

@@ -157,8 +157,7 @@ BOOST_AUTO_TEST_CASE(testAlphaShapes2D_InvalidPolygon_Issue254)
   points.emplace_back(1.0, 2.0);
 
   LineString const lineString(points);
-  BOOST_CHECK_THROW(algorithm::alphaShapes(lineString, 20.1, false),
-                    std::runtime_error);
+  BOOST_CHECK_THROW(algorithm::alphaShapes(lineString, 20.1, false), Exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
