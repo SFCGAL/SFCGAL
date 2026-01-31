@@ -46,10 +46,11 @@ template <class OutputIterator>
 void
 alphaEdges(const Alpha_shape_2 &alphaShape, OutputIterator out)
 {
+  // keep only stable boundary of the alpha-shape
   auto it  = alphaShape.alpha_shape_edges_begin();
   auto end = alphaShape.alpha_shape_edges_end();
   for (; it != end; ++it) {
-    if (alphaShape.classify(*it) == 2) {
+    if (alphaShape.classify(*it) == Alpha_shape_2::REGULAR) {
       *out++ = alphaShape.segment(*it);
     }
   }
