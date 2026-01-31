@@ -25,6 +25,7 @@
 
 #include <CGAL/Arr_non_caching_segment_basic_traits_2.h>
 #include <CGAL/Arrangement_2.h>
+#include <memory>
 #include <vector>
 
 namespace SFCGAL::algorithm {
@@ -154,7 +155,7 @@ optimalAlphaShapes(const Geometry &geometry, bool allowHoles,
   const double  optimalAlpha{
       computeAlpha(geometry, alphaShape, 10000, nbComponents)};
   if (optimalAlpha < 0) {
-    return std::unique_ptr<Geometry>(new GeometryCollection());
+    return std::make_unique<GeometryCollection>();
   }
 
   alphaShape.set_alpha(optimalAlpha);
@@ -170,7 +171,7 @@ alphaShapes(const Geometry &geometry, double alpha, bool allowHoles)
   Alpha_shape_2 alphaShape;
   const double  optimalAlpha{computeAlpha(geometry, alphaShape, alpha)};
   if (optimalAlpha < 0) {
-    return std::unique_ptr<Geometry>(new GeometryCollection());
+    return std::make_unique<GeometryCollection>();
   }
 
   return alphaToGeometry(alphaShape, allowHoles);
