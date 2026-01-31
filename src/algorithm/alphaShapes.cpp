@@ -5,11 +5,7 @@
 #include "SFCGAL/algorithm/alphaShapes.h"
 
 #include "SFCGAL/GeometryCollection.h"
-#include "SFCGAL/MultiPolygon.h"
 #include "SFCGAL/Polygon.h"
-#include "SFCGAL/PolyhedralSurface.h"
-#include "SFCGAL/Triangle.h"
-#include "SFCGAL/TriangulatedSurface.h"
 
 #include "SFCGAL/detail/GetPointsVisitor.h"
 
