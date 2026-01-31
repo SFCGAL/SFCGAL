@@ -99,22 +99,23 @@ BOOST_AUTO_TEST_CASE(testAlphaShapes2D_Polygon)
 BOOST_AUTO_TEST_CASE(testAlphaShapes2D_MultiPoint)
 {
   std::string inputData(SFCGAL_TEST_DIRECTORY);
-  inputData += "/data/AlphaShapesWkt.txt";
+  inputData += "/data/AlphaShapesWkt1Component.txt";
   std::ifstream ifs(inputData.c_str());
   BOOST_REQUIRE(ifs.good());
 
   std::string expectedData(SFCGAL_TEST_DIRECTORY);
-  expectedData += "/data/AlphaShapesWkt_expected.txt";
+  expectedData += "/data/AlphaShapesWkt1Component_expected.txt";
   std::ifstream efs(expectedData.c_str());
   BOOST_REQUIRE(efs.good());
 
   std::string expectedDataOptimal(SFCGAL_TEST_DIRECTORY);
-  expectedDataOptimal += "/data/AlphaShapesWkt_expected_optimal.txt";
+  expectedDataOptimal += "/data/AlphaShapesWkt1Component_expected_optimal.txt";
   std::ifstream efsOptimal(expectedDataOptimal.c_str());
   BOOST_REQUIRE(efsOptimal.good());
 
   std::string expectedDataOptimalHoles(SFCGAL_TEST_DIRECTORY);
-  expectedDataOptimalHoles += "/data/AlphaShapesWkt_expected_optimal_holes.txt";
+  expectedDataOptimalHoles +=
+      "/data/AlphaShapesWkt1Component_expected_optimal_holes.txt";
   std::ifstream efsOptimalHoles(expectedDataOptimalHoles.c_str());
   BOOST_REQUIRE(efsOptimalHoles.good());
 
