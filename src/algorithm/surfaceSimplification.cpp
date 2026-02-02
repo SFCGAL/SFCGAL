@@ -100,143 +100,130 @@ simplifyMeshLindstromTurk(InexactMesh &mesh, const StopPredicate &stop)
 #endif // SFCGAL_WITH_EIGEN
 
 /**
- * @brief Simplify a surface mesh
+ * @brief Call a simplification function on a mesh (exact or inexact) depending
+ * on a stop predicate.
+ *
+ * The function handles edge count as well as edge ratio stop predicates.
  */
+template <typename Mesh, typename SimplifyFn>
 auto
-simplifySurfaceMesh(Surface_mesh_3                    &mesh,
-                    const SimplificationStopPredicate &stopPredicate,
-                    SimplificationStrategy             strategy) -> size_t
+simplifyWithStopPredicate(Mesh &mesh, const SimplificationStopPredicate &stop,
+                          SimplifyFn &&simplifyFn)
 {
-  // For advanced strategies, convert to inexact mesh
-#ifdef SFCGAL_WITH_EIGEN
-  if (strategy == SimplificationStrategy::GARLAND_HECKBERT ||
-      strategy == SimplificationStrategy::LINDSTROM_TURK) {
+  size_t result;
+  if (stop.type == SimplificationStopPredicate::PredicateType::EDGE_COUNT) {
 
-    // Check mesh size before expensive conversion
-    constexpr size_t MAX_VERTICES_FOR_CONVERSION =
-        500000; // Reasonable limit for memory
-    constexpr size_t MAX_FACES_FOR_CONVERSION = 1000000;
-
-    if (mesh.number_of_vertices() > MAX_VERTICES_FOR_CONVERSION ||
-        mesh.number_of_faces() > MAX_FACES_FOR_CONVERSION) {
-      throw std::invalid_argument("Mesh too large for kernel conversion - use "
-                                  "EDGE_LENGTH strategy instead");
-    }
-
-    // Convert exact mesh to inexact mesh
-    EK_to_IK    toInexact;
-    InexactMesh inexactMesh;
-
-    // Copy vertices
-    std::map<Surface_mesh_3::Vertex_index, InexactMesh::Vertex_index> vertexMap;
-    for (auto vh : mesh.vertices()) {
-      auto inexactPoint = toInexact(mesh.point(vh));
-      auto newVh        = inexactMesh.add_vertex(inexactPoint);
-      vertexMap[vh]     = newVh;
-    }
-
-    // Copy faces
-    for (auto fh : mesh.faces()) {
-      std::vector<InexactMesh::Vertex_index> inexactVertices;
-      for (auto vh : mesh.vertices_around_face(mesh.halfedge(fh))) {
-        inexactVertices.push_back(vertexMap[vh]);
-      }
-      inexactMesh.add_face(inexactVertices);
-    }
-
-    size_t result;
-
-    if (stopPredicate.type ==
-        SimplificationStopPredicate::PredicateType::EDGE_COUNT) {
-      auto const initialEdgeCount =
-          static_cast<size_t>(inexactMesh.number_of_edges());
-      auto const targetEdgeCount = static_cast<size_t>(stopPredicate.value);
-
-      if (targetEdgeCount >= initialEdgeCount) {
-        return 0;
-      }
-
-      size_t const edgesToRemove = initialEdgeCount - targetEdgeCount;
-      SMS::Edge_count_stop_predicate<InexactMesh> stop(edgesToRemove);
-
-      if (strategy == SimplificationStrategy::GARLAND_HECKBERT) {
-        result = simplifyMeshGarlandHeckbert(inexactMesh, stop);
-      } else {
-        result = simplifyMeshLindstromTurk(inexactMesh, stop);
-      }
-    } else {
-      double const ratio = stopPredicate.value;
-
-      if (ratio <= 0.0 || ratio >= 1.0) {
-        throw std::invalid_argument(
-            "Edge count ratio must be in the range (0.0, 1.0)");
-      }
-
-      SMS::Edge_count_ratio_stop_predicate<InexactMesh> stop(ratio);
-
-      if (strategy == SimplificationStrategy::GARLAND_HECKBERT) {
-        result = simplifyMeshGarlandHeckbert(inexactMesh, stop);
-      } else {
-        result = simplifyMeshLindstromTurk(inexactMesh, stop);
-      }
-    }
-
-    // Convert back to exact mesh
-    mesh.clear();
-    IK_to_EK toExact;
-
-    // Copy vertices back
-    std::map<InexactMesh::Vertex_index, Surface_mesh_3::Vertex_index>
-        backVertexMap;
-    for (auto vh : inexactMesh.vertices()) {
-      auto exactPoint   = toExact(inexactMesh.point(vh));
-      auto newVh        = mesh.add_vertex(exactPoint);
-      backVertexMap[vh] = newVh;
-    }
-
-    // Copy faces back
-    for (auto fh : inexactMesh.faces()) {
-      std::vector<Surface_mesh_3::Vertex_index> exactVertices;
-      for (auto vh :
-           inexactMesh.vertices_around_face(inexactMesh.halfedge(fh))) {
-        exactVertices.push_back(backVertexMap[vh]);
-      }
-      mesh.add_face(exactVertices);
-    }
-
-    return result;
-  }
-#endif // SFCGAL_WITH_EIGEN
-
-  // Default EDGE_LENGTH strategy with exact mesh
-  if (stopPredicate.type ==
-      SimplificationStopPredicate::PredicateType::EDGE_COUNT) {
-    // Stop after collapsing a specific number of edges
     auto const initialEdgeCount = static_cast<size_t>(mesh.number_of_edges());
-    auto const targetEdgeCount  = static_cast<size_t>(stopPredicate.value);
+    auto const targetEdgeCount  = static_cast<size_t>(stop.value);
 
     if (targetEdgeCount >= initialEdgeCount) {
-      return 0; // No simplification needed
+      return static_cast<size_t>(0);
     }
 
     size_t const edgesToRemove = initialEdgeCount - targetEdgeCount;
-    SMS::Edge_count_stop_predicate<Surface_mesh_3> stop(edgesToRemove);
-
-    return simplifyMesh(mesh, stop);
+    SMS::Edge_count_stop_predicate<Mesh> predicate(edgesToRemove);
+    result = simplifyFn(mesh, predicate);
 
   } else {
-    // Stop when edge count ratio is reached
-    double const ratio = stopPredicate.value;
 
+    double const ratio = stop.value;
     if (ratio <= 0.0 || ratio >= 1.0) {
       throw std::invalid_argument(
           "Edge count ratio must be in the range (0.0, 1.0)");
     }
 
-    SMS::Edge_count_ratio_stop_predicate<Surface_mesh_3> stop(ratio);
-
-    return simplifyMesh(mesh, stop);
+    SMS::Edge_count_ratio_stop_predicate<Mesh> predicate(ratio);
+    result = simplifyFn(mesh, predicate);
   }
+  return result;
+}
+
+#ifdef SFCGAL_WITH_EIGEN
+/**
+ * @brief Simplify inexact meshes with Eigen strategies.
+ */
+auto
+simplifyInexactMesh(Surface_mesh_3                    &mesh,
+                    const SimplificationStopPredicate &stop,
+                    SimplificationStrategy             strategy)
+{
+  constexpr size_t MAX_VERTICES = 500000;
+  constexpr size_t MAX_FACES    = 1000000;
+
+  if (mesh.number_of_vertices() > MAX_VERTICES ||
+      mesh.number_of_faces() > MAX_FACES) {
+    throw std::invalid_argument("Mesh too large for kernel conversion - use "
+                                "EDGE_LENGTH strategy instead");
+  }
+
+  EK_to_IK    toInexact;
+  IK_to_EK    toExact;
+  InexactMesh inexactMesh;
+
+  std::map<Surface_mesh_3::Vertex_index, InexactMesh::Vertex_index> vmap;
+
+  for (auto vh : mesh.vertices()) {
+    vmap[vh] = inexactMesh.add_vertex(toInexact(mesh.point(vh)));
+  }
+
+  for (auto fh : mesh.faces()) {
+    std::vector<InexactMesh::Vertex_index> verts;
+    for (auto vh : mesh.vertices_around_face(mesh.halfedge(fh))) {
+      verts.push_back(vmap[vh]);
+    }
+    inexactMesh.add_face(verts);
+  }
+
+  auto simplifyFn = [&](auto &m, auto &predicate) {
+    if (strategy == SimplificationStrategy::GARLAND_HECKBERT) {
+      return simplifyMeshGarlandHeckbert(m, predicate);
+    }
+    return simplifyMeshLindstromTurk(m, predicate);
+  };
+
+  size_t result = simplifyWithStopPredicate(inexactMesh, stop, simplifyFn);
+
+  mesh.clear();
+  std::map<InexactMesh::Vertex_index, Surface_mesh_3::Vertex_index> backMap;
+
+  for (auto vh : inexactMesh.vertices()) {
+    backMap[vh] = mesh.add_vertex(toExact(inexactMesh.point(vh)));
+  }
+
+  for (auto fh : inexactMesh.faces()) {
+    std::vector<Surface_mesh_3::Vertex_index> verts;
+    for (auto vh : inexactMesh.vertices_around_face(inexactMesh.halfedge(fh))) {
+      verts.push_back(backMap[vh]);
+    }
+    mesh.add_face(verts);
+  }
+
+  return result;
+}
+#endif
+
+/**
+ * @brief Entry point for simplifying surface meshes
+ */
+auto
+simplifySurfaceMesh(Surface_mesh_3                    &mesh,
+                    const SimplificationStopPredicate &stop,
+                    SimplificationStrategy             strategy)
+{
+#ifdef SFCGAL_WITH_EIGEN
+  if (strategy == SimplificationStrategy::GARLAND_HECKBERT ||
+      strategy == SimplificationStrategy::LINDSTROM_TURK) {
+    return simplifyInexactMesh(mesh, stop, strategy);
+  }
+#else
+  (void)strategy;
+#endif
+
+  return simplifyWithStopPredicate(
+      mesh, stop, [](Surface_mesh_3 &m, const auto &predicate) {
+        return simplifyMesh(m, predicate);
+      });
+  ;
 }
 
 /**
@@ -326,7 +313,7 @@ simplifyMultiSolid(const MultiSolid                  &multiSolid,
   auto result = std::make_unique<MultiSolid>();
 
   for (size_t i = 0; i < multiSolid.numGeometries(); ++i) {
-    const Solid &solid = multiSolid.geometryN(i).as<Solid>();
+    const auto &solid = multiSolid.geometryN(i).as<Solid>();
     result->addGeometry(simplifySolid(solid, stopPredicate, strategy));
   }
 
