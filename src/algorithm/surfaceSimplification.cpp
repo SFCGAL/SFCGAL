@@ -146,8 +146,10 @@ simplifySurfaceMesh(Surface_mesh_3                    &mesh,
 
     size_t result;
 
-    if (stopPredicate.type == SimplificationStopPredicate::Type::EDGE_COUNT) {
-      auto const initialEdgeCount = static_cast<size_t>(inexactMesh.number_of_edges());
+    if (stopPredicate.type ==
+        SimplificationStopPredicate::PredicateType::EDGE_COUNT) {
+      auto const initialEdgeCount =
+          static_cast<size_t>(inexactMesh.number_of_edges());
       auto const targetEdgeCount = static_cast<size_t>(stopPredicate.value);
 
       if (targetEdgeCount >= initialEdgeCount) {
@@ -207,7 +209,8 @@ simplifySurfaceMesh(Surface_mesh_3                    &mesh,
 #endif // SFCGAL_WITH_EIGEN
 
   // Default EDGE_LENGTH strategy with exact mesh
-  if (stopPredicate.type == SimplificationStopPredicate::Type::EDGE_COUNT) {
+  if (stopPredicate.type ==
+      SimplificationStopPredicate::PredicateType::EDGE_COUNT) {
     // Stop after collapsing a specific number of edges
     auto const initialEdgeCount = static_cast<size_t>(mesh.number_of_edges());
     auto const targetEdgeCount  = static_cast<size_t>(stopPredicate.value);
@@ -377,7 +380,8 @@ surfaceSimplification(const Geometry                    &geometry,
   }
 
   // Validate ratio for EDGE_COUNT_RATIO
-  if (stopPredicate.type == SimplificationStopPredicate::Type::EDGE_COUNT_RATIO) {
+  if (stopPredicate.type ==
+      SimplificationStopPredicate::PredicateType::EDGE_COUNT_RATIO) {
     if (stopPredicate.value <= 0.0 || stopPredicate.value >= 1.0) {
       throw std::invalid_argument(
           "Edge count ratio must be in the range (0.0, 1.0)");
