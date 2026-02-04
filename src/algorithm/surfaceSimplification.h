@@ -97,7 +97,7 @@ struct SimplificationStopPredicate {
   /**
    * @brief Type of stop predicate
    */
-  enum class Type {
+  enum class PredicateType : unsigned char {
     /**
      * @brief Stop when edge count reaches the specified value
      */
@@ -111,8 +111,8 @@ struct SimplificationStopPredicate {
     EDGE_COUNT_RATIO
   };
 
-  Type   type;  ///< Type of stop predicate
-  double value; ///< Target value (count or ratio)
+  PredicateType type;  ///< Type of stop predicate
+  double        value; ///< Target value (count or ratio)
 
   /**
    * @brief Create an edge count stop predicate
@@ -122,7 +122,7 @@ struct SimplificationStopPredicate {
   static auto
   edgeCount(size_t count) -> SimplificationStopPredicate
   {
-    return {Type::EDGE_COUNT, static_cast<double>(count)};
+    return {PredicateType::EDGE_COUNT, static_cast<double>(count)};
   }
 
   /**
@@ -133,7 +133,7 @@ struct SimplificationStopPredicate {
   static auto
   edgeCountRatio(double ratio) -> SimplificationStopPredicate
   {
-    return {Type::EDGE_COUNT_RATIO, ratio};
+    return {PredicateType::EDGE_COUNT_RATIO, ratio};
   }
 };
 
