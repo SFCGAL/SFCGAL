@@ -478,8 +478,9 @@ selfIntersectsImpl(const LineString &lineString) -> bool
   }
 
   const size_t numSegments = l.numSegments();
-  if (numSegments <= 2)
+  if (numSegments <= 2) {
     return true;
+  }
 
   if (numSegments == 3) {
     if (Dim == 2) {
@@ -493,8 +494,9 @@ selfIntersectsImpl(const LineString &lineString) -> bool
   if (Dim == 2) {
     std::vector<Kernel::Point_2> points;
     points.reserve(numSegments);
-    for (size_t i = 0; i != numSegments; ++i)
+    for (size_t i = 0; i != numSegments; ++i) {
       points.push_back(l.pointN(i).toPoint_2());
+    }
 
     return !CGAL::is_simple_2(points.begin(), points.end());
   }
@@ -517,26 +519,32 @@ selfIntersectsImpl(const LineString &lineString) -> bool
         if (CGAL::collinear(s1.source(), s1.target(), s2.source()) &&
             CGAL::collinear(s1.source(), s1.target(), s2.target())) {
           Kernel::Less_xyz_3 less_xyz;
-          auto               a = s1.source(), b = s1.target();
-          if (!less_xyz(a, b))
+          auto               a = s1.source();
+          auto               b = s1.target();
+          if (!less_xyz(a, b)) {
             std::swap(a, b);
-          auto c = s2.source(), d = s2.target();
-          if (!less_xyz(c, d))
+          }
+          auto c = s2.source();
+          auto d = s2.target();
+          if (!less_xyz(c, d)) {
             std::swap(c, d);
+          }
           if (!less_xyz(a, c)) {
             std::swap(a, c);
             std::swap(b, d);
           }
 
-          if (!CGAL::are_ordered_along_line(a, b, c))
+          if (!CGAL::are_ordered_along_line(a, b, c)) {
             return true;
+          }
         } else {
           if (s1.source() == s2.source() || s1.source() == s2.target() ||
               s1.target() == s2.source() || s1.target() == s2.target()) {
             continue;
           }
-          if (do_intersect(s1, s2))
+          if (do_intersect(s1, s2)) {
             return true;
+          }
         }
       }
     }
