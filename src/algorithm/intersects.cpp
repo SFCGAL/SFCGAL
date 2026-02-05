@@ -36,6 +36,7 @@ namespace SFCGAL::algorithm {
 /// @{
 /// @privatesection
 
+// NOLINTBEGIN(readability-function-cognitive-complexity)
 /// Type of pa must be of larger dimension than type of pb
 auto
 _intersects(const PrimitiveHandle<2> &handle1,
@@ -188,11 +189,11 @@ _intersects(const PrimitiveHandle<2> &handle1,
     CGAL::Bbox_2 box2;
     box1 = poly1->bbox();
     box2 = poly2->bbox();
-    Envelope const e1(box1.xmin(), box1.xmax(), box1.ymin(), box1.ymax());
-    Envelope const e2(box2.xmin(), box2.xmax(), box2.ymin(), box2.ymax());
+    Envelope const env1(box1.xmin(), box1.xmax(), box1.ymin(), box1.ymax());
+    Envelope const env2(box2.xmin(), box2.xmax(), box2.ymin(), box2.ymax());
 
     // if pa is inside pb
-    if (Envelope::contains(e2, e1)) {
+    if (Envelope::contains(env2, env1)) {
       // is pa inside one of pb's holes ?
       CGAL::Point_2<Kernel> const pt =
           *poly1->outer_boundary().vertices_begin();
@@ -209,7 +210,7 @@ _intersects(const PrimitiveHandle<2> &handle1,
     }
 
     // if pb is inside pa
-    if (Envelope::contains(e1, e2)) {
+    if (Envelope::contains(env1, env2)) {
       // is pa inside one of pb's holes ?
       CGAL::Point_2<Kernel> const pt =
           *poly2->outer_boundary().vertices_begin();
@@ -230,6 +231,7 @@ _intersects(const PrimitiveHandle<2> &handle1,
 
   return false;
 }
+// NOLINTEND(readability-function-cognitive-complexity)
 
 /// intersects of a volume with any other type
 struct intersects_volume_x : public boost::static_visitor<bool> {
@@ -340,6 +342,7 @@ dispatch_intersects_sym(const PrimitiveHandle<Dim> &handle1,
   if (handle1.handle.which() >= handle2.handle.which()) {
     return _intersects(handle1, handle2);
   }
+  // NOLINTNEXTLINE(readability-suspicious-call-argument)
   return _intersects(handle2, handle1);
 }
 
@@ -457,6 +460,7 @@ intersects3D(const Geometry &geometry1, const Geometry &geometry2,
 }
 
 /// @private
+// NOLINTBEGIN(readability-function-cognitive-complexity,clang-analyzer-cplusplus.NewDelete)
 template <int Dim>
 auto
 selfIntersectsImpl(const LineString &lineString) -> bool
@@ -469,33 +473,35 @@ selfIntersectsImpl(const LineString &lineString) -> bool
   // note: zero length segments are a pain, to avoid algorithm complexity
   // we start by filtering them out
   const size_t numPoints = lineString.numPoints();
-  LineString   l;
+  LineString   line;
 
   for (size_t i = 0; i != numPoints; ++i) {
-    if (i == 0 || l.endPoint() != lineString.pointN(i)) {
-      l.addPoint(lineString.pointN(i));
+    if (i == 0 || line.endPoint() != lineString.pointN(i)) {
+      line.addPoint(lineString.pointN(i));
     }
   }
 
-  const size_t numSegments = l.numSegments();
+  const size_t numSegments = line.numSegments();
   if (numSegments <= 2) {
     return true;
   }
 
   if (numSegments == 3) {
     if (Dim == 2) {
-      return CGAL::collinear(l.pointN(0).toPoint_2(), l.pointN(1).toPoint_2(),
-                             l.pointN(2).toPoint_2());
+      return CGAL::collinear(line.pointN(0).toPoint_2(),
+                             line.pointN(1).toPoint_2(),
+                             line.pointN(2).toPoint_2());
     }
-    return CGAL::collinear(l.pointN(0).toPoint_3(), l.pointN(1).toPoint_3(),
-                           l.pointN(2).toPoint_3());
+    return CGAL::collinear(line.pointN(0).toPoint_3(),
+                           line.pointN(1).toPoint_3(),
+                           line.pointN(2).toPoint_3());
   }
 
   if (Dim == 2) {
     std::vector<Kernel::Point_2> points;
     points.reserve(numSegments);
     for (size_t i = 0; i != numSegments; ++i) {
-      points.push_back(l.pointN(i).toPoint_2());
+      points.push_back(line.pointN(i).toPoint_2());
     }
 
     return !CGAL::is_simple_2(points.begin(), points.end());
@@ -510,39 +516,41 @@ selfIntersectsImpl(const LineString &lineString) -> bool
        * Kernel::Point_Dim
        */
       {
-        const CGAL::Segment_3<Kernel> s1(l.pointN(i).toPoint_3(),
-                                         l.pointN(i + 1).toPoint_3());
-        const CGAL::Segment_3<Kernel> s2(l.pointN(j).toPoint_3(),
-                                         l.pointN(j + 1).toPoint_3());
+        const CGAL::Segment_3<Kernel> seg1(line.pointN(i).toPoint_3(),
+                                           line.pointN(i + 1).toPoint_3());
+        const CGAL::Segment_3<Kernel> seg2(line.pointN(j).toPoint_3(),
+                                           line.pointN(j + 1).toPoint_3());
 
         // first check for overlaps
-        if (CGAL::collinear(s1.source(), s1.target(), s2.source()) &&
-            CGAL::collinear(s1.source(), s1.target(), s2.target())) {
+        if (CGAL::collinear(seg1.source(), seg1.target(), seg2.source()) &&
+            CGAL::collinear(seg1.source(), seg1.target(), seg2.target())) {
           Kernel::Less_xyz_3 less_xyz;
-          auto               a = s1.source();
-          auto               b = s1.target();
-          if (!less_xyz(a, b)) {
-            std::swap(a, b);
+          auto               aPoint = seg1.source();
+          auto               bPoint = seg1.target();
+          if (!less_xyz(aPoint, bPoint)) {
+            std::swap(aPoint, bPoint);
           }
-          auto c = s2.source();
-          auto d = s2.target();
-          if (!less_xyz(c, d)) {
-            std::swap(c, d);
+          auto cPoint = seg2.source();
+          auto dPoint = seg2.target();
+          if (!less_xyz(cPoint, dPoint)) {
+            std::swap(cPoint, dPoint);
           }
-          if (!less_xyz(a, c)) {
-            std::swap(a, c);
-            std::swap(b, d);
+          if (!less_xyz(aPoint, cPoint)) {
+            std::swap(aPoint, cPoint);
+            std::swap(bPoint, dPoint);
           }
 
-          if (!CGAL::are_ordered_along_line(a, b, c)) {
+          if (!CGAL::are_ordered_along_line(aPoint, bPoint, cPoint)) {
             return true;
           }
         } else {
-          if (s1.source() == s2.source() || s1.source() == s2.target() ||
-              s1.target() == s2.source() || s1.target() == s2.target()) {
+          if (seg1.source() == seg2.source() ||
+              seg1.source() == seg2.target() ||
+              seg1.target() == seg2.source() ||
+              seg1.target() == seg2.target()) {
             continue;
           }
-          if (do_intersect(s1, s2)) {
+          if (do_intersect(seg1, seg2)) {
             return true;
           }
         }
@@ -552,7 +560,9 @@ selfIntersectsImpl(const LineString &lineString) -> bool
 
   return false;
 }
+// NOLINTEND(readability-function-cognitive-complexity,clang-analyzer-cplusplus.NewDelete)
 
+// NOLINTBEGIN(clang-analyzer-cplusplus.NewDelete)
 /// @private
 auto
 selfIntersects(const LineString &lineString) -> bool
@@ -565,6 +575,7 @@ selfIntersects3D(const LineString &lineString) -> bool
 {
   return selfIntersectsImpl<3>(lineString);
 }
+// NOLINTEND(clang-analyzer-cplusplus.NewDelete)
 
 /// @private
 template <int Dim>
