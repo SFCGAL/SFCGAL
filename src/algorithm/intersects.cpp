@@ -465,11 +465,6 @@ template <int Dim>
 auto
 selfIntersectsImpl(const LineString &lineString) -> bool
 {
-
-  if (lineString.numSegments() < 2) {
-    return false; // one segment cannot intersect
-  }
-
   // note: zero length segments are a pain, to avoid algorithm complexity
   // we start by filtering them out
   const size_t numPoints = lineString.numPoints();
@@ -482,11 +477,11 @@ selfIntersectsImpl(const LineString &lineString) -> bool
   }
 
   const size_t numSegments = line.numSegments();
-  if (numSegments <= 2) {
-    return true;
+  if (numSegments < 2) {
+    return false; // one segment cannot intersect
   }
 
-  if (numSegments == 3) {
+  if (numSegments == 2) {
     if (Dim == 2) {
       return CGAL::collinear(line.pointN(0).toPoint_2(),
                              line.pointN(1).toPoint_2(),
@@ -500,8 +495,12 @@ selfIntersectsImpl(const LineString &lineString) -> bool
   if (Dim == 2) {
     std::vector<Kernel::Point_2> points;
     points.reserve(numSegments);
-    for (size_t i = 0; i != numSegments; ++i) {
+    for (size_t i = 0; i != numSegments + 1; ++i) {
       points.push_back(line.pointN(i).toPoint_2());
+    }
+    if (points[0] == points[numSegments]) { // if the linestring is closed, it
+                                            // will fail with CGAL::is_simple_2
+      points.pop_back();
     }
 
     return !CGAL::is_simple_2(points.begin(), points.end());
