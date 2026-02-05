@@ -19,6 +19,9 @@ CheckOptions:
     value: 'g|x|y|z|m|to|a|b|t|dx|dy|dz|it'
   - key:   readability-identifier-length.IgnoredLoopCounterNames
     value: 'i|j|k|x|y|z|m|to|a|b|t|dx|dy|dz|it'
+  - key: modernize-use-auto.IgnoreSystemHeaders
+    value: "true"  # Most checks have an "IgnoreSystemHeaders" option
 FormatStyle: 'file'
 HeaderFileExtensions:         ['', 'h','hpp']
 ImplementationFileExtensions: ['c','cpp']
+HeaderFilterRegex: "^src/.*"
