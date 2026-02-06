@@ -7,6 +7,7 @@
 #include "SFCGAL/Kernel.h"
 #include "SFCGAL/PolyhedralSurface.h"
 #include "SFCGAL/algorithm/minkowskiSum3D.h"
+#include "SFCGAL/algorithm/sweep.h"
 #include "SFCGAL/algorithm/union.h"
 #include "SFCGAL/detail/GeometrySet.h"
 #include "SFCGAL/numeric.h"
@@ -209,89 +210,29 @@ Buffer3D::computeCylSphereBuffer() const -> std::unique_ptr<PolyhedralSurface>
 auto
 Buffer3D::computeFlatBuffer() const -> std::unique_ptr<PolyhedralSurface>
 {
-  std::vector<Kernel::Point_3> line_points;
-  line_points.reserve(_inputPoints.size());
-  for (const auto &p : _inputPoints) {
-    line_points.emplace_back(p.x(), p.y(), p.z());
+  if (_inputPoints.size() < 2) {
+    return std::make_unique<PolyhedralSurface>();
   }
 
-  Surface_mesh_3                                         buffer;
-  std::vector<std::vector<Surface_mesh_3::Vertex_index>> rings;
-
-  std::vector<Kernel::Plane_3> bisector_planes;
-  for (size_t i = 1; i < line_points.size() - 1; ++i) {
-    bisector_planes.push_back(compute_bisector_plane(
-        line_points[i - 1], line_points[i], line_points[i + 1]));
+  // Create LineString from input points
+  std::vector<Point> points;
+  points.reserve(_inputPoints.size());
+  for (const auto &point : _inputPoints) {
+    points.emplace_back(point.x(), point.y(), point.z());
   }
+  LineString path(points);
 
-  for (size_t i = 0; i < line_points.size() - 1; ++i) {
-    Kernel::Vector_3 axis =
-        normalizeVector(line_points[i + 1] - line_points[i]);
-    Kernel::Point_3 extended_start =
-        extend_point(line_points[i], -axis, _radius);
-    Kernel::Point_3 extended_end =
-        extend_point(line_points[i + 1], axis, _radius);
+  // Create circular profile using the sweep helper function
+  auto profile = create_circular_profile(_radius, _segments);
 
-    std::vector<Kernel::Point_3> start_circle =
-        create_circle_points(extended_start, axis, _radius, _segments);
-    std::vector<Kernel::Point_3> end_circle =
-        create_circle_points(extended_end, axis, _radius, _segments);
+  // Configure sweep options
+  SweepOptions options;
+  options.frame_method = SweepOptions::FrameMethod::ROTATION_MINIMIZING;
+  options.start_cap    = SweepOptions::EndCapStyle::FLAT;
+  options.end_cap      = SweepOptions::EndCapStyle::FLAT;
+  options.closed_path  = false; // Will be auto-detected
 
-    std::vector<Surface_mesh_3::Vertex_index> start_ring;
-    std::vector<Surface_mesh_3::Vertex_index> end_ring;
-
-    for (int j = 0; j < _segments; ++j) {
-      Kernel::Point_3 start_point = start_circle[j];
-      Kernel::Point_3 end_point   = end_circle[j];
-
-      if (i > 0) {
-        start_point = intersect_segment_plane(start_point, end_point,
-                                              bisector_planes[i - 1]);
-      }
-      if (i < line_points.size() - 2) {
-        end_point =
-            intersect_segment_plane(start_point, end_point, bisector_planes[i]);
-      }
-
-      Surface_mesh_3::Vertex_index v1 = buffer.add_vertex(start_point);
-      Surface_mesh_3::Vertex_index v2 = buffer.add_vertex(end_point);
-      start_ring.push_back(v1);
-      end_ring.push_back(v2);
-
-      if (j > 0) {
-        buffer.add_face(start_ring[j - 1], start_ring[j], end_ring[j],
-                        end_ring[j - 1]);
-      }
-    }
-    buffer.add_face(start_ring.back(), start_ring.front(), end_ring.front(),
-                    end_ring.back());
-
-    rings.push_back(start_ring);
-    if (i == line_points.size() - 2) {
-      rings.push_back(end_ring);
-    }
-  }
-
-  // Add caps
-  Kernel::Point_3 start_center = extend_point(
-      line_points.front(),
-      normalizeVector(line_points[1] - line_points.front()), -_radius);
-  Kernel::Point_3 end_center = extend_point(
-      line_points.back(),
-      normalizeVector(line_points.back() - line_points[line_points.size() - 2]),
-      _radius);
-  Surface_mesh_3::Vertex_index start_center_index =
-      buffer.add_vertex(start_center);
-  Surface_mesh_3::Vertex_index end_center_index = buffer.add_vertex(end_center);
-
-  for (int i = 0; i < _segments; ++i) {
-    buffer.add_face(start_center_index, rings.front()[(i + 1) % _segments],
-                    rings.front()[i]);
-    buffer.add_face(end_center_index, rings.back()[i],
-                    rings.back()[(i + 1) % _segments]);
-  }
-
-  return std::make_unique<PolyhedralSurface>(buffer);
+  return sweep(path, *profile, options);
 }
 
 auto
