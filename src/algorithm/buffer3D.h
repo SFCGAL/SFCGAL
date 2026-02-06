@@ -65,7 +65,7 @@ private:
   std::unique_ptr<PolyhedralSurface>
   computeFlatBuffer() const;
 
-  // Helper functions for FLAT buffer
+  // Helper functions for other buffer types
   CGAL::Point_3<Kernel>
   extend_point(const CGAL::Point_3<Kernel>  &point,
                const CGAL::Vector_3<Kernel> &direction, double distance) const;
