@@ -53,6 +53,7 @@
 #include "SFCGAL/algorithm/scale.h"
 #include "SFCGAL/algorithm/simplification.h"
 #include "SFCGAL/algorithm/straightSkeleton.h"
+#include "SFCGAL/algorithm/sweep.h"
 #include "SFCGAL/algorithm/tesselate.h"
 #include "SFCGAL/algorithm/translate.h"
 #include "SFCGAL/algorithm/union.h"
@@ -1762,6 +1763,106 @@ const std::vector<Operation> operations = {
            params.count("tolerance") ? params["tolerance"] : 1e-9;
        return SFCGAL::algorithm::insertPointsWithinTolerance(*geom_a, *geom_b,
                                                              tolerance);
+     }},
+
+    {"sweep", "Construction",
+     "Sweep a 2D profile along a 3D path to create a 3D surface", true,
+     "Parameters:\n"
+     "  frame_method=0|1|2|3: Frame computation method (default: 0)\n"
+     "    0 = ROTATION_MINIMIZING (RMF) - minimal twist for general paths\n"
+     "    1 = FRENET - Frenet-Serret frames (not yet implemented)\n"
+     "    2 = FIXED_UP - fixed up vector (ideal for planar paths, no twist)\n"
+     "    3 = SEGMENT_ALIGNED - segment-by-segment with miter joins (like buffer3D, not yet implemented)\n"
+     "  start_cap=0|1|2: Start cap style (default: 1)\n"
+     "    0 = NONE - no cap\n"
+     "    1 = FLAT - flat planar cap\n"
+     "    2 = ROUND - rounded hemispherical cap (not yet implemented)\n"
+     "  end_cap=0|1|2: End cap style (default: 1)\n"
+     "  closed_path=BOOL: Whether path forms a closed loop (default: false)\n"
+     "  anchor_x=VALUE: X coordinate of anchor point in profile space (default: 0.0)\n"
+     "  anchor_y=VALUE: Y coordinate of anchor point in profile space (default: 0.0)\n\n"
+     "The profile must be a 2D geometry (Polygon or LineString).\n"
+     "The path must be a 3D LineString with at least 2 points.\n"
+     "The anchor point specifies which profile point is positioned on the path.\n\n"
+     "Examples:\n"
+     "  sfcgalop -a \"LINESTRING Z(0 0 0,1 0 1,2 0 2)\" -b \"POLYGON((0 0,0.1 0,0.1 0.1,0 0.1,0 0))\" sweep\n"
+     "  sfcgalop -a \"LINESTRING Z(0 0 0,1 1 0,1 1 1,0 1 1,0 0 1,0 0 0)\" -b \"POLYGON((-0.1 -0.1,0.1 -0.1,0.1 0.1,-0.1 0.1,-0.1 -0.1))\" sweep \"closed_path=true\"\n"
+     "  sfcgalop -a \"LINESTRING Z(0 0 0,10 0 0)\" -b \"POLYGON((0 0,2 0,2 1,0 1,0 0))\" sweep \"anchor_x=1,anchor_y=0.5\"",
+     "A, B, params", "G",
+     [](const std::string &args, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
+       if (!geom_b) {
+         return std::nullopt;
+       }
+
+       // Check that geom_a is a LineString
+       if (geom_a->geometryTypeId() != SFCGAL::TYPE_LINESTRING) {
+         std::cerr << "sweep error: first geometry must be a LineString (path)\n";
+         return std::nullopt;
+       }
+
+       const auto &path = geom_a->as<SFCGAL::LineString>();
+
+       // Parse parameters
+       auto params = parse_params(args);
+
+       SFCGAL::algorithm::SweepOptions options;
+
+       // Frame method
+       int frame_method = static_cast<int>(params.count("frame_method") ? params["frame_method"] : 0);
+       switch (frame_method) {
+       case 1:
+         options.frame_method = SFCGAL::algorithm::SweepOptions::FrameMethod::FRENET;
+         break;
+       case 2:
+         options.frame_method = SFCGAL::algorithm::SweepOptions::FrameMethod::FIXED_UP;
+         break;
+       case 3:
+         options.frame_method = SFCGAL::algorithm::SweepOptions::FrameMethod::SEGMENT_ALIGNED;
+         break;
+       default:
+         options.frame_method = SFCGAL::algorithm::SweepOptions::FrameMethod::ROTATION_MINIMIZING;
+       }
+
+       // Start cap style
+       int start_cap = static_cast<int>(params.count("start_cap") ? params["start_cap"] : 1);
+       switch (start_cap) {
+       case 0:
+         options.start_cap = SFCGAL::algorithm::SweepOptions::EndCapStyle::NONE;
+         break;
+       case 2:
+         options.start_cap = SFCGAL::algorithm::SweepOptions::EndCapStyle::ROUND;
+         break;
+       default:
+         options.start_cap = SFCGAL::algorithm::SweepOptions::EndCapStyle::FLAT;
+       }
+
+       // End cap style
+       int end_cap = static_cast<int>(params.count("end_cap") ? params["end_cap"] : 1);
+       switch (end_cap) {
+       case 0:
+         options.end_cap = SFCGAL::algorithm::SweepOptions::EndCapStyle::NONE;
+         break;
+       case 2:
+         options.end_cap = SFCGAL::algorithm::SweepOptions::EndCapStyle::ROUND;
+         break;
+       default:
+         options.end_cap = SFCGAL::algorithm::SweepOptions::EndCapStyle::FLAT;
+       }
+
+       // Closed path
+       options.closed_path = parse_boolean_param(params, "closed_path", args, false);
+
+       // Anchor point parameters
+       options.anchor_x = params.count("anchor_x") ? params["anchor_x"] : 0.0;
+       options.anchor_y = params.count("anchor_y") ? params["anchor_y"] : 0.0;
+
+       try {
+         return SFCGAL::algorithm::sweep(path, *geom_b, options);
+       } catch (const std::exception &e) {
+         std::cerr << "sweep error: " << e.what() << "\n";
+         return std::nullopt;
+       }
      }},
 
     {"to_solid", "Conversions", "Convert a PolyhedralSurface to a Solid", false,
