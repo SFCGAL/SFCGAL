@@ -790,17 +790,15 @@ const std::vector<Operation> operations_construction = {
     {"sweep", "Construction",
      "Sweep a 2D profile along a 3D path to create a 3D surface", true,
      "Parameters:\n"
-     "  frame_method=0|1|2|3: Frame computation method (default: 0)\n"
+     "  frame_method=0|1|3: Frame computation method (default: 0)\n"
      "    0 = ROTATION_MINIMIZING (RMF) - minimal twist for general paths\n"
-     "    1 = FRENET - Frenet-Serret frames (not yet implemented)\n"
-     "    2 = FIXED_UP - fixed up vector (ideal for planar paths, no twist)\n"
-     "    3 = SEGMENT_ALIGNED - segment-by-segment with miter joins (like "
-     "buffer3D, not yet implemented)\n"
+     "    1 = FRENET - Frenet-Serret frames\n"
+     "    2 = SEGMENT_ALIGNED - segment aligned frames (ideal for "
+     "architecture)\n"
      "  start_cap=0|1|2: Start cap style (default: 1)\n"
      "    0 = NONE - no cap\n"
      "    1 = FLAT - flat planar cap\n"
-     "    2 = ROUND - rounded hemispherical cap (not yet implemented)\n"
-     "  end_cap=0|1|2: End cap style (default: 1)\n"
+     "  end_cap=0|1: End cap style (default: 1)\n"
      "  closed_path=BOOL: Whether path forms a closed loop (default: false)\n"
      "  anchor_x=VALUE: X coordinate of anchor point in profile space "
      "(default: 0.0)\n"
@@ -849,10 +847,6 @@ const std::vector<Operation> operations_construction = {
          break;
        case 2:
          options.frame_method =
-             SFCGAL::algorithm::SweepOptions::FrameMethod::FIXED_UP;
-         break;
-       case 3:
-         options.frame_method =
              SFCGAL::algorithm::SweepOptions::FrameMethod::SEGMENT_ALIGNED;
          break;
        default:
@@ -867,10 +861,6 @@ const std::vector<Operation> operations_construction = {
        case 0:
          options.start_cap = SFCGAL::algorithm::SweepOptions::EndCapStyle::NONE;
          break;
-       case 2:
-         options.start_cap =
-             SFCGAL::algorithm::SweepOptions::EndCapStyle::ROUND;
-         break;
        default:
          options.start_cap = SFCGAL::algorithm::SweepOptions::EndCapStyle::FLAT;
        }
@@ -881,9 +871,6 @@ const std::vector<Operation> operations_construction = {
        switch (end_cap) {
        case 0:
          options.end_cap = SFCGAL::algorithm::SweepOptions::EndCapStyle::NONE;
-         break;
-       case 2:
-         options.end_cap = SFCGAL::algorithm::SweepOptions::EndCapStyle::ROUND;
          break;
        default:
          options.end_cap = SFCGAL::algorithm::SweepOptions::EndCapStyle::FLAT;

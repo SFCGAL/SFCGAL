@@ -7,14 +7,12 @@
 #include <SFCGAL/config.h>
 
 #include <SFCGAL/Geometry.h>
-#include <SFCGAL/Kernel.h>
 #include <SFCGAL/LineString.h>
-#include <SFCGAL/Point.h>
 #include <SFCGAL/Polygon.h>
 #include <SFCGAL/PolyhedralSurface.h>
 
-#include <cstdint>
 #include <memory>
+#include <vector>
 
 namespace SFCGAL::algorithm {
 
@@ -26,63 +24,78 @@ struct SweepOptions {
    * @brief Frame computation method for sweep operation
    */
   enum class FrameMethod : std::uint8_t {
-    ROTATION_MINIMIZING, ///< Rotation Minimizing Frames (RMF) - minimal twist
-    FRENET,              ///< Frenet-Serret frames - natural curvature-based
-    FIXED_UP,            ///< Fixed up vector - constant reference direction
-    SEGMENT_ALIGNED ///< Segment-aligned frames with miter joins (like buffer3D)
+    /**
+     * @brief Rotation Minimizing Frame (RMF) / Double Reflection Method.
+     *
+     * Best for smooth, organic paths (pipes, cables, knots).
+     * Computes frames that minimize twist around the tangent.
+     * Based on: Wang, W., et al. (2008). "Computation of rotation minimizing
+     * frames". ACM Transactions on Graphics, 27(1), 1-18.
+     */
+    ROTATION_MINIMIZING,
+
+    /**
+     * @brief Frenet-Serret Frame.
+     *
+     * Classic differential geometry frame defined by tangent and curvature.
+     * Warning: Undefined on straight lines and flips at inflection points.
+     * Use only if specifically required by mathematical definition.
+     */
+    FRENET,
+
+    /**
+     * @brief Segment Aligned (Discrete Miter).
+     *
+     * Best for architecture, mechanical parts, and CAD (beams, walls).
+     * Does not use continuous frame propagation. Instead, computes a constant
+     * orientation for each segment and projects vertices onto bisector planes
+     * at corners to create perfect miter joins.
+     */
+    SEGMENT_ALIGNED
   };
 
   /**
    * @brief End cap style for sweep termination
    */
   enum class EndCapStyle : std::uint8_t {
-    NONE, ///< No end caps (open tube)
-    FLAT, ///< Flat planar caps perpendicular to path
-    ROUND ///< Rounded hemispherical caps (future)
+    NONE, ///< Tube remains open at ends
+    FLAT, ///< Tube is closed with flat faces
   };
 
-  /// Frame computation method (default: RMF for minimal twist)
+  /// Method used to compute the reference frame along the path
   FrameMethod frame_method = FrameMethod::ROTATION_MINIMIZING;
 
-  /// Start cap style
+  /// Style for the start of the sweep
   EndCapStyle start_cap = EndCapStyle::FLAT;
 
-  /// End cap style
+  /// Style for the end of the sweep
   EndCapStyle end_cap = EndCapStyle::FLAT;
 
-  /// Whether path is closed (first and last points coincide)
-  /// When true, applies holonomy correction for seamless closure
+  /// If true, connects the end of the path back to the start
   bool closed_path = false;
 
-  /// Fixed up vector for FIXED_UP frame method (default: Z-axis)
-  Kernel::Vector_3 fixed_up_vector = Kernel::Vector_3(0, 0, 1);
-
-  /// Tolerance for closed path detection (squared distance)
-  double closed_path_tolerance = 1e-10;
-
-  /// Anchor point X coordinate in profile space (default: origin)
-  /// The anchor point is positioned on the path during sweep
+  /**
+   * @brief Anchor point X coordinate in profile space (default: 0.0)
+   * The anchor point of the profile is the point that will travel exactly
+   * along the path.
+   */
   double anchor_x = 0.0;
 
-  /// Anchor point Y coordinate in profile space (default: origin)
-  /// The anchor point is positioned on the path during sweep
+  /**
+   * @brief Anchor point Y coordinate in profile space (default: 0.0)
+   */
   double anchor_y = 0.0;
 };
 
 /**
  * @brief Frame structure for sweep operations
- *
- * Represents an orthonormal frame at each point along the path:
- * - tangent: direction along the path (T)
- * - normal: first perpendicular direction (U) - maps to profile X-axis
- * - binormal: second perpendicular direction (V) - maps to profile Y-axis
- *
- * Forms a right-handed coordinate system: binormal = tangent × normal
+ * Represents a local coordinate system (Coordinate Frame) at a point on the
+ * path.
  */
 struct Frame {
-  Kernel::Vector_3 tangent;  ///< T: direction along path
-  Kernel::Vector_3 normal;   ///< U: first perpendicular (profile X)
-  Kernel::Vector_3 binormal; ///< V: second perpendicular (profile Y)
+  Kernel::Vector_3 tangent;  ///< Z-axis of local frame (direction of motion)
+  Kernel::Vector_3 normal;   ///< X-axis of local frame
+  Kernel::Vector_3 binormal; ///< Y-axis of local frame
 };
 
 /**
@@ -90,70 +103,24 @@ struct Frame {
  *
  * This function extrudes a 2D profile (polygon or linestring) along a 3D path
  * to create a polyhedral surface. The profile is defined in the XY plane where:
- * - X-axis maps to the frame normal direction (U)
- * - Y-axis maps to the frame binormal direction (V)
- * - The anchor point (specified in options) is positioned at the path center
+ * - X corresponds to the Normal direction of the path frame
+ * - Y corresponds to the Binormal direction of the path frame
  *
  * @param path 3D LineString defining the sweep path
- * @param profile 2D Polygon or LineString defining the cross-section
- *                Must be 2D (Z coordinates ignored if present)
+ * @param profile 2D Geometry (LineString or Polygon) defining the cross-section
  * @param options SweepOptions controlling frame method, end caps, etc.
- *
- * @return PolyhedralSurface representing the swept geometry
- *
- * @throws std::invalid_argument if path has < 2 points
- * @throws std::invalid_argument if profile has < 2 points
- * @throws std::invalid_argument if profile is not 2D
- *
- * @note Profile orientation:
- *       - For closed profiles (Polygon): exterior ring swept as tube wall,
- *         interior rings create holes in the wall
- *       - For open profiles (LineString): creates a ribbon/blade surface
- *
- * @note Anchor point:
- *       The anchor point (anchor_x, anchor_y) specifies which point in the
- *       profile coordinate system is positioned on the path. By default
- *       (anchor_x=0, anchor_y=0), the profile origin follows the path.
- *       For example, to center a rectangle on the path, set the anchor
- *       to the rectangle's center coordinates.
+ * @return std::unique_ptr<PolyhedralSurface> The resulting 3D surface
+ * @throws std::invalid_argument if inputs are invalid
  *
  * @example
- * @code
- * // Example 1: Circular profile along helical path
- * std::vector<Point> circle_pts;
- * for (int i = 0; i < 16; ++i) {
- *   double angle = 2.0 * M_PI * i / 16.0;
- *   circle_pts.emplace_back(cos(angle), sin(angle), 0);
- * }
- * circle_pts.emplace_back(0, 0, 0)
- * LineString circle(circle_pts);
- *
- * std::vector<Point> helix_pts;
- * for (int i = 0; i <= 20; ++i) {
- *   double t = i / 20.0;
- *   double angle = 4.0 * M_PI * t;
- *   helix_pts.emplace_back(2*cos(angle), 2*sin(angle), 10*t);
- * }
- * LineString helix(helix_pts);
- *
  * // Sweep with default options (RMF, flat caps, origin on path)
  * auto surface1 = sweep(helix, circle);
- *
- * // Example 2: Rectangular profile with custom anchor point
- * std::vector<Point> rect_pts;
- * rect_pts.emplace_back(0, 0, 0);
- * rect_pts.emplace_back(2, 0, 0);
- * rect_pts.emplace_back(2, 1, 0);
- * rect_pts.emplace_back(0, 1, 0);
- * rect_pts.emplace_back(0, 0, 0);
- * LineString rect(rect_pts);
  *
  * // Sweep with anchor at rectangle center (1, 0.5)
  * SweepOptions opts;
  * opts.anchor_x = 1.0;
  * opts.anchor_y = 0.5;
  * auto surface2 = sweep(helix, rect, opts);
- * @endcode
  */
 SFCGAL_API auto
 sweep(const LineString &path, const Geometry &profile,
@@ -161,30 +128,61 @@ sweep(const LineString &path, const Geometry &profile,
 
 /**
  * @brief Create a circular profile for sweep operations
- *
- * Helper function to generate a circular profile centered at origin.
- * Useful for creating pipe/tube geometries.
- *
- * @param radius Circle radius
- * @param segments Number of segments (vertices) in the circle
- * @return LineString representing the circular profile in XY plane
+ * Generates a Polygon approximating a circle centered at (0,0).
+ * @param radius Radius of the circle
+ * @param segments Number of segments to approximate the circle
+ * @return std::unique_ptr<LineString> (Closed LineString)
  */
 SFCGAL_API auto
-create_circular_profile(double radius, int segments)
+create_circular_profile(double radius, int segments = 32)
     -> std::unique_ptr<LineString>;
 
 /**
  * @brief Create a rectangular profile for sweep operations
- *
- * Helper function to generate a rectangular profile centered at origin.
- * Useful for creating beam/extrusion geometries.
- *
- * @param width Width of rectangle (X direction)
- * @param height Height of rectangle (Y direction)
- * @return Polygon representing the rectangular profile in XY plane
+ * Generates a rectangular Polygon centered at (0,0).
+ * @param width Width (X dimension)
+ * @param height Height (Y dimension)
+ * @return std::unique_ptr<Polygon>
  */
 SFCGAL_API auto
 create_rectangular_profile(double width, double height)
+    -> std::unique_ptr<Polygon>;
+
+/**
+ * @brief Create a triangular profile for chamfer operations
+ *
+ * Generates a right-angled triangle in the 3rd quadrant, intended for
+ * subtracting material (chamfer) from a 90-degree corner.
+ *
+ * The triangle vertices are:
+ * (0, 0)       - The corner
+ * (0, -radius_y)
+ * (-radius_x, 0)
+ *
+ * @param radius_x Length of the chamfer along X axis
+ * @param radius_y Length of the chamfer along Y axis (if < 0, uses radius_x)
+ * @return std::unique_ptr<Polygon>
+ */
+SFCGAL_API auto
+create_chamfer_profile(double radius_x, double radius_y = -1.0)
+    -> std::unique_ptr<Polygon>;
+
+/**
+ * @brief Create a fillet (rounded) profile for rounding operations
+ *
+ * Generates a profile representing the material to be removed to create a
+ * rounded corner (fillet) of a specific radius. The shape is located in the
+ * 3rd quadrant.
+ *
+ * The shape connects:
+ * (0, 0) -> (0, -radius) -> arc to (-radius, 0) -> (0, 0)
+ *
+ * @param radius Radius of the fillet
+ * @param segments Number of segments to approximate the 90-degree arc
+ * @return std::unique_ptr<Polygon>
+ */
+SFCGAL_API auto
+create_fillet_profile(double radius, int segments = 4)
     -> std::unique_ptr<Polygon>;
 
 } // namespace SFCGAL::algorithm
