@@ -5,10 +5,13 @@
 
 #include <SFCGAL/GeometryCollection.h>
 #include <SFCGAL/GeometryVisitor.h>
+#include <SFCGAL/LineString.h>
 #include <SFCGAL/MultiLineString.h>
 #include <SFCGAL/MultiPoint.h>
 #include <SFCGAL/MultiPolygon.h>
 #include <SFCGAL/MultiSolid.h>
+#include <SFCGAL/Polygon.h>
+#include <SFCGAL/PolyhedralSurface.h>
 #include <SFCGAL/Solid.h>
 #include <SFCGAL/Triangle.h>
 #include <SFCGAL/TriangulatedSurface.h>
@@ -18,7 +21,9 @@
 
 #include <CGAL/Surface_mesh.h>
 
+#include <algorithm>
 #include <cmath>
+#include <iostream>
 #include <stdexcept>
 
 namespace SFCGAL::algorithm {
@@ -157,16 +162,8 @@ extract_profile_points(const Geometry &profile) -> std::vector<Kernel::Point_2>
 }
 
 /**
- * @brief Check if path is closed using SFCGAL's isClosed algorithm
- */
-auto
-is_closed_path(const LineString &path) -> bool
-{
-  return static_cast<bool>(isClosed(path));
-}
-
-/**
  * @brief Compute initial frame from tangent direction
+ * Used as a starting point for RMF propagation.
  */
 auto
 compute_initial_frame(const Kernel::Vector_3 &tangent) -> Frame
@@ -175,6 +172,7 @@ compute_initial_frame(const Kernel::Vector_3 &tangent) -> Frame
   frame.tangent = normalizeVector(tangent);
 
   // Choose helper vector perpendicular to tangent
+  // Try X-axis first, if too parallel try Y-axis
   Kernel::Vector_3 helper(1, 0, 0);
   if (std::abs(CGAL::to_double(frame.tangent * helper)) > 0.9) {
     helper = Kernel::Vector_3(0, 1, 0);
@@ -189,6 +187,15 @@ compute_initial_frame(const Kernel::Vector_3 &tangent) -> Frame
 
 /**
  * @brief Propagate frame using Double Reflection Method (RMF)
+ *
+ * Implements the minimal rotation frame propagation described in:
+ * Wang, W., Jüttler, B., Zheng, D., & Liu, Y. (2008).
+ * "Computation of rotation minimizing frames."
+ * ACM Transactions on Graphics (TOG), 27(1), 1-18.
+ *
+ * This method reflects the frame twice:
+ * 1. Across the plane bisecting the chord (P_i, P_{i+1})
+ * 2. Across the plane bisecting the tangents (T_i, T_{i+1})
  */
 auto
 propagate_frame_rmf(const Frame &prev_frame, const Kernel::Point_3 &prev_point,
@@ -198,41 +205,40 @@ propagate_frame_rmf(const Frame &prev_frame, const Kernel::Point_3 &prev_point,
   Frame frame;
   frame.tangent = normalizeVector(curr_tangent);
 
-  // Vector from previous to current point
-  Kernel::Vector_3 segment_vector    = curr_point - prev_point;
-  Kernel::FT       segment_length_sq = segment_vector * segment_vector;
+  // Vector from previous to current point (Chord)
+  Kernel::Vector_3 v1           = curr_point - prev_point;
+  Kernel::FT       v1_length_sq = v1 * v1;
 
-  if (segment_length_sq < Kernel::FT(1e-20)) {
+  if (v1_length_sq < Kernel::FT(1e-20)) {
     // Points are coincident, keep same frame
     frame.normal   = prev_frame.normal;
     frame.binormal = prev_frame.binormal;
     return frame;
   }
 
-  // First reflection: reflect normal across plane perpendicular to
-  // segment_vector
+  // First reflection: reflect normal across plane perpendicular to v1
+  // Formula 11 from Wang et al. (R_1)
+  // R = P - 2(P.n)n where n is unit normal to reflection plane.
+  // Here reflection plane normal is v1/|v1|.
+  // R_1(n) = n - 2(n.v1/|v1|^2)v1
+  Kernel::FT       c1 = Kernel::FT(2) / v1_length_sq;
   Kernel::Vector_3 reflected_normal =
-      prev_frame.normal - (Kernel::FT(2) / segment_length_sq) *
-                              (segment_vector * prev_frame.normal) *
-                              segment_vector;
-
-  // Reflect previous tangent similarly
+      prev_frame.normal - c1 * (v1 * prev_frame.normal) * v1;
   Kernel::Vector_3 reflected_tangent =
-      prev_frame.tangent - (Kernel::FT(2) / segment_length_sq) *
-                               (segment_vector * prev_frame.tangent) *
-                               segment_vector;
+      prev_frame.tangent - c1 * (v1 * prev_frame.tangent) * v1;
 
   // Second reflection to align with new tangent
-  Kernel::Vector_3 tangent_diff    = frame.tangent - reflected_tangent;
-  Kernel::FT       tangent_diff_sq = tangent_diff * tangent_diff;
+  // Reflection plane normal is bisector of (reflected_tangent, new_tangent)
+  Kernel::Vector_3 v2           = frame.tangent - reflected_tangent;
+  Kernel::FT       v2_length_sq = v2 * v2;
 
-  if (tangent_diff_sq < Kernel::FT(1e-20)) {
+  if (v2_length_sq < Kernel::FT(1e-20)) {
     // Tangents are parallel, use first reflection result
     frame.normal = reflected_normal;
   } else {
-    frame.normal = reflected_normal - (Kernel::FT(2) / tangent_diff_sq) *
-                                          (tangent_diff * reflected_normal) *
-                                          tangent_diff;
+    // Formula 11 again (R_2)
+    Kernel::FT c2 = Kernel::FT(2) / v2_length_sq;
+    frame.normal  = reflected_normal - c2 * (v2 * reflected_normal) * v2;
   }
 
   frame.normal   = normalizeVector(frame.normal);
@@ -243,6 +249,7 @@ propagate_frame_rmf(const Frame &prev_frame, const Kernel::Point_3 &prev_point,
 
 /**
  * @brief Correct holonomy for closed paths
+ * Distributes the closing error angle smoothly across all frames.
  */
 void
 correct_holonomy(std::vector<Frame> &frames,
@@ -296,7 +303,7 @@ correct_holonomy(std::vector<Frame> &frames,
 }
 
 /**
- * @brief Compute RMF frames along path
+ * @brief Compute RMF frames along path (Discrete/Continuous hybrid)
  */
 auto
 compute_rmf_frames(const std::vector<Kernel::Point_3> &points, bool closed)
@@ -333,66 +340,89 @@ compute_rmf_frames(const std::vector<Kernel::Point_3> &points, bool closed)
 }
 
 /**
- * @brief Compute frames using fixed up vector method
+ * @brief Compute Frenet-Serret frames along path
  *
- * This method maintains a constant "up" direction (typically Z-axis) for all
- * frames. This is ideal for planar paths where twist-free extrusion is desired.
- * The up vector is projected perpendicular to the tangent at each point.
+ * T(t) = P'(t) / |P'(t)|
+ * B(t) = (P'(t) x P''(t)) / |P'(t) x P''(t)|
+ * N(t) = B(t) x T(t)
  *
- * @param points Path points
- * @param up_vector Fixed up direction (default: Z-axis)
- * @return Vector of frames at each path point
+ * Warning: This method is unstable on straight lines (curvature = 0)
+ * and at inflection points.
  */
 auto
-compute_fixed_up_frames(const std::vector<Kernel::Point_3> &points,
-                        const Kernel::Vector_3 &up_vector) -> std::vector<Frame>
+compute_frenet_frames(const std::vector<Kernel::Point_3> &points, bool closed)
+    -> std::vector<Frame>
 {
+  (void)closed;
   std::vector<Frame> frames;
   if (points.size() < 2) {
     return frames;
   }
 
-  Kernel::Vector_3 up_normalized = normalizeVector(up_vector);
-
   for (size_t i = 0; i < points.size(); ++i) {
     Frame frame;
 
-    // Compute tangent direction
+    // 1. Compute Tangent (Velocity)
     Kernel::Vector_3 tangent;
-    if (i == 0) {
-      // First point: use forward direction
+    if (i < points.size() - 1) {
       tangent = points[i + 1] - points[i];
-    } else if (i == points.size() - 1) {
-      // Last point: use backward direction
-      tangent = points[i] - points[i - 1];
     } else {
-      // Middle points: average of incoming and outgoing directions
-      Kernel::Vector_3 incoming = points[i] - points[i - 1];
-      Kernel::Vector_3 outgoing = points[i + 1] - points[i];
-      tangent                   = incoming + outgoing;
+      tangent = points[i] - points[i - 1];
     }
-
     frame.tangent = normalizeVector(tangent);
 
-    // Project up_vector perpendicular to tangent to get binormal
-    // binormal = up - (up · tangent) * tangent
-    Kernel::FT       dot_product = up_normalized * frame.tangent;
-    Kernel::Vector_3 projection  = dot_product * frame.tangent;
-    Kernel::Vector_3 binormal    = up_normalized - projection;
+    // 2. Compute Acceleration (Curvature direction)
+    // We use central difference approximation for internal points
+    Kernel::Vector_3 acceleration(0, 0, 0);
 
-    // Check if up_vector is too parallel to tangent
-    Kernel::FT binormal_length_sq = binormal * binormal;
-    if (binormal_length_sq < Kernel::FT(1e-10)) {
-      // up_vector is nearly parallel to tangent, choose perpendicular vector
-      Kernel::Vector_3 helper(1, 0, 0);
-      if (std::abs(CGAL::to_double(frame.tangent * helper)) > 0.9) {
-        helper = Kernel::Vector_3(0, 1, 0);
-      }
-      binormal = CGAL::cross_product(frame.tangent, helper);
+    if (i > 0 && i < points.size() - 1) {
+      // Central difference: (P_{i+1} - 2P_i + P_{i-1})
+      Kernel::Vector_3 v_in  = points[i] - points[i - 1];
+      Kernel::Vector_3 v_out = points[i + 1] - points[i];
+      acceleration           = v_out - v_in;
+    } else if (i == 0 && points.size() > 2) {
+      // Forward difference approximation
+      // P'' ≈ P_2 - 2P_1 + P_0
+      acceleration = (points[2] - points[1]) - (points[1] - points[0]);
+    } else if (i == points.size() - 1 && points.size() > 2) {
+      // Backward difference
+      acceleration =
+          (points[i] - points[i - 1]) - (points[i - 1] - points[i - 2]);
     }
 
-    frame.binormal = normalizeVector(binormal);
-    frame.normal   = CGAL::cross_product(frame.tangent, frame.binormal);
+    // 3. Compute Binormal = Tangent x Acceleration
+    Kernel::Vector_3 binormal =
+        CGAL::cross_product(frame.tangent, acceleration);
+    Kernel::FT binormal_len_sq = binormal * binormal;
+
+    if (binormal_len_sq > Kernel::FT(1e-10)) {
+      // Normal curvature exists
+      frame.binormal = normalizeVector(binormal);
+      frame.normal   = CGAL::cross_product(frame.binormal, frame.tangent);
+    } else {
+      // Degenerate case (Straight line or inflection point)
+      // Fallback:
+      if (frames.empty()) {
+        // If it's the very first point and it's straight, pick arbitrary
+        frame = compute_initial_frame(frame.tangent);
+      } else {
+        // Propagate previous frame (Parallel transport approximation)
+        Frame prev = frames.back();
+        // Ensure orthogonality with new tangent
+        // Project previous normal onto plane perpendicular to new tangent
+        Kernel::Vector_3 proj_normal =
+            prev.normal - (prev.normal * frame.tangent) * frame.tangent;
+
+        if (proj_normal * proj_normal > Kernel::FT(1e-10)) {
+          frame.normal   = normalizeVector(proj_normal);
+          frame.binormal = CGAL::cross_product(frame.tangent, frame.normal);
+        } else {
+          // New tangent is parallel to old normal? Unlikely if curve is smooth.
+          // Fallback to initial frame computation
+          frame = compute_initial_frame(frame.tangent);
+        }
+      }
+    }
 
     frames.push_back(frame);
   }
@@ -402,10 +432,6 @@ compute_fixed_up_frames(const std::vector<Kernel::Point_3> &points,
 
 /**
  * @brief Compute bisector plane at a corner (miter join)
- *
- * Given three consecutive points p1, p2, p3 forming a corner at p2,
- * compute the plane perpendicular to the bisector of the angle.
- * This is used for creating sharp miter joins at corners.
  */
 auto
 compute_bisector_plane(const Kernel::Point_3 &p1, const Kernel::Point_3 &p2,
@@ -414,15 +440,19 @@ compute_bisector_plane(const Kernel::Point_3 &p1, const Kernel::Point_3 &p2,
   Kernel::Vector_3 v1       = normalizeVector(p2 - p1);
   Kernel::Vector_3 v2       = normalizeVector(p3 - p2);
   Kernel::Vector_3 bisector = v1 + v2; // Bisector direction
+
+  // If segments are collinear (180 deg) or backtracking (0 deg), handle
+  // robustly
+  if (bisector * bisector < Kernel::FT(1e-10)) {
+    // Degenerate case: plane passes through p2 perpendicular to v1
+    return Kernel::Plane_3(p2, v1);
+  }
+
   return Kernel::Plane_3(p2, bisector);
 }
 
 /**
  * @brief Project point onto plane along a direction
- *
- * Projects point p onto the given plane along the direction from p_prev to p.
- * This is used to create miter joins by intersecting swept profile segments
- * with bisector planes at corners.
  */
 auto
 project_onto_bisector_plane(const Kernel::Point_3 &p_prev,
@@ -431,16 +461,13 @@ project_onto_bisector_plane(const Kernel::Point_3 &p_prev,
 {
   Kernel::Vector_3 v = p - p_prev;
 
-  // Compute intersection parameter t: plane.a*x + plane.b*y + plane.c*z +
-  // plane.d = 0
   Kernel::FT numerator = -(plane.a() * p_prev.x() + plane.b() * p_prev.y() +
                            plane.c() * p_prev.z() + plane.d());
   Kernel::FT denominator =
       plane.a() * v.x() + plane.b() * v.y() + plane.c() * v.z();
 
-  // Check if direction is parallel to plane
   if (CGAL::abs(denominator) < Kernel::FT(1e-10)) {
-    return p; // Return original point if parallel
+    return p; // Parallel
   }
 
   Kernel::FT t = numerator / denominator;
@@ -448,14 +475,7 @@ project_onto_bisector_plane(const Kernel::Point_3 &p_prev,
 }
 
 /**
- * @brief Compute frame perpendicular to segment axis
- *
- * Creates an orthonormal frame with tangent aligned to the segment axis.
- * This is used for SEGMENT_ALIGNED method where the frame is constant
- * along each segment (no twist).
- *
- * @param axis Normalized segment axis (direction from start to end)
- * @return Frame perpendicular to axis
+ * @brief Compute frame perpendicular to segment axis (for Segment Aligned)
  */
 auto
 compute_segment_frame(const Kernel::Vector_3 &axis) -> Frame
@@ -465,18 +485,14 @@ compute_segment_frame(const Kernel::Vector_3 &axis) -> Frame
 
   frame.tangent = normalized_axis;
 
-  // Choose perpendicular vector by cross product with a reference vector
   // Try Z-axis first, if parallel try Y-axis
   Kernel::Vector_3 perpendicular =
       CGAL::cross_product(normalized_axis, Kernel::Vector_3(0, 0, 1));
   if (perpendicular * perpendicular < Kernel::FT(1e-10)) {
-    // Axis is parallel to Z, use Y instead
     perpendicular =
         CGAL::cross_product(normalized_axis, Kernel::Vector_3(0, 1, 0));
   }
   frame.normal = normalizeVector(perpendicular);
-
-  // Binormal is cross product of tangent and normal (right-handed system)
   frame.binormal =
       normalizeVector(CGAL::cross_product(frame.tangent, frame.normal));
 
@@ -485,31 +501,20 @@ compute_segment_frame(const Kernel::Vector_3 &axis) -> Frame
 
 /**
  * @brief Transform 2D profile point to 3D using frame
- * @param profile_pt 2D point in profile space
- * @param path_pt 3D point on the path
- * @param frame Orthonormal frame at path point
- * @param anchor_x X coordinate of anchor point in profile space
- * @param anchor_y Y coordinate of anchor point in profile space
  */
 auto
 transform_profile_point(const Kernel::Point_2 &profile_pt,
                         const Kernel::Point_3 &path_pt, const Frame &frame,
                         double anchor_x, double anchor_y) -> Kernel::Point_3
 {
-  // Profile coordinates: (X, Y) in 2D
-  // Apply anchor point offset: subtract anchor from profile coordinates
-  // This positions the anchor point on the path
-  double x = CGAL::to_double(profile_pt.x()) - anchor_x;
-  double y = CGAL::to_double(profile_pt.y()) - anchor_y;
-  // Map X to normal direction, Y to binormal direction
+  double           x      = CGAL::to_double(profile_pt.x()) - anchor_x;
+  double           y      = CGAL::to_double(profile_pt.y()) - anchor_y;
   Kernel::Vector_3 offset = x * frame.normal + y * frame.binormal;
-
   return path_pt + offset;
 }
 
 /**
  * @brief Build sweep mesh by connecting consecutive profile instances
- * @return Vector of vertex rings (indices of vertices for each profile)
  */
 auto
 build_sweep_mesh(Surface_mesh_3                                  &mesh,
@@ -525,7 +530,6 @@ build_sweep_mesh(Surface_mesh_3                                  &mesh,
   size_t n_path_points    = profiles.size();
   size_t n_profile_points = profiles[0].size();
 
-  // Add all vertices
   vertex_rings.reserve(n_path_points);
 
   for (const auto &profile : profiles) {
@@ -537,16 +541,13 @@ build_sweep_mesh(Surface_mesh_3                                  &mesh,
     vertex_rings.push_back(std::move(ring));
   }
 
-  // Connect consecutive rings with quads
   for (size_t i = 0; i < n_path_points - 1; ++i) {
     const auto &ring1 = vertex_rings[i];
     const auto &ring2 = vertex_rings[i + 1];
 
     for (size_t j = 0; j < n_profile_points; ++j) {
-      size_t next_j =
-          (j + 1) % n_profile_points; // Wrap around to close the tube
-
-      // Create quad face with consistent orientation
+      size_t next_j = (j + 1) % n_profile_points;
+      // Add quad face
       mesh.add_face(ring1[j], ring2[j], ring2[next_j], ring1[next_j]);
     }
   }
@@ -556,242 +557,232 @@ build_sweep_mesh(Surface_mesh_3                                  &mesh,
 
 /**
  * @brief Add flat end caps to mesh
+ *
+ * For closed profiles, adds the profile itself as a single polygonal face.
+ * For open profiles, no caps are added (open-ended tube).
+ *
+ * @param add_start If true, adds the start cap
+ * @param add_end If true, adds the end cap
  */
 void
 add_flat_caps(
-    Surface_mesh_3 &mesh, const std::vector<Kernel::Point_3> &path,
-    const std::vector<Frame> & /*frames*/,
-    const std::vector<std::vector<Surface_mesh_3::Vertex_index>> &vertex_rings)
+    Surface_mesh_3                                               &mesh,
+    [[maybe_unused]] const std::vector<Kernel::Point_3>          &path,
+    const std::vector<std::vector<Surface_mesh_3::Vertex_index>> &vertex_rings,
+    bool add_start, bool add_end)
 {
   if (vertex_rings.empty()) {
     return;
   }
 
-  // Get first and last vertex rings
   const auto &first_ring = vertex_rings.front();
   const auto &last_ring  = vertex_rings.back();
 
-  size_t n_vertices = first_ring.size();
+  // Start cap: reversed orientation (inward-facing normal)
+  if (add_start) {
+    std::vector<Surface_mesh_3::Vertex_index> start_cap_vertices;
+    start_cap_vertices.reserve(first_ring.size());
+    for (auto it = first_ring.rbegin(); it != first_ring.rend(); ++it) {
+      start_cap_vertices.push_back(*it);
+    }
 
-  // Add center vertices for triangular fan caps
-  const Kernel::Point_3       &start_center     = path.front();
-  Surface_mesh_3::Vertex_index start_center_idx = mesh.add_vertex(start_center);
-
-  const Kernel::Point_3       &end_center     = path.back();
-  Surface_mesh_3::Vertex_index end_center_idx = mesh.add_vertex(end_center);
-
-  // Create start cap as triangular fan (inward-facing)
-  for (size_t i = 0; i < n_vertices; ++i) {
-    size_t next_i = (i + 1) % n_vertices;
-    mesh.add_face(start_center_idx, first_ring[i], first_ring[next_i]);
+    auto start_face = mesh.add_face(start_cap_vertices);
+    if (start_face == Surface_mesh_3::null_face()) {
+      std::cerr << "Warning: Failed to add start cap face" << std::endl;
+    }
   }
 
-  // Create end cap as triangular fan (outward-facing)
-  for (size_t i = 0; i < n_vertices; ++i) {
-    size_t next_i = (i + 1) % n_vertices;
-    mesh.add_face(end_center_idx, last_ring[next_i], last_ring[i]);
+  // End cap: normal orientation (outward-facing normal)
+  if (add_end) {
+    auto end_face = mesh.add_face(last_ring);
+    if (end_face == Surface_mesh_3::null_face()) {
+      std::cerr << "Warning: Failed to add end cap face" << std::endl;
+    }
   }
 }
 
-} // anonymous namespace
+// ----------------------------------------------------------------------------
+// Discrete Sweep Implementation (Segment Aligned)
+// ----------------------------------------------------------------------------
 
-// Public API implementation
-
+/**
+ * @brief Discrete sweep for Miter joins (Architecture/CAD style)
+ *
+ * This implementation treats each segment as a rigid tube and computes
+ * intersections (miters) at corners. It avoids the "twisting" issues of
+ * continuous frames at sharp corners.
+ */
 auto
-sweep(const LineString &path, const Geometry &profile,
-      const SweepOptions &options) -> std::unique_ptr<PolyhedralSurface>
+sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
+               const Geometry &profile, const SweepOptions &options)
+    -> std::unique_ptr<PolyhedralSurface>
 {
-  // Validate inputs
-  if (path.numPoints() < 2) {
-    throw std::invalid_argument("Path must have at least 2 points, got: " +
-                                std::to_string(path.numPoints()));
-  }
-
-  // Extract path points
-  std::vector<Kernel::Point_3> path_points;
-  path_points.reserve(path.numPoints());
-  for (size_t i = 0; i < path.numPoints(); ++i) {
-    const Point &point = path.pointN(i);
-    path_points.emplace_back(point.x(), point.y(), point.z());
-  }
-
-  // Extract profile points
+  Surface_mesh_3                                         mesh;
+  std::vector<std::vector<Surface_mesh_3::Vertex_index>> vertex_rings;
   std::vector<Kernel::Point_2> profile_points = extract_profile_points(profile);
 
-  // Determine if path is closed
-  bool closed = options.closed_path || is_closed_path(path);
+  bool closed = options.closed_path;
 
-  // For SEGMENT_ALIGNED method, use a completely different approach
-  // This follows the old buffer3D.computeFlatBuffer() pattern:
-  // - Process segment-by-segment (not point-by-point)
-  // - Each segment has a constant frame perpendicular to its axis
-  // - Profile is transformed at both ends of each segment with same frame
-  // - Then vertices are projected onto bisector planes at corners for miter
-  // joins
-  // - Build mesh directly without intermediate storage to avoid multiple
-  // transformations
-  if (options.frame_method == SweepOptions::FrameMethod::SEGMENT_ALIGNED) {
-    // Pre-compute bisector planes at intermediate points (corners)
-    std::vector<Kernel::Plane_3> bisector_planes;
-    if (path_points.size() >= 3) {
-      bisector_planes.reserve(path_points.size() - 2);
-      for (size_t i = 1; i < path_points.size() - 1; ++i) {
-        bisector_planes.push_back(compute_bisector_plane(
-            path_points[i - 1], path_points[i], path_points[i + 1]));
-      }
-
-      // For closed paths, add bisector plane at closing point
-      // This is between last segment (pN-1, pN) and first segment (p0, p1)
-      if (closed) {
-        bisector_planes.push_back(compute_bisector_plane(
-            path_points[path_points.size() - 2],
-            path_points[path_points.size() - 1], path_points[1]));
-      }
+  // 1. Pre-compute bisector planes
+  std::vector<Kernel::Plane_3> bisector_planes;
+  if (path_points.size() >= 3) {
+    bisector_planes.reserve(path_points.size() - 2);
+    for (size_t i = 1; i < path_points.size() - 1; ++i) {
+      bisector_planes.push_back(compute_bisector_plane(
+          path_points[i - 1], path_points[i], path_points[i + 1]));
     }
 
-    Surface_mesh_3                                         mesh;
-    std::vector<std::vector<Surface_mesh_3::Vertex_index>> vertex_rings;
-
-    // Previous segment's end ring - will be reused as next segment's start ring
-    std::vector<Surface_mesh_3::Vertex_index> prev_end_ring;
-
-    // For closed paths, save first segment's start ring to reuse as last
-    // segment's end ring
-    std::vector<Surface_mesh_3::Vertex_index> first_start_ring;
-
-    // Process each segment independently
-    for (size_t seg_idx = 0; seg_idx < path_points.size() - 1; ++seg_idx) {
-      // 1. Compute axis for THIS segment (constant for entire segment)
-      Kernel::Vector_3 axis = path_points[seg_idx + 1] - path_points[seg_idx];
-      Frame            segment_frame = compute_segment_frame(axis);
-
-      // 2. Handle start_ring: reuse previous end_ring or create new
-      std::vector<Surface_mesh_3::Vertex_index> start_ring;
-
-      if (seg_idx == 0) {
-        // First segment: create start_ring from scratch
-        std::vector<Kernel::Point_3> start_profile;
-        start_profile.reserve(profile_points.size());
-
-        for (const auto &profile_pt : profile_points) {
-          start_profile.push_back(transform_profile_point(
-              profile_pt, path_points[seg_idx], segment_frame, options.anchor_x,
-              options.anchor_y));
-        }
-
-        // Add vertices to mesh (no projection needed at start of path)
-        start_ring.reserve(profile_points.size());
-        for (const auto &pt : start_profile) {
-          start_ring.push_back(mesh.add_vertex(pt));
-        }
-
-        // Save first start ring for closed paths
-        first_start_ring = start_ring;
-      } else {
-        // Subsequent segments: reuse previous segment's end_ring
-        start_ring = prev_end_ring;
-      }
-
-      // 3. Create end_ring for this segment
-      std::vector<Surface_mesh_3::Vertex_index> end_ring;
-
-      // Note: For SEGMENT_ALIGNED, we don't reuse vertices for closed paths
-      // because the projection logic requires independent vertex rings
-      {
-        // Create new end_ring
-        std::vector<Kernel::Point_3> end_profile;
-        end_profile.reserve(profile_points.size());
-
-        for (const auto &profile_pt : profile_points) {
-          end_profile.push_back(transform_profile_point(
-              profile_pt, path_points[seg_idx + 1], segment_frame,
-              options.anchor_x, options.anchor_y));
-        }
-
-        // 4. Project end profile onto bisector plane if needed and add to mesh
-        end_ring.reserve(profile_points.size());
-
-        for (size_t pt_idx = 0; pt_idx < profile_points.size(); ++pt_idx) {
-          Kernel::Point_3 end_point = end_profile[pt_idx];
-
-          // Project end point onto its bisector plane if it has one
-          if (seg_idx < path_points.size() - 2) {
-            // For projection, we need the line from start to end
-            // Get start point from the mesh using start_ring index
-            Kernel::Point_3 start_point = mesh.point(start_ring[pt_idx]);
-            end_point = project_onto_bisector_plane(start_point, end_point,
-                                                    bisector_planes[seg_idx]);
-          }
-
-          // Add vertex to mesh
-          end_ring.push_back(mesh.add_vertex(end_point));
-        }
-      }
-
-      // Save end_ring for next iteration
-      prev_end_ring = end_ring;
-
-      // 4. Connect faces between start and end profiles
-      size_t n_pts = profile_points.size();
-      for (size_t i = 0; i < n_pts - 1; ++i) {
-        mesh.add_face(start_ring[i], start_ring[i + 1], end_ring[i + 1],
-                      end_ring[i]);
-      }
-
-      // For closed profiles (Polygon or closed LineString), add wrap-around
-      // face The profile extraction removes duplicate end point, so we need to
-      // connect the last point back to the first to close the tube
-      if (profile.geometryTypeId() == TYPE_POLYGON ||
-          (profile.geometryTypeId() == TYPE_LINESTRING &&
-           profile.as<LineString>().isClosed())) {
-        mesh.add_face(start_ring[n_pts - 1], start_ring[0], end_ring[0],
-                      end_ring[n_pts - 1]);
-      }
-
-      // Store rings for cap generation
-      if (seg_idx == 0) {
-        vertex_rings.push_back(start_ring);
-      }
-      if (seg_idx == path_points.size() - 2) {
-        vertex_rings.push_back(end_ring);
-      }
+    if (closed) {
+      bisector_planes.push_back(compute_bisector_plane(
+          path_points[path_points.size() - 2],
+          path_points[path_points.size() - 1], path_points[1]));
     }
-
-    // Add end caps if requested and path is not closed
-    if (!closed && (options.start_cap == SweepOptions::EndCapStyle::FLAT ||
-                    options.end_cap == SweepOptions::EndCapStyle::FLAT)) {
-      // For caps, we need frames at endpoints
-      std::vector<Frame> endpoint_frames(2);
-
-      // First segment frame for start cap
-      Kernel::Vector_3 first_axis = path_points[1] - path_points[0];
-      endpoint_frames[0]          = compute_segment_frame(first_axis);
-
-      // Last segment frame for end cap
-      Kernel::Vector_3 last_axis = path_points[path_points.size() - 1] -
-                                   path_points[path_points.size() - 2];
-      endpoint_frames[1] = compute_segment_frame(last_axis);
-
-      add_flat_caps(mesh, path_points, endpoint_frames, vertex_rings);
-    }
-
-    return std::make_unique<PolyhedralSurface>(mesh);
   }
 
-  // Compute frames along path for point-based methods
+  // Previous segment's end ring - reused as next start ring
+  std::vector<Surface_mesh_3::Vertex_index> prev_end_ring;
+  std::vector<Surface_mesh_3::Vertex_index> first_start_ring;
+
+  // Process each segment
+  for (size_t seg_idx = 0; seg_idx < path_points.size() - 1; ++seg_idx) {
+    // Constant frame for this segment
+    Kernel::Vector_3 axis = path_points[seg_idx + 1] - path_points[seg_idx];
+    Frame            segment_frame = compute_segment_frame(axis);
+
+    // --- Start Ring ---
+    std::vector<Surface_mesh_3::Vertex_index> start_ring;
+
+    if (seg_idx == 0) {
+      // Create first ring from scratch
+      std::vector<Kernel::Point_3> start_profile;
+      start_profile.reserve(profile_points.size());
+
+      for (const auto &profile_pt : profile_points) {
+        start_profile.push_back(transform_profile_point(
+            profile_pt, path_points[seg_idx], segment_frame, options.anchor_x,
+            options.anchor_y));
+      }
+
+      start_ring.reserve(profile_points.size());
+      for (const auto &pt : start_profile) {
+        start_ring.push_back(mesh.add_vertex(pt));
+      }
+      first_start_ring = start_ring;
+    } else {
+      // Reuse previous
+      start_ring = prev_end_ring;
+    }
+
+    // --- End Ring ---
+    std::vector<Surface_mesh_3::Vertex_index> end_ring;
+
+    if (closed && seg_idx == path_points.size() - 2) {
+      // Closing segment: Project start ring onto closing bisector
+      std::vector<Kernel::Point_3> end_profile;
+      end_profile.reserve(profile_points.size());
+
+      for (const auto &profile_pt : profile_points) {
+        end_profile.push_back(transform_profile_point(
+            profile_pt, path_points[seg_idx + 1], segment_frame,
+            options.anchor_x, options.anchor_y));
+      }
+
+      Kernel::Plane_3 closing_bisector = bisector_planes.back();
+
+      for (size_t pt_idx = 0; pt_idx < first_start_ring.size(); ++pt_idx) {
+        Kernel::Point_3 start_point  = mesh.point(start_ring[pt_idx]);
+        Kernel::Point_3 target_point = end_profile[pt_idx];
+
+        // Update the *existing* first vertex to be on the bisector plane
+        Kernel::Point_3 projected = project_onto_bisector_plane(
+            start_point, target_point, closing_bisector);
+
+        mesh.point(first_start_ring[pt_idx]) = projected;
+      }
+      end_ring = first_start_ring; // Loop back
+    } else {
+      // Normal segment
+      std::vector<Kernel::Point_3> end_profile;
+      end_profile.reserve(profile_points.size());
+
+      for (const auto &profile_pt : profile_points) {
+        end_profile.push_back(transform_profile_point(
+            profile_pt, path_points[seg_idx + 1], segment_frame,
+            options.anchor_x, options.anchor_y));
+      }
+
+      end_ring.reserve(profile_points.size());
+      for (size_t pt_idx = 0; pt_idx < profile_points.size(); ++pt_idx) {
+        Kernel::Point_3 end_point = end_profile[pt_idx];
+
+        // If there is a corner ahead, project onto bisector
+        if (seg_idx < path_points.size() - 2) {
+          Kernel::Point_3 start_point = mesh.point(start_ring[pt_idx]);
+          end_point = project_onto_bisector_plane(start_point, end_point,
+                                                  bisector_planes[seg_idx]);
+        }
+        end_ring.push_back(mesh.add_vertex(end_point));
+      }
+    }
+
+    prev_end_ring = end_ring;
+
+    // Connect faces
+    size_t n_pts = profile_points.size();
+    for (size_t i = 0; i < n_pts - 1; ++i) {
+      mesh.add_face(start_ring[i], start_ring[i + 1], end_ring[i + 1],
+                    end_ring[i]);
+    }
+    // Close tube
+    if (profile.geometryTypeId() == TYPE_POLYGON ||
+        (profile.geometryTypeId() == TYPE_LINESTRING &&
+         profile.as<LineString>().isClosed())) {
+      mesh.add_face(start_ring[n_pts - 1], start_ring[0], end_ring[0],
+                    end_ring[n_pts - 1]);
+    }
+
+    if (seg_idx == 0) {
+      vertex_rings.push_back(start_ring);
+    }
+    if (seg_idx == path_points.size() - 2) {
+      vertex_rings.push_back(end_ring);
+    }
+  }
+
+  if (!closed && (options.start_cap == SweepOptions::EndCapStyle::FLAT ||
+                  options.end_cap == SweepOptions::EndCapStyle::FLAT)) {
+    bool add_start = (options.start_cap == SweepOptions::EndCapStyle::FLAT);
+    bool add_end   = (options.end_cap == SweepOptions::EndCapStyle::FLAT);
+    add_flat_caps(mesh, path_points, vertex_rings, add_start, add_end);
+  }
+
+  return std::make_unique<PolyhedralSurface>(mesh);
+}
+
+// ----------------------------------------------------------------------------
+// Continuous Sweep Implementation (Point Based)
+// ----------------------------------------------------------------------------
+
+/**
+ * @brief Continuous sweep for smooth curves (RMF / Frenet)
+ */
+auto
+sweep_continuous(const std::vector<Kernel::Point_3> &path_points,
+                 const Geometry &profile, const SweepOptions &options)
+    -> std::unique_ptr<PolyhedralSurface>
+{
+  std::vector<Kernel::Point_2> profile_points = extract_profile_points(profile);
+  bool                         closed         = options.closed_path;
+
+  // 1. Compute Frames
   std::vector<Frame> frames;
   if (options.frame_method == SweepOptions::FrameMethod::ROTATION_MINIMIZING) {
     frames = compute_rmf_frames(path_points, closed);
-  } else if (options.frame_method == SweepOptions::FrameMethod::FIXED_UP) {
-    frames = compute_fixed_up_frames(path_points, options.fixed_up_vector);
-  } else {
-    // TODO: Implement Frenet frame method
-    throw std::runtime_error(
-        "Only ROTATION_MINIMIZING, FIXED_UP and SEGMENT_ALIGNED frame methods "
-        "are currently implemented");
+  } else if (options.frame_method == SweepOptions::FrameMethod::FRENET) {
+    frames = compute_frenet_frames(path_points, closed);
   }
 
-  // Transform profile at each path point using frames
+  // 2. Transform profile at each point
   std::vector<std::vector<Kernel::Point_3>> transformed_profiles;
   transformed_profiles.reserve(path_points.size());
 
@@ -804,61 +795,63 @@ sweep(const LineString &path, const Geometry &profile,
                                                    frames[i], options.anchor_x,
                                                    options.anchor_y));
     }
-
     transformed_profiles.push_back(std::move(profile_3d));
   }
 
-  // Apply bisector plane projection for FIXED_UP method at corners
-  // This creates miter joins for sharp corners (like AutoCAD)
-  // Implementation follows the same logic as the old buffer3D computeFlatBuffer
-  if (options.frame_method == SweepOptions::FrameMethod::FIXED_UP &&
-      path_points.size() >= 3) {
-    // Compute bisector planes at intermediate points (corners)
-    std::vector<Kernel::Plane_3> bisector_planes;
-    bisector_planes.reserve(path_points.size() - 2);
-
-    for (size_t i = 1; i < path_points.size() - 1; ++i) {
-      bisector_planes.push_back(compute_bisector_plane(
-          path_points[i - 1], path_points[i], path_points[i + 1]));
-    }
-
-    // Process each segment and project vertices onto bisector planes
-    // This is done segment-by-segment like the old buffer3D algorithm
-    for (size_t i = 0; i < path_points.size() - 1; ++i) {
-      for (size_t j = 0; j < profile_points.size(); ++j) {
-        Kernel::Point_3 start_point = transformed_profiles[i][j];
-        Kernel::Point_3 end_point   = transformed_profiles[i + 1][j];
-
-        // Project start point onto its bisector plane if it has one
-        if (i > 0) {
-          start_point = project_onto_bisector_plane(start_point, end_point,
-                                                    bisector_planes[i - 1]);
-        }
-
-        // Project end point onto its bisector plane if it has one
-        if (i < path_points.size() - 2) {
-          end_point = project_onto_bisector_plane(start_point, end_point,
-                                                  bisector_planes[i]);
-        }
-
-        // Update the transformed profiles
-        transformed_profiles[i][j]     = start_point;
-        transformed_profiles[i + 1][j] = end_point;
-      }
-    }
-  }
-
-  // Build sweep mesh
+  // 3. Build Mesh
   Surface_mesh_3 mesh;
   auto           vertex_rings = build_sweep_mesh(mesh, transformed_profiles);
 
-  // Add end caps if requested
   if (!closed && (options.start_cap == SweepOptions::EndCapStyle::FLAT ||
                   options.end_cap == SweepOptions::EndCapStyle::FLAT)) {
-    add_flat_caps(mesh, path_points, frames, vertex_rings);
+    bool add_start = (options.start_cap == SweepOptions::EndCapStyle::FLAT);
+    bool add_end   = (options.end_cap == SweepOptions::EndCapStyle::FLAT);
+    add_flat_caps(mesh, path_points, vertex_rings, add_start, add_end);
   }
 
   return std::make_unique<PolyhedralSurface>(mesh);
+}
+
+} // anonymous namespace
+
+// ----------------------------------------------------------------------------
+// Public API Implementation
+// ----------------------------------------------------------------------------
+
+auto
+sweep(const LineString &path, const Geometry &profile,
+      const SweepOptions &options) -> std::unique_ptr<PolyhedralSurface>
+{
+  if (path.numPoints() < 2) {
+    throw std::invalid_argument("Path must have at least 2 points");
+  }
+
+  std::vector<Kernel::Point_3> path_points;
+  path_points.reserve(path.numPoints());
+  for (size_t i = 0; i < path.numPoints(); ++i) {
+    const Point &point = path.pointN(i);
+    path_points.emplace_back(point.x(), point.y(), point.z());
+  }
+
+  // Force closed flag if geometry is closed
+  SweepOptions opts = options;
+  if (static_cast<bool>(isClosed(path))) {
+    opts.closed_path = true;
+  }
+
+  // If closed is requested but path is not geometrically closed, close it by
+  // duplicating start point
+  if (opts.closed_path && !path_points.empty()) {
+    if (path_points.front() != path_points.back()) {
+      path_points.push_back(path_points.front());
+    }
+  }
+
+  if (opts.frame_method == SweepOptions::FrameMethod::SEGMENT_ALIGNED) {
+    return sweep_discrete(path_points, profile, opts);
+  } else {
+    return sweep_continuous(path_points, profile, opts);
+  }
 }
 
 auto
@@ -866,12 +859,10 @@ create_circular_profile(double radius, int segments)
     -> std::unique_ptr<LineString>
 {
   if (radius <= 0.0) {
-    throw std::invalid_argument("Radius must be positive, got: " +
-                                std::to_string(radius));
+    throw std::invalid_argument("Radius must be positive");
   }
   if (segments < 3) {
-    throw std::invalid_argument("Segments must be at least 3, got: " +
-                                std::to_string(segments));
+    throw std::invalid_argument("Segments must be at least 3");
   }
 
   std::vector<Point> points;
@@ -883,8 +874,7 @@ create_circular_profile(double radius, int segments)
     double y     = radius * std::sin(angle);
     points.emplace_back(x, y, 0);
   }
-  // close the ring
-  points.emplace_back(points[0]);
+  points.emplace_back(points[0]); // Close
 
   return std::make_unique<LineString>(points);
 }
@@ -893,26 +883,91 @@ auto
 create_rectangular_profile(double width, double height)
     -> std::unique_ptr<Polygon>
 {
-  if (width <= 0.0) {
-    throw std::invalid_argument("Width must be positive, got: " +
-                                std::to_string(width));
-  }
-  if (height <= 0.0) {
-    throw std::invalid_argument("Height must be positive, got: " +
-                                std::to_string(height));
+  if (width <= 0.0 || height <= 0.0) {
+    throw std::invalid_argument("Dimensions must be positive");
   }
 
-  double half_width  = width / 2.0;
-  double half_height = height / 2.0;
+  double hw = width / 2.0;
+  double hh = height / 2.0;
 
   std::vector<Point> points;
-  points.reserve(5); // 4 corners + closure
+  points.reserve(5);
+  points.emplace_back(-hw, -hh, 0);
+  points.emplace_back(hw, -hh, 0);
+  points.emplace_back(hw, hh, 0);
+  points.emplace_back(-hw, hh, 0);
+  points.emplace_back(-hw, -hh, 0);
 
-  points.emplace_back(-half_width, -half_height, 0);
-  points.emplace_back(half_width, -half_height, 0);
-  points.emplace_back(half_width, half_height, 0);
-  points.emplace_back(-half_width, half_height, 0);
-  points.emplace_back(-half_width, -half_height, 0); // close the ring
+  LineString ring(points);
+  return std::make_unique<Polygon>(ring);
+}
+
+auto
+create_chamfer_profile(double radius_x, double radius_y)
+    -> std::unique_ptr<Polygon>
+{
+  if (radius_x <= 0.0) {
+    throw std::invalid_argument("Radius X must be positive");
+  }
+
+  double ry = (radius_y < 0.0) ? radius_x : radius_y; // Default to symmetric
+  if (ry <= 0.0) {
+    throw std::invalid_argument("Radius Y must be positive");
+  }
+
+  // Create a triangle in the 3rd quadrant (negative X, negative Y)
+  // Vertices: (0,0) -> (0, -ry) -> (-rx, 0) -> (0,0)
+  std::vector<Point> points;
+  points.reserve(4);
+  points.emplace_back(0, 0, 0);
+  points.emplace_back(0, -ry, 0);
+  points.emplace_back(-radius_x, 0, 0);
+  points.emplace_back(0, 0, 0);
+
+  LineString ring(points);
+  return std::make_unique<Polygon>(ring);
+}
+
+auto
+create_fillet_profile(double radius, int segments) -> std::unique_ptr<Polygon>
+{
+  if (radius <= 0.0) {
+    throw std::invalid_argument("Radius must be positive");
+  }
+  if (segments < 1) {
+    throw std::invalid_argument("Segments must be at least 1");
+  }
+
+  // Center of the arc is at (-radius, -radius)
+  double cx = -radius;
+  double cy = -radius;
+
+  std::vector<Point> points;
+  points.reserve(segments + 3);
+
+  points.emplace_back(0, 0, 0); // Origin
+
+  // Arc from 0 degrees (0, -r) to 90 degrees (-r, 0) relative to center
+  // In global coords, this goes from (0, -radius) to (-radius, 0)
+  // We iterate backwards to keep consistent winding order if needed,
+  // or just follow the path: (0,0) -> (0, -r) ... arc ... -> (-r, 0) -> (0,0)
+
+  // Start of arc (0, -radius) corresponds to angle 0 relative to center (-r,
+  // -r)? Center (-r, -r). Point (0, -r). x = -r + r*cos(0) = 0. y = -r +
+  // r*sin(0) = -r. Correct.
+
+  // End of arc (-r, 0).
+  // x = -r + r*cos(90) = -r. y = -r + r*sin(90) = 0. Correct.
+
+  // We want the points between angle 0 and 90 degrees.
+  for (int i = 0; i <= segments; ++i) {
+    double angle = (M_PI / 2.0) * (double(i) / segments);
+    double x     = cx + radius * std::cos(angle);
+    double y     = cy + radius * std::sin(angle);
+    points.emplace_back(x, y, 0);
+  }
+
+  points.emplace_back(0, 0, 0); // Close back to origin
 
   LineString ring(points);
   return std::make_unique<Polygon>(ring);
