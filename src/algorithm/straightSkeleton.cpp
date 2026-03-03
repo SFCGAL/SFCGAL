@@ -24,10 +24,17 @@
 
 #include <CGAL/Arr_segment_traits_2.h>
 #include <CGAL/Arrangement_2.h>
+#include <CGAL/Polygon_mesh_processing/orient_polygon_soup.h>
+#include <CGAL/Polygon_mesh_processing/orientation.h>
+#include <CGAL/Polygon_mesh_processing/polygon_soup_to_polygon_mesh.h>
 #include <CGAL/Straight_skeleton_converter_2.h>
 #include <CGAL/Surface_mesh.h>
+#include <CGAL/centroid.h>
 #include <CGAL/create_straight_skeleton_from_polygon_with_holes_2.h>
 #include <CGAL/extrude_skeleton.h>
+
+#include "SFCGAL/GeometryCollection.h"
+#include "SFCGAL/algorithm/orientation.h"
 
 #include <cmath>
 #include <memory>
@@ -537,69 +544,146 @@ approximateMedialAxis(const Geometry &geom, bool projectToEdges)
   return mx;
 }
 
+namespace { // anonymous namespace for conversion utilities
+
+/**
+ * @brief Convert angles (in degrees) to weights (tan of angle)
+ * @param angles Vector of vectors of angles in degrees
+ * @return Vector of vectors of weights
+ */
+auto
+anglesToWeights(const std::vector<std::vector<Kernel::FT>> &angles)
+    -> std::vector<std::vector<Kernel::FT>>
+{
+  std::vector<std::vector<Kernel::FT>> weights;
+  weights.reserve(angles.size());
+
+  for (const auto &ring : angles) {
+    std::vector<Kernel::FT> ringWeights;
+    ringWeights.reserve(ring.size());
+
+    for (const auto &angle : ring) {
+      if (angle == Kernel::FT(90.0)) {
+        ringWeights.emplace_back(0.0);
+      } else {
+        // Convert angle in degrees to radians then to weight (tan)
+        // Use CGAL::to_double for conversion to handle exact number types
+        double rad = CGAL::to_double(angle) * CGAL_PI / 180.0;
+        ringWeights.emplace_back(std::tan(rad));
+      }
+    }
+    weights.push_back(std::move(ringWeights));
+  }
+
+  return weights;
+}
+
+} // anonymous namespace
+
 /// @private
+// NOLINTBEGIN(readability-function-cognitive-complexity)
 auto
 extrudeStraightSkeleton(const Polygon &geom, double height,
+                        std::vector<std::vector<Kernel::FT>> weights,
                         std::vector<std::vector<Kernel::FT>> angles)
     -> std::unique_ptr<PolyhedralSurface>
 {
-  // Check angles format
-  size_t numRingsAngles = angles.size();
-  if (numRingsAngles == 0) {
+  // Check for conflicting parameters
+  const bool hasWeights = weights.size() != 1 || !weights[0].empty();
+  const bool hasAngles  = angles.size() != 1 || !angles[0].empty();
+
+  if (hasWeights && hasAngles) {
     BOOST_THROW_EXCEPTION(
-        SFCGAL::Exception("Bad format for angles list. List of list needed."));
+        SFCGAL::Exception("Cannot specify both weights and angles parameters. "
+                          "Use one or the other."));
   }
 
-  // If angles is not the default (list of size 1 containing 1 empty list)
-  // then check check that we have an angle for exactly each ring segment
-  if (!angles[0].empty() || numRingsAngles != 1) {
-    size_t numRings = geom.numRings();
-    if (numRings == numRingsAngles) {
-      for (size_t ringIdx = 0; ringIdx < numRings; ++ringIdx) {
-        size_t numSegments       = geom.ringN(ringIdx).numSegments();
-        size_t numSegmentsAngles = angles[ringIdx].size();
-        if (numSegments != numSegmentsAngles) {
-          BOOST_THROW_EXCEPTION(SFCGAL::Exception(
-              (boost::format("Needs %d angles for ring %d, found %d") %
-               numSegments % ringIdx % numSegmentsAngles)
-                  .str()));
-        }
-      }
-    } else {
+  // Determine which parameter to use (weights takes priority)
+  // If angles provided, convert to weights
+  std::vector<std::vector<Kernel::FT>> finalWeights;
+  if (hasWeights) {
+    finalWeights = std::move(weights);
+  } else if (hasAngles) {
+    finalWeights = anglesToWeights(angles);
+  }
+  // else: both are default, finalWeights stays empty
+
+  // Validate format if non-default
+  if (!finalWeights.empty()) {
+    size_t numRingsWeights = finalWeights.size();
+    if (numRingsWeights == 0) {
       BOOST_THROW_EXCEPTION(SFCGAL::Exception(
-          (boost::format("Angles list does not contain the correct number of "
-                         "rings (needs %d, found %d=)") %
-           numRings % numRingsAngles)
-              .str()));
+          "Bad format for weights/angles list. List of list needed."));
+    }
+
+    // Check that we have a weight for exactly each ring segment
+    if (!finalWeights[0].empty() || numRingsWeights != 1) {
+      size_t numRings = geom.numRings();
+      if (numRings == numRingsWeights) {
+        for (size_t ringIdx = 0; ringIdx < numRings; ++ringIdx) {
+          size_t numSegments        = geom.ringN(ringIdx).numSegments();
+          size_t numSegmentsWeights = finalWeights[ringIdx].size();
+          if (numSegments != numSegmentsWeights) {
+            BOOST_THROW_EXCEPTION(SFCGAL::Exception(
+                (boost::format(
+                     "Needs %d weights/angles for ring %d, found %d") %
+                 numSegments % ringIdx % numSegmentsWeights)
+                    .str()));
+          }
+        }
+      } else {
+        BOOST_THROW_EXCEPTION(SFCGAL::Exception(
+            (boost::format("Weights/angles list does not contain the correct "
+                           "number of rings (needs %d, found %d)") %
+             numRings % numRingsWeights)
+                .str()));
+      }
     }
   }
 
   std::unique_ptr<PolyhedralSurface> polys(new PolyhedralSurface);
+
   if (geom.isEmpty()) {
     return polys;
   }
+
   Surface_mesh_3 sm;
 
-  // Check if angles is the default value (one empty vector)
-  // If so, don't pass angles to CGAL to preserve original behavior
-  const bool useDefaultAngles = (angles.size() == 1 && angles[0].empty());
+  // Check if using default (no weights/angles specified)
+  const bool useDefault = finalWeights.empty() ||
+                          (finalWeights.size() == 1 && finalWeights[0].empty());
 
-  if (useDefaultAngles) {
-    CGAL::extrude_skeleton(geom.toPolygon_with_holes_2(), sm,
-                           CGAL::parameters::maximum_height(height));
+  if (useDefault) {
+    // Use CGAL default behavior (uniform weight = 1.0, i.e., 45° angles)
+    if (height <= 0.0) {
+      CGAL::extrude_skeleton(geom.toPolygon_with_holes_2(), sm);
+    } else {
+      CGAL::extrude_skeleton(geom.toPolygon_with_holes_2(), sm,
+                             CGAL::parameters::maximum_height(height));
+    }
+
   } else {
-    CGAL::extrude_skeleton(
-        geom.toPolygon_with_holes_2(), sm,
-        CGAL::parameters::angles(angles).maximum_height(height));
+    // Use custom weights
+    if (height <= 0.0) {
+      CGAL::extrude_skeleton(geom.toPolygon_with_holes_2(), sm,
+                             CGAL::parameters::weights(finalWeights));
+    } else {
+      CGAL::extrude_skeleton(
+          geom.toPolygon_with_holes_2(), sm,
+          CGAL::parameters::weights(finalWeights).maximum_height(height));
+    }
   }
 
   polys = std::make_unique<PolyhedralSurface>(sm);
+
   return polys;
 }
+// NOLINTEND(readability-function-cognitive-complexity)
 
 /// @private
 auto
 extrudeStraightSkeleton(const Geometry &geom, double height,
+                        std::vector<std::vector<Kernel::FT>> weights,
                         std::vector<std::vector<Kernel::FT>> angles)
     -> std::unique_ptr<PolyhedralSurface>
 {
@@ -608,8 +692,8 @@ extrudeStraightSkeleton(const Geometry &geom, double height,
   if (geom.geometryTypeId() != TYPE_POLYGON) {
     BOOST_THROW_EXCEPTION(Exception("Geometry must be a Polygon"));
   }
-  std::unique_ptr<PolyhedralSurface> result(
-      extrudeStraightSkeleton(geom.as<Polygon>(), height, std::move(angles)));
+  std::unique_ptr<PolyhedralSurface> result(extrudeStraightSkeleton(
+      geom.as<Polygon>(), height, std::move(weights), std::move(angles)));
   propagateValidityFlag(*result, true);
   return result;
 }
@@ -618,6 +702,7 @@ extrudeStraightSkeleton(const Geometry &geom, double height,
 auto
 extrudeStraightSkeleton(const Geometry &geom, double building_height,
                         double                               roof_height,
+                        std::vector<std::vector<Kernel::FT>> weights,
                         std::vector<std::vector<Kernel::FT>> angles)
     -> std::unique_ptr<PolyhedralSurface>
 {
@@ -628,8 +713,8 @@ extrudeStraightSkeleton(const Geometry &geom, double building_height,
   }
 
   // Create complete roof with base
-  auto completeRoof =
-      extrudeStraightSkeleton(geom, roof_height, std::move(angles));
+  auto completeRoof = extrudeStraightSkeleton(
+      geom, roof_height, std::move(weights), std::move(angles));
 
   // Create new roof surface
   auto roof = std::make_unique<PolyhedralSurface>();
@@ -772,4 +857,5 @@ straightSkeletonPartition(const Polygon &geom, bool /*autoOrientation*/)
 
   return result;
 }
+
 } // namespace SFCGAL::algorithm

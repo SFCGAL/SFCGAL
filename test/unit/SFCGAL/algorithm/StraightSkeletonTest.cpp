@@ -894,4 +894,96 @@ BOOST_AUTO_TEST_CASE(testProjectMedialAxisToEdgesThinH)
   }
 }
 
+// Tests for weights parameter
+
+BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonWithWeights)
+{
+  std::unique_ptr<Geometry> const geom(
+      io::readWkt("POLYGON ((0 0, 4 0, 4 2, 0 2, 0 0))"));
+
+  // 4 edges with weights: vertical (0) on short sides, 1.0 (45°) on long sides
+  // This creates a gable-like roof
+  std::vector<std::vector<Kernel::FT>> weights = {
+      {Kernel::FT(1.0), Kernel::FT(0.0), Kernel::FT(1.0), Kernel::FT(0.0)}};
+
+  std::unique_ptr<PolyhedralSurface> out(
+      algorithm::extrudeStraightSkeleton(*geom, 3.0, weights));
+
+  BOOST_CHECK(!out->isEmpty());
+  BOOST_CHECK(out->is3D());
+  BOOST_CHECK_GT(out->numGeometries(), 0U);
+}
+
+BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonWeightsVsAngles)
+{
+  std::unique_ptr<Geometry> const geom(
+      io::readWkt("POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0))"));
+
+  // Using angles: all 45 degrees
+  std::vector<std::vector<Kernel::FT>> angles = {
+      {Kernel::FT(45), Kernel::FT(45), Kernel::FT(45), Kernel::FT(45)}};
+
+  // Using weights: all 1.0 (which is tan(45°) = 1.0)
+  std::vector<std::vector<Kernel::FT>> weights = {
+      {Kernel::FT(1.0), Kernel::FT(1.0), Kernel::FT(1.0), Kernel::FT(1.0)}};
+
+  std::unique_ptr<PolyhedralSurface> outAngles(
+      algorithm::extrudeStraightSkeleton(*geom, 3.0, {{}}, angles));
+
+  std::unique_ptr<PolyhedralSurface> outWeights(
+      algorithm::extrudeStraightSkeleton(*geom, 3.0, weights));
+
+  // Both should produce the same geometry (within precision)
+  BOOST_CHECK_EQUAL(outAngles->numGeometries(), outWeights->numGeometries());
+}
+
+BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonBothWeightsAndAngles)
+{
+  std::unique_ptr<Geometry> const geom(
+      io::readWkt("POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))"));
+
+  std::vector<std::vector<Kernel::FT>> weights = {
+      {Kernel::FT(1.0), Kernel::FT(1.0), Kernel::FT(1.0), Kernel::FT(1.0)}};
+  std::vector<std::vector<Kernel::FT>> angles = {
+      {Kernel::FT(45), Kernel::FT(45), Kernel::FT(45), Kernel::FT(45)}};
+
+  // Providing both weights and angles should throw an exception
+  BOOST_CHECK_THROW(
+      algorithm::extrudeStraightSkeleton(*geom, 3.0, weights, angles),
+      Exception);
+}
+
+BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonWeightsWithHole)
+{
+  std::unique_ptr<Geometry> const geom(io::readWkt(
+      "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), (3 3, 3 7, 7 7, 7 3, 3 3))"));
+
+  // Weights for outer ring (4 edges) and inner ring (4 edges)
+  std::vector<std::vector<Kernel::FT>> weights = {
+      {Kernel::FT(1.0), Kernel::FT(1.0), Kernel::FT(1.0), Kernel::FT(1.0)},
+      {Kernel::FT(1.0), Kernel::FT(1.0), Kernel::FT(1.0), Kernel::FT(1.0)}};
+
+  std::unique_ptr<PolyhedralSurface> out(
+      algorithm::extrudeStraightSkeleton(*geom, 2.0, weights));
+
+  BOOST_CHECK(!out->isEmpty());
+  BOOST_CHECK(out->is<PolyhedralSurface>());
+}
+
+BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonDefaultWeights)
+{
+  std::unique_ptr<Geometry> const geom(
+      io::readWkt("POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))"));
+
+  // Call without weights parameter (uses default)
+  std::unique_ptr<PolyhedralSurface> out1(
+      algorithm::extrudeStraightSkeleton(*geom, 2.0));
+
+  // Call with explicit empty weights vector (default value)
+  std::unique_ptr<PolyhedralSurface> out2(
+      algorithm::extrudeStraightSkeleton(*geom, 2.0, {{}}));
+
+  // Both should produce same result
+  BOOST_CHECK_EQUAL(out1->asText(2), out2->asText(2));
+}
 BOOST_AUTO_TEST_SUITE_END()

@@ -28,7 +28,6 @@
 #include "SFCGAL/primitive3d/Primitive.h"
 #include "SFCGAL/primitive3d/Sphere.h"
 #include "SFCGAL/primitive3d/Torus.h"
-#include "SFCGAL/version.h"
 
 #include "SFCGAL/capi/sfcgal_c.h"
 
@@ -42,7 +41,7 @@
 #include "SFCGAL/io/wkt.h"
 #include "sfcgal_c.h"
 
-#if !defined(_MSC_VER)
+#ifndef _MSC_VER
   #include "SFCGAL/algorithm/alphaShapes.h"
 #endif
 #include "SFCGAL/algorithm/alphaWrapping3D.h"
@@ -1825,6 +1824,78 @@ sfcgal_geometry_extrude_polygon_straight_skeleton_with_angles(
                                                        roof_height, anglesVec);
   } catch (std::exception &e) {
     SFCGAL_WARNING("During extrude_polygon_straight_skeleton_with_angles(A):");
+    SFCGAL_WARNING(
+        "  with A: %s",
+        static_cast<const SFCGAL::Geometry *>(geom)->asText().c_str());
+    SFCGAL_ERROR("%s", e.what());
+    return nullptr;
+  }
+
+  return polys.release();
+}
+
+extern "C" auto
+sfcgal_geometry_extrude_straight_skeleton_with_weights(
+    const sfcgal_geometry_t *geom, double height, const double *weights,
+    const size_t *weights_per_ring, size_t num_rings) -> sfcgal_geometry_t *
+{
+  const auto *g1 = reinterpret_cast<const SFCGAL::Geometry *>(geom);
+
+  // Convert C arrays to std::vector<std::vector<Kernel::FT>>
+  std::vector<std::vector<SFCGAL::Kernel::FT>> weightsVec;
+  size_t                                       offset = 0;
+  for (size_t i = 0; i < num_rings; ++i) {
+    std::vector<SFCGAL::Kernel::FT> ringWeights;
+    ringWeights.reserve(weights_per_ring[i]);
+    for (size_t j = 0; j < weights_per_ring[i]; ++j) {
+      ringWeights.emplace_back(weights[offset++]);
+    }
+    weightsVec.push_back(std::move(ringWeights));
+  }
+
+  std::unique_ptr<SFCGAL::PolyhedralSurface> polys;
+
+  try {
+    polys = SFCGAL::algorithm::extrudeStraightSkeleton(*g1, height, weightsVec);
+  } catch (std::exception &e) {
+    SFCGAL_WARNING("During extrude_straight_skeleton_with_weights(A):");
+    SFCGAL_WARNING(
+        "  with A: %s",
+        static_cast<const SFCGAL::Geometry *>(geom)->asText().c_str());
+    SFCGAL_ERROR("%s", e.what());
+    return nullptr;
+  }
+
+  return polys.release();
+}
+
+extern "C" auto
+sfcgal_geometry_extrude_polygon_straight_skeleton_with_weights(
+    const sfcgal_geometry_t *geom, double building_height, double roof_height,
+    const double *weights, const size_t *weights_per_ring, size_t num_rings)
+    -> sfcgal_geometry_t *
+{
+  const auto *g1 = reinterpret_cast<const SFCGAL::Geometry *>(geom);
+
+  // Convert C arrays to std::vector<std::vector<Kernel::FT>>
+  std::vector<std::vector<SFCGAL::Kernel::FT>> weightsVec;
+  size_t                                       offset = 0;
+  for (size_t i = 0; i < num_rings; ++i) {
+    std::vector<SFCGAL::Kernel::FT> ringWeights;
+    ringWeights.reserve(weights_per_ring[i]);
+    for (size_t j = 0; j < weights_per_ring[i]; ++j) {
+      ringWeights.emplace_back(weights[offset++]);
+    }
+    weightsVec.push_back(std::move(ringWeights));
+  }
+
+  std::unique_ptr<SFCGAL::Geometry> polys;
+
+  try {
+    polys = SFCGAL::algorithm::extrudeStraightSkeleton(*g1, building_height,
+                                                       roof_height, weightsVec);
+  } catch (std::exception &e) {
+    SFCGAL_WARNING("During extrude_polygon_straight_skeleton_with_weights(A):");
     SFCGAL_WARNING(
         "  with A: %s",
         static_cast<const SFCGAL::Geometry *>(geom)->asText().c_str());
