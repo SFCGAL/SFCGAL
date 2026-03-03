@@ -119,28 +119,44 @@ straightSkeleton(const MultiPolygon &geom, bool autoOrientation = true,
  * @brief build a 3D straight skeleton extruded for a Polygon
  * @param geom the input polygon
  * @param height extrusion height
- * @param angles vector of vector of angles for each polygon ring edge
+ * @param weights vector of vector of weights (tan of angles) for each polygon
+ * ring edge
+ * @param angles vector of vector of angles (in degrees) for each polygon ring
+ * edge
  * @return extruded straight skeleton as a PolyhedralSurface
+ * @throws Exception If both weights and angles are non-default
  * @throws NotImplementedException If geom is a Polygon with point touching
- * rings.
+ * rings
+ * @note weights take priority over angles if both provided (but this throws an
+ * exception)
+ * @note Specify either weights OR angles, not both
  */
 SFCGAL_API auto
 extrudeStraightSkeleton(const Polygon &geom, double height,
-                        std::vector<std::vector<Kernel::FT>> angles = {{}})
+                        std::vector<std::vector<Kernel::FT>> weights = {{}},
+                        std::vector<std::vector<Kernel::FT>> angles  = {{}})
     -> std::unique_ptr<PolyhedralSurface>;
 
 /**
  * @brief build a 3D straight skeleton extruded for a Geometry
  * @param geom input geometry
  * @param height extrusion height
- * @param angles vector of vector of angles for each polygon ring edge
+ * @param weights vector of vector of weights (tan of angles) for each polygon
+ * ring edge
+ * @param angles vector of vector of angles (in degrees) for each polygon ring
+ * edge
  * @return extruded straight skeleton as a PolyhedralSurface
+ * @throws Exception If both weights and angles are non-default
  * @throws NotImplementedException If geom is a Polygon with point touching
- * rings.
+ * rings
+ * @note weights take priority over angles if both provided (but this throws an
+ * exception)
+ * @note Specify either weights OR angles, not both
  */
 SFCGAL_API auto
 extrudeStraightSkeleton(const Geometry &geom, double height,
-                        std::vector<std::vector<Kernel::FT>> angles = {{}})
+                        std::vector<std::vector<Kernel::FT>> weights = {{}},
+                        std::vector<std::vector<Kernel::FT>> angles  = {{}})
     -> std::unique_ptr<PolyhedralSurface>;
 
 /**
@@ -149,15 +165,23 @@ extrudeStraightSkeleton(const Geometry &geom, double height,
  * @param geom input geometry
  * @param building_height building height
  * @param roof_height roof height
- * @param angles vector of vector of angles for each polygon ring edge
+ * @param weights vector of vector of weights (tan of angles) for each polygon
+ * ring edge
+ * @param angles vector of vector of angles (in degrees) for each polygon ring
+ * edge
  * @return extruded straight skeleton as a PolyhedralSurface
+ * @throws Exception If both weights and angles are non-default
  * @throws NotImplementedException If geom is a Polygon with point touching
- * rings.
+ * rings
+ * @note weights take priority over angles if both provided (but this throws an
+ * exception)
+ * @note Specify either weights OR angles, not both
  */
 SFCGAL_API auto
 extrudeStraightSkeleton(const Geometry &geom, double building_height,
                         double                               roof_height,
-                        std::vector<std::vector<Kernel::FT>> angles = {{}})
+                        std::vector<std::vector<Kernel::FT>> weights = {{}},
+                        std::vector<std::vector<Kernel::FT>> angles  = {{}})
     -> std::unique_ptr<PolyhedralSurface>;
 
 /**

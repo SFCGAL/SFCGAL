@@ -298,7 +298,7 @@ parse_params(const std::string &str) -> std::map<std::string, double>
   return params;
 }
 
-//NOLINTBEGIN(readability-function-cognitive-complexity)
+// NOLINTBEGIN(readability-function-cognitive-complexity)
 /**
  * @brief Extract the angles parameter from the original string.
  *
@@ -371,7 +371,106 @@ extract_angles_param(const std::string &param_str)
         if (chr == ',') {
           pos++;
         }
-      } else if (std::isdigit(chr) != 0 || chr == '.' || chr == '-' || chr == '+') {
+      } else if (std::isdigit(chr) != 0 || chr == '.' || chr == '-' ||
+                 chr == '+') {
+        num_str += chr;
+        pos++;
+      } else {
+        pos++;
+      }
+    }
+
+    // Don't forget the last number before ']'
+    if (!num_str.empty()) {
+      inner.emplace_back(parse_double(trim(num_str)));
+    }
+
+    if (pos < param_str.size() && param_str[pos] == ']') {
+      pos++; // Skip closing ']'
+    }
+
+    if (!inner.empty()) {
+      result.push_back(std::move(inner));
+    }
+  }
+
+  return result;
+}
+
+/**
+ * @brief Extract the weights parameter from the original string.
+ *
+ * Parses weights in JSON-like format: [[1.0,0,1.0,0],[1.0,1.0]]
+ * Returns a vector of vectors of Kernel::FT values.
+ *
+ * @param param_str Original parameter string
+ * @return Vector of vectors of weights (empty if not found or invalid)
+ */
+auto
+extract_weights_param(const std::string &param_str)
+    -> std::vector<std::vector<SFCGAL::Kernel::FT>>
+{
+  std::vector<std::vector<SFCGAL::Kernel::FT>> result;
+
+  // Find "weights=" in the string
+  auto pos = param_str.find("weights=");
+  if (pos == std::string::npos) {
+    return result; // No weights parameter
+  }
+
+  // Skip "weights="
+  pos += 8;
+
+  // Find the opening '[['
+  if (pos >= param_str.size() || param_str[pos] != '[') {
+    return result;
+  }
+  pos++; // Skip first '['
+
+  // Parse each inner array (same logic as extract_angles_param)
+  while (pos < param_str.size()) {
+    // Skip whitespace
+    while (pos < param_str.size() && std::isspace(param_str[pos]) != 0) {
+      pos++;
+    }
+
+    if (pos >= param_str.size()) {
+      break;
+    }
+
+    // Check for end of outer array
+    if (param_str[pos] == ']') {
+      break;
+    }
+
+    // Skip comma between inner arrays
+    if (param_str[pos] == ',') {
+      pos++;
+      continue;
+    }
+
+    // Expect start of inner array
+    if (param_str[pos] != '[') {
+      break;
+    }
+    pos++; // Skip '['
+
+    // Parse values in inner array
+    std::vector<SFCGAL::Kernel::FT> inner;
+    std::string                     num_str;
+
+    while (pos < param_str.size() && param_str[pos] != ']') {
+      char chr = param_str[pos];
+      if (chr == ',' || chr == ']') {
+        if (!num_str.empty()) {
+          inner.emplace_back(parse_double(trim(num_str)));
+          num_str.clear();
+        }
+        if (chr == ',') {
+          pos++;
+        }
+      } else if (std::isdigit(chr) != 0 || chr == '.' || chr == '-' ||
+                 chr == '+') {
         num_str += chr;
         pos++;
       } else {
@@ -682,14 +781,20 @@ const std::vector<Operation> operations = {
      "and roof.\n\n"
      "Parameters:\n"
      "  height=VALUE: Roof extrusion height (required)\n"
-     "  building_height=VALUE: Height of vertical walls (optional, default: 0)\n"
+     "  building_height=VALUE: Height of vertical walls (optional, default: "
+     "0)\n"
      "    - If > 0, creates a building with walls + roof\n"
      "    - If 0 or omitted, creates only the roof surface\n"
      "  angles=[[a1,a2,...],[b1,b2,...]]: Per-edge angles in degrees "
      "(optional)\n"
      "    - Each inner array corresponds to a ring (exterior, then holes)\n"
      "    - Each value is the angle for one edge segment\n"
-     "    - Valid range: 0 < angle < 180 (90 = vertical)\n\n"
+     "    - Valid range: 0 < angle < 180 (90 = vertical)\n"
+     "  weights=[[w1,w2,...],[v1,v2,...]]: Per-edge weights (tan of angles) "
+     "(optional)\n"
+     "    - Each inner array corresponds to a ring (exterior, then holes)\n"
+     "    - Each value is the weight (tan) for one edge segment\n"
+     "    - Cannot be used with angles parameter\n\n"
      "Examples:\n"
      "  # Roof only\n"
      "  sfcgalop -a \"POLYGON((0 0,10 0,10 10,0 10,0 0))\" "
@@ -699,30 +804,43 @@ const std::vector<Operation> operations = {
      "extrude_straight_skeleton \"height=3,building_height=9\"\n"
      "  # With custom angles\n"
      "  sfcgalop -a \"POLYGON((0 0,10 0,10 10,0 10,0 0))\" "
-     "extrude_straight_skeleton \"height=5,angles=[[45,45,45,45]]\"",
+     "extrude_straight_skeleton \"height=5,angles=[[45,45,45,45]]\"\n"
+     "  # With custom weights (gable pattern: vertical on edges 1,3)\n"
+     "  sfcgalop -a \"POLYGON((0 0,10 0,10 5,0 5,0 0))\" "
+     "extrude_straight_skeleton \"height=3,weights=[[1.0,0,1.0,0]]\"",
      "A, params", "G",
      [](const std::string &args, const SFCGAL::Geometry *geom_a,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       auto   params          = parse_params(args);
-       double height          = params.count("height") != 0 ? params["height"] : 1.0;
-       double building_height = params.count("building_height") != 0
-                                    ? params["building_height"]
-                                    : 0.0;
+              auto   params          = parse_params(args);
+              double height          = params.count("height") != 0 ? params["height"] : 0.0;
+              double building_height = params.count("building_height") != 0
+                                           ? params["building_height"]
+                                           : 0.0;
 
-       auto angles = extract_angles_param(args);
+       auto angles  = extract_angles_param(args);
+       auto weights = extract_weights_param(args);
+
+       // Check for conflict
+       if (!angles.empty() && !weights.empty()) {
+         throw SFCGAL::Exception(
+             "Cannot specify both angles and weights parameters");
+       }
+
        if (angles.empty()) {
-         // Use default (no custom angles)
          angles = {{}};
+       }
+       if (weights.empty()) {
+         weights = {{}};
        }
 
        if (building_height > 0.0) {
          // Building with walls + roof
          return SFCGAL::algorithm::extrudeStraightSkeleton(
-             *geom_a, building_height, height, angles);
+             *geom_a, building_height, height, weights, angles);
        }
        // Roof only
        return SFCGAL::algorithm::extrudeStraightSkeleton(*geom_a, height,
-                                                         angles);
+                                                         weights, angles);
      }},
 
     {"medial_axis", "Construction",
