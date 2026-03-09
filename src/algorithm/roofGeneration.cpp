@@ -1,0 +1,145 @@
+// Copyright (c) 2025-2025, SFCGAL team.
+// SPDX-License-Identifier: LGPL-2.0-or-later
+
+#include "SFCGAL/algorithm/roofGeneration.h"
+#include "SFCGAL/MultiLineString.h"
+#include "SFCGAL/algorithm/distance.h"
+#include "SFCGAL/algorithm/extrude.h"
+#include "SFCGAL/algorithm/straightSkeleton.h"
+
+#include <CGAL/Polygon_mesh_processing/clip.h>
+#include <CGAL/number_utils.h>
+#include <map>
+
+namespace SFCGAL::algorithm {
+
+auto
+extrudeGableRoof(const Polygon &polygon, double clippingHeight,
+                 double roofAngle) -> std::unique_ptr<PolyhedralSurface>
+{
+  // 1. Generate standard hipped roof
+  // Pass 0.0 for height to get the natural maximum height of the roof
+  std::vector<Kernel::FT> angles(polygon.exteriorRing().numSegments(),
+                                 roofAngle);
+  auto roof = extrudeStraightSkeleton(polygon, 0.0, {{}}, {angles});
+
+  // 2. Compute projection mapping from medial axis
+  auto medialAxisProjection = approximateMedialAxis(polygon, true);
+
+  std::map<std::pair<double, double>, Point> ridgeToEdgeMapping;
+  const double                               tolerance = 1e-3;
+
+  for (size_t segmentIdx = 0;
+       segmentIdx < medialAxisProjection->numGeometries(); ++segmentIdx) {
+    const auto &medialLine =
+        medialAxisProjection->geometryN(segmentIdx).as<LineString>();
+    if (medialLine.numPoints() < 2) {
+      continue;
+    }
+
+    // Check start of medial line
+    Point  firstPoint          = medialLine.pointN(0);
+    Point  secondPoint         = medialLine.pointN(1);
+    double firstPointDistance  = distance(firstPoint, polygon.exteriorRing());
+    double secondPointDistance = distance(secondPoint, polygon.exteriorRing());
+
+    if (firstPointDistance < tolerance && secondPointDistance > tolerance) {
+      ridgeToEdgeMapping[{CGAL::to_double(secondPoint.x()),
+                          CGAL::to_double(secondPoint.y())}] = firstPoint;
+    }
+
+    // Check end of medial line
+    size_t pointCount        = medialLine.numPoints();
+    Point  lastPoint         = medialLine.pointN(pointCount - 1);
+    Point  penultimatePoint  = medialLine.pointN(pointCount - 2);
+    double lastPointDistance = distance(lastPoint, polygon.exteriorRing());
+    double penultimatePointDistance =
+        distance(penultimatePoint, polygon.exteriorRing());
+
+    if (lastPointDistance < tolerance && penultimatePointDistance > tolerance) {
+      ridgeToEdgeMapping[{CGAL::to_double(penultimatePoint.x()),
+                          CGAL::to_double(penultimatePoint.y())}] = lastPoint;
+    }
+  }
+
+  // 3. Deform the roof: move ridge endpoints to the boundary
+  for (size_t patchIdx = 0; patchIdx < roof->numPatches(); ++patchIdx) {
+    Polygon    &patch = roof->patchN(patchIdx);
+    LineString &ring  = patch.exteriorRing();
+    for (size_t vertexIdx = 0; vertexIdx < ring.numPoints(); ++vertexIdx) {
+      Point &vertex = ring.pointN(vertexIdx);
+      if (vertex.z() > 0) {
+        double vertexX = CGAL::to_double(vertex.x());
+        double vertexY = CGAL::to_double(vertex.y());
+
+        for (const auto &[ridgeCoord, edgePoint] : ridgeToEdgeMapping) {
+          double deltaX = vertexX - ridgeCoord.first;
+          double deltaY = vertexY - ridgeCoord.second;
+          if (((deltaX * deltaX) + (deltaY * deltaY)) < 1e-4) {
+            vertex = Point(edgePoint.x(), edgePoint.y(), vertex.z());
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  //  roof->orient();
+
+  // 4. Clip the roof to the specified height if it's strictly positive
+  if (clippingHeight > 0.0) {
+    Kernel::Plane_3 clippingPlane(0, 0, 1, -Kernel::FT(clippingHeight));
+    auto            surfaceMesh = roof->toSurfaceMesh();
+    CGAL::Polygon_mesh_processing::clip(surfaceMesh, clippingPlane,
+                                        CGAL::parameters::clip_volume(true));
+    roof = std::make_unique<PolyhedralSurface>(surfaceMesh);
+  }
+
+  return roof;
+}
+
+auto
+extrudeSkillionRoof(const Polygon &polygon, double clippingHeight,
+                    size_t primaryEdgeIndex, double primaryAngle,
+                    double secondaryAngle) -> std::unique_ptr<PolyhedralSurface>
+{
+  std::vector<Kernel::FT> angles;
+  for (size_t edgeIdx = 0; edgeIdx < polygon.exteriorRing().numSegments();
+       ++edgeIdx) {
+    if (edgeIdx == primaryEdgeIndex) {
+      angles.emplace_back(primaryAngle);
+    } else {
+      angles.emplace_back(secondaryAngle);
+    }
+  }
+
+  std::vector<std::vector<Kernel::FT>> anglePattern = {angles};
+  return extrudeStraightSkeleton(polygon, clippingHeight, {{}}, anglePattern);
+}
+
+auto
+generateRoof(const Polygon &footprint, const RoofParameters &params)
+    -> std::unique_ptr<Geometry>
+{
+  switch (params.type) {
+  case RoofType::FLAT:
+    return extrude(footprint, 0.0, 0.0, params.roofHeight);
+  case RoofType::HIPPED:
+    return extrudeStraightSkeleton(footprint, params.roofHeight);
+  case RoofType::GABLE:
+    return extrudeGableRoof(footprint, params.roofHeight, params.slopeAngle);
+  case RoofType::SKILLION:
+    return extrudeSkillionRoof(footprint, 0.0, params.primaryEdgeIndex,
+                               params.slopeAngle, 90.0);
+  }
+  return nullptr;
+}
+
+auto
+generateRoof(const Polygon &footprint, const RoofParameters &params,
+             NoValidityCheck & /*nvc*/) -> std::unique_ptr<Geometry>
+{
+  return generateRoof(footprint, params);
+}
+
+} // namespace SFCGAL::algorithm
