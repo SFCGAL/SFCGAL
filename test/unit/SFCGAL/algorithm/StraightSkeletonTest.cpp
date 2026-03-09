@@ -20,6 +20,7 @@
 #include "SFCGAL/TriangulatedSurface.h"
 #include "SFCGAL/algorithm/covers.h"
 #include "SFCGAL/algorithm/length.h"
+#include "SFCGAL/algorithm/roofGeneration.h"
 #include "SFCGAL/algorithm/straightSkeleton.h"
 #include "SFCGAL/io/wkt.h"
 
@@ -986,4 +987,113 @@ BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonDefaultWeights)
   // Both should produce same result
   BOOST_CHECK_EQUAL(out1->asText(2), out2->asText(2));
 }
+
+// Tests for generateRoof
+
+BOOST_AUTO_TEST_CASE(testGenerateFlatRoof)
+{
+  std::unique_ptr<Geometry> const geom(
+      io::readWkt("POLYGON ((0 0, 10 0, 10 5, 0 5, 0 0))"));
+
+  algorithm::RoofParameters roofParameters;
+  roofParameters.type       = algorithm::RoofType::FLAT;
+  roofParameters.roofHeight = 3.0;
+
+  auto out = algorithm::generateRoof(geom->as<Polygon>(), roofParameters);
+
+  BOOST_CHECK(out);
+  BOOST_CHECK(!out->isEmpty());
+  BOOST_CHECK(out->is3D());
+}
+
+BOOST_AUTO_TEST_CASE(testGenerateHippedRoof)
+{
+  std::unique_ptr<Geometry> const geom(
+      io::readWkt("POLYGON ((0 0, 10 0, 10 5, 0 5, 0 0))"));
+
+  algorithm::RoofParameters roofParameters;
+  roofParameters.type       = algorithm::RoofType::HIPPED;
+  roofParameters.roofHeight = 3.0;
+
+  auto out = algorithm::generateRoof(geom->as<Polygon>(), roofParameters);
+
+  BOOST_CHECK(out);
+  BOOST_CHECK(!out->isEmpty());
+  BOOST_CHECK(out->is3D());
+}
+
+BOOST_AUTO_TEST_CASE(testGenerateGableRoof)
+{
+  // Rectangle: 10x5, gables should be on short (5-unit) sides
+  std::unique_ptr<Geometry> const geom(
+      io::readWkt("POLYGON ((0 0, 10 0, 10 5, 0 5, 0 0))"));
+
+  algorithm::RoofParameters roofParameters;
+  roofParameters.type       = algorithm::RoofType::GABLE;
+  roofParameters.roofHeight = 3.0;
+  roofParameters.slopeAngle = 45.0;
+
+  auto out = algorithm::generateRoof(geom->as<Polygon>(), roofParameters);
+
+  BOOST_CHECK(out);
+  BOOST_CHECK(!out->isEmpty());
+  BOOST_CHECK(out->is3D());
+}
+
+BOOST_AUTO_TEST_CASE(testGenerateGableRoofSquare)
+{
+  // Square polygon
+  std::unique_ptr<Geometry> const geom(
+      io::readWkt("POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0))"));
+
+  algorithm::RoofParameters roofParameters;
+  roofParameters.type       = algorithm::RoofType::GABLE;
+  roofParameters.roofHeight = 3.0;
+  roofParameters.slopeAngle = 45.0;
+
+  auto out = algorithm::generateRoof(geom->as<Polygon>(), roofParameters);
+
+  BOOST_CHECK(out);
+  BOOST_CHECK(!out->isEmpty());
+  BOOST_CHECK(out->is3D());
+}
+
+BOOST_AUTO_TEST_CASE(testGenerateSkillionRoof)
+{
+  // Square polygon with skillion (mono-pitch) roof
+  std::unique_ptr<Geometry> const geom(
+      io::readWkt("POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0))"));
+
+  algorithm::RoofParameters roofParameters;
+  roofParameters.type             = algorithm::RoofType::SKILLION;
+  roofParameters.roofHeight       = 3.0;
+  roofParameters.slopeAngle       = 30.0;
+  roofParameters.primaryEdgeIndex = 0;
+
+  auto out = algorithm::generateRoof(geom->as<Polygon>(), roofParameters);
+
+  BOOST_CHECK(out);
+  BOOST_CHECK(!out->isEmpty());
+  BOOST_CHECK(out->is3D());
+}
+
+BOOST_AUTO_TEST_CASE(testGenerateSkillionRoofDifferentEdge)
+{
+  // Rectangle with skillion roof on a different edge
+  std::unique_ptr<Geometry> const geom(
+      io::readWkt("POLYGON ((0 0, 6 0, 6 4, 0 4, 0 0))"));
+
+  algorithm::RoofParameters roofParameters;
+  roofParameters.type             = algorithm::RoofType::SKILLION;
+  roofParameters.roofHeight       = 2.5;
+  roofParameters.slopeAngle       = 25.0;
+  roofParameters.primaryEdgeIndex = 1;
+
+  auto out = algorithm::generateRoof(geom->as<Polygon>(), roofParameters);
+
+  BOOST_CHECK(out);
+  BOOST_CHECK(!out->isEmpty());
+  BOOST_CHECK(out->is3D());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
