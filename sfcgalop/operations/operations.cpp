@@ -48,6 +48,7 @@
   #include "SFCGAL/algorithm/polygonRepair.h"
 #endif
 #include "SFCGAL/algorithm/insertPointsWithinTolerance.h"
+#include "SFCGAL/algorithm/roofGeneration.h"
 #include "SFCGAL/algorithm/rotate.h"
 #include "SFCGAL/algorithm/scale.h"
 #include "SFCGAL/algorithm/simplification.h"
@@ -737,20 +738,18 @@ const std::vector<Operation> operations = {
        return SFCGAL::algorithm::convexHull3D(*geom_a);
      }},
 
-    {"centroid", "Construction",
-     "Compute the geometric centroid of a geometry",
+    {"centroid", "Construction", "Compute the geometric centroid of a geometry",
      false,
-     "The computed centroid relies on 2D areas, even if geometries are 3D-defined.\n",
+     "The computed centroid relies on 2D areas, even if geometries are "
+     "3D-defined.\n",
      "A", "G",
      [](const std::string &, const SFCGAL::Geometry *geom_a,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
        return SFCGAL::algorithm::centroid(*geom_a);
      }},
 
-    {"centroid_3d", "Construction", "Compute the geometric centroid of a 3D geometry",
-     false,
-     "",
-     "A", "G",
+    {"centroid_3d", "Construction",
+     "Compute the geometric centroid of a 3D geometry", false, "", "A", "G",
      [](const std::string &, const SFCGAL::Geometry *geom_a,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
        return SFCGAL::algorithm::centroid3D(*geom_a);
@@ -811,11 +810,11 @@ const std::vector<Operation> operations = {
      "A, params", "G",
      [](const std::string &args, const SFCGAL::Geometry *geom_a,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-              auto   params          = parse_params(args);
-              double height          = params.count("height") != 0 ? params["height"] : 0.0;
-              double building_height = params.count("building_height") != 0
-                                           ? params["building_height"]
-                                           : 0.0;
+       auto   params = parse_params(args);
+       double height = params.count("height") != 0 ? params["height"] : 0.0;
+       double building_height = params.count("building_height") != 0
+                                    ? params["building_height"]
+                                    : 0.0;
 
        auto angles  = extract_angles_param(args);
        auto weights = extract_weights_param(args);
@@ -841,6 +840,174 @@ const std::vector<Operation> operations = {
        // Roof only
        return SFCGAL::algorithm::extrudeStraightSkeleton(*geom_a, height,
                                                          weights, angles);
+     }},
+
+    {"generate_flat_roof", "Construction",
+     "Generate a flat roof from a polygon", false,
+     "Creates a flat roof by simple extrusion.\n\n"
+     "Parameters:\n"
+     "  height=VALUE: Roof height (required)\n\n"
+     "Examples:\n"
+     "  sfcgalop -a \"POLYGON((0 0,10 0,10 5,0 5,0 0))\" "
+     "generate_flat_roof \"height=3\"",
+     "A, params", "G",
+     [](const std::string &args, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       auto   params = parse_params(args);
+       double height = params.count("height") != 0 ? params["height"] : 3.0;
+
+       SFCGAL::algorithm::RoofParameters roofParameters;
+       roofParameters.type       = SFCGAL::algorithm::RoofType::FLAT;
+       roofParameters.roofHeight = height;
+       return SFCGAL::algorithm::generateRoof(geom_a->as<SFCGAL::Polygon>(),
+                                              roofParameters);
+     }},
+
+    {"generate_hipped_roof", "Construction",
+     "Generate a hipped roof from a polygon", false,
+     "Creates a hipped roof using straight skeleton extrusion.\n\n"
+     "Parameters:\n"
+     "  height=VALUE: Roof height (required)\n\n"
+     "Examples:\n"
+     "  sfcgalop -a \"POLYGON((0 0,10 0,10 5,0 5,0 0))\" "
+     "generate_hipped_roof \"height=3\"",
+     "A, params", "G",
+     [](const std::string &args, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       auto   params = parse_params(args);
+       double height = params.count("height") != 0 ? params["height"] : 3.0;
+
+       SFCGAL::algorithm::RoofParameters roofParameters;
+       roofParameters.type       = SFCGAL::algorithm::RoofType::HIPPED;
+       roofParameters.roofHeight = height;
+       return SFCGAL::algorithm::generateRoof(geom_a->as<SFCGAL::Polygon>(),
+                                              roofParameters);
+     }},
+
+    {"generate_gable_roof", "Construction",
+     "Generate a gable roof from a polygon", false,
+     "Creates a gable roof by automatically detecting the gable ends (shortest "
+     "edges).\n"
+     "Gable edges become vertical (90°), other edges use the specified roof "
+     "angle.\n\n"
+     "Parameters:\n"
+     "  height=VALUE: Roof height (required)\n"
+     "  roof_angle=VALUE: Slope angle for non-gable edges in degrees (default: "
+     "45)\n\n"
+     "Examples:\n"
+     "  # Rectangle with auto-detected gables\n"
+     "  sfcgalop -a \"POLYGON((0 0,10 0,10 5,0 5,0 0))\" "
+     "generate_gable_roof \"height=3\"\n"
+     "  # Custom roof angle\n"
+     "  sfcgalop -a \"POLYGON((0 0,10 0,10 5,0 5,0 0))\" "
+     "generate_gable_roof \"height=3,roof_angle=30\"",
+     "A, params", "G",
+     [](const std::string &args, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       auto   params = parse_params(args);
+       double height = params.count("height") != 0 ? params["height"] : 3.0;
+       double roof_angle =
+           params.count("roof_angle") != 0 ? params["roof_angle"] : 45.0;
+
+       SFCGAL::algorithm::RoofParameters roofParameters;
+       roofParameters.type       = SFCGAL::algorithm::RoofType::GABLE;
+       roofParameters.roofHeight = height;
+       roofParameters.slopeAngle = roof_angle;
+       return SFCGAL::algorithm::generateRoof(geom_a->as<SFCGAL::Polygon>(),
+                                              roofParameters);
+     }},
+
+    {"generate_skillion_roof", "Construction",
+     "Generate a skillion (mono-pitch) roof from a polygon", false,
+     "Creates a skillion roof with one sloped edge and other edges "
+     "vertical.\n\n"
+     "Parameters:\n"
+     "  height=VALUE: Roof height (required)\n"
+     "  slope_angle=VALUE: Slope angle in degrees (default: 30)\n"
+     "  primary_edge=VALUE: Index of the sloped edge (default: 0)\n\n"
+     "Examples:\n"
+     "  # Default slope at 30°\n"
+     "  sfcgalop -a \"POLYGON((0 0,4 0,4 4,0 4,0 0))\" "
+     "generate_skillion_roof \"height=3\"\n"
+     "  # Custom edge and angle\n"
+     "  sfcgalop -a \"POLYGON((0 0,4 0,4 4,0 4,0 0))\" "
+     "generate_skillion_roof \"height=3,primary_edge=1,slope_angle=25\"",
+     "A, params", "G",
+     [](const std::string &args, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       auto   params = parse_params(args);
+       double height = params.count("height") != 0 ? params["height"] : 3.0;
+       double slope_angle =
+           params.count("slope_angle") != 0 ? params["slope_angle"] : 30.0;
+       size_t primary_edge = params.count("primary_edge") != 0
+                                 ? static_cast<size_t>(params["primary_edge"])
+                                 : 0;
+
+       SFCGAL::algorithm::RoofParameters roofParameters;
+       roofParameters.type             = SFCGAL::algorithm::RoofType::SKILLION;
+       roofParameters.roofHeight       = height;
+       roofParameters.slopeAngle       = slope_angle;
+       roofParameters.primaryEdgeIndex = primary_edge;
+       return SFCGAL::algorithm::generateRoof(geom_a->as<SFCGAL::Polygon>(),
+                                              roofParameters);
+     }},
+
+    {"generate_roof", "Construction",
+     "Generate a roof from a polygon using a specified type", false,
+     "Unified roof generation dispatching to flat, hipped, gable, or "
+     "skillion.\n\n"
+     "Parameters:\n"
+     "  type=VALUE: Roof type: flat, hipped, gable, skillion (default: "
+     "gable)\n"
+     "  height=VALUE: Roof height (default: 3.0)\n"
+     "  slope_angle=VALUE: Slope angle in degrees for gable/skillion "
+     "(default: 30)\n"
+     "  primary_edge=VALUE: Index of the sloped edge for skillion "
+     "(default: 0)\n\n"
+     "Examples:\n"
+     "  sfcgalop -a \"POLYGON((0 0,10 0,10 5,0 5,0 0))\" "
+     "generate_roof \"type=hipped,height=5\"\n"
+     "  sfcgalop -a \"POLYGON((0 0,10 0,10 5,0 5,0 0))\" "
+     "generate_roof \"type=gable,height=3,slope_angle=45\"\n"
+     "  sfcgalop -a \"POLYGON((0 0,4 0,4 4,0 4,0 0))\" "
+     "generate_roof \"type=skillion,height=3,primary_edge=2\"",
+     "A, params", "G",
+     [](const std::string &args, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       auto   params = parse_params(args);
+       double height = params.count("height") != 0 ? params["height"] : 3.0;
+       double slope_angle =
+           params.count("slope_angle") != 0 ? params["slope_angle"] : 30.0;
+       size_t primary_edge = params.count("primary_edge") != 0
+                                 ? static_cast<size_t>(params["primary_edge"])
+                                 : 0;
+
+       SFCGAL::algorithm::RoofParameters roofParameters;
+       roofParameters.roofHeight       = height;
+       roofParameters.slopeAngle       = slope_angle;
+       roofParameters.primaryEdgeIndex = primary_edge;
+
+       // Parse roof type from string
+       std::string type_str;
+       auto        pos = args.find("type=");
+       if (pos != std::string::npos) {
+         auto start = pos + 5;
+         auto end   = args.find_first_of(",\"", start);
+         type_str   = args.substr(start, end - start);
+       }
+
+       if (type_str == "flat") {
+         roofParameters.type = SFCGAL::algorithm::RoofType::FLAT;
+       } else if (type_str == "hipped") {
+         roofParameters.type = SFCGAL::algorithm::RoofType::HIPPED;
+       } else if (type_str == "skillion") {
+         roofParameters.type = SFCGAL::algorithm::RoofType::SKILLION;
+       } else {
+         roofParameters.type = SFCGAL::algorithm::RoofType::GABLE;
+       }
+
+       return SFCGAL::algorithm::generateRoof(geom_a->as<SFCGAL::Polygon>(),
+                                              roofParameters);
      }},
 
     {"medial_axis", "Construction",
