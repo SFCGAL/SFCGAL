@@ -1962,6 +1962,87 @@ sfcgal_geometry_extrude_polygon_straight_skeleton_with_weights(
     const double *weights, const size_t *weights_per_ring, size_t num_rings);
 
 /**
+ * Generate a roof from a polygon using a specified type.
+ * Dispatches to flat, hipped, gable, or skillion roof generation.
+ * @param geom the input polygon
+ * @param roof_type roof type: 0=flat, 1=hipped, 2=skillion, 3=gable
+ * @param slope_angle slope angle in degrees for gable/skillion (default: 30)
+ * @param height roof height (default: 3.0)
+ * @param primary_edge_index index of the sloped edge for skillion (default: 0)
+ * @pre geom must be a SFCGAL::Polygon
+ * @pre isValid(geom) == true
+ * @return The generated roof geometry
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_geometry_generate_roof(const sfcgal_geometry_t *geom, int roof_type,
+                              double slope_angle, double height,
+                              size_t primary_edge_index);
+
+/**
+ * Generate a flat roof from a polygon.
+ * @param geom the input polygon
+ * @param height roof height
+ * @pre geom must be a SFCGAL::Polygon
+ * @pre isValid(geom) == true
+ * @pre height > 0
+ * @return The flat roof geometry
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_geometry_generate_flat_roof(const sfcgal_geometry_t *geom,
+                                   double                   height);
+
+/**
+ * Generate a hipped roof from a polygon using straight skeleton.
+ * @param geom the input polygon
+ * @param height roof height
+ * @pre geom must be a SFCGAL::Polygon
+ * @pre isValid(geom) == true
+ * @pre height > 0
+ * @return The hipped roof geometry
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_geometry_generate_hipped_roof(const sfcgal_geometry_t *geom,
+                                     double                   height);
+
+/**
+ * Generate a gable roof from a polygon.
+ * Automatically detects gable ends (shortest edges become vertical).
+ * @param geom the input polygon
+ * @param height roof height
+ * @param slope_angle slope angle for non-gable edges in degrees
+ * @pre geom must be a SFCGAL::Polygon
+ * @pre isValid(geom) == true
+ * @pre height > 0
+ * @pre 0 < slope_angle < 180
+ * @return The gable roof geometry
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_geometry_generate_gable_roof(const sfcgal_geometry_t *geom,
+                                    double height, double slope_angle);
+
+/**
+ * Generate a skillion (mono-pitch) roof from a polygon.
+ * @param geom the input polygon
+ * @param height roof height
+ * @param slope_angle slope angle in degrees
+ * @param primary_edge_index index of the sloped edge
+ * @pre geom must be a SFCGAL::Polygon
+ * @pre isValid(geom) == true
+ * @pre height > 0
+ * @pre 0 < slope_angle < 180
+ * @return The skillion roof geometry
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_geometry_generate_skillion_roof(const sfcgal_geometry_t *geom,
+                                       double height, double slope_angle,
+                                       size_t primary_edge_index);
+
+/**
  * Returns the approximate medial axis for the given SFCGAL::Polygon
  * Approximate medial axis is based on straight skeleton
  * @param geom the input geometry
