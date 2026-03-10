@@ -103,6 +103,22 @@ extrudeSkillionRoof(const Polygon &polygon, double clippingHeight,
                     size_t primaryEdgeIndex, double primaryAngle,
                     double secondaryAngle) -> std::unique_ptr<PolyhedralSurface>
 {
+  // If no clipping height, compute from geometry and slope
+  if (clippingHeight <= 0.0) {
+    const auto    &ring   = polygon.exteriorRing();
+    const auto    &point0 = ring.pointN(primaryEdgeIndex);
+    const auto    &point1 = ring.pointN(primaryEdgeIndex + 1);
+    Kernel::Line_2 edgeLine(point0.toPoint_2(), point1.toPoint_2());
+    double         maxDist = 0.0;
+    for (size_t i = 0; i < ring.numPoints(); ++i) {
+      double distance = std::sqrt(CGAL::to_double(
+          CGAL::squared_distance(ring.pointN(i).toPoint_2(), edgeLine)));
+      maxDist         = std::max(maxDist, distance);
+    }
+    double rad     = primaryAngle * CGAL_PI / 180.0;
+    clippingHeight = maxDist * std::tan(rad);
+  }
+
   std::vector<Kernel::FT> angles;
   for (size_t edgeIdx = 0; edgeIdx < polygon.exteriorRing().numSegments();
        ++edgeIdx) {
@@ -129,8 +145,9 @@ generateRoof(const Polygon &footprint, const RoofParameters &params)
   case RoofType::GABLE:
     return extrudeGableRoof(footprint, params.roofHeight, params.slopeAngle);
   case RoofType::SKILLION:
-    return extrudeSkillionRoof(footprint, 0.0, params.primaryEdgeIndex,
-                               params.slopeAngle, 90.0);
+    return extrudeSkillionRoof(footprint, params.roofHeight,
+                               params.primaryEdgeIndex, params.slopeAngle,
+                               90.0);
   }
   return nullptr;
 }
