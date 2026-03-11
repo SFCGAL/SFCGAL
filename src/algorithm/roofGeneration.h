@@ -67,12 +67,13 @@ generateRoof(const Polygon &footprint, const RoofParameters &params,
  * @brief Gable roof generation (Surface only).
  * @param polygon The 2D polygon footprint
  * @param clippingHeight Optional maximum height for clipping (0.0 for auto)
- * @param roofAngle The slope angle in degrees
+ * @param slopeAngle The slope angle in degrees
  * @return A unique_ptr to the generated polyhedral surface
  */
 SFCGAL_API auto
 extrudeGableRoof(const Polygon &polygon, double clippingHeight,
-                 double roofAngle = 45.0) -> std::unique_ptr<PolyhedralSurface>;
+                 double slopeAngle = 45.0)
+    -> std::unique_ptr<PolyhedralSurface>;
 
 /**
  * @brief Skillion roof generation (Surface only).
