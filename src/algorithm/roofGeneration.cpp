@@ -15,12 +15,12 @@ namespace SFCGAL::algorithm {
 
 auto
 extrudeGableRoof(const Polygon &polygon, double clippingHeight,
-                 double roofAngle) -> std::unique_ptr<PolyhedralSurface>
+                 double slopeAngle) -> std::unique_ptr<PolyhedralSurface>
 {
   // 1. Generate standard hipped roof
   // Pass 0.0 for height to get the natural maximum height of the roof
   std::vector<Kernel::FT> angles(polygon.exteriorRing().numSegments(),
-                                 roofAngle);
+                                 slopeAngle);
   auto roof = extrudeStraightSkeleton(polygon, 0.0, {{}}, {angles});
 
   // 2. Compute projection mapping from medial axis
