@@ -867,7 +867,7 @@ const std::vector<Operation> operations = {
      "Generate a hipped roof from a polygon", false,
      "Creates a hipped roof using straight skeleton extrusion.\n\n"
      "Parameters:\n"
-     "  height=VALUE: Roof height (required)\n\n"
+     "  height=VALUE: Roof height (default: 3.0)\n\n"
      "Examples:\n"
      "  sfcgalop -a \"POLYGON((0 0,10 0,10 5,0 5,0 0))\" "
      "generate_hipped_roof \"height=3\"",
@@ -924,7 +924,7 @@ const std::vector<Operation> operations = {
      "Creates a skillion roof with one sloped edge and other edges "
      "vertical.\n\n"
      "Parameters:\n"
-     "  height=VALUE: Roof height (required)\n"
+     "  height=VALUE: Roof height (default: 3.0)\n"
      "  slope_angle=VALUE: Slope angle in degrees (default: 30)\n"
      "  primary_edge=VALUE: Index of the sloped edge (default: 0)\n\n"
      "Examples:\n"
