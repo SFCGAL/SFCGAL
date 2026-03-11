@@ -888,24 +888,26 @@ const std::vector<Operation> operations = {
      "Generate a gable roof from a polygon", false,
      "Creates a gable roof by automatically detecting the gable ends (shortest "
      "edges).\n"
-     "Gable edges become vertical (90°), other edges use the specified roof "
-     "angle.\n\n"
+     "Gable edges become vertical (90°), other edges use the specified slope "
+     "angle.\n"
+     "The roof height is determined by the slope angle and the geometry.\n\n"
      "Parameters:\n"
-     "  height=VALUE: Roof height (required)\n"
      "  slope_angle=VALUE: Slope angle for non-gable edges in degrees (default: "
-     "45)\n\n"
+     "45)\n"
+     "  height=VALUE: Maximum clipping height (optional, default: 0 = no "
+     "clipping)\n\n"
      "Examples:\n"
      "  # Rectangle with auto-detected gables\n"
      "  sfcgalop -a \"POLYGON((0 0,10 0,10 5,0 5,0 0))\" "
-     "generate_gable_roof \"height=3\"\n"
-     "  # Custom slope angle\n"
+     "generate_gable_roof \"slope_angle=30\"\n"
+     "  # With max clipping height\n"
      "  sfcgalop -a \"POLYGON((0 0,10 0,10 5,0 5,0 0))\" "
-     "generate_gable_roof \"height=3,slope_angle=30\"",
+     "generate_gable_roof \"slope_angle=30,height=3\"",
      "A, params", "G",
      [](const std::string &args, const SFCGAL::Geometry *geom_a,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
        auto   params = parse_params(args);
-       double height = params.count("height") != 0 ? params["height"] : 3.0;
+       double height = params.count("height") != 0 ? params["height"] : 0.0;
        double slope_angle =
            params.count("slope_angle") != 0 ? params["slope_angle"] : 45.0;
 
