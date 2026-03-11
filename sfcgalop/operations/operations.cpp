@@ -892,27 +892,27 @@ const std::vector<Operation> operations = {
      "angle.\n\n"
      "Parameters:\n"
      "  height=VALUE: Roof height (required)\n"
-     "  roof_angle=VALUE: Slope angle for non-gable edges in degrees (default: "
+     "  slope_angle=VALUE: Slope angle for non-gable edges in degrees (default: "
      "45)\n\n"
      "Examples:\n"
      "  # Rectangle with auto-detected gables\n"
      "  sfcgalop -a \"POLYGON((0 0,10 0,10 5,0 5,0 0))\" "
      "generate_gable_roof \"height=3\"\n"
-     "  # Custom roof angle\n"
+     "  # Custom slope angle\n"
      "  sfcgalop -a \"POLYGON((0 0,10 0,10 5,0 5,0 0))\" "
-     "generate_gable_roof \"height=3,roof_angle=30\"",
+     "generate_gable_roof \"height=3,slope_angle=30\"",
      "A, params", "G",
      [](const std::string &args, const SFCGAL::Geometry *geom_a,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
        auto   params = parse_params(args);
        double height = params.count("height") != 0 ? params["height"] : 3.0;
-       double roof_angle =
-           params.count("roof_angle") != 0 ? params["roof_angle"] : 45.0;
+       double slope_angle =
+           params.count("slope_angle") != 0 ? params["slope_angle"] : 45.0;
 
        SFCGAL::algorithm::RoofParameters roofParameters;
        roofParameters.type       = SFCGAL::algorithm::RoofType::GABLE;
        roofParameters.roofHeight = height;
-       roofParameters.slopeAngle = roof_angle;
+       roofParameters.slopeAngle = slope_angle;
        return SFCGAL::algorithm::generateRoof(geom_a->as<SFCGAL::Polygon>(),
                                               roofParameters);
      }},
