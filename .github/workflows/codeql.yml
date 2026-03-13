@@ -57,7 +57,7 @@ jobs:
 
     - name: Build
       run: |
-          CGAL_DIR=/CGAL cmake -DSFCGAL_BUILD_TESTS=ON -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++
+          CGAL_DIR=/CGAL cmake -DSFCGAL_WITH_EIGEN=ON -DSFCGAL_BUILD_TESTS=ON -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++
           make -j$(nproc)
           ctest -VV
 
