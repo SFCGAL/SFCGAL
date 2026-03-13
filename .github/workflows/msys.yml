@@ -34,10 +34,11 @@ jobs:
           ninja:p
           cgal:p
           nlohmann-json:p
+          eigen3:p
 
     - name: '🚧 Build TOOL'
       run: |
-        MSYSTEM= cmake -G"Ninja" -B build -DCMAKE_BUILD_TYPE=Release -DSFCGAL_BUILD_TESTS=ON -DCMAKE_INSTALL_PREFIX=D:/a/_temp/msys64/${{ matrix.sys }} -DSFCGAL_CONFIG_EXECUTABLE=D:/a/_temp/msys64/${{ matrix.sys }}/bin/sfcgal-config
+        MSYSTEM= cmake -G"Ninja" -B build -DSFCGAL_WITH_EIGEN=ON -DCMAKE_BUILD_TYPE=Release -DSFCGAL_BUILD_TESTS=ON -DCMAKE_INSTALL_PREFIX=D:/a/_temp/msys64/${{ matrix.sys }} -DSFCGAL_CONFIG_EXECUTABLE=D:/a/_temp/msys64/${{ matrix.sys }}/bin/sfcgal-config
         MSYSTEM= cmake --build build
         MSYSTEM= cmake --install build
         echo "🔍 Testing sfcgal-config --libs output..."
