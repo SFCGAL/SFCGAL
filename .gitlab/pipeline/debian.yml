@@ -17,13 +17,14 @@
     - apt-get install --yes sudo wget ${PACKAGE}
     - ./ci/debian/before_install.sh $CGAL_VERSION
     - cd $CI_PROJECT_DIR
-    - cmake -DSFCGAL_BUILD_TESTS=ON -DCMAKE_C_COMPILER=/usr/bin/${C_COMPILER} -DCMAKE_CXX_COMPILER=/usr/bin/${CXX_COMPILER} -DCGAL_DIR=${CI_PROJECT_DIR}/CGAL-${CGAL_VERSION}
+    - cmake -DSFCGAL_WITH_EIGEN=${EIGEN} -DSFCGAL_BUILD_TESTS=ON -DCMAKE_C_COMPILER=/usr/bin/${C_COMPILER} -DCMAKE_CXX_COMPILER=/usr/bin/${CXX_COMPILER} -DCGAL_DIR=${CI_PROJECT_DIR}/CGAL-${CGAL_VERSION}
     - make -j$(nproc)
     - ctest -VV
   parallel:
     matrix:
       - CGAL_VERSION: [$CGAL_5_VERSION, $CGAL_LATEST_VERSION]
         OS_VERSION: ["stable", "testing"]
+        EIGEN: ["OFF", "ON"]
 
 debian_clang:
   extends: .debian_test_base

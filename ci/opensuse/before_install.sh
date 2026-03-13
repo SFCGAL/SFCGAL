@@ -4,5 +4,6 @@ zypper install -y \
     libboost_serialization-devel \
     libboost_program_options-devel \
     libboost_test-devel \
-    nlohmann_json-devel
+    nlohmann_json-devel \
+    libeigen3-devel
 rm -rf build

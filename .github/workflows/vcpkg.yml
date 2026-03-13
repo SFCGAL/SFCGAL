@@ -46,3 +46,4 @@ jobs:
           configurePreset: 'ninja-multi-vcpkg'
           buildPreset: 'ninja-multi-vcpkg'
           buildPresetAdditionalArgs: '[`--config Release`]'
+          configurePresetAdditionalArgs: '["-DSFCGAL_WITH_EIGEN=ON"]'
