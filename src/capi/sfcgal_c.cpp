@@ -2226,21 +2226,27 @@ sfcgal_geometry_translate_3d(const sfcgal_geometry_t *geom, double dx,
 }
 
 extern "C" auto
-sfcgal_geometry_transform(const sfcgal_geometry_t *geom, const float *matrix4x4)
-    -> sfcgal_geometry_t *
+sfcgal_geometry_transform(const sfcgal_geometry_t *geom,
+                          const double *matrix4x4) -> sfcgal_geometry_t *
 {
   const auto *g = reinterpret_cast<const SFCGAL::Geometry *>(geom);
   std::unique_ptr<SFCGAL::Geometry> gb = g->clone();
 
   // row by row
-  CGAL::Aff_transformation_3<SFCGAL::Kernel> transf(
-      matrix4x4[(0 * 4) + 0], matrix4x4[(1 * 4) + 0], matrix4x4[(2 * 4) + 0],
-      matrix4x4[(3 * 4) + 0], //
-      matrix4x4[(0 * 4) + 1], matrix4x4[(1 * 4) + 1], matrix4x4[(2 * 4) + 1],
-      matrix4x4[(3 * 4) + 1], //
-      matrix4x4[(0 * 4) + 2], matrix4x4[(1 * 4) + 2], matrix4x4[(2 * 4) + 2],
-      matrix4x4[(3 * 4) + 2], //
-      matrix4x4[(3 * 4) + 3]);
+  CGAL::Aff_transformation_3<SFCGAL::Kernel> transf{
+      SFCGAL::Kernel::FT(matrix4x4[(0 * 4) + 0]),
+      SFCGAL::Kernel::FT(matrix4x4[(1 * 4) + 0]),
+      SFCGAL::Kernel::FT(matrix4x4[(2 * 4) + 0]),
+      SFCGAL::Kernel::FT(matrix4x4[(3 * 4) + 0]),
+      SFCGAL::Kernel::FT(matrix4x4[(0 * 4) + 1]),
+      SFCGAL::Kernel::FT(matrix4x4[(1 * 4) + 1]),
+      SFCGAL::Kernel::FT(matrix4x4[(2 * 4) + 1]),
+      SFCGAL::Kernel::FT(matrix4x4[(3 * 4) + 1]),
+      SFCGAL::Kernel::FT(matrix4x4[(0 * 4) + 2]),
+      SFCGAL::Kernel::FT(matrix4x4[(1 * 4) + 2]),
+      SFCGAL::Kernel::FT(matrix4x4[(2 * 4) + 2]),
+      SFCGAL::Kernel::FT(matrix4x4[(3 * 4) + 2]),
+      SFCGAL::Kernel::FT(matrix4x4[(3 * 4) + 3])};
 
   SFCGAL::transform::AffineTransform3 visitor(transf);
   gb->accept(visitor);

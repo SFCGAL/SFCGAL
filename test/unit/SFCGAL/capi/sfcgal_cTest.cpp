@@ -1247,10 +1247,10 @@ BOOST_AUTO_TEST_CASE(testTransform)
 
   // translate
   {
-    std::array<float, 16> mat = {1, 0, 0, 0, //
-                                 0, 1, 0, 0, //
-                                 0, 0, 1, 0, //
-                                 1, 2, 3, 1};
+    std::array<double, 16> mat = {1, 0, 0, 0, //
+                                  0, 1, 0, 0, //
+                                  0, 0, 1, 0, //
+                                  1, 2, 3, 1};
 
     hasError = false;
     sfcgal_geometry_t *result =
@@ -1271,10 +1271,10 @@ BOOST_AUTO_TEST_CASE(testTransform)
 
   // scale
   {
-    std::array<float, 16> mat = {1, 0, 0, 0, //
-                                 0, 2, 0, 0, //
-                                 0, 0, 3, 0, //
-                                 0, 0, 0, 1};
+    std::array<double, 16> mat = {1, 0, 0, 0, //
+                                  0, 2, 0, 0, //
+                                  0, 0, 3, 0, //
+                                  0, 0, 0, 1};
 
     hasError = false;
     sfcgal_geometry_t *result =
@@ -1295,10 +1295,10 @@ BOOST_AUTO_TEST_CASE(testTransform)
 
   // rotate
   {
-    std::array<float, 16> mat = {-1.0e-07, 1.0,      0.0, 0.0, //
-                                 -1.0,     -1.0e-07, 0.0, 0.0, //
-                                 0.0,      0.0,      1.0, 0.0, //
-                                 0.0,      0.0,      0.0, 1.0};
+    std::array<double, 16> mat = {-1.0e-07, 1.0,      0.0, 0.0, //
+                                  -1.0,     -1.0e-07, 0.0, 0.0, //
+                                  0.0,      0.0,      1.0, 0.0, //
+                                  0.0,      0.0,      0.0, 1.0};
 
     hasError = false;
     sfcgal_geometry_t *result =

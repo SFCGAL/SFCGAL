@@ -2485,13 +2485,13 @@ sfcgal_geometry_translate_2d(const sfcgal_geometry_t *geom, double dx,
 /**
  * Transform a geometry by a 3D matrix (4x4)
  * @param geom the geometry to translate
- * @param matrix4x4 pointer onto 4x4 float matrix (column by column)
+ * @param matrix4x4 pointer onto 4x4 double matrix (column by column)
  * @return The transformed geometry
  * @ingroup capi
  */
 SFCGAL_API sfcgal_geometry_t *
 sfcgal_geometry_transform(const sfcgal_geometry_t *geom,
-                          const float             *matrix4x4);
+                          const double            *matrix4x4);
 
 /**
  * Simplify a geometry
