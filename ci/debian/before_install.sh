@@ -4,7 +4,7 @@ apt-get install --yes \
     cmake libboost-program-options-dev \
     libboost-test-dev libboost-thread-dev nlohmann-json3-dev \
     libboost-system-dev libboost-serialization-dev \
-    libmpfr-dev libgmp-dev \
+    libmpfr-dev libgmp-dev libeigen3-dev \
     xz-utils
 #CGAL
 
