@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
 #include "SFCGAL/detail/io/WktWriter.h"
+#include "SFCGAL/detail/io/WktWriter_p.h"
 
 #include "SFCGAL/Exception.h"
 #include "SFCGAL/GeometryCollection.h"
@@ -125,32 +126,6 @@ WktWriter::writeCoordinateType(const Geometry &geometry)
   } else if (geometry.is3D() && geometry.isMeasured()) {
     _s << "ZM ";
   }
-}
-
-static auto
-fixZeroNeg(double val, int precision) -> double
-{
-  if (std::abs(val) < std::pow(10, -precision)) {
-    return 0;
-  }
-  return val;
-}
-
-static auto
-fixZeroNegForWeights(double val, int precision) -> double
-{
-  // NURBS weights must be positive
-  if (val <= 0) {
-    // Convert non-positive weights to minimum positive value
-    return std::pow(10, -precision);
-  }
-
-  // For positive weights, preserve small values instead of converting to 0
-  if (val < std::pow(10, -precision)) {
-    return std::pow(10, -precision);
-  }
-
-  return val;
 }
 
 void
