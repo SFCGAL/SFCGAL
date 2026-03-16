@@ -16,6 +16,12 @@ namespace SFCGAL::detail::io {
 static auto
 fixZeroNeg(double val, int precision) -> double
 {
+  if (precision == 0) {
+    const double roundVal = std::round(val);
+    // According to IEEE 754, -0.0 == 0.0
+    return roundVal == 0.0 ? 0.0 : roundVal;
+  }
+
   if (std::abs(val) < std::pow(10, -precision)) {
     return 0;
   }
