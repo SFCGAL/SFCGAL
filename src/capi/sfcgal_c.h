@@ -2484,7 +2484,7 @@ sfcgal_geometry_translate_2d(const sfcgal_geometry_t *geom, double dx,
 
 /**
  * Transform a geometry by a 3D matrix (4x4)
- * @param geom the geometry to translate
+ * @param geom the geometry to transform
  * @param matrix4x4 pointer onto 4x4 double matrix (column by column)
  * @return The transformed geometry
  * @ingroup capi
