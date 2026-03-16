@@ -331,8 +331,11 @@ if(SFCGAL_BUILD_CLI)
 endif()
 
 #-- install directories
-install(DIRECTORY ${CMAKE_BINARY_DIR}/include DESTINATION .)
-
+install(DIRECTORY ${CMAKE_BINARY_DIR}/include
+        DESTINATION .
+        FILES_MATCHING PATTERN "*.h"
+        PATTERN "*_p.h" EXCLUDE
+)
 
 #-- sfcgal-config
 if ( "${CMAKE_BUILD_TYPE}" STREQUAL "Debug" )

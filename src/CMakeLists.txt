@@ -1,6 +1,9 @@
 file( GLOB_RECURSE SFCGAL_SOURCES "*.cpp" )
 file( GLOB_RECURSE SFCGAL_HEADERS "*.h" )
 
+# Exclude private headers files from SFCGAL_HEADERS
+list(FILTER SFCGAL_HEADERS EXCLUDE REGEX "_p\\.h$")
+
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC )
     list(REMOVE_ITEM SFCGAL_SOURCES ${CMAKE_SOURCE_DIR}/src/algorithm/alphaShapes.cpp)
     list(REMOVE_ITEM SFCGAL_HEADERS ${CMAKE_SOURCE_DIR}/src/algorithm/alphaShapes.h)
