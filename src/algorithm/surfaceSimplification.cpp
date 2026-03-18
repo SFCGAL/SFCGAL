@@ -101,6 +101,47 @@ simplifyMeshLindstromTurk(InexactMesh &mesh, const StopPredicate &stop)
 
 /**
  * @brief Call a simplification function on a mesh (exact or inexact) depending
+ * on an edge count stop predicate.
+ */
+template <typename Mesh, typename SimplifyFn>
+auto
+simplifyMeshThroughEdgeCount(Mesh                              &mesh,
+                             const SimplificationStopPredicate &stop,
+                             SimplifyFn                       &&simplifyFn)
+{
+  auto const initialEdgeCount = static_cast<size_t>(mesh.number_of_edges());
+  auto const targetEdgeCount  = static_cast<size_t>(stop.value);
+
+  if (targetEdgeCount >= initialEdgeCount) {
+    return static_cast<size_t>(0);
+  }
+
+  size_t const edgesToRemove = initialEdgeCount - targetEdgeCount;
+  SMS::Edge_count_stop_predicate<Mesh> predicate(edgesToRemove);
+  return simplifyFn(mesh, predicate);
+}
+
+/**
+ * @brief Call a simplification function on a mesh (exact or inexact) depending
+ * on an edge count ratio stop predicate.
+ */
+template <typename Mesh, typename SimplifyFn>
+auto
+simplifyMeshThroughEdgeRatio(Mesh                              &mesh,
+                             const SimplificationStopPredicate &stop,
+                             SimplifyFn                       &&simplifyFn)
+{
+  double const ratio = stop.value;
+  if (ratio <= 0.0 || ratio >= 1.0) {
+    throw std::invalid_argument(
+        "Edge count ratio must be in the range (0.0, 1.0)");
+  }
+  SMS::Edge_count_ratio_stop_predicate<Mesh> predicate(ratio);
+  return simplifyFn(mesh, predicate);
+}
+
+/**
+ * @brief Call a simplification function on a mesh (exact or inexact) depending
  * on a stop predicate.
  *
  * The function handles edge count as well as edge ratio stop predicates.
@@ -112,28 +153,9 @@ simplifyWithStopPredicate(Mesh &mesh, const SimplificationStopPredicate &stop,
 {
   size_t result;
   if (stop.type == SimplificationStopPredicate::PredicateType::EDGE_COUNT) {
-
-    auto const initialEdgeCount = static_cast<size_t>(mesh.number_of_edges());
-    auto const targetEdgeCount  = static_cast<size_t>(stop.value);
-
-    if (targetEdgeCount >= initialEdgeCount) {
-      return static_cast<size_t>(0);
-    }
-
-    size_t const edgesToRemove = initialEdgeCount - targetEdgeCount;
-    SMS::Edge_count_stop_predicate<Mesh> predicate(edgesToRemove);
-    result = simplifyFn(mesh, predicate);
-
+    result = simplifyMeshThroughEdgeCount(mesh, stop, simplifyFn);
   } else {
-
-    double const ratio = stop.value;
-    if (ratio <= 0.0 || ratio >= 1.0) {
-      throw std::invalid_argument(
-          "Edge count ratio must be in the range (0.0, 1.0)");
-    }
-
-    SMS::Edge_count_ratio_stop_predicate<Mesh> predicate(ratio);
-    result = simplifyFn(mesh, predicate);
+    result = simplifyMeshThroughEdgeRatio(mesh, stop, simplifyFn);
   }
   return result;
 }
@@ -142,10 +164,11 @@ simplifyWithStopPredicate(Mesh &mesh, const SimplificationStopPredicate &stop,
 /**
  * @brief Simplify inexact meshes with Eigen strategies.
  */
+template <typename SimplifyFn>
 auto
 simplifyInexactMesh(Surface_mesh_3                    &mesh,
                     const SimplificationStopPredicate &stop,
-                    SimplificationStrategy             strategy)
+                    SimplifyFn                       &&simplifyFn)
 {
   constexpr size_t MAX_VERTICES = 500000;
   constexpr size_t MAX_FACES    = 1000000;
@@ -174,13 +197,6 @@ simplifyInexactMesh(Surface_mesh_3                    &mesh,
     inexactMesh.add_face(verts);
   }
 
-  auto simplifyFn = [&](auto &mesh_, auto &predicate) {
-    if (strategy == SimplificationStrategy::GARLAND_HECKBERT) {
-      return simplifyMeshGarlandHeckbert(mesh_, predicate);
-    }
-    return simplifyMeshLindstromTurk(mesh_, predicate);
-  };
-
   size_t result = simplifyWithStopPredicate(inexactMesh, stop, simplifyFn);
 
   mesh.clear();
@@ -205,26 +221,50 @@ simplifyInexactMesh(Surface_mesh_3                    &mesh,
 
 /**
  * @brief Entry point for simplifying surface meshes
+ *
+ * This function encapsulates the selection of the accurate simplification
+ * function depending on the chosen strategy. The regular edge length strategy
+ * is used as a default case, whilst the Garland-Heckbert and Lindstrom-Turk
+ * strategies require the SFCGAL_WITH_EIGEN compilation option. Both strategies
+ * trigger a proxy function that deals with a copied mesh computed onto an
+ * inexact CGAL kernel.
+ *
+ *
  */
 auto
 simplifySurfaceMesh(Surface_mesh_3                    &mesh,
                     const SimplificationStopPredicate &stop,
                     SimplificationStrategy             strategy)
 {
+
+  switch (strategy) {
 #ifdef SFCGAL_WITH_EIGEN
-  if (strategy == SimplificationStrategy::GARLAND_HECKBERT ||
-      strategy == SimplificationStrategy::LINDSTROM_TURK) {
-    return simplifyInexactMesh(mesh, stop, strategy);
+  case SimplificationStrategy::GARLAND_HECKBERT: {
+    auto simplifyFn = [&](auto &mesh_, auto &predicate) {
+      return simplifyMeshGarlandHeckbert(mesh_, predicate);
+    };
+    return simplifyInexactMesh(mesh, stop, simplifyFn);
+  }
+  case SimplificationStrategy::LINDSTROM_TURK: {
+    auto simplifyFn = [&](auto &mesh_, auto &predicate) {
+      return simplifyMeshLindstromTurk(mesh_, predicate);
+    };
+    return simplifyInexactMesh(mesh, stop, simplifyFn);
   }
 #else
-  (void)strategy;
-#endif
-
-  return simplifyWithStopPredicate(
-      mesh, stop, [](Surface_mesh_3 &m, const auto &predicate) {
-        return simplifyMesh(m, predicate);
-      });
-  ;
+  case SimplificationStrategy::GARLAND_HECKBERT:
+  case SimplificationStrategy::LINDSTROM_TURK:
+    BOOST_THROW_EXCEPTION(
+        SFCGAL::Exception("The chosen simplification strategy requires SFCGAL "
+                          "to be built with -DSFCGAL_WITH_EIGEN=ON."));
+#endif // SFCGAL_WITH_EIGEN
+  default: {
+    auto simplifyFn = [&](Surface_mesh_3 &mesh_, const auto &predicate) {
+      return simplifyMesh(mesh_, predicate);
+    };
+    return simplifyWithStopPredicate(mesh, stop, simplifyFn);
+  }
+  }
 }
 
 /**
