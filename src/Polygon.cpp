@@ -9,6 +9,7 @@
 #include "SFCGAL/LineString.h"
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/algorithm/orientation.h"
+#include "SFCGAL/triangulate/triangulatePolygon.h"
 
 namespace SFCGAL {
 
@@ -192,6 +193,14 @@ void
 Polygon::accept(ConstGeometryVisitor &visitor) const
 {
   visitor.visit(*this);
+}
+
+auto
+Polygon::toTriangulatedSurface() const -> TriangulatedSurface
+{
+  TriangulatedSurface result;
+  triangulate::triangulatePolygon3D(*this, result);
+  return result;
 }
 
 auto

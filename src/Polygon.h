@@ -18,6 +18,7 @@
 #include "SFCGAL/Kernel.h"
 #include "SFCGAL/LineString.h"
 #include "SFCGAL/Surface.h"
+#include "SFCGAL/TriangulatedSurface.h"
 
 namespace SFCGAL {
 
@@ -404,6 +405,13 @@ public:
   /// @param visitor Const visitor to accept
   void
   accept(ConstGeometryVisitor &visitor) const override;
+
+  /**
+   * Convert Polygon to TriangulatedSurface
+   * @return A triangulated surface representation
+   */
+  [[nodiscard]] auto
+  toTriangulatedSurface() const -> TriangulatedSurface;
 
   /**
    * @brief Serializer
