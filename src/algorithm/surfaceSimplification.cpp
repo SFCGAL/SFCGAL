@@ -38,21 +38,13 @@ namespace SMS = CGAL::Surface_mesh_simplification;
 
 namespace detail {
 
-#ifdef SFCGAL_WITH_EIGEN
-// Inexact kernel types for advanced strategies
-using InexactKernel = CGAL::Exact_predicates_inexact_constructions_kernel;
-using InexactMesh   = CGAL::Surface_mesh<InexactKernel::Point_3>;
-using EK_to_IK      = CGAL::Cartesian_converter<Kernel, InexactKernel>;
-using IK_to_EK      = CGAL::Cartesian_converter<InexactKernel, Kernel>;
-#endif // SFCGAL_WITH_EIGEN
-
 /**
  * @brief Apply edge collapse simplification using Edge Length cost and Midpoint
  * placement
  */
 template <typename StopPredicate>
 auto
-simplifyMesh(Surface_mesh_3 &mesh, const StopPredicate &stop) -> size_t
+defaultEdgeCollapser(Surface_mesh_3 &mesh, const StopPredicate &stop) -> size_t
 {
   using Cost      = SMS::Edge_length_cost<Surface_mesh_3>;
   using Placement = SMS::Midpoint_placement<Surface_mesh_3>;
@@ -63,13 +55,19 @@ simplifyMesh(Surface_mesh_3 &mesh, const StopPredicate &stop) -> size_t
 }
 
 #ifdef SFCGAL_WITH_EIGEN
+// Inexact kernel types for advanced strategies
+using InexactKernel = CGAL::Exact_predicates_inexact_constructions_kernel;
+using InexactMesh   = CGAL::Surface_mesh<InexactKernel::Point_3>;
+using EK_to_IK      = CGAL::Cartesian_converter<Kernel, InexactKernel>;
+using IK_to_EK      = CGAL::Cartesian_converter<InexactKernel, Kernel>;
+
 /**
  * @brief Apply edge collapse simplification using Garland-Heckbert strategy on
  * inexact mesh
  */
 template <typename StopPredicate>
 auto
-simplifyMeshGarlandHeckbert(InexactMesh &mesh, const StopPredicate &stop)
+garlandHeckbertEdgeCollapser(InexactMesh &mesh, const StopPredicate &stop)
     -> size_t
 {
   using Policies =
@@ -87,7 +85,7 @@ simplifyMeshGarlandHeckbert(InexactMesh &mesh, const StopPredicate &stop)
  */
 template <typename StopPredicate>
 auto
-simplifyMeshLindstromTurk(InexactMesh &mesh, const StopPredicate &stop)
+lindstromTurkEdgeCollapser(InexactMesh &mesh, const StopPredicate &stop)
     -> size_t
 {
   using Cost      = SMS::LindstromTurk_cost<InexactMesh>;
@@ -97,55 +95,15 @@ simplifyMeshLindstromTurk(InexactMesh &mesh, const StopPredicate &stop)
       mesh, stop,
       CGAL::parameters::get_cost(Cost()).get_placement(Placement()));
 }
-#endif // SFCGAL_WITH_EIGEN
 
-/**
- * @brief Call a simplification function on a mesh (exact or inexact) depending
- * on a stop predicate.
- *
- * The function handles edge count as well as edge ratio stop predicates.
- */
-template <typename Mesh, typename SimplifyFn>
-auto
-simplifyWithStopPredicate(Mesh &mesh, const SimplificationStopPredicate &stop,
-                          SimplifyFn &&simplifyFn)
-{
-  size_t result;
-  if (stop.type == SimplificationStopPredicate::PredicateType::EDGE_COUNT) {
-
-    auto const initialEdgeCount = static_cast<size_t>(mesh.number_of_edges());
-    auto const targetEdgeCount  = static_cast<size_t>(stop.value);
-
-    if (targetEdgeCount >= initialEdgeCount) {
-      return static_cast<size_t>(0);
-    }
-
-    size_t const edgesToRemove = initialEdgeCount - targetEdgeCount;
-    SMS::Edge_count_stop_predicate<Mesh> predicate(edgesToRemove);
-    result = simplifyFn(mesh, predicate);
-
-  } else {
-
-    double const ratio = stop.value;
-    if (ratio <= 0.0 || ratio >= 1.0) {
-      throw std::invalid_argument(
-          "Edge count ratio must be in the range (0.0, 1.0)");
-    }
-
-    SMS::Edge_count_ratio_stop_predicate<Mesh> predicate(ratio);
-    result = simplifyFn(mesh, predicate);
-  }
-  return result;
-}
-
-#ifdef SFCGAL_WITH_EIGEN
 /**
  * @brief Simplify inexact meshes with Eigen strategies.
  */
+template <typename EdgeCollapseFn>
 auto
-simplifyInexactMesh(Surface_mesh_3                    &mesh,
-                    const SimplificationStopPredicate &stop,
-                    SimplificationStrategy             strategy)
+applyInexactEdgeCollapserWithStopPredicate(
+    Surface_mesh_3 &mesh, const SimplificationStopPredicate &stop,
+    EdgeCollapseFn &&edgeCollapseFn) -> size_t
 {
   constexpr size_t MAX_VERTICES = 500000;
   constexpr size_t MAX_FACES    = 1000000;
@@ -174,14 +132,8 @@ simplifyInexactMesh(Surface_mesh_3                    &mesh,
     inexactMesh.add_face(verts);
   }
 
-  auto simplifyFn = [&](auto &mesh_, auto &predicate) {
-    if (strategy == SimplificationStrategy::GARLAND_HECKBERT) {
-      return simplifyMeshGarlandHeckbert(mesh_, predicate);
-    }
-    return simplifyMeshLindstromTurk(mesh_, predicate);
-  };
-
-  size_t result = simplifyWithStopPredicate(inexactMesh, stop, simplifyFn);
+  size_t result =
+      applyEdgeCollapserWithStopPredicate(inexactMesh, stop, edgeCollapseFn);
 
   mesh.clear();
   std::map<InexactMesh::Vertex_index, Surface_mesh_3::Vertex_index> backMap;
@@ -201,30 +153,113 @@ simplifyInexactMesh(Surface_mesh_3                    &mesh,
 
   return result;
 }
-#endif
+#endif // SFCGAL_WITH_EIGEN
+
+/**
+ * @brief Call a simplification function on a mesh (exact or inexact) depending
+ * on an edge count stop predicate.
+ */
+template <typename Mesh, typename EdgeCollapseFn>
+auto
+applyEdgeCollapserThroughEdgeCount(Mesh &mesh, const size_t targetEdgeCount,
+                                   EdgeCollapseFn &&edgeCollapseFn) -> size_t
+{
+  auto const initialEdgeCount = static_cast<size_t>(mesh.number_of_edges());
+
+  if (targetEdgeCount >= initialEdgeCount) {
+    return static_cast<size_t>(0);
+  }
+
+  size_t const edgesToRemove = initialEdgeCount - targetEdgeCount;
+  SMS::Edge_count_stop_predicate<Mesh> predicate(edgesToRemove);
+  return edgeCollapseFn(mesh, predicate);
+}
+
+/**
+ * @brief Call a simplification function on a mesh (exact or inexact) depending
+ * on an edge count ratio stop predicate.
+ */
+template <typename Mesh, typename EdgeCollapseFn>
+auto
+applyEdgeCollapserThroughEdgeRatio(Mesh &mesh, const double &ratio,
+                                   EdgeCollapseFn &&edgeCollapseFn) -> size_t
+{
+  if (ratio <= 0.0 || ratio >= 1.0) {
+    throw std::invalid_argument(
+        "Edge count ratio must be in the range (0.0, 1.0)");
+  }
+  SMS::Edge_count_ratio_stop_predicate<Mesh> predicate(ratio);
+  return edgeCollapseFn(mesh, predicate);
+}
+
+/**
+ * @brief Call a simplification function on a mesh (exact or inexact) depending
+ * on a stop predicate.
+ *
+ * The function handles edge count as well as edge ratio stop predicates.
+ */
+template <typename Mesh, typename EdgeCollapseFn>
+auto
+applyEdgeCollapserWithStopPredicate(Mesh                              &mesh,
+                                    const SimplificationStopPredicate &stop,
+                                    EdgeCollapseFn &&edgeCollapseFn) -> size_t
+{
+  size_t result;
+  if (stop.type == SimplificationStopPredicate::PredicateType::EDGE_COUNT) {
+    auto const targetEdgeCount = static_cast<size_t>(stop.value);
+    result = applyEdgeCollapserThroughEdgeCount(mesh, targetEdgeCount,
+                                                edgeCollapseFn);
+  } else {
+    double const ratio = stop.value;
+    result = applyEdgeCollapserThroughEdgeRatio(mesh, ratio, edgeCollapseFn);
+  }
+  return result;
+}
 
 /**
  * @brief Entry point for simplifying surface meshes
+ *
+ * This function encapsulates the selection of the accurate simplification
+ * function depending on the chosen strategy. The regular edge length strategy
+ * is used as a default case, whilst the Garland-Heckbert and Lindstrom-Turk
+ * strategies require the SFCGAL_WITH_EIGEN compilation option. Both strategies
+ * trigger a proxy function that deals with a copied mesh computed onto an
+ * inexact CGAL kernel.
+ *
+ *
  */
 auto
 simplifySurfaceMesh(Surface_mesh_3                    &mesh,
                     const SimplificationStopPredicate &stop,
-                    SimplificationStrategy             strategy)
+                    SimplificationStrategy             strategy) -> size_t
 {
+
+  switch (strategy) {
 #ifdef SFCGAL_WITH_EIGEN
-  if (strategy == SimplificationStrategy::GARLAND_HECKBERT ||
-      strategy == SimplificationStrategy::LINDSTROM_TURK) {
-    return simplifyInexactMesh(mesh, stop, strategy);
+  case SimplificationStrategy::GARLAND_HECKBERT: {
+    auto edgeCollapseFn = [&](auto &mesh_, auto &predicate) {
+      return garlandHeckbertEdgeCollapser(mesh_, predicate);
+    };
+    return applyInexactEdgeCollapserWithStopPredicate(mesh, stop,
+                                                      edgeCollapseFn);
+  }
+  case SimplificationStrategy::LINDSTROM_TURK: {
+    auto edgeCollapseFn = [&](auto &mesh_, auto &predicate) {
+      return lindstromTurkEdgeCollapser(mesh_, predicate);
+    };
+    return applyInexactEdgeCollapserWithStopPredicate(mesh, stop,
+                                                      edgeCollapseFn);
   }
 #else
-  (void)strategy;
-#endif
-
-  return simplifyWithStopPredicate(
-      mesh, stop, [](Surface_mesh_3 &m, const auto &predicate) {
-        return simplifyMesh(m, predicate);
-      });
-  ;
+    (void)strategy;
+#endif // SFCGAL_WITH_EIGEN
+  default: {
+    auto edgeCollapseFn = [&](Surface_mesh_3 &mesh_, const auto &predicate) {
+      return defaultEdgeCollapser(mesh_, predicate);
+    };
+    return applyEdgeCollapserWithStopPredicate(mesh, stop, edgeCollapseFn);
+  }
+  }
 }
 
 /**
@@ -292,7 +327,7 @@ simplifySolid(const Solid                       &solid,
       simplifyPolyhedralSurface(solid.exteriorShell(), stopPredicate, strategy);
 
   // Create new solid with simplified exterior shell
-  auto result = std::make_unique<Solid>(*simplifiedExterior);
+  auto result = std::make_unique<Solid>(std::move(simplifiedExterior));
 
   // Copy interior shells (not simplified)
   for (size_t i = 0; i < solid.numInteriorShells(); ++i) {
