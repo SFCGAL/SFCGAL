@@ -138,13 +138,8 @@ BOOST_AUTO_TEST_CASE(testSimplify_TriangulatedSurface_GarlandHeckbert)
 
   const auto &simplifiedTin = simplified->as<TriangulatedSurface>();
   BOOST_CHECK_LT(simplifiedTin.numTriangles(), cube->numTriangles());
-
-  std::cout << "Original triangles: " << cube->numTriangles() << "\n";
-  std::cout << "Simplified triangles: " << simplifiedTin.numTriangles() << "\n";
 }
-#endif // SFCGAL_WITH_EIGEN
 
-#ifdef SFCGAL_WITH_EIGEN
 // Test TriangulatedSurface simplification with Lindstrom-Turk strategy
 BOOST_AUTO_TEST_CASE(testSimplify_TriangulatedSurface_LindstromTurk)
 {
@@ -162,14 +157,8 @@ BOOST_AUTO_TEST_CASE(testSimplify_TriangulatedSurface_LindstromTurk)
 
   const auto &simplifiedTin = simplified->as<TriangulatedSurface>();
   BOOST_CHECK_LT(simplifiedTin.numTriangles(), cube->numTriangles());
-
-  std::cout << "Original triangles: " << cube->numTriangles() << "\n";
-  std::cout << "Simplified triangles (LT): " << simplifiedTin.numTriangles()
-            << "\n";
 }
-#endif // SFCGAL_WITH_EIGEN
 
-#ifdef SFCGAL_WITH_EIGEN
 // Test PolyhedralSurface simplification with Garland-Heckbert strategy
 BOOST_AUTO_TEST_CASE(testSimplify_PolyhedralSurface_GarlandHeckbert)
 {
@@ -184,14 +173,8 @@ BOOST_AUTO_TEST_CASE(testSimplify_PolyhedralSurface_GarlandHeckbert)
 
   BOOST_CHECK(simplified);
   BOOST_CHECK(simplified->is<PolyhedralSurface>());
-
-  std::cout << "Original patches: " << cube->numPatches() << "\n";
-  std::cout << "Simplified patches: "
-            << simplified->as<PolyhedralSurface>().numPatches() << "\n";
 }
-#endif // SFCGAL_WITH_EIGEN
 
-#ifdef SFCGAL_WITH_EIGEN
 // Test PolyhedralSurface simplification with Lindstrom-Turk strategy
 BOOST_AUTO_TEST_CASE(testSimplify_PolyhedralSurface_LindstromTurk)
 {
@@ -206,10 +189,6 @@ BOOST_AUTO_TEST_CASE(testSimplify_PolyhedralSurface_LindstromTurk)
 
   BOOST_CHECK(simplified);
   BOOST_CHECK(simplified->is<PolyhedralSurface>());
-
-  std::cout << "Original patches: " << cube->numPatches() << "\n";
-  std::cout << "Simplified patches (LT): "
-            << simplified->as<PolyhedralSurface>().numPatches() << "\n";
 }
 #endif // SFCGAL_WITH_EIGEN
 
@@ -228,11 +207,6 @@ BOOST_AUTO_TEST_CASE(testSimplify_Solid)
 
   const auto &simplifiedSolid = simplified->as<Solid>();
   BOOST_CHECK(!simplifiedSolid.isEmpty());
-
-  std::cout << "Original solid exterior patches: "
-            << solid.exteriorShell().numPatches() << "\n";
-  std::cout << "Simplified solid exterior patches: "
-            << simplifiedSolid.exteriorShell().numPatches() << "\n";
 }
 
 // Test MultiSolid simplification
@@ -257,8 +231,6 @@ BOOST_AUTO_TEST_CASE(testSimplify_MultiSolid)
 
   const auto &simplifiedMulti = simplified->as<MultiSolid>();
   BOOST_CHECK_EQUAL(simplifiedMulti.numGeometries(), 2);
-
-  std::cout << "MultiSolid simplified successfully" << "\n";
 }
 
 // Test edge count stop predicate
@@ -277,8 +249,6 @@ BOOST_AUTO_TEST_CASE(testSimplify_EdgeCountPredicate)
 
   BOOST_CHECK(simplified);
   BOOST_CHECK(simplified->is<TriangulatedSurface>());
-
-  std::cout << "Simplified with edge count predicate" << "\n";
 }
 
 // Test empty geometries
@@ -358,9 +328,6 @@ BOOST_AUTO_TEST_CASE(testSimplify_WKT_TriangulatedSurface)
 
   BOOST_CHECK(simplified);
   BOOST_CHECK(simplified->is<TriangulatedSurface>());
-
-  std::cout << "WKT Source: " << geom->asText(2) << "\n";
-  std::cout << "WKT Simplified: " << simplified->asText(2) << "\n";
 }
 
 // Test that simplified geometry maintains 3D characteristics
@@ -402,9 +369,6 @@ BOOST_AUTO_TEST_CASE(testSimplify_SolidWithInteriorShells)
   const auto &simplifiedSolid = simplified->as<Solid>();
   // Interior shells are preserved but not simplified
   BOOST_CHECK_EQUAL(simplifiedSolid.numInteriorShells(), 1);
-
-  std::cout << "Solid with interior shells simplified successfully"
-            << "\n";
 }
 
 BOOST_AUTO_TEST_SUITE_END()
