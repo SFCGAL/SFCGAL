@@ -23,21 +23,21 @@ triangulatePolygon3D(const Geometry      &g,
                      TriangulatedSurface &triangulatedSurface) -> void;
 /**
  * @brief Triangulate a 3D Polygon
- * @param g Input polygon to triangulate
+ * @param polygon Input polygon to triangulate
  * @param triangulatedSurface Output triangulated surface
  * @todo unittest
  */
 SFCGAL_API void
-triangulatePolygon3D(const Polygon       &g,
+triangulatePolygon3D(const Polygon       &polygon,
                      TriangulatedSurface &triangulatedSurface);
 /**
  * @brief Triangulate a 3D Triangle (copy triangle)
- * @param g Input triangle to triangulate
+ * @param triangle Input triangle to triangulate
  * @param triangulatedSurface Output triangulated surface
  * @todo unittest
  */
 SFCGAL_API void
-triangulatePolygon3D(const Triangle      &g,
+triangulatePolygon3D(const Triangle      &triangle,
                      TriangulatedSurface &triangulatedSurface);
 /**
  * @brief Triangulate a 3D TriangulatedSurface (copy triangles)
