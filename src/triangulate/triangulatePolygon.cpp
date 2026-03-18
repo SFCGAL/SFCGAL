@@ -20,7 +20,9 @@
 
 namespace SFCGAL::triangulate {
 
+//! \cond
 using Vertex_handle = ConstraintDelaunayTriangulation::Vertex_handle;
+//! \endcond
 
 auto
 triangulatePolygon3D(const Geometry      &g,
