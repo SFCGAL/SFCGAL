@@ -414,6 +414,13 @@ public:
   toTriangulatedSurface() const -> TriangulatedSurface;
 
   /**
+   * @brief Convert Polygon to CGAL::Surface_mesh
+   * @return CGAL Surface_mesh representation of the polygon
+   */
+  [[nodiscard]] auto
+  toSurfaceMesh() const -> Surface_mesh_3;
+
+  /**
    * @brief Serializer
    * @param ar Archive for serialization
    */

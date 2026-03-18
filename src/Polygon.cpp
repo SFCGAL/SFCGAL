@@ -204,6 +204,14 @@ Polygon::toTriangulatedSurface() const -> TriangulatedSurface
 }
 
 auto
+Polygon::toSurfaceMesh() const -> Surface_mesh_3
+{
+  // Convert to triangulated surface first, then to surface mesh
+  TriangulatedSurface triangulated = toTriangulatedSurface();
+  return triangulated.toSurfaceMesh();
+}
+
+auto
 Polygon::isCounterClockWiseOriented() const -> bool
 {
   return algorithm::isCounterClockWiseOriented(*this);
