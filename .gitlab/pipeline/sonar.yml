@@ -4,7 +4,7 @@ image: debian:stable
 variables:
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar" # Defines the location of the analysis task cache
   GIT_DEPTH: "0" # Tells git to fetch all the branches of the project, required by the analysis task
-  SONAR_SCANNER_VERSION: 6.1.0.4477-linux-x64
+  SONAR_SCANNER_VERSION: 8.0.1.6346-linux-x64
 
 sonar:get-binaries:
   stage: sonar-build-test
@@ -14,9 +14,10 @@ sonar:get-binaries:
     paths:
       - build-wrapper/
       - sonar-scanner/
-  script:
+  before_script:
     - apt-get update -qq
     - apt-get install --yes sudo curl wget build-essential unzip
+  script:
     # Download sonar-scanner
     - curl -sSLo ./sonar-scanner.zip "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}.zip"
     - unzip -o sonar-scanner.zip
@@ -52,7 +53,7 @@ sonar:build-test:
     # run the build inside the build wrapper
     - build-wrapper/build-wrapper-linux-x86-64 --out-dir bw-output cmake --build build/ --config Release
     - cd build
-    - ctest -VV
+    - ctest -V
   artifacts:
     paths:
       - build/
