@@ -38,10 +38,12 @@ extrudeGableRoof(const Polygon &polygon, double clippingHeight,
     }
 
     // Check start of medial line
-    Point  firstPoint          = medialLine.pointN(0);
-    Point  secondPoint         = medialLine.pointN(1);
-    double firstPointDistance  = distance(firstPoint, polygon.exteriorRing());
-    double secondPointDistance = distance(secondPoint, polygon.exteriorRing());
+    Point        firstPoint  = medialLine.pointN(0);
+    Point        secondPoint = medialLine.pointN(1);
+    const double firstPointDistance =
+        distance(firstPoint, polygon.exteriorRing());
+    const double secondPointDistance =
+        distance(secondPoint, polygon.exteriorRing());
 
     if (firstPointDistance < tolerance && secondPointDistance > tolerance) {
       ridgeToEdgeMapping[{CGAL::to_double(secondPoint.x()),
@@ -49,11 +51,12 @@ extrudeGableRoof(const Polygon &polygon, double clippingHeight,
     }
 
     // Check end of medial line
-    size_t pointCount        = medialLine.numPoints();
-    Point  lastPoint         = medialLine.pointN(pointCount - 1);
-    Point  penultimatePoint  = medialLine.pointN(pointCount - 2);
-    double lastPointDistance = distance(lastPoint, polygon.exteriorRing());
-    double penultimatePointDistance =
+    size_t       pointCount       = medialLine.numPoints();
+    Point        lastPoint        = medialLine.pointN(pointCount - 1);
+    Point        penultimatePoint = medialLine.pointN(pointCount - 2);
+    const double lastPointDistance =
+        distance(lastPoint, polygon.exteriorRing());
+    const double penultimatePointDistance =
         distance(penultimatePoint, polygon.exteriorRing());
 
     if (lastPointDistance < tolerance && penultimatePointDistance > tolerance) {
@@ -69,12 +72,12 @@ extrudeGableRoof(const Polygon &polygon, double clippingHeight,
     for (size_t vertexIdx = 0; vertexIdx < ring.numPoints(); ++vertexIdx) {
       Point &vertex = ring.pointN(vertexIdx);
       if (vertex.z() > 0) {
-        double vertexX = CGAL::to_double(vertex.x());
-        double vertexY = CGAL::to_double(vertex.y());
+        const double vertexX = CGAL::to_double(vertex.x());
+        const double vertexY = CGAL::to_double(vertex.y());
 
         for (const auto &[ridgeCoord, edgePoint] : ridgeToEdgeMapping) {
-          double deltaX = vertexX - ridgeCoord.first;
-          double deltaY = vertexY - ridgeCoord.second;
+          const double deltaX = vertexX - ridgeCoord.first;
+          const double deltaY = vertexY - ridgeCoord.second;
           if (((deltaX * deltaX) + (deltaY * deltaY)) < 1e-4) {
             vertex = Point(edgePoint.x(), edgePoint.y(), vertex.z());
             break;
@@ -86,8 +89,8 @@ extrudeGableRoof(const Polygon &polygon, double clippingHeight,
 
   // 4. Clip the roof to the specified height if it's strictly positive
   if (clippingHeight > 0.0) {
-    Kernel::Plane_3 clippingPlane(0, 0, 1, -Kernel::FT(clippingHeight));
-    auto            surfaceMesh = roof->toSurfaceMesh();
+    const Kernel::Plane_3 clippingPlane(0, 0, 1, -Kernel::FT(clippingHeight));
+    auto                  surfaceMesh = roof->toSurfaceMesh();
     CGAL::Polygon_mesh_processing::clip(surfaceMesh, clippingPlane,
                                         CGAL::parameters::clip_volume(true));
     roof = std::make_unique<PolyhedralSurface>(surfaceMesh);
@@ -103,18 +106,18 @@ extrudeSkillionRoof(const Polygon &polygon, double clippingHeight,
 {
   // If no clipping height, compute from geometry and slope
   if (clippingHeight <= 0.0) {
-    const auto    &ring   = polygon.exteriorRing();
-    const auto    &point0 = ring.pointN(primaryEdgeIndex);
-    const auto    &point1 = ring.pointN(primaryEdgeIndex + 1);
-    Kernel::Line_2 edgeLine(point0.toPoint_2(), point1.toPoint_2());
-    double         maxDist = 0.0;
+    const auto          &ring   = polygon.exteriorRing();
+    const auto          &point0 = ring.pointN(primaryEdgeIndex);
+    const auto          &point1 = ring.pointN(primaryEdgeIndex + 1);
+    const Kernel::Line_2 edgeLine(point0.toPoint_2(), point1.toPoint_2());
+    double               maxDist = 0.0;
     for (size_t i = 0; i < ring.numPoints(); ++i) {
-      double distance = std::sqrt(CGAL::to_double(
+      const double distance = std::sqrt(CGAL::to_double(
           CGAL::squared_distance(ring.pointN(i).toPoint_2(), edgeLine)));
-      maxDist         = std::max(maxDist, distance);
+      maxDist               = std::max(maxDist, distance);
     }
-    double rad     = primaryAngle * CGAL_PI / 180.0;
-    clippingHeight = maxDist * std::tan(rad);
+    const double rad = primaryAngle * CGAL_PI / 180.0;
+    clippingHeight   = maxDist * std::tan(rad);
   }
 
   std::vector<Kernel::FT> angles;
