@@ -1962,10 +1962,22 @@ sfcgal_geometry_extrude_polygon_straight_skeleton_with_weights(
     const double *weights, const size_t *weights_per_ring, size_t num_rings);
 
 /**
+ * Roof type for sfcgal_geometry_generate_roof
+ * @ingroup capi
+ */
+typedef enum {
+  SFCGAL_ROOF_FLAT     = 0,
+  SFCGAL_ROOF_HIPPED   = 1,
+  SFCGAL_ROOF_SKILLION = 2,
+  SFCGAL_ROOF_GABLE    = 3
+} sfcgal_roof_type_t;
+
+/**
  * Generate a roof from a polygon using a specified type.
  * Dispatches to flat, hipped, gable, or skillion roof generation.
  * @param geom the input polygon
- * @param roof_type roof type: 0=flat, 1=hipped, 2=skillion, 3=gable
+ * @param roof_type roof type (SFCGAL_ROOF_FLAT, SFCGAL_ROOF_HIPPED,
+ *        SFCGAL_ROOF_SKILLION, or SFCGAL_ROOF_GABLE)
  * @param slope_angle slope angle in degrees for gable/skillion (default: 30)
  * @param height roof height (default: 3.0)
  * @param primary_edge_index index of the sloped edge for skillion (default: 0)
@@ -1975,9 +1987,9 @@ sfcgal_geometry_extrude_polygon_straight_skeleton_with_weights(
  * @ingroup capi
  */
 SFCGAL_API sfcgal_geometry_t *
-sfcgal_geometry_generate_roof(const sfcgal_geometry_t *geom, int roof_type,
-                              double slope_angle, double height,
-                              size_t primary_edge_index);
+sfcgal_geometry_generate_roof(const sfcgal_geometry_t *geom,
+                              sfcgal_roof_type_t roof_type, double slope_angle,
+                              double height, size_t primary_edge_index);
 
 /**
  * Generate a flat roof from a polygon.
