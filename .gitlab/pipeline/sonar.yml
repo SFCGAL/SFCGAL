@@ -42,18 +42,34 @@ sonar:build-test:
       - sonar-scanner/
       - bw-output/
       - build/ # the build has to be made available to the sonar-scanner for the analysis
+      - reports/
   needs: ["sonar:get-binaries"]
   before_script:
     - apt-get update -qq
-    - apt-get install --yes sudo wget build-essential
+    - apt-get install --yes sudo wget build-essential gcovr
     - ./ci/debian/before_install.sh $SONAR_CGAL_VERSION
   script:
     # prepare the build tree
-    - CGAL_DIR=$CI_PROJECT_DIR/CGAL cmake -S . -B build -DSFCGAL_BUILD_TESTS=ON -DSFCGAL_BUILD_EXAMPLES=ON -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    - CGAL_DIR=$CI_PROJECT_DIR/CGAL cmake -S . -B build -DSFCGAL_COVERAGE=ON -DSFCGAL_BUILD_TESTS=ON -DSFCGAL_BUILD_EXAMPLES=ON -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     # run the build inside the build wrapper
     - build-wrapper/build-wrapper-linux-x86-64 --out-dir bw-output cmake --build build/ --config Release
+    - mkdir -p reports/unit && mkdir -p reports/coverage
     - cd build
-    - ctest -V
+    # run unit tests in parallel and generate boost reports
+    - |
+      test/unit/unit-test-SFCGAL --list_content 2>&1
+      | egrep -v '^ '
+      | sed 's/\*//g'
+      | xargs -P$(nproc) -I {} test/unit/unit-test-SFCGAL --report_format=XML --report_level=detailed --report_sink=boost_report_{}.xml -t {}
+    # run other test and generate boost report
+    - |
+      for f in $(find test/ -type f | egrep -v '\.o$' | grep -v cmake | grep -v unit); do
+        $f --report_format=XML --report_level=detailed --report_sink=boost_report_$(basename $f).xml;
+      done
+    # merge all boost reports to one cpp unit one
+    - python ../script/merge_boost_reports_to_cppunit.py boost_report_*.xml && mv merged_report.xml ../reports/unit/
+    # generate coverage report
+    - gcovr --xml-pretty --exclude-unreachable-branches --exclude-throw-branches --print-summary -o ../reports/coverage/coverage.xml --sonarqube=../reports/coverage/coverage_sonarqube.xml --root .. -e "\.\./test/"
   artifacts:
     paths:
       - build/
@@ -75,9 +91,13 @@ sonar:check:
       - sonar-scanner/
       - bw-output/
       - build/
+      - reports/
   needs: ["sonar:build-test"]
   script:
-    - sonar-scanner/bin/sonar-scanner -Dsonar.host.url="${SONAR_HOST_URL}" -Dsonar.token="${SONAR_TOKEN}" -Dsonar.cfamily.build-wrapper-output=bw-output
+    - |
+      sonar-scanner/bin/sonar-scanner -Dsonar.host.url="${SONAR_HOST_URL}" -Dsonar.token="${SONAR_TOKEN}"
+      -Dsonar.cfamily.compile-commands=bw-output/compile_commands.json
+      -Dsonar.cfamily.cppunit.reportsPath=reports/unit/ -Dsonar.coverageReportPaths=reports/coverage/coverage_sonarqube.xml
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: always

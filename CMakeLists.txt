@@ -222,11 +222,11 @@ append_coverage_compiler_flags()
 set(COVERAGE_EXCLUDES
   '${PROJECT_SOURCE_DIR}/CGAL/*'
   '${PROJECT_SOURCE_DIR}/test/*')
-setup_target_for_coverage_gcovr_xml(
-     NAME sfcgal_coverage                    # New target name
-     EXECUTABLE ctest -j ${PROCESSOR_COUNT} -R unit-test
-     DEPENDENCIES SFCGAL unit-test-SFCGAL
-     )
+# setup_target_for_coverage_gcovr_xml(
+#      NAME sfcgal_coverage                    # New target name
+#      EXECUTABLE ctest -j ${PROCESSOR_COUNT} -R unit-test
+#      DEPENDENCIES SFCGAL unit-test-SFCGAL
+#      )
 endif()
 
 #-- Warnings, frounding-math and gprof  ------------------------------------------
