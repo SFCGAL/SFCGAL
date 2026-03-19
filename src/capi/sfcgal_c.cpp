@@ -1908,9 +1908,10 @@ sfcgal_geometry_extrude_polygon_straight_skeleton_with_weights(
 }
 
 extern "C" auto
-sfcgal_geometry_generate_roof(const sfcgal_geometry_t *geom, int roof_type,
-                              double slope_angle, double height,
-                              size_t primary_edge_index) -> sfcgal_geometry_t *
+sfcgal_geometry_generate_roof(const sfcgal_geometry_t *geom,
+                              sfcgal_roof_type_t roof_type, double slope_angle,
+                              double height, size_t primary_edge_index)
+    -> sfcgal_geometry_t *
 {
   const auto *g1 = reinterpret_cast<const SFCGAL::Geometry *>(geom);
 
@@ -1923,13 +1924,13 @@ sfcgal_geometry_generate_roof(const sfcgal_geometry_t *geom, int roof_type,
     roofParameters.primaryEdgeIndex = primary_edge_index;
 
     switch (roof_type) {
-    case 0:
+    case SFCGAL_ROOF_FLAT:
       roofParameters.type = SFCGAL::algorithm::RoofType::FLAT;
       break;
-    case 1:
+    case SFCGAL_ROOF_HIPPED:
       roofParameters.type = SFCGAL::algorithm::RoofType::HIPPED;
       break;
-    case 2:
+    case SFCGAL_ROOF_SKILLION:
       roofParameters.type = SFCGAL::algorithm::RoofType::SKILLION;
       break;
     default:
@@ -1955,14 +1956,15 @@ extern "C" auto
 sfcgal_geometry_generate_flat_roof(const sfcgal_geometry_t *geom, double height)
     -> sfcgal_geometry_t *
 {
-  return sfcgal_geometry_generate_roof(geom, 0, 0.0, height, 0);
+  return sfcgal_geometry_generate_roof(geom, SFCGAL_ROOF_FLAT, 0.0, height, 0);
 }
 
 extern "C" auto
 sfcgal_geometry_generate_hipped_roof(const sfcgal_geometry_t *geom,
                                      double height) -> sfcgal_geometry_t *
 {
-  return sfcgal_geometry_generate_roof(geom, 1, 0.0, height, 0);
+  return sfcgal_geometry_generate_roof(geom, SFCGAL_ROOF_HIPPED, 0.0, height,
+                                       0);
 }
 
 extern "C" auto
@@ -1970,7 +1972,8 @@ sfcgal_geometry_generate_gable_roof(const sfcgal_geometry_t *geom,
                                     double height, double slope_angle)
     -> sfcgal_geometry_t *
 {
-  return sfcgal_geometry_generate_roof(geom, 3, slope_angle, height, 0);
+  return sfcgal_geometry_generate_roof(geom, SFCGAL_ROOF_GABLE, slope_angle,
+                                       height, 0);
 }
 
 extern "C" auto
@@ -1979,8 +1982,8 @@ sfcgal_geometry_generate_skillion_roof(const sfcgal_geometry_t *geom,
                                        size_t primary_edge_index)
     -> sfcgal_geometry_t *
 {
-  return sfcgal_geometry_generate_roof(geom, 2, slope_angle, height,
-                                       primary_edge_index);
+  return sfcgal_geometry_generate_roof(geom, SFCGAL_ROOF_SKILLION, slope_angle,
+                                       height, primary_edge_index);
 }
 
 extern "C" auto
