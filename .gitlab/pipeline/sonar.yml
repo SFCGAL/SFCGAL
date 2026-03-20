@@ -63,7 +63,7 @@ sonar:build-test:
       | xargs -P$(nproc) -I {} test/unit/unit-test-SFCGAL --report_format=XML --report_level=detailed --report_sink=boost_report_{}.xml -t {}
     # run other test and generate boost report
     - >
-      for f in $(find test/ -type f | egrep -v '\.o$' | grep -v cmake | grep -v unit); do
+      for f in $(find test/ -type f -perm u=rwx,g=rwx,o=rx | grep -v unit); do
         $f --report_format=XML --report_level=detailed --report_sink=boost_report_$(basename $f).xml;
       done
     # merge all boost reports to one cpp unit one
