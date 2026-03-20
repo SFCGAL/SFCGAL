@@ -98,11 +98,14 @@ sonar:check:
       - build/
       - reports/
   needs: ["sonar:build-test"]
-  variables:
-    SONAR_TOKEN: "${SONAR_TOKEN}"
   script:
+    - env
+    - |
+      [ "10e1f2a183000b1de41779e488b73a8c09150031" = "$SONAR_TOKEN" ] && echo "TOKEN OK" || echo "TOKEN BAD"
+    - |
+      [ "https://sonarcloud.io" = "$SONAR_HOST_URL" ] && echo "HOST OK" || echo "HOST BAD"
     - >
-      sonar-scanner/bin/sonar-scanner -Dsonar.host.url="${SONAR_HOST_URL}" -Dsonar.token="${SONAR_TOKEN}"
+      sonar-scanner/bin/sonar-scanner
       -Dsonar.cfamily.compile-commands=bw-output/compile_commands.json
       -Dsonar.cfamily.cppunit.reportsPath=reports/unit/ -Dsonar.coverageReportPaths=reports/coverage/coverage_sonarqube.xml
   rules:
