@@ -98,6 +98,8 @@ sonar:check:
       - build/
       - reports/
   needs: ["sonar:build-test"]
+  variables:
+    SONAR_TOKEN: "${SONAR_TOKEN}"
   script:
     - >
       sonar-scanner/bin/sonar-scanner -Dsonar.host.url="${SONAR_HOST_URL}" -Dsonar.token="${SONAR_TOKEN}"
