@@ -46,7 +46,7 @@ sonar:build-test:
   needs: ["sonar:get-binaries"]
   before_script:
     - apt-get update -qq
-    - apt-get install --yes sudo wget build-essential gcovr
+    - apt-get install --yes sudo wget build-essential gcovr python3
     - ./ci/debian/before_install.sh $SONAR_CGAL_VERSION
   script:
     # prepare the build tree
@@ -75,30 +75,8 @@ sonar:build-test:
       --sonarqube=../reports/coverage/coverage_sonarqube.xml
       --root ..
       -e "\.\./test/"
-  # artifacts:
-  #   paths:
-  #     - build/
-  #     - test/test_config.h
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: always
-    # on default branch
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: always
-
-sonar:check:
-  stage: sonar-build-test
-  cache:
-    policy: pull
-    key: "${CI_COMMIT_SHORT_SHA}"
-    paths:
-      # - build-wrapper/
-      - sonar-scanner/
-      - bw-output/
-      - build/
-      - reports/
-  needs: ["sonar:build-test"]
-  script:
+    # run sonar scanner
+    - cd ..
     - env
     - |
       [ "10e1f2a183000b1de41779e488b73a8c09150031" = "$SONAR_TOKEN" ] && echo "TOKEN OK" || echo "TOKEN BAD"
