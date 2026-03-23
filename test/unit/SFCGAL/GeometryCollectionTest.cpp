@@ -48,12 +48,12 @@ BOOST_AUTO_TEST_CASE(testAccessors)
   BOOST_CHECK_EQUAL(g.numGeometries(), 0U);
   BOOST_CHECK_THROW(g.geometryN(0), Exception);
 
-  g.addGeometry(new Point(2.0, 3.0));
+  g.addGeometry(std::make_unique<Point>(2.0, 3.0));
   BOOST_CHECK_EQUAL(g.numGeometries(), 1U);
-  g.addGeometry(new LineString(Point(0.0, 0.0), Point(1.0, 1.0)));
+  g.addGeometry(std::make_unique<LineString>(Point(0.0, 0.0), Point(1.0, 1.0)));
   BOOST_CHECK_EQUAL(g.numGeometries(), 2U);
-  g.addGeometry(
-      new Triangle(Point(0.0, 0.0), Point(1.0, 0.0), Point(1.0, 1.0)));
+  g.addGeometry(std::make_unique<Triangle>(Point(0.0, 0.0), Point(1.0, 0.0),
+                                           Point(1.0, 1.0)));
   BOOST_CHECK_EQUAL(g.numGeometries(), 3U);
 
   BOOST_CHECK_EQUAL(g.geometryN(0).asText(0), "POINT (2 3)");
@@ -67,8 +67,9 @@ BOOST_AUTO_TEST_CASE(testAccessors)
   BOOST_CHECK_EQUAL(g.geometryN(1).asText(0), "POINT (0 0)");
   BOOST_CHECK_EQUAL(g.geometryN(2).asText(0), "TRIANGLE ((0 0,1 0,1 1,0 0))");
 
-  g.setGeometryN(
-      new Triangle(Point(3.0, 0.0), Point(4.0, 0.0), Point(4.0, 1.0)), 2);
+  g.setGeometryN(std::make_unique<Triangle>(Point(3.0, 0.0), Point(4.0, 0.0),
+                                            Point(4.0, 1.0)),
+                 2);
   BOOST_CHECK_EQUAL(g.numGeometries(), 3U);
   BOOST_CHECK_EQUAL(g.geometryN(0).asText(0), "POINT (2 3)");
   BOOST_CHECK_EQUAL(g.geometryN(1).asText(0), "POINT (0 0)");
@@ -190,9 +191,8 @@ BOOST_AUTO_TEST_CASE(testDropZM)
   BOOST_CHECK(!geom3D.dropM());
 
   GeometryCollection geomM;
-  geomM.addGeometry(io::readWkt("POINT M (2 3 4)").release());
-  geomM.addGeometry(
-      io::readWkt("TRIANGLE M ((0 0 1, 5 5 5, 0 5 2, 0 0 1))").release());
+  geomM.addGeometry(io::readWkt("POINT M (2 3 4)"));
+  geomM.addGeometry(io::readWkt("TRIANGLE M ((0 0 1, 5 5 5, 0 5 2, 0 0 1))"));
   BOOST_REQUIRE(geomM.is<GeometryCollection>());
   BOOST_CHECK(!geomM.is3D());
   BOOST_CHECK(geomM.isMeasured());
@@ -257,9 +257,8 @@ BOOST_AUTO_TEST_CASE(testSwapXY)
       "TRIANGLE Z ((0.0 0.0 6.0,0.0 1.0 6.0,1.0 1.0 6.0,0.0 0.0 6.0)))");
 
   GeometryCollection geomM;
-  geomM.addGeometry(io::readWkt("POINT M (2 3 4)").release());
-  geomM.addGeometry(
-      io::readWkt("TRIANGLE M ((0 0 1, 5 5 5, 0 5 2, 0 0 1))").release());
+  geomM.addGeometry(io::readWkt("POINT M (2 3 4)"));
+  geomM.addGeometry(io::readWkt("TRIANGLE M ((0 0 1, 5 5 5, 0 5 2, 0 0 1))"));
   BOOST_REQUIRE(geomM.is<GeometryCollection>());
   geomM.swapXY();
   BOOST_CHECK_EQUAL(
