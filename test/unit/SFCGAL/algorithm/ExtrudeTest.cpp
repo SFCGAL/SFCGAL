@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(testExtrudeSquareWithHole)
 // 1, 0), 0, 0, 1));
 BOOST_AUTO_TEST_CASE(testChainingExtrude)
 {
-  std::unique_ptr<Geometry> g(new Point(0.0, 0.0));
+  std::unique_ptr<Geometry> g(std::make_unique<Point>(0.0, 0.0));
   g = algorithm::extrude(*g, 1.0, 0.0, 0.0);
   BOOST_CHECK_EQUAL(g->asText(0), "LINESTRING Z (0 0 0,1 0 0)");
   g = algorithm::extrude(*g, 0.0, 1.0, 0.0);
