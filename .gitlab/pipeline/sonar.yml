@@ -64,7 +64,7 @@ sonar:build-test:
         $f --report_format=XML --report_level=detailed --report_sink=boost_report_$(basename $f).xml;
       done
     # merge all boost reports to one cpp unit one
-    - python ../script/merge_boost_reports_to_cppunit.py boost_report_*.xml
+    - python3 ../script/merge_boost_reports_to_cppunit.py boost_report_*.xml
     - mv merged_report.xml ../reports/unit/
     # generate coverage report
     - >
