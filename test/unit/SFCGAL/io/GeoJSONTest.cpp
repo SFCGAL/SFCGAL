@@ -436,8 +436,8 @@ BOOST_AUTO_TEST_CASE(testWriteWithBbox)
 BOOST_AUTO_TEST_CASE(testWriteGeometryCollection)
 {
   GeometryCollection gc;
-  gc.addGeometry(new Point(0, 0));
-  gc.addGeometry(new Point(1, 1));
+  gc.addGeometry(std::make_unique<Point>(0, 0));
+  gc.addGeometry(std::make_unique<Point>(1, 1));
 
   std::string json   = writeGeoJSON(gc);
   auto        parsed = nlohmann::json::parse(json);
