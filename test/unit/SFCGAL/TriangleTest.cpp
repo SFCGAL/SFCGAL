@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(isTriangle)
 // template < typename Derived > inline Derived &        Geometry::as()
 BOOST_AUTO_TEST_CASE(asTriangle)
 {
-  std::unique_ptr<Geometry> g(new Triangle());
+  std::unique_ptr<Geometry> g(std::make_unique<Triangle>());
   BOOST_CHECK(g->as<Triangle>().isEmpty());
 }
 
