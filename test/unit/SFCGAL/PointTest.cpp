@@ -353,7 +353,7 @@ BOOST_AUTO_TEST_CASE(isPoint)
 // template < typename Derived > inline Derived &        Geometry::as()
 BOOST_AUTO_TEST_CASE(asPoint)
 {
-  std::unique_ptr<Geometry> g(new Point());
+  std::unique_ptr<Geometry> g(std::make_unique<Point>());
   BOOST_CHECK(g->as<Point>().isEmpty());
 }
 
