@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(defaultConstructor)
 BOOST_AUTO_TEST_CASE(addLineString)
 {
   MultiLineString g;
-  g.addGeometry(new LineString());
+  g.addGeometry(std::make_unique<LineString>());
   BOOST_CHECK_EQUAL(g.numGeometries(), 1U);
 
   g.addGeometry(LineString(Point(0.0, 0.0), Point(1.0, 1.0)));
@@ -83,9 +83,9 @@ BOOST_AUTO_TEST_CASE(dropZM)
 
   MultiLineString multiLineString2D;
   multiLineString2D.addGeometry(
-      new LineString(Point(2.0, 3.0), Point(4.0, 5.0)));
+      std::make_unique<LineString>(Point(2.0, 3.0), Point(4.0, 5.0)));
   multiLineString2D.addGeometry(
-      new LineString(Point(6.0, 7.0), Point(9.0, 10.0)));
+      std::make_unique<LineString>(Point(6.0, 7.0), Point(9.0, 10.0)));
   BOOST_CHECK(!multiLineString2D.is3D());
   BOOST_CHECK(!multiLineString2D.isMeasured());
   BOOST_CHECK(!multiLineString2D.dropM());
@@ -93,9 +93,9 @@ BOOST_AUTO_TEST_CASE(dropZM)
 
   MultiLineString multiLineString3D;
   multiLineString3D.addGeometry(
-      new LineString(Point(2.0, 3.0, 5.0), Point(4.0, 5.0, 5.0)));
-  multiLineString3D.addGeometry(
-      new LineString(Point(6.0, 7.0, 5.0), Point(9.0, 10.0, 5.0)));
+      std::make_unique<LineString>(Point(2.0, 3.0, 5.0), Point(4.0, 5.0, 5.0)));
+  multiLineString3D.addGeometry(std::make_unique<LineString>(
+      Point(6.0, 7.0, 5.0), Point(9.0, 10.0, 5.0)));
   BOOST_CHECK(multiLineString3D.is3D());
   BOOST_CHECK(!multiLineString3D.isMeasured());
   BOOST_CHECK(!multiLineString3D.dropM());
@@ -124,10 +124,10 @@ BOOST_AUTO_TEST_CASE(dropZM)
   BOOST_CHECK(!multiLineStringM.dropZ());
 
   MultiLineString multiLineStringZM;
-  multiLineStringZM.addGeometry(
-      new LineString(Point(2.0, 3.0, 5.0, 2.0), Point(4.0, 5.0, 5.0, 2.0)));
-  multiLineStringZM.addGeometry(
-      new LineString(Point(6.0, 7.0, 5.0, 1.0), Point(9.0, 10.0, 5.0, 1.0)));
+  multiLineStringZM.addGeometry(std::make_unique<LineString>(
+      Point(2.0, 3.0, 5.0, 2.0), Point(4.0, 5.0, 5.0, 2.0)));
+  multiLineStringZM.addGeometry(std::make_unique<LineString>(
+      Point(6.0, 7.0, 5.0, 1.0), Point(9.0, 10.0, 5.0, 1.0)));
   BOOST_CHECK(multiLineStringZM.is3D());
   BOOST_CHECK(multiLineStringZM.isMeasured());
   BOOST_CHECK(multiLineStringZM.dropM());
@@ -154,18 +154,18 @@ BOOST_AUTO_TEST_CASE(swapXY)
 
   MultiLineString multiLineString2D;
   multiLineString2D.addGeometry(
-      new LineString(Point(2.0, 3.0), Point(4.0, 5.0)));
+      std::make_unique<LineString>(Point(2.0, 3.0), Point(4.0, 5.0)));
   multiLineString2D.addGeometry(
-      new LineString(Point(6.0, 7.0), Point(9.0, 10.0)));
+      std::make_unique<LineString>(Point(6.0, 7.0), Point(9.0, 10.0)));
   multiLineString2D.swapXY();
   BOOST_CHECK_EQUAL(multiLineString2D.asText(0),
                     "MULTILINESTRING ((3 2,5 4),(7 6,10 9))");
 
   MultiLineString multiLineString3D;
   multiLineString3D.addGeometry(
-      new LineString(Point(2.0, 3.0, 5.0), Point(4.0, 5.0, 5.0)));
-  multiLineString3D.addGeometry(
-      new LineString(Point(6.0, 7.0, 5.0), Point(9.0, 10.0, 5.0)));
+      std::make_unique<LineString>(Point(2.0, 3.0, 5.0), Point(4.0, 5.0, 5.0)));
+  multiLineString3D.addGeometry(std::make_unique<LineString>(
+      Point(6.0, 7.0, 5.0), Point(9.0, 10.0, 5.0)));
   multiLineString3D.swapXY();
   BOOST_CHECK_EQUAL(multiLineString3D.asText(0),
                     "MULTILINESTRING Z ((3 2 5,5 4 5),(7 6 5,10 9 5))");
@@ -180,10 +180,10 @@ BOOST_AUTO_TEST_CASE(swapXY)
                     "MULTILINESTRING M ((0 0 4,1 1 5,2 2 6),(2 3 4,2 4 5))");
 
   MultiLineString multiLineStringZM;
-  multiLineStringZM.addGeometry(
-      new LineString(Point(2.0, 3.0, 5.0, 2.0), Point(4.0, 5.0, 5.0, 2.0)));
-  multiLineStringZM.addGeometry(
-      new LineString(Point(6.0, 7.0, 5.0, 1.0), Point(9.0, 10.0, 5.0, 1.0)));
+  multiLineStringZM.addGeometry(std::make_unique<LineString>(
+      Point(2.0, 3.0, 5.0, 2.0), Point(4.0, 5.0, 5.0, 2.0)));
+  multiLineStringZM.addGeometry(std::make_unique<LineString>(
+      Point(6.0, 7.0, 5.0, 1.0), Point(9.0, 10.0, 5.0, 1.0)));
   multiLineStringZM.swapXY();
   BOOST_CHECK_EQUAL(
       multiLineStringZM.asText(0),
