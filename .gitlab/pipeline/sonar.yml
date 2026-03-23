@@ -34,6 +34,12 @@ sonar:get-binaries:
 
 sonar:build-test:
   stage: sonar-build-test
+  cache:
+    policy: pull-push
+    key: "${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - build-wrapper/
+      - sonar-scanner/
   needs: ["sonar:get-binaries"]
   before_script:
     - apt-get update -qq
