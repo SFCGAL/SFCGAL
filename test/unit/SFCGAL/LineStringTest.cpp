@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(testAccessors)
   g.addPoint(Point(1.0, 1.0));
   BOOST_CHECK_EQUAL(g.numGeometries(), 1U);
 
-  g.addPoint(new Point(2.0, 1.0));
+  g.addPoint(std::make_unique<Point>(2.0, 1.0));
   BOOST_CHECK_EQUAL(g.numGeometries(), 1U);
 
   BOOST_CHECK_EQUAL(g.geometryN(0).asText(0), "LINESTRING (0 0,1 0,1 1,2 1)");
