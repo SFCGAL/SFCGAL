@@ -36,9 +36,9 @@ BOOST_AUTO_TEST_CASE(testGeometryTypeId)
 BOOST_AUTO_TEST_CASE(addPolygon)
 {
   MultiPolygon g;
-  g.addGeometry(new Polygon());
+  g.addGeometry(std::make_unique<Polygon>());
   BOOST_CHECK_EQUAL(g.numGeometries(), 1U);
-  g.addGeometry(new Polygon());
+  g.addGeometry(std::make_unique<Polygon>());
   BOOST_CHECK_EQUAL(g.numGeometries(), 2U);
 }
 //-- addForbidenGeometry
