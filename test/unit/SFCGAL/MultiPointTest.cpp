@@ -34,9 +34,9 @@ BOOST_AUTO_TEST_CASE(testGeometryTypeId)
 BOOST_AUTO_TEST_CASE(addPoint)
 {
   MultiPoint g;
-  g.addGeometry(new Point(2.0, 3.0));
+  g.addGeometry(std::make_unique<Point>(2.0, 3.0));
   BOOST_CHECK_EQUAL(g.numGeometries(), 1U);
-  g.addGeometry(new Point(4.0, 5.0));
+  g.addGeometry(std::make_unique<Point>(4.0, 5.0));
   BOOST_CHECK_EQUAL(g.numGeometries(), 2U);
 }
 //-- addForbidenGeometry
@@ -72,16 +72,16 @@ BOOST_AUTO_TEST_CASE(dropZM)
   BOOST_CHECK(!multiPointEmpty.dropM());
 
   MultiPoint multiPoint2D;
-  multiPoint2D.addGeometry(new Point(2.0, 3.0));
-  multiPoint2D.addGeometry(new Point(4.0, 5.0));
+  multiPoint2D.addGeometry(std::make_unique<Point>(2.0, 3.0));
+  multiPoint2D.addGeometry(std::make_unique<Point>(4.0, 5.0));
   BOOST_CHECK(!multiPoint2D.is3D());
   BOOST_CHECK(!multiPoint2D.isMeasured());
   BOOST_CHECK(!multiPoint2D.dropM());
   BOOST_CHECK(!multiPoint2D.dropZ());
 
   MultiPoint multiPoint3D;
-  multiPoint3D.addGeometry(new Point(2.0, 3.0, 5.0));
-  multiPoint3D.addGeometry(new Point(4.0, 5.0, 7.0));
+  multiPoint3D.addGeometry(std::make_unique<Point>(2.0, 3.0, 5.0));
+  multiPoint3D.addGeometry(std::make_unique<Point>(4.0, 5.0, 7.0));
   BOOST_CHECK(multiPoint3D.is3D());
   BOOST_CHECK(!multiPoint3D.isMeasured());
   BOOST_CHECK(!multiPoint3D.dropM());
@@ -106,8 +106,8 @@ BOOST_AUTO_TEST_CASE(dropZM)
   BOOST_CHECK(!multiPointM.dropZ());
 
   MultiPoint multiPointZM;
-  multiPointZM.addGeometry(new Point(2.0, 3.0, 5.0, 6.0));
-  multiPointZM.addGeometry(new Point(4.0, 5.0, 7.0, 8.0));
+  multiPointZM.addGeometry(std::make_unique<Point>(2.0, 3.0, 5.0, 6.0));
+  multiPointZM.addGeometry(std::make_unique<Point>(4.0, 5.0, 7.0, 8.0));
   BOOST_CHECK(multiPointZM.is3D());
   BOOST_CHECK(multiPointZM.isMeasured());
   BOOST_CHECK(multiPointZM.dropM());
@@ -131,14 +131,14 @@ BOOST_AUTO_TEST_CASE(swapXY)
   BOOST_CHECK(multiPointEmpty.isEmpty());
 
   MultiPoint multiPoint2D;
-  multiPoint2D.addGeometry(new Point(2.0, 3.0));
-  multiPoint2D.addGeometry(new Point(4.0, 5.0));
+  multiPoint2D.addGeometry(std::make_unique<Point>(2.0, 3.0));
+  multiPoint2D.addGeometry(std::make_unique<Point>(4.0, 5.0));
   multiPoint2D.swapXY();
   BOOST_CHECK_EQUAL(multiPoint2D.asText(0), "MULTIPOINT ((3 2),(5 4))");
 
   MultiPoint multiPoint3D;
-  multiPoint3D.addGeometry(new Point(9.0, 3.0, 5.0));
-  multiPoint3D.addGeometry(new Point(12.0, 5.0, 7.0));
+  multiPoint3D.addGeometry(std::make_unique<Point>(9.0, 3.0, 5.0));
+  multiPoint3D.addGeometry(std::make_unique<Point>(12.0, 5.0, 7.0));
   multiPoint3D.swapXY();
   BOOST_CHECK_EQUAL(multiPoint3D.asText(0), "MULTIPOINT Z ((3 9 5),(5 12 7))");
 
@@ -149,8 +149,8 @@ BOOST_AUTO_TEST_CASE(swapXY)
   BOOST_CHECK_EQUAL(multiPointM.asText(0), "MULTIPOINT M ((7 20 4),(9 14 7))");
 
   MultiPoint multiPointZM;
-  multiPointZM.addGeometry(new Point(-2.0, -3.0, 5.0, 6.0));
-  multiPointZM.addGeometry(new Point(42.0, -5.0, 7.0, 8.0));
+  multiPointZM.addGeometry(std::make_unique<Point>(-2.0, -3.0, 5.0, 6.0));
+  multiPointZM.addGeometry(std::make_unique<Point>(42.0, -5.0, 7.0, 8.0));
   multiPointZM.swapXY();
   BOOST_CHECK_EQUAL(multiPointZM.asText(0),
                     "MULTIPOINT ZM ((-3 -2 5 6),(-5 42 7 8))");
