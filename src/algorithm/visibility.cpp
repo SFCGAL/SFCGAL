@@ -60,9 +60,7 @@ query_visibility(Face_handle fh, Halfedge_const_handle he)
   }
 
   extRing->closes();
-  std::unique_ptr<Polygon> result{new Polygon(extRing.release())};
-
-  return result;
+  return std::make_unique<Polygon>(std::move(extRing));
 }
 
 /** @endcond */
