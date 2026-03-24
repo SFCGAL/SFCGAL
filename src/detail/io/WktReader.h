@@ -49,10 +49,10 @@ public:
    * read a geometry from a string
    *
    * @warning returns new instance
-   * @return pointer to newly created Geometry object
+   * @return unique pointer to newly created Geometry object
    */
   auto
-  readGeometry() -> Geometry *;
+  readGeometry() -> std::unique_ptr<Geometry>;
 
   /**
    * read geometry type

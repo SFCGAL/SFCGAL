@@ -44,7 +44,7 @@ WktReader::readSRID() -> srid_t
 }
 
 auto
-WktReader::readGeometry() -> Geometry *
+WktReader::readGeometry() -> std::unique_ptr<Geometry>
 {
   GeometryType const geometryType = readGeometryType();
   _is3D                           = _reader.imatch("Z");
@@ -54,79 +54,79 @@ WktReader::readGeometry() -> Geometry *
   case TYPE_POINT: {
     auto geom = std::make_unique<Point>();
     readInnerPoint(*geom);
-    return geom.release();
+    return geom;
   }
 
   case TYPE_LINESTRING: {
     auto geom = std::make_unique<LineString>();
     readInnerLineString(*geom);
-    return geom.release();
+    return geom;
   }
 
   case TYPE_TRIANGLE: {
     auto geom = std::make_unique<Triangle>();
     readInnerTriangle(*geom);
-    return geom.release();
+    return geom;
   }
 
   case TYPE_POLYGON: {
     auto geom = std::make_unique<Polygon>();
     readInnerPolygon(*geom);
-    return geom.release();
+    return geom;
   }
 
   case TYPE_MULTIPOINT: {
     auto geom = std::make_unique<MultiPoint>();
     readInnerMultiPoint(*geom);
-    return geom.release();
+    return geom;
   }
 
   case TYPE_MULTILINESTRING: {
     auto geom = std::make_unique<MultiLineString>();
     readInnerMultiLineString(*geom);
-    return geom.release();
+    return geom;
   }
 
   case TYPE_MULTIPOLYGON: {
     auto geom = std::make_unique<MultiPolygon>();
     readInnerMultiPolygon(*geom);
-    return geom.release();
+    return geom;
   }
 
   case TYPE_GEOMETRYCOLLECTION: {
     auto geom = std::make_unique<GeometryCollection>();
     readInnerGeometryCollection(*geom);
-    return geom.release();
+    return geom;
   }
 
   case TYPE_TRIANGULATEDSURFACE: {
     auto geom = std::make_unique<TriangulatedSurface>();
     readInnerTriangulatedSurface(*geom);
-    return geom.release();
+    return geom;
   }
 
   case TYPE_POLYHEDRALSURFACE: {
     auto geom = std::make_unique<PolyhedralSurface>();
     readInnerPolyhedralSurface(*geom);
-    return geom.release();
+    return geom;
   }
 
   case TYPE_SOLID: {
     auto geom = std::make_unique<Solid>();
     readInnerSolid(*geom);
-    return geom.release();
+    return geom;
   }
 
   case TYPE_MULTISOLID: {
     auto geom = std::make_unique<MultiSolid>();
     readInnerMultiSolid(*geom);
-    return geom.release();
+    return geom;
   }
 
   case TYPE_NURBSCURVE: {
-    std::unique_ptr<NURBSCurve> geom(new NURBSCurve());
+    auto geom = std::make_unique<NURBSCurve>();
     readInnerNURBSCurve(*geom);
-    return geom.release();
+    return geom;
   }
   }
 
@@ -215,7 +215,7 @@ WktReader::readInnerLineString(LineString &lineString)
 
   while (!_reader.eof()) {
 
-    std::unique_ptr<Point> point(new Point());
+    auto point = std::make_unique<Point>();
 
     if (readPointCoordinate(*point)) {
       lineString.addPoint(std::move(point));
@@ -255,7 +255,7 @@ WktReader::readInnerPolygon(Polygon &polygon)
     if (i == 0) {
       readInnerLineString(polygon.exteriorRing());
     } else {
-      std::unique_ptr<LineString> interiorRing(new LineString);
+      auto interiorRing = std::make_unique<LineString>();
       readInnerLineString(*interiorRing);
       polygon.addInteriorRing(std::move(interiorRing));
     }
@@ -332,7 +332,7 @@ WktReader::readInnerMultiPoint(MultiPoint &multiPoint)
   }
 
   while (!_reader.eof()) {
-    std::unique_ptr<Point> point(new Point());
+    auto point = std::make_unique<Point>();
 
     if (!_reader.imatch("EMPTY")) {
       // optional open/close parenthesis
@@ -377,7 +377,7 @@ WktReader::readInnerMultiLineString(MultiLineString &multiLineString)
 
   while (!_reader.eof()) {
 
-    std::unique_ptr<LineString> lineString(new LineString());
+    auto lineString = std::make_unique<LineString>();
     readInnerLineString(*lineString);
     if (!lineString->isEmpty()) {
       multiLineString.addGeometry(std::move(lineString));
@@ -407,7 +407,7 @@ WktReader::readInnerMultiPolygon(MultiPolygon &multiPolygon)
 
   while (!_reader.eof()) {
 
-    std::unique_ptr<Polygon> polygon(new Polygon());
+    auto polygon = std::make_unique<Polygon>();
     readInnerPolygon(*polygon);
     if (!polygon->isEmpty()) {
       multiPolygon.addGeometry(std::move(polygon));
@@ -441,9 +441,9 @@ WktReader::readInnerGeometryCollection(GeometryCollection &collection)
     bool saved_isMeasured = _isMeasured;
 
     // read a full wkt geometry ex : POINT (2.0 6.0)
-    Geometry *gg = readGeometry();
+    std::unique_ptr<Geometry> gg = readGeometry();
     if (!gg->isEmpty()) {
-      collection.addGeometry(std::unique_ptr<Geometry>(gg));
+      collection.addGeometry(std::move(gg));
     }
 
     // Restore state for next iteration
@@ -473,7 +473,7 @@ WktReader::readInnerTriangulatedSurface(TriangulatedSurface &tin)
   }
 
   while (!_reader.eof()) {
-    std::unique_ptr<Triangle> triangle(new Triangle());
+    auto triangle = std::make_unique<Triangle>();
     readInnerTriangle(*triangle);
     tin.addPatch(std::move(triangle));
 
@@ -499,7 +499,7 @@ WktReader::readInnerPolyhedralSurface(PolyhedralSurface &surface)
   }
 
   while (!_reader.eof()) {
-    std::unique_ptr<Polygon> polygon(new Polygon());
+    auto polygon = std::make_unique<Polygon>();
     readInnerPolygon(*polygon);
     surface.addPatch(std::move(polygon));
 
@@ -530,7 +530,7 @@ WktReader::readInnerSolid(Solid &solid)
     if (i == 0) {
       readInnerPolyhedralSurface(solid.exteriorShell());
     } else {
-      std::unique_ptr<PolyhedralSurface> shell(new PolyhedralSurface);
+      auto shell = std::make_unique<PolyhedralSurface>();
       readInnerPolyhedralSurface(*shell);
       solid.addInteriorShell(std::move(shell));
     }
@@ -560,7 +560,7 @@ WktReader::readInnerMultiSolid(MultiSolid &multiSolid)
 
   while (!_reader.eof()) {
 
-    std::unique_ptr<Solid> solid(new Solid());
+    auto solid = std::make_unique<Solid>();
     readInnerSolid(*solid);
     if (!solid->isEmpty()) {
       multiSolid.addGeometry(std::move(solid));
