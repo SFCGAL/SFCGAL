@@ -1163,8 +1163,9 @@ sfcgal_solid_create_from_exterior_shell(sfcgal_geometry_t *shell)
     -> sfcgal_geometry_t *
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
-      return static_cast<SFCGAL::Geometry *>(new SFCGAL::Solid(
-          down_cast<SFCGAL::PolyhedralSurface>(shell)));)
+      return static_cast<SFCGAL::Geometry *>(
+                 new SFCGAL::Solid(std::unique_ptr<SFCGAL::PolyhedralSurface>(
+                     down_cast<SFCGAL::PolyhedralSurface>(shell))));)
 }
 
 extern "C" auto

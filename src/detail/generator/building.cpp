@@ -131,7 +131,7 @@ building(const Polygon &g, const Kernel::FT &wallHeight,
     }
   }
 
-  return std::unique_ptr<Geometry>(new Solid(shell.release()));
+  return std::make_unique<Solid>(std::move(shell));
 }
 
 auto

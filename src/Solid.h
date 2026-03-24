@@ -49,8 +49,15 @@ public:
   /**
    * Constructor with an exterior shell (takes ownership)
    * @param exteriorShell The exterior shell of the solid
+   * @deprecated The unique_ptr version should be used instead
    */
+  [[deprecated("The unique_ptr version should be used instead")]]
   Solid(PolyhedralSurface *exteriorShell);
+  /**
+   * Constructor with an exterior shell (takes ownership)
+   * @param exteriorShell A unique_ptr to the exterior shell of the solid
+   */
+  Solid(std::unique_ptr<PolyhedralSurface> exteriorShell);
   /**
    * Constructor with a vector of shells (PolyhedralSurface)
    * @param shells Vector of polyhedral surfaces forming the solid
