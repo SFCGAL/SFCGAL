@@ -142,7 +142,7 @@ Envelope::toRing() const -> std::unique_ptr<LineString>
 auto
 Envelope::toPolygon() const -> std::unique_ptr<Polygon>
 {
-  return std::make_unique<Polygon>(toRing().release());
+  return std::make_unique<Polygon>(toRing());
 }
 
 auto
@@ -242,7 +242,7 @@ Envelope::toShell() const -> std::unique_ptr<PolyhedralSurface>
 auto
 Envelope::toSolid() const -> std::unique_ptr<Solid>
 {
-  return std::make_unique<Solid>(toShell().release());
+  return std::make_unique<Solid>(toShell());
 }
 
 auto
