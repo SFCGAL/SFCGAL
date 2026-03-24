@@ -197,7 +197,7 @@ createGeometryFromObjData(const ObjData &obj_data) -> std::unique_ptr<Geometry>
         ring->addPoint(vertices[face[0]]);
       }
 
-      auto polygon = std::make_unique<Polygon>(ring.release());
+      auto polygon = std::make_unique<Polygon>(std::move(ring));
       polyhedral_surface->addPatch(std::move(polygon));
     }
 
