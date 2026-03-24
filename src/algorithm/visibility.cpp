@@ -36,7 +36,7 @@ query_visibility(Face_handle fh, Halfedge_const_handle he)
     -> std::unique_ptr<Polygon>
 {
 
-  std::unique_ptr<LineString> extRing{new LineString()};
+  auto extRing = std::make_unique<LineString>();
   // Make sure the visibility polygon we find has an outer boundary
   if (fh->has_outer_ccb()) {
     Arrangement_2::Ccb_halfedge_circulator curr = fh->outer_ccb();
@@ -91,8 +91,8 @@ visibility(const Geometry &polygon, const Geometry &point,
     return std::make_unique<Polygon>();
   }
 
-  Point_2 const                     queryPoint{point.as<Point>().toPoint_2()};
-  std::unique_ptr<LineString> const extRing{new LineString()};
+  Point_2 const queryPoint{point.as<Point>().toPoint_2()};
+  const auto    extRing = std::make_unique<LineString>();
 
   // insert geometry into the arrangement
   CGAL::Polygon_with_holes_2 pwh{
