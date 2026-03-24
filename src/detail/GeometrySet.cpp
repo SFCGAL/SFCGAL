@@ -923,9 +923,9 @@ recompose_volumes(const GeometrySet<3>::VolumeCollection &volumes,
       }
     } else {
 
-      auto *shell = new PolyhedralSurface(volume.primitive());
+      auto shell = std::make_unique<PolyhedralSurface>(volume.primitive());
       // TODO: test open / closed
-      output.push_back(new Solid(shell));
+      output.push_back(new Solid(std::move(shell)));
     }
   }
 }

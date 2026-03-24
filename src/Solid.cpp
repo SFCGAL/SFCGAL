@@ -13,13 +13,18 @@ namespace SFCGAL {
 Solid::Solid() { _shells.push_back(std::make_unique<PolyhedralSurface>()); }
 
 Solid::Solid(const PolyhedralSurface &exteriorShell)
+    : Solid(exteriorShell.clone())
 {
-  _shells.push_back(exteriorShell.clone());
 }
 
 Solid::Solid(PolyhedralSurface *exteriorShell)
+    : Solid(std::unique_ptr<PolyhedralSurface>(exteriorShell))
 {
-  _shells.emplace_back(exteriorShell);
+}
+
+Solid::Solid(std::unique_ptr<PolyhedralSurface> exteriorShell)
+{
+  _shells.emplace_back(std::move(exteriorShell));
 }
 
 Solid::Solid(const std::vector<PolyhedralSurface> &shells)
