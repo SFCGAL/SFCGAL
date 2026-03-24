@@ -30,13 +30,13 @@ tesselate(const Geometry &g, NoValidityCheck /*unused*/)
 
   case TYPE_POLYGON:
   case TYPE_POLYHEDRALSURFACE: {
-    auto *triSurf = new TriangulatedSurface();
+    auto triSurf = std::make_unique<TriangulatedSurface>();
     triangulate::triangulatePolygon3D(g, *triSurf);
-    return std::unique_ptr<Geometry>(triSurf);
+    return triSurf;
   }
 
   case TYPE_SOLID: {
-    std::unique_ptr<GeometryCollection> ret(new GeometryCollection);
+    auto ret = std::make_unique<GeometryCollection>();
 
     for (size_t i = 0; i < g.as<Solid>().numShells(); ++i) {
       const PolyhedralSurface &shellN = g.as<Solid>().shellN(i);
@@ -46,20 +46,20 @@ tesselate(const Geometry &g, NoValidityCheck /*unused*/)
       }
     }
 
-    return std::unique_ptr<Geometry>(ret.release());
+    return ret;
   }
 
   // multipolygon and multisolid return a geometrycollection
   case TYPE_MULTIPOLYGON:
   case TYPE_MULTISOLID:
   case TYPE_GEOMETRYCOLLECTION: {
-    std::unique_ptr<GeometryCollection> ret(new GeometryCollection);
+    auto ret = std::make_unique<GeometryCollection>();
 
     for (size_t i = 0; i < g.numGeometries(); ++i) {
       ret->addGeometry(tesselate(g.geometryN(i)));
     }
 
-    return std::unique_ptr<Geometry>(ret.release());
+    return ret;
   }
 
   default:
