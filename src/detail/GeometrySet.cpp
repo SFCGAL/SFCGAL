@@ -913,13 +913,13 @@ recompose_volumes(const GeometrySet<3>::VolumeCollection &volumes,
         output.push_back(new Triangle(p[0], p[1], p[2]));
       } else {
         // Else it is a polygon
-        auto *ls = new LineString;
+        auto exterioRing = std::make_unique<LineString>();
 
         for (auto &it : boundary) {
-          ls->addPoint(it);
+          exterioRing->addPoint(it);
         }
 
-        output.push_back(new Polygon(ls));
+        output.push_back(new Polygon(std::move(exterioRing)));
       }
     } else {
 

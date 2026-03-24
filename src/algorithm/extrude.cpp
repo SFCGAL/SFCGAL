@@ -99,7 +99,7 @@ extrude(const LineString &g, const Kernel::Vector_3 &v) -> PolyhedralSurface *
     ring->addPoint(new Point(a + v));
     ring->addPoint(new Point(a));
 
-    polyhedralSurface->addPatch(new Polygon(ring.release()));
+    polyhedralSurface->addPatch(std::move(ring));
   }
 
   return polyhedralSurface.release();

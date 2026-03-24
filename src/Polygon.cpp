@@ -6,6 +6,7 @@
 #include "SFCGAL/Polygon.h"
 #include "SFCGAL/GeometryVisitor.h"
 
+#include "SFCGAL/LineString.h"
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/algorithm/orientation.h"
 
@@ -25,14 +26,18 @@ Polygon::Polygon(const std::vector<LineString> &rings)
   }
 }
 
-Polygon::Polygon(const LineString &exteriorRing)
+Polygon::Polygon(const LineString &exteriorRing) : Polygon(exteriorRing.clone())
 {
-  _rings.push_back(exteriorRing.clone());
 }
 
 Polygon::Polygon(LineString *exteriorRing)
+    : Polygon(std::unique_ptr<LineString>(exteriorRing))
 {
-  _rings.push_back(std::unique_ptr<LineString>(exteriorRing));
+}
+
+Polygon::Polygon(std::unique_ptr<LineString> exteriorRing)
+{
+  _rings.emplace_back(std::move(exteriorRing));
 }
 
 Polygon::Polygon(const Triangle &triangle)

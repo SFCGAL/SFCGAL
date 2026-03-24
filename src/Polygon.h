@@ -50,8 +50,16 @@ public:
   /**
    * Constructor with an exterior ring (takes ownership)
    * @param exteriorRing The exterior ring of the polygon
+   * @deprecated The unique_ptr version should be used instead
    */
+  [[deprecated("The unique_ptr version should be used instead")]]
   Polygon(LineString *exteriorRing);
+  /**
+   * Constructor with an exterior ring (takes ownership)
+   * @param exteriorRing A unique pointer to the exterior ring of the exterior
+   * ring
+   */
+  Polygon(std::unique_ptr<LineString> exteriorRing);
   /**
    * Constructor with a Triangle
    * @param triangle The triangle to convert to a polygon

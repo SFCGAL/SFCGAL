@@ -886,7 +886,8 @@ sfcgal_polygon_create_from_exterior_ring(sfcgal_geometry_t *ring)
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
       return static_cast<SFCGAL::Geometry *>(
-                 new SFCGAL::Polygon(down_cast<SFCGAL::LineString>(ring)));)
+                 new SFCGAL::Polygon(std::unique_ptr<SFCGAL::LineString>(
+                     down_cast<SFCGAL::LineString>(ring))));)
 }
 
 extern "C" void
