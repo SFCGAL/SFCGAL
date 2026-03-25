@@ -47,8 +47,8 @@ hoch(const unsigned int &order) -> std::unique_ptr<Polygon>
     points = _hoch(points);
   }
 
-  std::unique_ptr<Polygon>    result(new Polygon());
-  std::unique_ptr<LineString> ring(new LineString());
+  auto result = std::make_unique<Polygon>();
+  auto ring   = std::make_unique<LineString>();
 
   for (auto &point : points) {
     ring->addPoint(std::make_unique<Point>(point.x(), point.y()));
