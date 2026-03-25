@@ -115,7 +115,7 @@ auto
 ConstraintDelaunayTriangulation::getTriangulatedSurface() const
     -> std::unique_ptr<TriangulatedSurface>
 {
-  std::unique_ptr<TriangulatedSurface> result(new TriangulatedSurface);
+  auto result = std::make_unique<TriangulatedSurface>();
   getTriangles(*result, false);
   return result;
 }
