@@ -46,7 +46,7 @@ sierpinski(const unsigned int &order) -> std::unique_ptr<MultiPolygon>
     triangles = _sierpinski(triangles);
   }
 
-  std::unique_ptr<MultiPolygon> result(new MultiPolygon);
+  auto result = std::make_unique<MultiPolygon>();
 
   for (auto &triangle : triangles) {
     result->addGeometry(Triangle(triangle).toPolygon());
