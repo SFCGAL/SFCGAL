@@ -660,14 +660,15 @@ GeometrySet<Dim>::computeBoundingBoxes(
 template <int Dim>
 void
 recompose_points(const typename GeometrySet<Dim>::PointCollection &points,
-                 std::vector<Geometry *> &rpoints, dim_t<Dim> /*unused*/)
+                 std::vector<std::unique_ptr<Geometry>>           &rpoints,
+                 dim_t<Dim> /*unused*/)
 {
   if (points.empty()) {
     return;
     //			rpoints.push_back( new Point() );
   }
   for (auto it = points.begin(); it != points.end(); ++it) {
-    rpoints.push_back(new Point(it->primitive()));
+    rpoints.push_back(std::make_unique<Point>(it->primitive()));
   }
 }
 /// \endcond
@@ -708,7 +709,8 @@ struct ComparePoints {
 template <int Dim>
 void
 recompose_segments(const typename GeometrySet<Dim>::SegmentCollection &segments,
-                   std::vector<Geometry *> &lines, dim_t<Dim> /*unused*/)
+                   std::vector<std::unique_ptr<Geometry>>             &lines,
+                   dim_t<Dim> /*unused*/)
 {
   if (segments.empty()) {
     //			lines.push_back( new LineString );
@@ -776,8 +778,7 @@ recompose_segments(const typename GeometrySet<Dim>::SegmentCollection &segments,
       }
 
       // now we go down
-      auto *line = new LineString;
-      lines.push_back(line);
+      auto line = std::make_unique<LineString>();
       line->addPoint(points[boost::source(root, g)]);
       line->addPoint(points[boost::target(root, g)]);
       boost::get(boost::edge_color, g)[root] = boost::black_color;
@@ -791,13 +792,16 @@ recompose_segments(const typename GeometrySet<Dim>::SegmentCollection &segments,
         line->addPoint(points[boost::target(*ej, g)]);
         boost::get(boost::edge_color, g)[*ej] = boost::black_color;
       }
+
+      lines.push_back(std::move(line));
     }
   }
 }
 
 void
 recompose_surfaces(const GeometrySet<2>::SurfaceCollection &surfaces,
-                   std::vector<Geometry *> &output, dim_t<2> /*unused*/)
+                   std::vector<std::unique_ptr<Geometry>>  &output,
+                   dim_t<2> /*unused*/)
 {
   for (const auto &surface : surfaces) {
     if (surface.primitive().holes_begin() == surface.primitive().holes_end() &&
@@ -806,16 +810,18 @@ recompose_surfaces(const GeometrySet<2>::SurfaceCollection &surfaces,
       CGAL::Point_2<Kernel> const p1(*vit++);
       CGAL::Point_2<Kernel> const p2(*vit++);
       CGAL::Point_2<Kernel> const p3(*vit++);
-      output.push_back(new Triangle(CGAL::Triangle_2<Kernel>(p1, p2, p3)));
+      output.push_back(
+          std::make_unique<Triangle>(CGAL::Triangle_2<Kernel>(p1, p2, p3)));
     } else {
-      output.push_back(new Polygon(surface.primitive()));
+      output.push_back(std::make_unique<Polygon>(surface.primitive()));
     }
   }
 }
 
 void
 recompose_surfaces(const GeometrySet<3>::SurfaceCollection &surfaces,
-                   std::vector<Geometry *> &output, dim_t<3> /*unused*/)
+                   std::vector<std::unique_ptr<Geometry>>  &output,
+                   dim_t<3> /*unused*/)
 {
   if (surfaces.empty()) {
     return;
@@ -823,11 +829,11 @@ recompose_surfaces(const GeometrySet<3>::SurfaceCollection &surfaces,
 
   // TODO : regroup triangles of the same mesh
   if (surfaces.size() == 1) {
-    output.push_back(new Triangle(surfaces.begin()->primitive()));
+    output.push_back(std::make_unique<Triangle>(surfaces.begin()->primitive()));
     return;
   }
 
-  std::unique_ptr<TriangulatedSurface> tri(new TriangulatedSurface);
+  auto tri = std::make_unique<TriangulatedSurface>();
 
   for (const auto &surface : surfaces) {
     tri->addPatch(std::make_unique<Triangle>(surface.primitive()));
@@ -840,32 +846,31 @@ recompose_surfaces(const GeometrySet<3>::SurfaceCollection &surfaces,
       boost::connected_components(graph.faceGraph(), component.data());
 
   if (1 == numComponents) {
-    output.push_back(tri.release());
+    output.push_back(std::move(tri));
   } else {
-    std::vector<TriangulatedSurface *> sout(numComponents);
-
     for (unsigned c = 0; c < numComponents; c++) {
-      sout[c] = new TriangulatedSurface;
-      output.push_back(sout[c]);
+      output.push_back(std::make_unique<TriangulatedSurface>());
     }
 
     const size_t numPatches = tri->numPatches();
 
     for (size_t t = 0; t != numPatches; ++t) {
-      sout[component[t]]->addPatch(tri->patchN(t));
+      output[component[t]]->as<TriangulatedSurface>().addPatch(tri->patchN(t));
     }
   }
 }
 
 void
 recompose_volumes(const GeometrySet<2>::VolumeCollection & /*unused*/,
-                  std::vector<Geometry *> & /*unused*/, dim_t<2> /*unused*/)
+                  std::vector<std::unique_ptr<Geometry>> & /*unused*/,
+                  dim_t<2> /*unused*/)
 {
 }
 
 void
 recompose_volumes(const GeometrySet<3>::VolumeCollection &volumes,
-                  std::vector<Geometry *> &output, dim_t<3> /*unused*/)
+                  std::vector<std::unique_ptr<Geometry>> &output,
+                  dim_t<3> /*unused*/)
 {
   if (volumes.empty()) {
     return;
@@ -910,7 +915,7 @@ recompose_volumes(const GeometrySet<3>::VolumeCollection &volumes,
           p[i] = *it;
         }
 
-        output.push_back(new Triangle(p[0], p[1], p[2]));
+        output.push_back(std::make_unique<Triangle>(p[0], p[1], p[2]));
       } else {
         // Else it is a polygon
         auto exteriorRing = std::make_unique<LineString>();
@@ -919,13 +924,13 @@ recompose_volumes(const GeometrySet<3>::VolumeCollection &volumes,
           exteriorRing->addPoint(it);
         }
 
-        output.push_back(new Polygon(std::move(exteriorRing)));
+        output.push_back(std::make_unique<Polygon>(std::move(exteriorRing)));
       }
     } else {
 
       auto shell = std::make_unique<PolyhedralSurface>(volume.primitive());
       // TODO: test open / closed
-      output.push_back(new Solid(std::move(shell)));
+      output.push_back(std::make_unique<Solid>(std::move(shell)));
     }
   }
 }
@@ -935,7 +940,7 @@ template <int Dim>
 auto
 GeometrySet<Dim>::recompose() const -> std::unique_ptr<Geometry>
 {
-  std::vector<Geometry *> geometries;
+  std::vector<std::unique_ptr<Geometry>> geometries;
 
   recompose_points(_points, geometries, dim_t<Dim>());
   recompose_segments(_segments, geometries, dim_t<Dim>());
@@ -943,11 +948,11 @@ GeometrySet<Dim>::recompose() const -> std::unique_ptr<Geometry>
   recompose_volumes(_volumes, geometries, dim_t<Dim>());
 
   if (geometries.empty()) {
-    return std::unique_ptr<Geometry>(new GeometryCollection);
+    return std::make_unique<GeometryCollection>();
   }
 
   if (geometries.size() == 1) {
-    return std::unique_ptr<Geometry>(geometries[0]);
+    return std::move(geometries[0]);
   }
 
   // else we have a mix of different types
@@ -961,32 +966,32 @@ GeometrySet<Dim>::recompose() const -> std::unique_ptr<Geometry>
     }
   }
 
-  GeometryCollection *ret = nullptr;
+  std::unique_ptr<GeometryCollection> ret = nullptr;
 
   if (hasCommonType) {
     if (commonType == TYPE_POINT) {
-      ret = new MultiPoint;
+      ret = std::make_unique<MultiPoint>();
     } else if (commonType == TYPE_LINESTRING) {
-      ret = new MultiLineString;
+      ret = std::make_unique<MultiLineString>();
     } else if (commonType == TYPE_POLYGON) {
-      ret = new MultiPolygon;
+      ret = std::make_unique<MultiPolygon>();
     } else if (commonType == TYPE_SOLID) {
-      ret = new MultiSolid;
+      ret = std::make_unique<MultiSolid>();
     } else {
       // one common type, but no MULTI equivalent
-      ret = new GeometryCollection;
+      ret = std::make_unique<GeometryCollection>();
     }
   } else {
-    ret = new GeometryCollection;
+    ret = std::make_unique<GeometryCollection>();
   }
 
   BOOST_ASSERT(ret != 0);
 
   for (auto &geometry : geometries) {
-    ret->addGeometry(std::unique_ptr<Geometry>(geometry));
+    ret->addGeometry(std::move(geometry));
   }
 
-  return std::unique_ptr<Geometry>(ret);
+  return ret;
 }
 
 /// \cond IGNORE
