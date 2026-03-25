@@ -313,11 +313,12 @@ public:
 
   /**
    * add a point to the set
-   * @param g The point to add
+   * @param point The point to add
    * @param flags Optional flags for the point
    */
   void
-  addPrimitive(const typename TypeForDimension<Dim>::Point &g, int flags = 0);
+  addPrimitive(const typename TypeForDimension<Dim>::Point &point,
+               int                                          flags = 0);
   /**
    * @brief Add multiple points from iterator range
    * @param ibegin Iterator to first point
@@ -339,11 +340,12 @@ public:
 
   /**
    * add a segment to the set
-   * @param g The segment to add
+   * @param segment The segment to add
    * @param flags Optional flags for the segment
    */
   void
-  addPrimitive(const typename TypeForDimension<Dim>::Segment &g, int flags = 0);
+  addPrimitive(const typename TypeForDimension<Dim>::Segment &segment,
+               int                                            flags = 0);
   /**
    * @brief Add multiple segments from iterator range
    * @param ibegin Iterator to first segment
