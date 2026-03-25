@@ -54,14 +54,14 @@ PolyhedralSurface::PolyhedralSurface(const Mesh &sm)
 
   using vertexDescriptor = Mesh::Vertex_index;
   for (auto face : sm.faces()) {
-    auto *new_face = new LineString();
+    auto new_face = std::make_unique<LineString>();
     for (vertexDescriptor const vertexDesc :
          vertices_around_face(sm.halfedge(face), sm)) {
       new_face->addPoint(Point(sm.point(vertexDesc)));
     }
 
     new_face->addPoint(new_face->startPoint().clone());
-    _polygons.push_back(std::make_unique<Polygon>(new_face));
+    _polygons.push_back(std::make_unique<Polygon>(std::move(new_face)));
   }
 }
 
@@ -72,14 +72,14 @@ PolyhedralSurface::PolyhedralSurface(const InexactMesh &inexactMesh)
 
   inexact_to_exact toExact;
   for (auto face : inexactMesh.faces()) {
-    auto *new_face = new LineString();
+    auto new_face = std::make_unique<LineString>();
     for (vertexDescriptor const vertexDesc :
          vertices_around_face(inexactMesh.halfedge(face), inexactMesh)) {
       new_face->addPoint(Point(toExact(inexactMesh.point(vertexDesc))));
     }
 
     new_face->addPoint(new_face->startPoint().clone());
-    _polygons.push_back(std::make_unique<Polygon>(new_face));
+    _polygons.push_back(std::make_unique<Polygon>(std::move(new_face)));
   }
 }
 

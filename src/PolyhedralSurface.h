@@ -71,7 +71,7 @@ public:
   {
     for (typename Polyhedron::Facet_const_iterator fit = poly.facets_begin();
          fit != poly.facets_end(); ++fit) {
-      auto *face = new LineString();
+      auto face = std::make_unique<LineString>();
       typename Polyhedron::Halfedge_around_facet_const_circulator hit =
           fit->facet_begin();
       do {
@@ -80,7 +80,7 @@ public:
       } while (hit != fit->facet_begin());
       // close the ring
       face->addPoint(hit->vertex()->point());
-      _polygons.push_back(std::make_unique<Polygon>(face));
+      _polygons.push_back(std::make_unique<Polygon>(std::move(face)));
     }
   }
 
