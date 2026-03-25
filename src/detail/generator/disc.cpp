@@ -25,7 +25,7 @@ disc(const Point &center, const double &radius,
 {
   BOOST_ASSERT(nQuadrantSegments > 1);
 
-  std::unique_ptr<LineString> exteriorRing(new LineString());
+  auto exteriorRing = std::make_unique<LineString>();
 
   double const dTheta = M_PI_4 / nQuadrantSegments;
 
@@ -39,7 +39,7 @@ disc(const Point &center, const double &radius,
 
   exteriorRing->addPoint(exteriorRing->startPoint());
 
-  return std::make_unique<Polygon>(exteriorRing.release());
+  return std::make_unique<Polygon>(std::move(exteriorRing));
 }
 
 } // namespace SFCGAL::generator
