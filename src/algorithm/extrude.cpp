@@ -28,6 +28,7 @@
 
 #include "SFCGAL/detail/tools/Log.h"
 
+#include <memory>
 #include <utility>
 
 namespace SFCGAL::algorithm {
@@ -43,7 +44,7 @@ extrude(const Point &g, const Kernel::Vector_3 &extrusionVector)
     -> std::unique_ptr<LineString>;
 auto
 extrude(const LineString &g, const Kernel::Vector_3 &extrusionVector)
-    -> PolyhedralSurface *;
+    -> std::unique_ptr<PolyhedralSurface>;
 auto
 extrude(const Polygon &g, const Kernel::Vector_3 &extrusionVector,
         bool addTop = true) -> std::unique_ptr<Solid>;
@@ -53,24 +54,24 @@ extrude(const Triangle &g, const Kernel::Vector_3 &extrusionVector)
 
 auto
 extrude(const MultiPoint &g, const Kernel::Vector_3 &extrusionVector)
-    -> MultiLineString *;
+    -> std::unique_ptr<MultiLineString>;
 auto
 extrude(const MultiLineString &g, const Kernel::Vector_3 &extrusionVector)
-    -> PolyhedralSurface *;
+    -> std::unique_ptr<PolyhedralSurface>;
 auto
 extrude(const MultiPolygon &g, const Kernel::Vector_3 &extrusionVector)
-    -> MultiSolid *;
+    -> std::unique_ptr<MultiSolid>;
 
 auto
 extrude(const TriangulatedSurface &g, const Kernel::Vector_3 &extrusionVector)
-    -> Solid *;
+    -> std::unique_ptr<Solid>;
 auto
 extrude(const PolyhedralSurface &g, const Kernel::Vector_3 &extrusionVector)
-    -> Solid *;
+    -> std::unique_ptr<Solid>;
 
 auto
 extrude(const GeometryCollection &g, const Kernel::Vector_3 &extrusionVector)
-    -> GeometryCollection *;
+    -> std::unique_ptr<GeometryCollection>;
 
 auto
 extrude(const Point &g, const Kernel::Vector_3 &extrusionVector)
@@ -88,17 +89,17 @@ extrude(const Point &g, const Kernel::Vector_3 &extrusionVector)
 
 auto
 extrude(const LineString &g, const Kernel::Vector_3 &extrusionVector)
-    -> PolyhedralSurface *
+    -> std::unique_ptr<PolyhedralSurface>
 {
 
-  std::unique_ptr<PolyhedralSurface> polyhedralSurface(new PolyhedralSurface());
+  auto polyhedralSurface = std::make_unique<PolyhedralSurface>();
 
   if (g.isEmpty()) {
-    return polyhedralSurface.release();
+    return polyhedralSurface;
   }
 
   for (size_t i = 0; i < g.numPoints() - 1; i++) {
-    std::unique_ptr<LineString> ring(new LineString);
+    auto ring = std::make_unique<LineString>();
 
     Kernel::Point_3 const a = g.pointN(i).toPoint_3();
     Kernel::Point_3 const b = g.pointN(i + 1).toPoint_3();
@@ -111,7 +112,7 @@ extrude(const LineString &g, const Kernel::Vector_3 &extrusionVector)
     polyhedralSurface->addPatch(std::make_unique<Polygon>(std::move(ring)));
   }
 
-  return polyhedralSurface.release();
+  return polyhedralSurface;
 }
 
 auto
@@ -167,29 +168,29 @@ extrude(const Triangle &g, const Kernel::Vector_3 &extrusionVector)
 
 auto
 extrude(const MultiPoint &g, const Kernel::Vector_3 &extrusionVector)
-    -> MultiLineString *
+    -> std::unique_ptr<MultiLineString>
 {
-  std::unique_ptr<MultiLineString> result(new MultiLineString());
+  auto result = std::make_unique<MultiLineString>();
 
   if (g.isEmpty()) {
-    return result.release();
+    return result;
   }
 
   for (size_t i = 0; i < g.numGeometries(); i++) {
     result->addGeometry(extrude(g.pointN(i), extrusionVector));
   }
 
-  return result.release();
+  return result;
 }
 
 auto
 extrude(const MultiLineString &g, const Kernel::Vector_3 &extrusionVector)
-    -> PolyhedralSurface *
+    -> std::unique_ptr<PolyhedralSurface>
 {
-  std::unique_ptr<PolyhedralSurface> result(new PolyhedralSurface());
+  auto result = std::make_unique<PolyhedralSurface>();
 
   if (g.isEmpty()) {
-    return result.release();
+    return result;
   }
 
   for (size_t i = 0; i < g.numGeometries(); i++) {
@@ -201,34 +202,34 @@ extrude(const MultiLineString &g, const Kernel::Vector_3 &extrusionVector)
     }
   }
 
-  return result.release();
+  return result;
 }
 
 auto
 extrude(const MultiPolygon &g, const Kernel::Vector_3 &extrusionVector)
-    -> MultiSolid *
+    -> std::unique_ptr<MultiSolid>
 {
-  std::unique_ptr<MultiSolid> result(new MultiSolid());
+  auto result = std::make_unique<MultiSolid>();
 
   if (g.isEmpty()) {
-    return result.release();
+    return result;
   }
 
   for (size_t i = 0; i < g.numGeometries(); i++) {
     result->addGeometry(extrude(g.polygonN(i), extrusionVector));
   }
 
-  return result.release();
+  return result;
 }
 
 auto
 extrude(const TriangulatedSurface &g, const Kernel::Vector_3 &extrusionVector)
-    -> Solid *
+    -> std::unique_ptr<Solid>
 {
-  std::unique_ptr<Solid> result(new Solid());
+  auto result = std::make_unique<Solid>();
 
   if (g.isEmpty()) {
-    return result.release();
+    return result;
   }
 
   // bottom and top
@@ -257,15 +258,15 @@ extrude(const TriangulatedSurface &g, const Kernel::Vector_3 &extrusionVector)
         extrudedBoundary->as<PolyhedralSurface>());
   }
 
-  return result.release();
+  return result;
 }
 
 auto
 extrude(const PolyhedralSurface &g, const Kernel::Vector_3 &extrusionVector)
-    -> Solid *
+    -> std::unique_ptr<Solid>
 {
   if (g.isEmpty()) {
-    return new Solid();
+    return std::make_unique<Solid>();
   }
 
   TriangulatedSurface triangulatedSurface;
@@ -275,19 +276,19 @@ extrude(const PolyhedralSurface &g, const Kernel::Vector_3 &extrusionVector)
 
 auto
 extrude(const GeometryCollection &g, const Kernel::Vector_3 &extrusionVector)
-    -> GeometryCollection *
+    -> std::unique_ptr<GeometryCollection>
 {
-  std::unique_ptr<GeometryCollection> result(new GeometryCollection());
+  auto result = std::make_unique<GeometryCollection>();
 
   if (g.isEmpty()) {
-    return result.release();
+    return result;
   }
 
   for (size_t i = 0; i < g.numGeometries(); i++) {
     result->addGeometry(extrude(g.geometryN(i), extrusionVector));
   }
 
-  return result.release();
+  return result;
 }
 
 /// @private
@@ -297,12 +298,10 @@ extrude(const Geometry &inputGeometry, const Kernel::Vector_3 &extrusionVector)
 {
   switch (inputGeometry.geometryTypeId()) {
   case TYPE_POINT:
-    return std::unique_ptr<Geometry>(
-        extrude(inputGeometry.as<Point>(), extrusionVector));
+    return extrude(inputGeometry.as<Point>(), extrusionVector);
 
   case TYPE_LINESTRING:
-    return std::unique_ptr<Geometry>(
-        extrude(inputGeometry.as<LineString>(), extrusionVector));
+    return extrude(inputGeometry.as<LineString>(), extrusionVector);
 
   case TYPE_NURBSCURVE: {
     auto lineString =
@@ -310,40 +309,32 @@ extrude(const Geometry &inputGeometry, const Kernel::Vector_3 &extrusionVector)
     if (!lineString || lineString->isEmpty()) {
       return std::make_unique<PolyhedralSurface>(); // empty result
     }
-    return std::unique_ptr<Geometry>(extrude(*lineString, extrusionVector));
+    return extrude(*lineString, extrusionVector);
   }
 
   case TYPE_POLYGON:
-    return std::unique_ptr<Geometry>(
-        extrude(inputGeometry.as<Polygon>(), extrusionVector));
+    return extrude(inputGeometry.as<Polygon>(), extrusionVector);
 
   case TYPE_TRIANGLE:
-    return std::unique_ptr<Geometry>(
-        extrude(inputGeometry.as<Triangle>(), extrusionVector));
+    return extrude(inputGeometry.as<Triangle>(), extrusionVector);
 
   case TYPE_GEOMETRYCOLLECTION:
-    return std::unique_ptr<Geometry>(
-        extrude(inputGeometry.as<GeometryCollection>(), extrusionVector));
+    return extrude(inputGeometry.as<GeometryCollection>(), extrusionVector);
 
   case TYPE_MULTIPOINT:
-    return std::unique_ptr<Geometry>(
-        extrude(inputGeometry.as<MultiPoint>(), extrusionVector));
+    return extrude(inputGeometry.as<MultiPoint>(), extrusionVector);
 
   case TYPE_MULTILINESTRING:
-    return std::unique_ptr<Geometry>(
-        extrude(inputGeometry.as<MultiLineString>(), extrusionVector));
+    return extrude(inputGeometry.as<MultiLineString>(), extrusionVector);
 
   case TYPE_MULTIPOLYGON:
-    return std::unique_ptr<Geometry>(
-        extrude(inputGeometry.as<MultiPolygon>(), extrusionVector));
+    return extrude(inputGeometry.as<MultiPolygon>(), extrusionVector);
 
   case TYPE_TRIANGULATEDSURFACE:
-    return std::unique_ptr<Geometry>(
-        extrude(inputGeometry.as<TriangulatedSurface>(), extrusionVector));
+    return extrude(inputGeometry.as<TriangulatedSurface>(), extrusionVector);
 
   case TYPE_POLYHEDRALSURFACE:
-    return std::unique_ptr<Geometry>(
-        extrude(inputGeometry.as<PolyhedralSurface>(), extrusionVector));
+    return extrude(inputGeometry.as<PolyhedralSurface>(), extrusionVector);
 
   case TYPE_SOLID:
   case TYPE_MULTISOLID:
@@ -407,7 +398,6 @@ extrude(const Polygon &polygon, const double &height)
         "trying to extrude with non finite value in extrusionVector"));
   }
 
-  return std::unique_ptr<Geometry>(
-      extrude(polygon, Kernel::Vector_3(0.0, 0.0, height), false));
+  return extrude(polygon, Kernel::Vector_3(0.0, 0.0, height), false);
 }
 } // namespace SFCGAL::algorithm
