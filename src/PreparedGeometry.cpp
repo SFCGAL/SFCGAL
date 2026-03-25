@@ -13,7 +13,7 @@ PreparedGeometry::PreparedGeometry() : _srid(0) {}
 
 PreparedGeometry::PreparedGeometry(std::unique_ptr<Geometry> &&geometry,
                                    srid_t                      srid)
-    : _geometry(geometry.release()), _srid(srid)
+    : _geometry(std::move(geometry)), _srid(srid)
 {
 }
 
