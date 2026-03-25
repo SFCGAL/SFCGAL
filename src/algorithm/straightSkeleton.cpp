@@ -93,19 +93,16 @@ straightSkeletonToMultiLineString(const CGAL::Straight_skeleton_2<K> &skeleton,
       continue;
     }
 
-    std::unique_ptr<LineString> lineString = nullptr;
-    Point                       pa(it->opposite()->vertex()->point());
-    Point                       pb(it->vertex()->point());
+    Point pa(it->opposite()->vertex()->point());
+    Point pb(it->vertex()->point());
     // avoid degenerate cases.https://gitlab.com/Oslandia/SFCGAL/-/issues/143
     if (pa != pb && distancePointPoint(pa, pb) > toleranceAbs) {
       if (outputDistanceInM) {
         pa.setM(CGAL::to_double(it->opposite()->vertex()->time()));
         pb.setM(CGAL::to_double(it->vertex()->time()));
-        lineString = std::make_unique<LineString>(pa, pb);
-      } else {
-        lineString = std::make_unique<LineString>(pa, pb);
       }
 
+      auto lineString = std::make_unique<LineString>(pa, pb);
       algorithm::translate(*lineString, translate);
       result.addGeometry(std::move(lineString));
     }
@@ -297,7 +294,7 @@ straightSkeletonToMedialAxis(const CGAL::Straight_skeleton_2<K> &skeleton,
     Point startPoint(it->opposite()->vertex()->point());
     Point endPoint(it->vertex()->point());
 
-    std::unique_ptr<LineString> lineString(new LineString);
+    auto lineString = std::make_unique<LineString>();
 
     // Project start point if it's a free endpoint
     if (projectToEdges && vertexDegree[it->opposite()->vertex()] == 1) {
@@ -462,7 +459,7 @@ straightSkeleton(const Polygon &geom, bool /*autoOrientation*/, bool innerOnly,
                  bool outputDistanceInM, const double &toleranceAbs)
     -> std::unique_ptr<MultiLineString>
 {
-  std::unique_ptr<MultiLineString> result(new MultiLineString);
+  auto result = std::make_unique<MultiLineString>();
 
   if (geom.isEmpty()) {
     return result;
@@ -491,7 +488,7 @@ straightSkeleton(const MultiPolygon &geom, bool /*autoOrientation*/,
                  bool innerOnly, bool outputDistanceInM,
                  const double &toleranceAbs) -> std::unique_ptr<MultiLineString>
 {
-  std::unique_ptr<MultiLineString> result(new MultiLineString);
+  auto result = std::make_unique<MultiLineString>();
 
   for (size_t i = 0; i < geom.numGeometries(); i++) {
     Kernel::Vector_2           trans;
@@ -522,7 +519,7 @@ approximateMedialAxis(const Geometry &geom, bool projectToEdges)
 {
   SFCGAL_ASSERT_GEOMETRY_VALIDITY_2D(geom);
 
-  std::unique_ptr<MultiLineString> mx(new MultiLineString);
+  auto mx = std::make_unique<MultiLineString>();
 
   std::vector<Polygon> polys;
   extractPolygons(geom, polys);
@@ -641,7 +638,7 @@ extrudeStraightSkeleton(const Polygon &geom, double height,
     }
   }
 
-  std::unique_ptr<PolyhedralSurface> polys(new PolyhedralSurface);
+  auto polys = std::make_unique<PolyhedralSurface>();
 
   if (geom.isEmpty()) {
     return polys;
@@ -706,7 +703,7 @@ extrudeStraightSkeleton(const Geometry &geom, double building_height,
                         std::vector<std::vector<Kernel::FT>> angles)
     -> std::unique_ptr<PolyhedralSurface>
 {
-  std::unique_ptr<PolyhedralSurface> result(new PolyhedralSurface);
+  auto result = std::make_unique<PolyhedralSurface>();
 
   if (geom.isEmpty()) {
     return result;
@@ -760,7 +757,7 @@ straightSkeletonPartition(const Geometry &geom, bool autoOrientation)
 {
   SFCGAL_ASSERT_GEOMETRY_VALIDITY_2D(geom);
 
-  std::unique_ptr<PolyhedralSurface> result(new PolyhedralSurface);
+  auto result = std::make_unique<PolyhedralSurface>();
 
   switch (geom.geometryTypeId()) {
   case TYPE_TRIANGLE:
@@ -782,7 +779,7 @@ auto
 straightSkeletonPartition(const MultiPolygon &geom, bool autoOrientation)
     -> std::unique_ptr<PolyhedralSurface>
 {
-  std::unique_ptr<PolyhedralSurface> result(new PolyhedralSurface);
+  auto result = std::make_unique<PolyhedralSurface>();
 
   for (size_t i = 0; i < geom.numGeometries(); i++) {
     std::unique_ptr<PolyhedralSurface> partitioned =
@@ -799,7 +796,7 @@ auto
 straightSkeletonPartition(const Polygon &geom, bool /*autoOrientation*/)
     -> std::unique_ptr<PolyhedralSurface>
 {
-  std::unique_ptr<PolyhedralSurface> result(new PolyhedralSurface);
+  auto result = std::make_unique<PolyhedralSurface>();
 
   if (geom.isEmpty()) {
     return result;
