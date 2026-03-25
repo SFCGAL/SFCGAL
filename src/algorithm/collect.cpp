@@ -10,6 +10,7 @@
 #include "SFCGAL/MultiPoint.h"
 #include "SFCGAL/MultiPolygon.h"
 #include "SFCGAL/MultiSolid.h"
+#include <memory>
 
 namespace SFCGAL::algorithm {
 /// @private
@@ -18,35 +19,35 @@ collect(const Geometry &ga, const Geometry &gb) -> std::unique_ptr<Geometry>
 {
   if (ga.geometryTypeId() == gb.geometryTypeId()) {
     if (ga.geometryTypeId() == TYPE_POINT) {
-      auto *mp = new MultiPoint;
+      auto mp = std::make_unique<MultiPoint>();
       mp->addGeometry(ga);
       mp->addGeometry(gb);
-      return std::unique_ptr<Geometry>(mp);
+      return mp;
     }
     if (ga.geometryTypeId() == TYPE_LINESTRING) {
-      auto *mls = new MultiLineString();
+      auto mls = std::make_unique<MultiLineString>();
       mls->addGeometry(ga);
       mls->addGeometry(gb);
-      return std::unique_ptr<Geometry>(mls);
+      return mls;
     }
     if (ga.geometryTypeId() == TYPE_POLYGON) {
-      auto *mp = new MultiPolygon();
+      auto mp = std::make_unique<MultiPolygon>();
       mp->addGeometry(ga);
       mp->addGeometry(gb);
-      return std::unique_ptr<Geometry>(mp);
+      return mp;
     }
     if (ga.geometryTypeId() == TYPE_SOLID) {
-      auto *mp = new MultiSolid();
+      auto mp = std::make_unique<MultiSolid>();
       mp->addGeometry(ga);
       mp->addGeometry(gb);
-      return std::unique_ptr<Geometry>(mp);
+      return mp;
     }
   }
 
   // else
-  auto *coll = new GeometryCollection();
+  auto coll = std::make_unique<GeometryCollection>();
   coll->addGeometry(ga);
   coll->addGeometry(gb);
-  return std::unique_ptr<Geometry>(coll);
+  return coll;
 }
 } // namespace SFCGAL::algorithm
