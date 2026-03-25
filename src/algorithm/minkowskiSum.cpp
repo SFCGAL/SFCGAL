@@ -270,8 +270,7 @@ minkowskiSum(const Geometry &gA, const Polygon &gB, NoValidityCheck /*unused*/)
 
   Polygon_set_2 polygonSet;
   minkowskiSum(gA, gB.toPolygon_2(), polygonSet);
-  return std::unique_ptr<Geometry>(
-      detail::polygonSetToMultiPolygon(polygonSet).release());
+  return detail::polygonSetToMultiPolygon(polygonSet);
 }
 
 /// @private
