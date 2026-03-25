@@ -44,7 +44,7 @@ BoundaryVisitor::visit(const LineString &g)
   if (g.startPoint().coordinate() == g.endPoint().coordinate()) {
     _boundary.reset();
   } else {
-    std::unique_ptr<MultiPoint> boundary(new MultiPoint);
+    auto boundary = std::make_unique<MultiPoint>();
     boundary->addGeometry(g.startPoint());
     boundary->addGeometry(g.endPoint());
     _boundary = std::move(boundary);
@@ -62,7 +62,7 @@ BoundaryVisitor::visit(const Polygon &g)
   if (!g.hasInteriorRings()) {
     _boundary = g.exteriorRing().clone();
   } else {
-    std::unique_ptr<MultiLineString> boundary(new MultiLineString);
+    auto boundary = std::make_unique<MultiLineString>();
 
     for (size_t i = 0; i < g.numRings(); i++) {
       boundary->addGeometry(g.ringN(i));
@@ -80,7 +80,7 @@ BoundaryVisitor::visit(const Triangle &g)
     return;
   }
 
-  std::unique_ptr<LineString> boundary(new LineString);
+  auto boundary = std::make_unique<LineString>();
 
   for (size_t i = 0; i < 4; i++) {
     boundary->addPoint(g.vertex(i));
@@ -197,7 +197,7 @@ BoundaryVisitor::visit(const NURBSCurve &g)
   if (startPoint.coordinate() == endPoint.coordinate()) {
     _boundary.reset();
   } else {
-    std::unique_ptr<MultiPoint> boundary(new MultiPoint);
+    auto boundary = std::make_unique<MultiPoint>();
     boundary->addGeometry(std::make_unique<Point>(startPoint));
     boundary->addGeometry(std::make_unique<Point>(endPoint));
     _boundary = std::move(boundary);
@@ -248,7 +248,7 @@ BoundaryVisitor::getBoundaryFromLineStrings(const graph::GeometryGraph &graph)
   } else if (vertices.size() == 1) {
     _boundary = std::make_unique<Point>(graph[vertices[0]].coordinate);
   } else {
-    std::unique_ptr<MultiPoint> boundary(new MultiPoint);
+    auto boundary = std::make_unique<MultiPoint>();
 
     for (auto &vertice : vertices) {
       boundary->addGeometry(std::make_unique<Point>(graph[vertice].coordinate));
@@ -281,7 +281,7 @@ BoundaryVisitor::getBoundaryFromPolygons(const graph::GeometryGraph &g)
     _boundary.reset();
   } else {
     // TODO merge Line Segments into LineString
-    std::unique_ptr<MultiLineString> boundary(new MultiLineString);
+    auto boundary = std::make_unique<MultiLineString>();
 
     for (auto &edge : boundaryEdges) {
       vertex_descriptor source = g.source(edge);
