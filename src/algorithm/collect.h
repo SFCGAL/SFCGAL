@@ -34,13 +34,13 @@ collect(GeometryIterator begin, GeometryIterator end)
   GeometryIterator it;
   // FIXME: optimize type. For instance, if all the given geometries are points,
   // return a MultiPoint instead of a GeometryCollection
-  GeometryCollection *coll = new GeometryCollection();
+  auto coll = std::make_unique<GeometryCollection>();
 
   for (it = begin; it != end; ++it) {
     coll->addGeometry(*it);
   }
 
-  return std::unique_ptr<Geometry>(coll);
+  return coll;
 }
 } // namespace SFCGAL::algorithm
 
