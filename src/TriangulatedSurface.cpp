@@ -12,6 +12,7 @@
 #include "SFCGAL/TriangulatedSurface.h"
 
 #include <map>
+#include <memory>
 
 namespace SFCGAL {
 
@@ -346,7 +347,7 @@ template <typename Polyhedron>
 auto
 TriangulatedSurface::toPolyhedron_3() const -> std::unique_ptr<Polyhedron>
 {
-  auto *poly = new Polyhedron();
+  auto poly = std::make_unique<Polyhedron>();
   Triangulated2Polyhedron<typename Polyhedron::HalfedgeDS> converter(*this);
   poly->delegate(converter);
 
@@ -354,7 +355,7 @@ TriangulatedSurface::toPolyhedron_3() const -> std::unique_ptr<Polyhedron>
   std::transform(poly->facets_begin(), poly->facets_end(), poly->planes_begin(),
                  Plane_from_facet<Polyhedron>());
 
-  return std::unique_ptr<Polyhedron>(poly);
+  return poly;
 }
 
 auto
