@@ -19,11 +19,10 @@ namespace SFCGAL::io {
 auto
 readEwkt(std::istream &s) -> std::unique_ptr<PreparedGeometry>
 {
-  WktReader                         wktReader(s);
-  srid_t const                      srid = wktReader.readSRID();
-  std::unique_ptr<Geometry>         g(wktReader.readGeometry());
-  std::unique_ptr<PreparedGeometry> uptr(
-      new PreparedGeometry(std::move(g), srid));
+  WktReader                 wktReader(s);
+  srid_t const              srid = wktReader.readSRID();
+  std::unique_ptr<Geometry> g(wktReader.readGeometry());
+  auto uptr = std::make_unique<PreparedGeometry>(std::move(g), srid);
   return uptr;
 }
 
