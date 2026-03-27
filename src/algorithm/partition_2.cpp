@@ -76,7 +76,7 @@ polygons_to_geometry(const std::list<TPolygon_2> &polys)
     -> std::unique_ptr<Geometry>
 {
 
-  auto *geoms = new GeometryCollection;
+  auto geoms = std::make_unique<GeometryCollection>();
 
   std::list<TPolygon_2>::const_iterator poly_it;
   for (poly_it = polys.begin(); poly_it != polys.end(); ++poly_it) {
@@ -87,7 +87,7 @@ polygons_to_geometry(const std::list<TPolygon_2> &polys)
     poly->exteriorRing().addPoint(*(poly_it->vertices_begin()));
     geoms->addGeometry(std::move(poly));
   }
-  return std::unique_ptr<Geometry>(geoms);
+  return geoms;
 }
 
 /// @} end of private section
@@ -103,12 +103,8 @@ partition_2(const Geometry &g, PartitionAlgorithm alg,
 {
   using CGAL::object_cast;
 
-  if (g.isEmpty()) {
-    return std::unique_ptr<Geometry>(new GeometryCollection());
-  }
-
-  if (g.geometryTypeId() != TYPE_POLYGON) {
-    return std::unique_ptr<Geometry>(new GeometryCollection());
+  if (g.isEmpty() || g.geometryTypeId() != TYPE_POLYGON) {
+    return std::make_unique<GeometryCollection>();
   }
 
   const TPolygon_2 poly{toTPolygon_2(g.as<Polygon>())};
