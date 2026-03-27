@@ -54,16 +54,16 @@ collectionHomogenize(std::unique_ptr<Geometry> g) -> std::unique_ptr<Geometry>
     return g;
   }
 
-  GeometryCollection *ret_geo = nullptr;
+  std::unique_ptr<GeometryCollection> ret_geo;
 
   if (common_type == TYPE_POINT) {
-    ret_geo = new MultiPoint;
+    ret_geo = std::make_unique<MultiPoint>();
   } else if (common_type == TYPE_LINESTRING) {
-    ret_geo = new MultiLineString;
+    ret_geo = std::make_unique<MultiLineString>();
   } else if (common_type == TYPE_POLYGON) {
-    ret_geo = new MultiPolygon;
+    ret_geo = std::make_unique<MultiPolygon>();
   } else if (common_type == TYPE_SOLID) {
-    ret_geo = new MultiSolid;
+    ret_geo = std::make_unique<MultiSolid>();
   }
 
   // copy each geometry
@@ -71,7 +71,7 @@ collectionHomogenize(std::unique_ptr<Geometry> g) -> std::unique_ptr<Geometry>
     ret_geo->addGeometry(coll.geometryN(i));
   }
 
-  return std::unique_ptr<Geometry>(ret_geo);
+  return ret_geo;
 }
 
 } // namespace SFCGAL::algorithm
