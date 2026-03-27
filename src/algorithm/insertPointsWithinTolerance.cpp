@@ -215,7 +215,7 @@ insertPointsWithinTolerance(const Geometry &baseGeometry,
     const auto &baseLineString = baseGeometry.as<LineString>();
     auto        result =
         insertPointsIntoLineString(baseLineString, sourcePoints, tolerance);
-    return std::unique_ptr<Geometry>(result.release());
+    return result;
   }
 
   case TYPE_POLYGON: {
@@ -240,7 +240,7 @@ insertPointsWithinTolerance(const Geometry &baseGeometry,
       resultMultiLineString->addGeometry(std::move(newLineString));
     }
 
-    return std::unique_ptr<Geometry>(resultMultiLineString.release());
+    return resultMultiLineString;
   }
 
   case TYPE_MULTIPOLYGON: {
