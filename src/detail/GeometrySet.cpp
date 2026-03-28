@@ -1203,12 +1203,6 @@ GeometrySet<Dim>::filterCovered(GeometrySet<Dim> &output) const
   _filter_covered(_points.begin(), _points.end(), output);
 }
 
-/**
- * @brief Stream output operator for 2D GeometrySet
- * @param ostr Output stream
- * @param geomSet The 2D geometry set to output
- * @return The output stream
- */
 auto
 operator<<(std::ostream &ostr, const GeometrySet<2> &geomSet) -> std::ostream &
 {
@@ -1228,12 +1222,6 @@ operator<<(std::ostream &ostr, const GeometrySet<2> &geomSet) -> std::ostream &
   return ostr;
 }
 
-/**
- * @brief Stream output operator for 3D GeometrySet
- * @param ostr Output stream
- * @param geomSet The 3D geometry set to output
- * @return The output stream
- */
 auto
 operator<<(std::ostream &ostr, const GeometrySet<3> &geomSet) -> std::ostream &
 {
