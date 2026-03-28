@@ -257,7 +257,7 @@ WktReader::readInnerPolygon(Polygon &polygon)
     } else {
       std::unique_ptr<LineString> interiorRing(new LineString);
       readInnerLineString(*interiorRing);
-      polygon.addRing(interiorRing.release());
+      polygon.addInteriorRing(interiorRing.release());
     }
 
     // break if not followed by another ring

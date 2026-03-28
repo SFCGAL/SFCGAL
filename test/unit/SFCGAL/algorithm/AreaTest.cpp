@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(testArea2D_PolygonWithHoleWithBadOrientation)
     ring.addPoint(Point(1.0, 2.0));
     ring.addPoint(ring.startPoint());
 
-    polygon.addRing(ring);
+    polygon.addInteriorRing(ring);
   }
 
   // hole 2
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(testArea2D_PolygonWithHoleWithBadOrientation)
     ring.addPoint(Point(3.0, 4.0));
     ring.addPoint(ring.startPoint());
 
-    polygon.addRing(ring);
+    polygon.addInteriorRing(ring);
   }
 
   // 5x5 - 1 - 1 = 23

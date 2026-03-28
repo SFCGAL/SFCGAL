@@ -314,6 +314,7 @@ public:
    * @param ls LineString to add as ring
    * @deprecated addInteriorRing
    */
+  [[deprecated("Use addInteriorRing instead")]]
   void
   addRing(const LineString &ls)
   {
@@ -324,6 +325,7 @@ public:
    * @param ls Pointer to LineString to add as ring
    * @deprecated addInteriorRing
    */
+  [[deprecated("Use addInteriorRing instead")]]
   void
   addRing(LineString *ls)
   {
