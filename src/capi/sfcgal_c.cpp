@@ -1193,7 +1193,8 @@ sfcgal_solid_add_interior_shell(sfcgal_geometry_t *geom,
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
       down_cast<SFCGAL::Solid>(geom)->addInteriorShell(
-          down_cast<SFCGAL::PolyhedralSurface>(shell));)
+          std::unique_ptr<SFCGAL::PolyhedralSurface>(
+              down_cast<SFCGAL::PolyhedralSurface>(shell)));)
 }
 
 extern "C" void

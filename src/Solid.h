@@ -192,6 +192,7 @@ public:
    * @param shell The polyhedral surface to add as interior shell
    * @deprecated The unique_ptr version should be used instead
    */
+  [[deprecated("The unique_ptr version should be used instead")]]
   void
   addInteriorShell(PolyhedralSurface *shell)
   {

@@ -192,7 +192,7 @@ parseSolid(const nlohmann::json &coords) -> std::unique_ptr<Solid>
   // Parse interior shells
   for (size_t i = 1; i < coords.size(); ++i) {
     auto interiorShell = parsePolyhedralSurface(coords[i]);
-    solid->addInteriorShell(*interiorShell);
+    solid->addInteriorShell(std::move(interiorShell));
   }
 
   return solid;

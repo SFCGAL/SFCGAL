@@ -532,7 +532,7 @@ WktReader::readInnerSolid(Solid &solid)
     } else {
       std::unique_ptr<PolyhedralSurface> shell(new PolyhedralSurface);
       readInnerPolyhedralSurface(*shell);
-      solid.addInteriorShell(shell.release());
+      solid.addInteriorShell(std::move(shell));
     }
 
     // break if not followed by another points
