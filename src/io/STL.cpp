@@ -48,14 +48,14 @@ save(const Geometry &geom, std::ostream &out) -> void
           const auto         &poly = geom.as<Polygon>();
           TriangulatedSurface tin;
           triangulate::triangulatePolygon3D(poly, tin);
-          for (size_t i = 0; i < tin.numTriangles(); ++i) {
+          for (size_t i = 0; i < tin.numPatches(); ++i) {
             all_triangles.push_back(tin.triangleN(i));
           }
           break;
         }
         case TYPE_TRIANGULATEDSURFACE: {
           const auto &tin = geom.as<TriangulatedSurface>();
-          for (size_t i = 0; i < tin.numTriangles(); ++i) {
+          for (size_t i = 0; i < tin.numPatches(); ++i) {
             all_triangles.push_back(tin.triangleN(i));
           }
           break;

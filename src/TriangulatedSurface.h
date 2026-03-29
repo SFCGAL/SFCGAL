@@ -186,7 +186,10 @@ public:
    * @return Number of triangles in the surface
    * @deprecated see numPatches()
    */
+  // clang-format off
+  [[deprecated("Use numPatches instead")]]
   [[nodiscard]] auto
+  // clang-format on
   numTriangles() const -> size_t
   {
     return _triangles.size();

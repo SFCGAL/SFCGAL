@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(testReadTINExtension)
 
   BOOST_CHECK(g->is<TriangulatedSurface>());
   const auto &tin = g->as<TriangulatedSurface>();
-  BOOST_CHECK_EQUAL(tin.numTriangles(), 2U);
+  BOOST_CHECK_EQUAL(tin.numPatches(), 2U);
 }
 
 BOOST_AUTO_TEST_CASE(testReadPolyhedralSurfaceExtension)
@@ -518,7 +518,7 @@ BOOST_AUTO_TEST_CASE(testRoundTripTINExtension)
 
   BOOST_CHECK(parsed->is<TriangulatedSurface>());
   const auto &result = parsed->as<TriangulatedSurface>();
-  BOOST_CHECK_EQUAL(result.numTriangles(), 2U);
+  BOOST_CHECK_EQUAL(result.numPatches(), 2U);
 }
 
 // ============================================================================
