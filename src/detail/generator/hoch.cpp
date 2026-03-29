@@ -57,7 +57,7 @@ hoch(const unsigned int &order) -> std::unique_ptr<Polygon>
   ring->addPoint(
       std::make_unique<Point>(points.front().x(), points.front().y()));
 
-  result->setExteriorRing(ring.release());
+  result->setExteriorRing(std::move(ring));
 
   return result;
 }

@@ -185,6 +185,7 @@ public:
    * @param ring The new exterior ring
    * @deprecated The unique_ptr version should be used instead
    */
+  [[deprecated("The unique_ptr version should be used instead")]]
   void
   setExteriorRing(LineString *ring)
   {

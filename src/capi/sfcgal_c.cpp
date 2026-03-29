@@ -897,7 +897,8 @@ sfcgal_polygon_set_exterior_ring(sfcgal_geometry_t *polygon,
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
       down_cast<SFCGAL::Polygon>(polygon)->setExteriorRing(
-          down_cast<SFCGAL::LineString>(ring));)
+          std::unique_ptr<SFCGAL::LineString>(
+              down_cast<SFCGAL::LineString>(ring)));)
 }
 
 extern "C" auto
