@@ -159,7 +159,7 @@ parseTIN(const nlohmann::json &coords) -> std::unique_ptr<TriangulatedSurface>
       auto        pt0  = parsePoint(ring[0]);
       auto        pt1  = parsePoint(ring[1]);
       auto        pt2  = parsePoint(ring[2]);
-      tin->addTriangle(Triangle(*pt0, *pt1, *pt2));
+      tin->addPatch(Triangle(*pt0, *pt1, *pt2));
     }
   }
   return tin;

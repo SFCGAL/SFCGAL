@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE(testWriteTriangleExtension)
 BOOST_AUTO_TEST_CASE(testWriteTINStrict)
 {
   TriangulatedSurface tin;
-  tin.addTriangle(Triangle(Point(0, 0, 0), Point(1, 0, 0), Point(0.5, 1, 0)));
+  tin.addPatch(Triangle(Point(0, 0, 0), Point(1, 0, 0), Point(0.5, 1, 0)));
 
   GeoJSONOptions opts;
   opts.strict      = true;
@@ -378,7 +378,7 @@ BOOST_AUTO_TEST_CASE(testWriteTINStrict)
 BOOST_AUTO_TEST_CASE(testWriteTINExtension)
 {
   TriangulatedSurface tin;
-  tin.addTriangle(Triangle(Point(0, 0, 0), Point(1, 0, 0), Point(0.5, 1, 0)));
+  tin.addPatch(Triangle(Point(0, 0, 0), Point(1, 0, 0), Point(0.5, 1, 0)));
 
   GeoJSONOptions opts;
   opts.strict      = false;
@@ -505,10 +505,8 @@ BOOST_AUTO_TEST_CASE(testRoundTripPolygonWithHole)
 BOOST_AUTO_TEST_CASE(testRoundTripTINExtension)
 {
   TriangulatedSurface original;
-  original.addTriangle(
-      Triangle(Point(0, 0, 0), Point(1, 0, 0), Point(0.5, 1, 0)));
-  original.addTriangle(
-      Triangle(Point(1, 0, 0), Point(2, 0, 0), Point(1.5, 1, 0)));
+  original.addPatch(Triangle(Point(0, 0, 0), Point(1, 0, 0), Point(0.5, 1, 0)));
+  original.addPatch(Triangle(Point(1, 0, 0), Point(2, 0, 0), Point(1.5, 1, 0)));
 
   GeoJSONOptions opts;
   opts.strict = false; // Use extension mode for round-trip

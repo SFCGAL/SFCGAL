@@ -228,36 +228,40 @@ public:
    * @param triangle The triangle to add
    * @deprecated see addPatch()
    */
+  [[deprecated("Use addPatch instead")]]
   void
   addTriangle(const Triangle &triangle)
   {
-    addTriangle(triangle.clone());
+    addPatch(triangle.clone());
   }
   /**
    * add a Triangle to the TriangulatedSurface
    * @param triangle Pointer to the triangle to add
    * @deprecated see addPatch()
    */
+  [[deprecated("Use addPatch instead")]]
   void
   addTriangle(Triangle *triangle)
   {
-    addTriangle(std::unique_ptr<Triangle>(triangle));
+    addPatch(std::unique_ptr<Triangle>(triangle));
   }
   /**
    * add a Triangle to the TriangulatedSurface
    * @param triangle Unique pointer to the triangle to add
    * @deprecated see addPatch()
    */
+  [[deprecated("Use addPatch instead")]]
   void
   addTriangle(std::unique_ptr<Triangle> triangle)
   {
-    _triangles.emplace_back(std::move(triangle));
+    addPatch(std::move(triangle));
   }
   /**
    * add triangles from an other TriangulatedSurface
    * @param other The triangulated surface to copy triangles from
    * @deprecated see addPatches()
    */
+  [[deprecated("Use addPatches instead")]]
   void
   addTriangles(const TriangulatedSurface &other);
 
