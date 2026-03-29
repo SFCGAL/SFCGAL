@@ -463,7 +463,7 @@ polyhedralSurfaceToCoords(const PolyhedralSurface &polyhedralSurface,
     return coords; // Return empty array for empty PolyhedralSurface
   }
   for (size_t i = 0; i < polyhedralSurface.numPatches(); ++i) {
-    coords.push_back(polygonToCoords(polyhedralSurface.polygonN(i), precision));
+    coords.push_back(polygonToCoords(polyhedralSurface.patchN(i), precision));
   }
   return coords;
 }

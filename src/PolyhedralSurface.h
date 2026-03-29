@@ -259,7 +259,10 @@ public:
    * @return Const reference to the nth polygon
    * @deprecated see patchN()
    */
+  // clang-format off
+  [[deprecated("Use patchN instead")]]
   [[nodiscard]] auto
+  // clang-format on
   polygonN(size_t const &index) const -> const Polygon &
   {
     return patchN(index);
@@ -270,6 +273,7 @@ public:
    * @return Reference to the nth polygon
    * @deprecated see patchN()
    */
+  [[deprecated("Use patchN instead")]]
   auto
   polygonN(size_t const &index) -> Polygon &
   {
