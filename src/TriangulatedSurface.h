@@ -117,7 +117,6 @@ public:
   /**
    * [SFA/OGC]Returns the number of patches
    * @return Number of triangular patches
-   * @deprecated see numGeometries()
    */
   [[nodiscard]] auto
   numPatches() const -> size_t
