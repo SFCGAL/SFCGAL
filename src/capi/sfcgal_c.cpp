@@ -1133,7 +1133,8 @@ sfcgal_triangulated_surface_set_patch_n(sfcgal_geometry_t *tin,
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
       return down_cast<SFCGAL::TriangulatedSurface>(tin)->setPatchN(
-          down_cast<SFCGAL::Triangle>(patch), i);)
+          std::unique_ptr<SFCGAL::Triangle>(down_cast<SFCGAL::Triangle>(patch)),
+          i);)
 }
 
 extern "C" void

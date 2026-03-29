@@ -315,6 +315,7 @@ public:
    * @param idx The index of the patch to set
    * @deprecated The unique_ptr version should be used instead
    */
+  [[deprecated("The unique_ptr version should be used instead")]]
   void
   setPatchN(Triangle *triangle, size_t const &idx);
 
