@@ -931,7 +931,8 @@ sfcgal_polygon_add_interior_ring(sfcgal_geometry_t *geom,
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
       down_cast<SFCGAL::Polygon>(geom)->addInteriorRing(
-          down_cast<SFCGAL::LineString>(ring));)
+          std::unique_ptr<SFCGAL::LineString>(
+              down_cast<SFCGAL::LineString>(ring)));)
 }
 
 /**

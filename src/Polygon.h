@@ -290,7 +290,9 @@ public:
   /**
    * append a ring to the Polygon (take ownership)
    * @param ls The line string to add as interior ring
+   * @deprecated The unique_ptr version should be used instead
    */
+  [[deprecated("The unique_ptr version should be used instead")]]
   void
   addInteriorRing(LineString *ls)
   {
