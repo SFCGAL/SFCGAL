@@ -350,7 +350,7 @@ WktReader::readInnerMultiPoint(MultiPoint &multiPoint)
     }
 
     if (!point->isEmpty()) {
-      multiPoint.addGeometry(point.release());
+      multiPoint.addGeometry(std::move(point));
     }
 
     // break if not followed by another points
@@ -380,7 +380,7 @@ WktReader::readInnerMultiLineString(MultiLineString &multiLineString)
     std::unique_ptr<LineString> lineString(new LineString());
     readInnerLineString(*lineString);
     if (!lineString->isEmpty()) {
-      multiLineString.addGeometry(lineString.release());
+      multiLineString.addGeometry(std::move(lineString));
     }
 
     // break if not followed by another points
@@ -410,7 +410,7 @@ WktReader::readInnerMultiPolygon(MultiPolygon &multiPolygon)
     std::unique_ptr<Polygon> polygon(new Polygon());
     readInnerPolygon(*polygon);
     if (!polygon->isEmpty()) {
-      multiPolygon.addGeometry(polygon.release());
+      multiPolygon.addGeometry(std::move(polygon));
     }
 
     // break if not followed by another points
@@ -443,7 +443,7 @@ WktReader::readInnerGeometryCollection(GeometryCollection &collection)
     // read a full wkt geometry ex : POINT (2.0 6.0)
     Geometry *gg = readGeometry();
     if (!gg->isEmpty()) {
-      collection.addGeometry(gg);
+      collection.addGeometry(std::unique_ptr<Geometry>(gg));
     }
 
     // Restore state for next iteration
@@ -563,7 +563,7 @@ WktReader::readInnerMultiSolid(MultiSolid &multiSolid)
     std::unique_ptr<Solid> solid(new Solid());
     readInnerSolid(*solid);
     if (!solid->isEmpty()) {
-      multiSolid.addGeometry(solid.release());
+      multiSolid.addGeometry(std::move(solid));
     }
 
     // break if not followed by another points

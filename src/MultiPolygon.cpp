@@ -52,7 +52,7 @@ MultiPolygon::MultiPolygon(const CGAL::Multipolygon_with_holes_2<Kernel> &other)
       }
     }
 
-    addGeometry(polygon.release());
+    addGeometry(std::move(polygon));
   }
 }
 #endif

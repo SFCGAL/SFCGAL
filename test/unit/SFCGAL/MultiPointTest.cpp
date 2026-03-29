@@ -93,8 +93,8 @@ BOOST_AUTO_TEST_CASE(dropZM)
   BOOST_CHECK(!multiPoint3D.dropZ());
 
   MultiPoint multiPointM;
-  multiPointM.addGeometry(io::readWkt("POINT M (2 3 4)").release());
-  multiPointM.addGeometry(io::readWkt("POINT M (4 5 7)").release());
+  multiPointM.addGeometry(io::readWkt("POINT M (2 3 4)"));
+  multiPointM.addGeometry(io::readWkt("POINT M (4 5 7)"));
   BOOST_CHECK(!multiPointM.is3D());
   BOOST_CHECK(multiPointM.isMeasured());
   BOOST_CHECK(!multiPointM.dropZ());
@@ -143,8 +143,8 @@ BOOST_AUTO_TEST_CASE(swapXY)
   BOOST_CHECK_EQUAL(multiPoint3D.asText(0), "MULTIPOINT Z ((3 9 5),(5 12 7))");
 
   MultiPoint multiPointM;
-  multiPointM.addGeometry(io::readWkt("POINT M (20 7 4)").release());
-  multiPointM.addGeometry(io::readWkt("POINT M (14 9 7)").release());
+  multiPointM.addGeometry(io::readWkt("POINT M (20 7 4)"));
+  multiPointM.addGeometry(io::readWkt("POINT M (14 9 7)"));
   multiPointM.swapXY();
   BOOST_CHECK_EQUAL(multiPointM.asText(0), "MULTIPOINT M ((7 20 4),(9 14 7))");
 

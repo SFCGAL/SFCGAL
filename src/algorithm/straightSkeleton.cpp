@@ -93,21 +93,21 @@ straightSkeletonToMultiLineString(const CGAL::Straight_skeleton_2<K> &skeleton,
       continue;
     }
 
-    LineString *lineString = nullptr;
-    Point       pa(it->opposite()->vertex()->point());
-    Point       pb(it->vertex()->point());
+    std::unique_ptr<LineString> lineString = nullptr;
+    Point                       pa(it->opposite()->vertex()->point());
+    Point                       pb(it->vertex()->point());
     // avoid degenerate cases.https://gitlab.com/Oslandia/SFCGAL/-/issues/143
     if (pa != pb && distancePointPoint(pa, pb) > toleranceAbs) {
       if (outputDistanceInM) {
         pa.setM(CGAL::to_double(it->opposite()->vertex()->time()));
         pb.setM(CGAL::to_double(it->vertex()->time()));
-        lineString = new LineString(pa, pb);
+        lineString = std::make_unique<LineString>(pa, pb);
       } else {
-        lineString = new LineString(pa, pb);
+        lineString = std::make_unique<LineString>(pa, pb);
       }
 
       algorithm::translate(*lineString, translate);
-      result.addGeometry(lineString);
+      result.addGeometry(std::move(lineString));
     }
   }
 }
@@ -319,7 +319,7 @@ straightSkeletonToMedialAxis(const CGAL::Straight_skeleton_2<K> &skeleton,
       lineString->addPoint(proj);
     }
 
-    result.addGeometry(lineString.release());
+    result.addGeometry(std::move(lineString));
   }
 }
 

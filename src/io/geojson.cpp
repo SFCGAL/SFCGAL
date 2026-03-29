@@ -122,7 +122,7 @@ parseMultiPoint(const nlohmann::json &coords) -> std::unique_ptr<MultiPoint>
 {
   auto multiPoint = std::make_unique<MultiPoint>();
   for (const auto &coord : coords) {
-    multiPoint->addGeometry(parsePoint(coord).release());
+    multiPoint->addGeometry(parsePoint(coord));
   }
   return multiPoint;
 }
@@ -133,7 +133,7 @@ parseMultiLineString(const nlohmann::json &coords)
 {
   auto multiLineString = std::make_unique<MultiLineString>();
   for (const auto &lineCoords : coords) {
-    multiLineString->addGeometry(parseLineString(lineCoords).release());
+    multiLineString->addGeometry(parseLineString(lineCoords));
   }
   return multiLineString;
 }
@@ -143,7 +143,7 @@ parseMultiPolygon(const nlohmann::json &coords) -> std::unique_ptr<MultiPolygon>
 {
   auto multiPolygon = std::make_unique<MultiPolygon>();
   for (const auto &polyCoords : coords) {
-    multiPolygon->addGeometry(parsePolygon(polyCoords).release());
+    multiPolygon->addGeometry(parsePolygon(polyCoords));
   }
   return multiPolygon;
 }
@@ -208,7 +208,7 @@ parseGeometryCollection(const nlohmann::json &geometries)
 {
   auto geometryCollection = std::make_unique<GeometryCollection>();
   for (const auto &geomJson : geometries) {
-    geometryCollection->addGeometry(parseGeometryObject(geomJson).release());
+    geometryCollection->addGeometry(parseGeometryObject(geomJson));
   }
   return geometryCollection;
 }
@@ -718,7 +718,7 @@ readGeoJSON(const nlohmann::json &json) -> std::unique_ptr<Geometry>
     for (const auto &feature : json["features"]) {
       if (feature.contains("geometry") && !feature["geometry"].is_null()) {
         geometryCollection->addGeometry(
-            parseGeometryObject(feature["geometry"]).release());
+            parseGeometryObject(feature["geometry"]));
       }
     }
     return geometryCollection;

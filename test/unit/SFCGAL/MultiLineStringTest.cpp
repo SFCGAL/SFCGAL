@@ -109,9 +109,8 @@ BOOST_AUTO_TEST_CASE(dropZM)
 
   MultiLineString multiLineStringM;
   multiLineStringM.addGeometry(
-      io::readWkt("LINESTRING M (0 0 4, 1 1 5, 2 2 6)").release());
-  multiLineStringM.addGeometry(
-      io::readWkt("LINESTRING M (3 2 4, 4 2 5)").release());
+      io::readWkt("LINESTRING M (0 0 4, 1 1 5, 2 2 6)"));
+  multiLineStringM.addGeometry(io::readWkt("LINESTRING M (3 2 4, 4 2 5)"));
   BOOST_CHECK(!multiLineStringM.is3D());
   BOOST_CHECK(multiLineStringM.isMeasured());
   BOOST_CHECK(!multiLineStringM.dropZ());
@@ -172,9 +171,8 @@ BOOST_AUTO_TEST_CASE(swapXY)
 
   MultiLineString multiLineStringM;
   multiLineStringM.addGeometry(
-      io::readWkt("LINESTRING M (0 0 4, 1 1 5, 2 2 6)").release());
-  multiLineStringM.addGeometry(
-      io::readWkt("LINESTRING M (3 2 4, 4 2 5)").release());
+      io::readWkt("LINESTRING M (0 0 4, 1 1 5, 2 2 6)"));
+  multiLineStringM.addGeometry(io::readWkt("LINESTRING M (3 2 4, 4 2 5)"));
   multiLineStringM.swapXY();
   BOOST_CHECK_EQUAL(multiLineStringM.asText(0),
                     "MULTILINESTRING M ((0 0 4,1 1 5,2 2 6),(2 3 4,2 4 5))");

@@ -981,7 +981,8 @@ sfcgal_geometry_collection_add_geometry(sfcgal_geometry_t *geom,
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
       down_cast<SFCGAL::GeometryCollection>(geom)->addGeometry(
-          reinterpret_cast<SFCGAL::Geometry *>(ngeom));)
+          std::unique_ptr<SFCGAL::Geometry>(
+              reinterpret_cast<SFCGAL::Geometry *>(ngeom)));)
 }
 
 /**

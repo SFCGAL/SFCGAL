@@ -58,8 +58,8 @@ BOOST_AUTO_TEST_CASE(asTextEmpty)
 BOOST_AUTO_TEST_CASE(asText2d)
 {
   MultiPolygon g;
-  g.addGeometry(Envelope(0.0, 1.0, 0.0, 1.0).toPolygon().release());
-  g.addGeometry(Envelope(2.0, 3.0, 4.0, 5.0).toPolygon().release());
+  g.addGeometry(Envelope(0.0, 1.0, 0.0, 1.0).toPolygon());
+  g.addGeometry(Envelope(2.0, 3.0, 4.0, 5.0).toPolygon());
   BOOST_CHECK_EQUAL(g.asText(3),
                     "MULTIPOLYGON (((0.000 0.000,1.000 0.000,1.000 1.000,0.000 "
                     "1.000,0.000 0.000)),((2.000 4.000,3.000 4.000,3.000 "
@@ -127,9 +127,9 @@ BOOST_AUTO_TEST_CASE(dropZM)
 
   MultiPolygon multiPolygonM;
   multiPolygonM.addGeometry(
-      io::readWkt("POLYGON M ((0 0 1, 0 3 2, 3 3 3, 3 0 4, 0 0 1))").release());
+      io::readWkt("POLYGON M ((0 0 1, 0 3 2, 3 3 3, 3 0 4, 0 0 1))"));
   multiPolygonM.addGeometry(
-      io::readWkt("POLYGON M ((4 5 1, 1 4 2, 4 0 4, 4 5 1))").release());
+      io::readWkt("POLYGON M ((4 5 1, 1 4 2, 4 0 4, 4 5 1))"));
   BOOST_CHECK(!multiPolygonM.is3D());
   BOOST_CHECK(multiPolygonM.isMeasured());
   BOOST_CHECK(!multiPolygonM.dropZ());
@@ -143,12 +143,10 @@ BOOST_AUTO_TEST_CASE(dropZM)
   BOOST_CHECK(!multiPolygonM.dropZ());
 
   MultiPolygon multiPolygonZM;
+  multiPolygonZM.addGeometry(io::readWkt(
+      "POLYGON ZM ((0 0 1 4, 0 3 2 5, 3 3 3 6, 3 0 4 7, 0 0 1 4))"));
   multiPolygonZM.addGeometry(
-      io::readWkt("POLYGON ZM ((0 0 1 4, 0 3 2 5, 3 3 3 6, 3 0 4 7, 0 0 1 4))")
-          .release());
-  multiPolygonZM.addGeometry(
-      io::readWkt("POLYGON ZM ((2 4 1 5, 7 7 7 6, 4 2 5 7, 2 4 1 5))")
-          .release());
+      io::readWkt("POLYGON ZM ((2 4 1 5, 7 7 7 6, 4 2 5 7, 2 4 1 5))"));
   BOOST_CHECK(multiPolygonZM.is3D());
   BOOST_CHECK(multiPolygonZM.isMeasured());
   BOOST_CHECK(multiPolygonZM.dropM());
@@ -223,9 +221,9 @@ BOOST_AUTO_TEST_CASE(swapXY)
 
   MultiPolygon multiPolygonM;
   multiPolygonM.addGeometry(
-      io::readWkt("POLYGON M ((0 0 1, 0 3 2, 3 3 3, 3 0 4, 0 0 1))").release());
+      io::readWkt("POLYGON M ((0 0 1, 0 3 2, 3 3 3, 3 0 4, 0 0 1))"));
   multiPolygonM.addGeometry(
-      io::readWkt("POLYGON M ((4 5 1, 1 4 2, 4 0 4, 4 5 1))").release());
+      io::readWkt("POLYGON M ((4 5 1, 1 4 2, 4 0 4, 4 5 1))"));
   multiPolygonM.swapXY();
   BOOST_CHECK_EQUAL(multiPolygonM.asText(0),
                     "MULTIPOLYGON M "
@@ -233,12 +231,10 @@ BOOST_AUTO_TEST_CASE(swapXY)
                     "((5 4 1,4 1 2,0 4 4,5 4 1)))");
 
   MultiPolygon multiPolygonZM;
+  multiPolygonZM.addGeometry(io::readWkt(
+      "POLYGON ZM ((0 0 1 4, 0 3 2 5, 3 3 3 6, 3 0 4 7, 0 0 1 4))"));
   multiPolygonZM.addGeometry(
-      io::readWkt("POLYGON ZM ((0 0 1 4, 0 3 2 5, 3 3 3 6, 3 0 4 7, 0 0 1 4))")
-          .release());
-  multiPolygonZM.addGeometry(
-      io::readWkt("POLYGON ZM ((2 4 1 5, 7 7 7 6, 4 2 5 7, 2 4 1 5))")
-          .release());
+      io::readWkt("POLYGON ZM ((2 4 1 5, 7 7 7 6, 4 2 5 7, 2 4 1 5))"));
   multiPolygonZM.swapXY();
   BOOST_CHECK_EQUAL(multiPolygonZM.asText(0),
                     "MULTIPOLYGON ZM "

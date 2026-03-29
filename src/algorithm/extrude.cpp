@@ -39,14 +39,15 @@ namespace SFCGAL::algorithm {
 /// @privatesection
 
 auto
-extrude(const Point &g, const Kernel::Vector_3 &v) -> LineString *;
+extrude(const Point &g, const Kernel::Vector_3 &v)
+    -> std::unique_ptr<LineString>;
 auto
 extrude(const LineString &g, const Kernel::Vector_3 &v) -> PolyhedralSurface *;
 auto
 extrude(const Polygon &g, const Kernel::Vector_3 &v, bool addTop = true)
-    -> Solid *;
+    -> std::unique_ptr<Solid>;
 auto
-extrude(const Triangle &g, const Kernel::Vector_3 &v) -> Solid *;
+extrude(const Triangle &g, const Kernel::Vector_3 &v) -> std::unique_ptr<Solid>;
 
 auto
 extrude(const MultiPoint &g, const Kernel::Vector_3 &v) -> MultiLineString *;
@@ -66,16 +67,17 @@ extrude(const GeometryCollection &g, const Kernel::Vector_3 &v)
     -> GeometryCollection *;
 
 auto
-extrude(const Point &g, const Kernel::Vector_3 &v) -> LineString *
+extrude(const Point &g, const Kernel::Vector_3 &v)
+    -> std::unique_ptr<LineString>
 {
   if (g.isEmpty()) {
-    return new LineString();
+    return std::make_unique<LineString>();
   }
 
   Kernel::Point_3 const a = g.toPoint_3();
   Kernel::Point_3 const b = a + v;
 
-  return new LineString(Point(a), Point(b));
+  return std::make_unique<LineString>(Point(a), Point(b));
 }
 
 auto
@@ -106,10 +108,11 @@ extrude(const LineString &g, const Kernel::Vector_3 &v) -> PolyhedralSurface *
 }
 
 auto
-extrude(const Polygon &g, const Kernel::Vector_3 &v, bool addTop) -> Solid *
+extrude(const Polygon &g, const Kernel::Vector_3 &v, bool addTop)
+    -> std::unique_ptr<Solid>
 {
   if (g.isEmpty()) {
-    return new Solid();
+    return std::make_unique<Solid>();
   }
 
   bool const reverseOrientation = (v * normal3D<Kernel>(g)) > 0;
@@ -145,11 +148,11 @@ extrude(const Polygon &g, const Kernel::Vector_3 &v, bool addTop) -> Solid *
     }
   }
 
-  return new Solid(polyhedralSurface);
+  return std::make_unique<Solid>(polyhedralSurface);
 }
 
 auto
-extrude(const Triangle &g, const Kernel::Vector_3 &v) -> Solid *
+extrude(const Triangle &g, const Kernel::Vector_3 &v) -> std::unique_ptr<Solid>
 {
   return extrude(g.toPolygon(), v);
 }
@@ -267,7 +270,7 @@ extrude(const GeometryCollection &g, const Kernel::Vector_3 &v)
   }
 
   for (size_t i = 0; i < g.numGeometries(); i++) {
-    result->addGeometry(extrude(g.geometryN(i), v).release());
+    result->addGeometry(extrude(g.geometryN(i), v));
   }
 
   return result.release();

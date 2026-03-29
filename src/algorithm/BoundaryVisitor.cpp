@@ -198,8 +198,8 @@ BoundaryVisitor::visit(const NURBSCurve &g)
     _boundary.reset();
   } else {
     std::unique_ptr<MultiPoint> boundary(new MultiPoint);
-    boundary->addGeometry(new Point(startPoint));
-    boundary->addGeometry(new Point(endPoint));
+    boundary->addGeometry(std::make_unique<Point>(startPoint));
+    boundary->addGeometry(std::make_unique<Point>(endPoint));
     _boundary = std::move(boundary);
   }
 }
@@ -251,7 +251,7 @@ BoundaryVisitor::getBoundaryFromLineStrings(const graph::GeometryGraph &graph)
     std::unique_ptr<MultiPoint> boundary(new MultiPoint);
 
     for (auto &vertice : vertices) {
-      boundary->addGeometry(new Point(graph[vertice].coordinate));
+      boundary->addGeometry(std::make_unique<Point>(graph[vertice].coordinate));
     }
 
     _boundary = std::move(boundary);
@@ -287,8 +287,8 @@ BoundaryVisitor::getBoundaryFromPolygons(const graph::GeometryGraph &g)
       vertex_descriptor source = g.source(edge);
       vertex_descriptor target = g.target(edge);
 
-      boundary->addGeometry(new LineString(Point(g[source].coordinate),
-                                           Point(g[target].coordinate)));
+      boundary->addGeometry(std::make_unique<LineString>(
+          Point(g[source].coordinate), Point(g[target].coordinate)));
     }
 
     _boundary = std::move(boundary);

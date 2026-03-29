@@ -154,7 +154,7 @@ polygonSetToMultiPolygon(const Offset_polygon_set_2 &polygonSet, const int &n)
   std::unique_ptr<MultiPolygon> result(new MultiPolygon);
 
   for (auto &re : res) {
-    result->addGeometry(new Polygon(approximate(re, n)));
+    result->addGeometry(std::make_unique<Polygon>(approximate(re, n)));
   }
 
   return result;

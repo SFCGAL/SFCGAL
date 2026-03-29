@@ -80,12 +80,12 @@ polygons_to_geometry(const std::list<TPolygon_2> &polys)
 
   std::list<TPolygon_2>::const_iterator poly_it;
   for (poly_it = polys.begin(); poly_it != polys.end(); ++poly_it) {
-    auto *poly = new Polygon;
+    auto poly = std::make_unique<Polygon>();
     for (const TPoint_2 &p : poly_it->container()) {
       poly->exteriorRing().addPoint(p);
     }
     poly->exteriorRing().addPoint(*(poly_it->vertices_begin()));
-    geoms->addGeometry(poly);
+    geoms->addGeometry(std::move(poly));
   }
   return std::unique_ptr<Geometry>(geoms);
 }

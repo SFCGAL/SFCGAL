@@ -982,8 +982,8 @@ GeometrySet<Dim>::recompose() const -> std::unique_ptr<Geometry>
 
   BOOST_ASSERT(ret != 0);
 
-  for (auto &geometrie : geometries) {
-    ret->addGeometry(geometrie);
+  for (auto &geometry : geometries) {
+    ret->addGeometry(std::unique_ptr<Geometry>(geometry));
   }
 
   return std::unique_ptr<Geometry>(ret);

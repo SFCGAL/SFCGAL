@@ -166,7 +166,7 @@ WkbReader::readInnerGeometryCollection() -> GeometryCollection
     for (uint32_t i = 0; i < numGeoms; ++i) {
       readWkb();
       if (_geometry != nullptr) {
-        result.addGeometry(_geometry.release());
+        result.addGeometry(std::move(_geometry));
       }
     }
   } catch (std::exception &e) {

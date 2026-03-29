@@ -141,8 +141,7 @@ building(const MultiPolygon &g, const Kernel::FT &wallHeight,
   std::unique_ptr<MultiSolid> multiSolid(new MultiSolid);
 
   for (size_t i = 0; i < g.numGeometries(); i++) {
-    multiSolid->addGeometry(
-        building(g.polygonN(i), wallHeight, roofSlope).release());
+    multiSolid->addGeometry(building(g.polygonN(i), wallHeight, roofSlope));
   }
 
   return std::unique_ptr<Geometry>(multiSolid.release());

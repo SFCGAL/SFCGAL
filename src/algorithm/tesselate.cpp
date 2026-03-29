@@ -42,7 +42,7 @@ tesselate(const Geometry &g, NoValidityCheck /*unused*/)
       const PolyhedralSurface &shellN = g.as<Solid>().shellN(i);
 
       if (!shellN.isEmpty()) {
-        ret->addGeometry(tesselate(shellN).release());
+        ret->addGeometry(tesselate(shellN));
       }
     }
 
@@ -56,7 +56,7 @@ tesselate(const Geometry &g, NoValidityCheck /*unused*/)
     std::unique_ptr<GeometryCollection> ret(new GeometryCollection);
 
     for (size_t i = 0; i < g.numGeometries(); ++i) {
-      ret->addGeometry(tesselate(g.geometryN(i)).release());
+      ret->addGeometry(tesselate(g.geometryN(i)));
     }
 
     return std::unique_ptr<Geometry>(ret.release());

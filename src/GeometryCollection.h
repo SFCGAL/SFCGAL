@@ -152,6 +152,7 @@ public:
    * @param geometry Pointer to geometry to add
    * @deprecated The unique_ptr version should be used instead
    */
+  [[deprecated("The unique_ptr version should be used instead")]]
   void
   addGeometry(Geometry *geometry);
   /**

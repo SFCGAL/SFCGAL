@@ -58,8 +58,8 @@ BOOST_AUTO_TEST_CASE(asTextEmpty)
 BOOST_AUTO_TEST_CASE(asText2d)
 {
   MultiSolid g;
-  g.addGeometry(Envelope(0.0, 1.0, 0.0, 1.0, 0.0, 1.0).toSolid().release());
-  g.addGeometry(Envelope(2.0, 3.0, 4.0, 5.0, 6.0, 7.0).toSolid().release());
+  g.addGeometry(Envelope(0.0, 1.0, 0.0, 1.0, 0.0, 1.0).toSolid());
+  g.addGeometry(Envelope(2.0, 3.0, 4.0, 5.0, 6.0, 7.0).toSolid());
   BOOST_CHECK_EQUAL(
       g.asText(0),
       "MULTISOLID Z (((((0 0 0,0 1 0,1 1 0,1 0 0,0 0 0)),((0 0 1,1 0 1,1 1 1,0 "
@@ -91,8 +91,8 @@ BOOST_AUTO_TEST_CASE(dropZ)
   BOOST_CHECK(geom.isEmpty());
   BOOST_CHECK(!geom.dropZ());
 
-  geom.addGeometry(Envelope(0.0, 1.0, 0.0, 1.0, 0.0, 1.0).toSolid().release());
-  geom.addGeometry(Envelope(2.0, 3.0, 4.0, 5.0, 6.0, 7.0).toSolid().release());
+  geom.addGeometry(Envelope(0.0, 1.0, 0.0, 1.0, 0.0, 1.0).toSolid());
+  geom.addGeometry(Envelope(2.0, 3.0, 4.0, 5.0, 6.0, 7.0).toSolid());
   BOOST_CHECK(geom.dropZ());
   BOOST_CHECK_EQUAL(geom.asText(0),
                     "MULTISOLID (((((0 0,0 1,1 1,1 0,0 0)),((0 0,1 0,1 1,0 "
@@ -109,8 +109,8 @@ BOOST_AUTO_TEST_CASE(swapXY)
 {
   MultiSolid geom;
 
-  geom.addGeometry(Envelope(0.0, 1.0, 0.0, 1.0, 0.0, 1.0).toSolid().release());
-  geom.addGeometry(Envelope(2.0, 3.0, 4.0, 5.0, 6.0, 7.0).toSolid().release());
+  geom.addGeometry(Envelope(0.0, 1.0, 0.0, 1.0, 0.0, 1.0).toSolid());
+  geom.addGeometry(Envelope(2.0, 3.0, 4.0, 5.0, 6.0, 7.0).toSolid());
   geom.swapXY();
   BOOST_CHECK_EQUAL(geom.asText(0), "MULTISOLID Z ("
                                     "((((0 0 0,1 0 0,1 1 0,0 1 0,0 0 0)),"
