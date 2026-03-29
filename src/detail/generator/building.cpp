@@ -54,7 +54,7 @@ _buildingWall(const Polygon_2 &ring, const Kernel::FT &wallHeight,
     wallRing.addPoint(std::make_unique<Point>(b.x(), b.y(), wallHeight));
     wallRing.addPoint(std::make_unique<Point>(a.x(), a.y(), wallHeight));
     wallRing.addPoint(std::make_unique<Point>(a.x(), a.y(), Kernel::FT(0)));
-    shell.addPolygon(Polygon(wallRing));
+    shell.addPatch(Polygon(wallRing));
   }
 }
 
@@ -89,7 +89,7 @@ building(const Polygon &g, const Kernel::FT &wallHeight,
     Polygon bottom(polygon);
     bottom.reverse();
     SFCGAL::algorithm::force3D(bottom);
-    shell->addPolygon(bottom);
+    shell->addPatch(bottom);
   }
 
   // walls
@@ -126,7 +126,7 @@ building(const Polygon &g, const Kernel::FT &wallHeight,
 
       if (!infiniteTimeFound) {
         roofFaceRing.addPoint(roofFaceRing.startPoint());
-        shell->addPolygon(Polygon(roofFaceRing));
+        shell->addPatch(Polygon(roofFaceRing));
       }
     }
   }

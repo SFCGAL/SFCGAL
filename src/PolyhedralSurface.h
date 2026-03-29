@@ -284,6 +284,7 @@ public:
    * @param polygon The polygon to add
    * @deprecated see addPatch()
    */
+  [[deprecated("Use addPatch instead")]]
   void
   addPolygon(const Polygon &polygon);
   /**
@@ -291,6 +292,7 @@ public:
    * @param polygon The polygon to add
    * @deprecated see addPatch()
    */
+  [[deprecated("Use addPatch instead")]]
   void
   addPolygon(Polygon *polygon);
   /**
@@ -298,6 +300,7 @@ public:
    * @param polyhedralSurface The polyhedral surface to add polygons from
    * @deprecated see addPatches()
    */
+  [[deprecated("Use addPatches instead")]]
   void
   addPolygons(const PolyhedralSurface &polyhedralSurface);
 

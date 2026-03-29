@@ -237,7 +237,7 @@ extrude(const TriangulatedSurface &g, const Kernel::Vector_3 &v) -> Solid *
   if (!boundary->isEmpty()) {
     std::unique_ptr<Geometry> extrudedBoundary(extrude(*boundary, v));
     BOOST_ASSERT(extrudedBoundary->is<PolyhedralSurface>());
-    result->exteriorShell().addPolygons(
+    result->exteriorShell().addPatches(
         extrudedBoundary->as<PolyhedralSurface>());
   }
 

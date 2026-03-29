@@ -171,7 +171,7 @@ parsePolyhedralSurface(const nlohmann::json &coords)
 {
   auto polyhedralSurface = std::make_unique<PolyhedralSurface>();
   for (const auto &polyCoords : coords) {
-    polyhedralSurface->addPolygon(*parsePolygon(polyCoords));
+    polyhedralSurface->addPatch(*parsePolygon(polyCoords));
   }
   return polyhedralSurface;
 }
