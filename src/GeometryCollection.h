@@ -129,6 +129,8 @@ public:
   /// @brief Set the geometry at the given index (pointer version)
   /// @param geometry Pointer to geometry to set
   /// @param idx Index where to set the geometry
+  /// @deprecated The unique_ptr version should be used instead
+  [[deprecated("The unique_ptr version should be used instead")]]
   void
   setGeometryN(Geometry *geometry, size_t const &idx) override;
   /**

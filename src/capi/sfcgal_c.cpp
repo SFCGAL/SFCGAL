@@ -972,7 +972,9 @@ sfcgal_geometry_collection_set_geometry_n(sfcgal_geometry_t *collection,
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
       return down_cast<SFCGAL::GeometryCollection>(collection)
-          ->setGeometryN(reinterpret_cast<SFCGAL::Geometry *>(geometry), i);)
+          ->setGeometryN(std::unique_ptr<SFCGAL::Geometry>(
+                             reinterpret_cast<SFCGAL::Geometry *>(geometry)),
+                         i);)
 }
 
 extern "C" void
