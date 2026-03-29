@@ -105,7 +105,8 @@ ConstraintDelaunayTriangulation::getTriangles(
     const Coordinate &c = it->vertex(2)->info().original;
 
     if (!a.isEmpty() && !b.isEmpty() && !c.isEmpty()) {
-      triangulatedSurface.addPatch(new Triangle(Point(a), Point(b), Point(c)));
+      triangulatedSurface.addPatch(
+          std::make_unique<Triangle>(Point(a), Point(b), Point(c)));
     }
   }
 }

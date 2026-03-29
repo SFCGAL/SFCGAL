@@ -157,6 +157,7 @@ public:
    *
    * @deprecated The unique_ptr version should be used instead
    */
+  [[deprecated("The unique_ptr version should be used instead")]]
   void
   addPatch(Triangle *patch)
   {

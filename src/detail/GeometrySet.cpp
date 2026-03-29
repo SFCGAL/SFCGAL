@@ -830,7 +830,7 @@ recompose_surfaces(const GeometrySet<3>::SurfaceCollection &surfaces,
   std::unique_ptr<TriangulatedSurface> tri(new TriangulatedSurface);
 
   for (const auto &surface : surfaces) {
-    tri->addPatch(new Triangle(surface.primitive()));
+    tri->addPatch(std::make_unique<Triangle>(surface.primitive()));
   }
 
   SFCGAL::algorithm::SurfaceGraph const graph(*tri);
