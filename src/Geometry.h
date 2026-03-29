@@ -368,6 +368,7 @@ public:
    *
    * @deprecated The unique_ptr version should be used instead
    */
+  [[deprecated("The unique_ptr version should be used instead")]]
   virtual void
   setGeometryN(Geometry *geometry, size_t const &idx);
 
