@@ -320,6 +320,7 @@ public:
    * anymore of its deallocation.
    * @deprecated The unique_ptr version should be used instead
    */
+  [[deprecated("The unique_ptr version should be used instead")]]
   void
   setPatchN(Geometry *geometry, size_t const &idx);
 
@@ -353,6 +354,7 @@ public:
    * anymore of its deallocation.
    * @deprecated The unique_ptr version should be used instead
    */
+  [[deprecated("The unique_ptr version should be used instead")]]
   void
   setPatchN(Polygon *patch, size_t const &idx);
 

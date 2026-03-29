@@ -1072,7 +1072,9 @@ sfcgal_polyhedral_surface_set_patch_n(sfcgal_geometry_t *polyhedral,
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
       return down_cast<SFCGAL::PolyhedralSurface>(polyhedral)
-          ->setPatchN(down_cast<SFCGAL::Polygon>(patch), i);)
+          ->setPatchN(std::unique_ptr<SFCGAL::Polygon>(
+                          down_cast<SFCGAL::Polygon>(patch)),
+                      i);)
 }
 
 extern "C" void
