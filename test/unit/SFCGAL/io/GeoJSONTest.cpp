@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(testReadPolyhedralSurfaceExtension)
 
   BOOST_CHECK(g->is<PolyhedralSurface>());
   const auto &polyhedralSurface = g->as<PolyhedralSurface>();
-  BOOST_CHECK_EQUAL(polyhedralSurface.numPolygons(), 2U);
+  BOOST_CHECK_EQUAL(polyhedralSurface.numPatches(), 2U);
 }
 
 BOOST_AUTO_TEST_CASE(testReadPreparedWithCRS)

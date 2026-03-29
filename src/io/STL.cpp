@@ -62,7 +62,7 @@ save(const Geometry &geom, std::ostream &out) -> void
         }
         case TYPE_POLYHEDRALSURFACE: {
           const auto &phs = geom.as<PolyhedralSurface>();
-          for (size_t i = 0; i < phs.numPolygons(); ++i) {
+          for (size_t i = 0; i < phs.numPatches(); ++i) {
             process_geometry(phs.polygonN(i));
           }
           break;

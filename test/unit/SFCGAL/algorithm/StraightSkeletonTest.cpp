@@ -552,7 +552,7 @@ BOOST_AUTO_TEST_CASE(testStraightSkeletonPartitionSimpleRectangle)
   std::unique_ptr<Geometry> out(algorithm::straightSkeletonPartition(*g));
   BOOST_CHECK(out->is<PolyhedralSurface>());
   BOOST_CHECK_EQUAL(out->as<PolyhedralSurface>().numGeometries(), 1);
-  BOOST_CHECK_EQUAL(out->as<PolyhedralSurface>().numPolygons(), 4);
+  BOOST_CHECK_EQUAL(out->as<PolyhedralSurface>().numPatches(), 4);
   std::string const expectedWKT(
       "POLYHEDRALSURFACE (((0.00 0.00,1.00 1.00,0.00 2.00)),((3.00 0.00,2.00 "
       "1.00,1.00 1.00,0.00 0.00)),((3.00 2.00,2.00 1.00,3.00 0.00)),((0.00 "
@@ -567,7 +567,7 @@ BOOST_AUTO_TEST_CASE(testStraightSkeletonPartitionComplexPolygon)
   std::unique_ptr<Geometry> out(algorithm::straightSkeletonPartition(*g));
   BOOST_CHECK(out->is<PolyhedralSurface>());
   BOOST_CHECK_EQUAL(out->as<PolyhedralSurface>().numGeometries(), 1);
-  BOOST_CHECK_EQUAL(out->as<PolyhedralSurface>().numPolygons(), 8);
+  BOOST_CHECK_EQUAL(out->as<PolyhedralSurface>().numPatches(), 8);
   std::string const expectedWKT(
       "POLYHEDRALSURFACE (((0.00 0.00,1.00 1.00,0.50 1.50,0.50 2.50,0.00 "
       "3.00)),((3.00 0.00,2.00 1.00,1.00 1.00,0.00 0.00)),((3.00 3.00,2.50 "

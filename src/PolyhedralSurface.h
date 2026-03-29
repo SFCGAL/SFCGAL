@@ -189,7 +189,10 @@ public:
    * @deprecated see numPatches
    * @see numGeometries()
    */
+  // clang-format off
+  [[deprecated("Use numPatches instead")]]
   [[nodiscard]] auto
+  // clang-format on
   numPolygons() const -> size_t
   {
     return numPatches();
