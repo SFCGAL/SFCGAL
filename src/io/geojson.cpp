@@ -449,7 +449,7 @@ tinToCoords(const TriangulatedSurface &tin, int precision) -> nlohmann::json
     return coords; // Return empty array for empty TriangulatedSurface
   }
   for (size_t i = 0; i < tin.numPatches(); ++i) {
-    coords.push_back(triangleToCoords(tin.triangleN(i), precision));
+    coords.push_back(triangleToCoords(tin.patchN(i), precision));
   }
   return coords;
 }

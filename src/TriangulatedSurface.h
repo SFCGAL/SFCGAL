@@ -201,7 +201,10 @@ public:
    * @return Const reference to the nth triangle
    * @deprecated see patchN()
    */
+  // clang-format off
+  [[deprecated("Use patchN instead")]]
   [[nodiscard]] auto
+  // clang-format on
   triangleN(size_t const &index) const -> const Triangle &
   {
     BOOST_ASSERT(index < _triangles.size());
@@ -213,6 +216,7 @@ public:
    * @return Reference to the nth triangle
    * @deprecated see patchN()
    */
+  [[deprecated("Use patchN instead")]]
   auto
   triangleN(size_t const &index) -> Triangle &
   {
