@@ -224,7 +224,7 @@ PolyhedralSurface::addPolygon(const Polygon &polygon)
 void
 PolyhedralSurface::addPolygon(Polygon *polygon)
 {
-  addPatch(polygon);
+  addPatch(std::unique_ptr<Polygon>(polygon));
 }
 
 void

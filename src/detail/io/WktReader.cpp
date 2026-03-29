@@ -501,7 +501,7 @@ WktReader::readInnerPolyhedralSurface(PolyhedralSurface &surface)
   while (!_reader.eof()) {
     std::unique_ptr<Polygon> polygon(new Polygon());
     readInnerPolygon(*polygon);
-    surface.addPatch(polygon.release());
+    surface.addPatch(std::move(polygon));
 
     // break if not followed by another points
     if (!_reader.match(',')) {
