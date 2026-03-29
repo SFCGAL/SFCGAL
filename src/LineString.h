@@ -223,6 +223,7 @@ public:
    * this point is moved into the LineString.
    * @deprecated The unique_ptr version should be used instead
    */
+  [[deprecated("The unique_ptr version should be used instead")]]
   void
   addPoint(Point *point)
   {

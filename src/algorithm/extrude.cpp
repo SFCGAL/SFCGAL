@@ -93,11 +93,11 @@ extrude(const LineString &g, const Kernel::Vector_3 &v) -> PolyhedralSurface *
 
     Kernel::Point_3 const a = g.pointN(i).toPoint_3();
     Kernel::Point_3 const b = g.pointN(i + 1).toPoint_3();
-    ring->addPoint(new Point(a));
-    ring->addPoint(new Point(b));
-    ring->addPoint(new Point(b + v));
-    ring->addPoint(new Point(a + v));
-    ring->addPoint(new Point(a));
+    ring->addPoint(std::make_unique<Point>(a));
+    ring->addPoint(std::make_unique<Point>(b));
+    ring->addPoint(std::make_unique<Point>(b + v));
+    ring->addPoint(std::make_unique<Point>(a + v));
+    ring->addPoint(std::make_unique<Point>(a));
 
     polyhedralSurface->addPatch(std::make_unique<Polygon>(std::move(ring)));
   }

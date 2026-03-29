@@ -49,11 +49,11 @@ _buildingWall(const Polygon_2 &ring, const Kernel::FT &wallHeight,
     const Point_2 &b = ring.vertex((i + 1) % npt);
 
     LineString wallRing;
-    wallRing.addPoint(new Point(a.x(), a.y(), Kernel::FT(0)));
-    wallRing.addPoint(new Point(b.x(), b.y(), Kernel::FT(0)));
-    wallRing.addPoint(new Point(b.x(), b.y(), wallHeight));
-    wallRing.addPoint(new Point(a.x(), a.y(), wallHeight));
-    wallRing.addPoint(new Point(a.x(), a.y(), Kernel::FT(0)));
+    wallRing.addPoint(std::make_unique<Point>(a.x(), a.y(), Kernel::FT(0)));
+    wallRing.addPoint(std::make_unique<Point>(b.x(), b.y(), Kernel::FT(0)));
+    wallRing.addPoint(std::make_unique<Point>(b.x(), b.y(), wallHeight));
+    wallRing.addPoint(std::make_unique<Point>(a.x(), a.y(), wallHeight));
+    wallRing.addPoint(std::make_unique<Point>(a.x(), a.y(), Kernel::FT(0)));
     shell.addPolygon(Polygon(wallRing));
   }
 }

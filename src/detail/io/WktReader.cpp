@@ -218,7 +218,7 @@ WktReader::readInnerLineString(LineString &lineString)
     std::unique_ptr<Point> point(new Point());
 
     if (readPointCoordinate(*point)) {
-      lineString.addPoint(point.release());
+      lineString.addPoint(std::move(point));
     } else {
       BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
     }

@@ -34,7 +34,7 @@ disc(const Point &center, const double &radius,
     Kernel::Vector_2 const p =
         center.toVector_2() +
         radius * Kernel::Vector_2(cos(i * dTheta), sin(i * dTheta));
-    exteriorRing->addPoint(new Point(p.x(), p.y()));
+    exteriorRing->addPoint(std::make_unique<Point>(p.x(), p.y()));
   }
 
   exteriorRing->addPoint(exteriorRing->startPoint());

@@ -51,10 +51,11 @@ hoch(const unsigned int &order) -> std::unique_ptr<Polygon>
   std::unique_ptr<LineString> ring(new LineString());
 
   for (auto &point : points) {
-    ring->addPoint(new Point(point.x(), point.y()));
+    ring->addPoint(std::make_unique<Point>(point.x(), point.y()));
   }
 
-  ring->addPoint(new Point(points.front().x(), points.front().y()));
+  ring->addPoint(
+      std::make_unique<Point>(points.front().x(), points.front().y()));
 
   result->setExteriorRing(ring.release());
 

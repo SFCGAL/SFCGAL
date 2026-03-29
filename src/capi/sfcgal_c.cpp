@@ -804,7 +804,7 @@ sfcgal_linestring_add_point(sfcgal_geometry_t *geom, sfcgal_geometry_t *point)
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
       down_cast<SFCGAL::LineString>(geom)->addPoint(
-          down_cast<SFCGAL::Point>(point));)
+          std::unique_ptr<SFCGAL::Point>(down_cast<SFCGAL::Point>(point)));)
 }
 
 extern "C" void
