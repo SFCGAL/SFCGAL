@@ -2951,6 +2951,27 @@ sfcgal_geometry_polygon_repair(const sfcgal_geometry_t     *geom,
 
 #endif // SFCGAL_CGAL_VERSION_MAJOR >= 6
 
+/**
+ * Splits the given geometry with a plane defined by a point and a normal
+ * vector.
+ * @param geom The input geometry to split
+ * @param ptx X-coordinate of a point belonging to the splitting plane
+ * @param pty Y-coordinate of a point belonging to the splitting plane
+ * @param ptz Z-coordinate of a point belonging to the splitting plane
+ * @param normalx X-coordinate of the normal vector of the splitting plane
+ * @param normaly Y-coordinate of the normal vector of the splitting plane
+ * @param normalz Z-coordinate of the normal vector of the splitting plane
+ * @param close_geometries If true, ensures resulting geometries are closed.
+ * @return A GeometryCollection containing the split geometries, or an empty
+ * GeometryCollection if the plane does not intersect the geometry.
+ * @pre isValid(geom) == true
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_geometry_split_3d(const sfcgal_geometry_t *geom, double ptx, double pty,
+                         double ptz, double normalx, double normaly,
+                         double normalz, bool close_geometries);
+
 /*--------------------------------------------------------------------------------------*
  *
  * Error handling
