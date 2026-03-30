@@ -1039,7 +1039,7 @@ BOOST_AUTO_TEST_CASE(testForceLHR)
   sfcgal_set_error_handlers(printf, on_error);
 
   std::string strGeom{"POLYGON ((0 0,0 5,5 5,5 0,0 0),(1 1,2 1,2 2,1 2,1 1))"};
-  std::string expectedGeom{
+  std::string expected_geom{
       "POLYGON ((0 0,5 0,5 5,0 5,0 0),(1 1,1 2,2 2,2 1,1 1))"};
 
   auto const geom = io::readWkt(strGeom);
@@ -1052,7 +1052,7 @@ BOOST_AUTO_TEST_CASE(testForceLHR)
   std::string strApi(wkbApi, wkbLen);
 
   // check
-  BOOST_CHECK_EQUAL(expectedGeom, strApi);
+  BOOST_CHECK_EQUAL(expected_geom, strApi);
   sfcgal_free_buffer(wkbApi);
   sfcgal_geometry_delete(lhr);
 }
@@ -1063,7 +1063,7 @@ BOOST_AUTO_TEST_CASE(testForceRHR_3D)
 
   std::string strGeom{"POLYGON ((0 5 1,0 0 2,5 0 3,5 5 4,0 5 1),(2 1 1,1 1 2,1 "
                       "2 3,2 2 4,2 1 1),(4 3 1,3 3 2,3 4 3,4 4 4,4 3 1))"};
-  std::string expectedGeom{
+  std::string expected_geom{
       "POLYGON Z ((0 5 1,5 5 4,5 0 3,0 0 2,0 5 1),(2 1 1,2 2 4,1 2 3,1 1 2,2 1 "
       "1),(4 3 1,4 4 4,3 4 3,3 3 2,4 3 1))"};
 
@@ -1077,7 +1077,7 @@ BOOST_AUTO_TEST_CASE(testForceRHR_3D)
   std::string strApi(wkbApi, wkbLen);
 
   // check
-  BOOST_CHECK_EQUAL(expectedGeom, strApi);
+  BOOST_CHECK_EQUAL(expected_geom, strApi);
   sfcgal_free_buffer(wkbApi);
   sfcgal_geometry_delete(rhr);
 }
@@ -2031,13 +2031,13 @@ BOOST_AUTO_TEST_CASE(testCylinderTest)
   const std::string strApi(wktApi, wkbLen);
   sfcgal_free_buffer(wktApi);
 
-  std::string expectedWkt(SFCGAL_TEST_DIRECTORY);
-  expectedWkt += "/data/cylinder_expected.wkt";
-  std::ifstream efs(expectedWkt.c_str());
+  std::string expected_wkt(SFCGAL_TEST_DIRECTORY);
+  expected_wkt += "/data/cylinder_expected.wkt";
+  std::ifstream efs(expected_wkt.c_str());
   BOOST_REQUIRE(efs.good());
-  std::getline(efs, expectedWkt);
+  std::getline(efs, expected_wkt);
 
-  BOOST_CHECK_EQUAL(strApi, expectedWkt);
+  BOOST_CHECK_EQUAL(strApi, expected_wkt);
 
   sfcgal_geometry_delete(polySurface);
 
@@ -2824,6 +2824,51 @@ BOOST_AUTO_TEST_CASE(testSurfaceSimplificationRatio)
   /* --- cleanup --- */
   sfcgal_geometry_delete(result);
   sfcgal_geometry_delete(geom);
+}
+
+BOOST_AUTO_TEST_CASE(testSplit3D)
+{
+  sfcgal_set_error_handlers(printf, on_error);
+
+  std::string input_data(SFCGAL_TEST_DIRECTORY);
+  input_data += "/data/split3D/houseSolid.wkt";
+  std::ifstream ifs(input_data.c_str());
+  BOOST_REQUIRE(ifs.good());
+
+  std::string input_wkt;
+  std::getline(ifs, input_wkt);
+  const std::unique_ptr<Geometry> house_solid(io::readWkt(input_wkt));
+  BOOST_CHECK(!house_solid->isEmpty());
+  BOOST_CHECK_EQUAL(house_solid->geometryTypeId(),
+                    SFCGAL::GeometryType::TYPE_SOLID);
+
+  sfcgal_geometry_t *split_geom =
+      sfcgal_geometry_split_3d(house_solid.get(), 0, 0, 2.5, 0, 0, 1, true);
+
+  BOOST_CHECK(split_geom != nullptr);
+
+  const unsigned int expected_nr_split = 2;
+  const unsigned int nr_geom_split = sfcgal_geometry_num_geometries(split_geom);
+  BOOST_CHECK_EQUAL(nr_geom_split, expected_nr_split);
+
+  for (unsigned int i = 0; i < nr_geom_split; ++i) {
+    std::string component_data(SFCGAL_TEST_DIRECTORY);
+    component_data +=
+        "/data/split3D/houseSolidComponent" + std::to_string(i) + ".wkt";
+    std::ifstream ifs(component_data.c_str());
+    BOOST_REQUIRE(ifs.good());
+
+    std::string expected_wkt;
+    std::getline(ifs, expected_wkt);
+    const std::unique_ptr<Geometry> expected_geom = io::readWkt(expected_wkt);
+
+    const sfcgal_geometry_t *geom_n =
+        sfcgal_geometry_collection_geometry_n(split_geom, i);
+
+    BOOST_CHECK(sfcgal_geometry_covers_3d(geom_n, expected_geom.get()));
+  }
+
+  sfcgal_geometry_delete(split_geom);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
