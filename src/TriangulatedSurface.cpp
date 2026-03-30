@@ -127,7 +127,7 @@ TriangulatedSurface::swapXY() -> void
 }
 
 void
-TriangulatedSurface::addPatchs(const TriangulatedSurface &other)
+TriangulatedSurface::addPatches(const TriangulatedSurface &other)
 {
   for (const auto &it : other) {
     addPatch(it);
@@ -137,7 +137,7 @@ TriangulatedSurface::addPatchs(const TriangulatedSurface &other)
 void
 TriangulatedSurface::addTriangles(const TriangulatedSurface &other)
 {
-  addPatchs(other);
+  addPatches(other);
 }
 
 auto

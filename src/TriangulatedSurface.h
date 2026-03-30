@@ -176,11 +176,11 @@ public:
     _triangles.emplace_back(std::move(patch));
   }
   /**
-   * add patchs from an other TriangulatedSurface
+   * add patches from an other TriangulatedSurface
    * @param other The triangulated surface to add patches from
    */
   void
-  addPatchs(const TriangulatedSurface &other);
+  addPatches(const TriangulatedSurface &other);
 
   /**
    * [SFA/OGC]Returns the number of triangles
@@ -249,7 +249,7 @@ public:
   /**
    * add triangles from an other TriangulatedSurface
    * @param other The triangulated surface to copy triangles from
-   * @deprecated see addPatchs()
+   * @deprecated see addPatches()
    */
   void
   addTriangles(const TriangulatedSurface &other);
