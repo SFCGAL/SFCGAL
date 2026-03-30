@@ -13,7 +13,7 @@
 
 #include "../../../test_config.h"
 
-#include <boost/ptr_container/ptr_map.hpp>
+#include <boost/format.hpp>
 #include <boost/test/unit_test.hpp>
 
 using namespace SFCGAL;
@@ -26,16 +26,16 @@ using namespace boost::unit_test;
 // }
 
 void
-insertOrReplace(boost::ptr_map<std::string, Geometry> &map, std::string key,
-                Geometry *value)
+insertOrReplace(std::unordered_map<std::string, std::unique_ptr<Geometry>> &map,
+                std::string key, std::unique_ptr<Geometry> value)
 {
-  boost::ptr_map<std::string, Geometry>::iterator const found = map.find(key);
+  const auto found = map.find(key);
 
   if (found != map.end()) {
     map.erase(found);
   }
 
-  map.insert(key, value);
+  map.emplace(key, std::move(value));
 }
 BOOST_AUTO_TEST_SUITE(SFCGAL_algorithm_IntersectionTest)
 
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(testFileIntersectionTest)
     }
   }
 
-  boost::ptr_map<std::string, Geometry> storedGeom;
+  std::unordered_map<std::string, std::unique_ptr<Geometry>> storedGeom;
 
   // logger().setLogLevel( Logger::Debug );
 
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(testFileIntersectionTest)
       std::string geomName;
       std::getline(iss, geomName, '|');
       std::getline(iss, wktGA, '|');
-      insertOrReplace(storedGeom, geomName, io::readWkt(wktGA).release());
+      insertOrReplace(storedGeom, geomName, io::readWkt(wktGA));
       continue;
     }
 
@@ -127,9 +127,8 @@ BOOST_AUTO_TEST_CASE(testFileIntersectionTest)
 
     if (wktGA[0] == '@') {
       // stored geometry reference
-      std::string const name = wktGA.substr(1);
-      const boost::ptr_map<std::string, Geometry>::const_iterator found =
-          storedGeom.find(name);
+      std::string const name  = wktGA.substr(1);
+      const auto        found = storedGeom.find(name);
 
       if (found == storedGeom.end()) {
         BOOST_REQUIRE_MESSAGE(
@@ -141,15 +140,14 @@ BOOST_AUTO_TEST_CASE(testFileIntersectionTest)
       gA = io::readWkt(wktGA);
     }
 
-    insertOrReplace(storedGeom, "A", gA->clone().release());
+    insertOrReplace(storedGeom, "A", gA->clone());
 
     std::getline(iss, wktGB, '|');
 
     if (wktGB[0] == '@') {
       // stored geometry reference
-      std::string const name = wktGB.substr(1);
-      const boost::ptr_map<std::string, Geometry>::const_iterator found =
-          storedGeom.find(name);
+      std::string const name  = wktGB.substr(1);
+      const auto        found = storedGeom.find(name);
 
       if (found == storedGeom.end()) {
         BOOST_REQUIRE_MESSAGE(
@@ -161,7 +159,7 @@ BOOST_AUTO_TEST_CASE(testFileIntersectionTest)
       gB = io::readWkt(wktGB);
     }
 
-    insertOrReplace(storedGeom, "B", gB->clone().release());
+    insertOrReplace(storedGeom, "B", gB->clone());
 
     // exception management
     bool expectException      = false;
@@ -171,9 +169,8 @@ BOOST_AUTO_TEST_CASE(testFileIntersectionTest)
 
     if (wktOut[0] == '@') {
       // stored geometry reference
-      std::string const name = wktOut.substr(1);
-      const boost::ptr_map<std::string, Geometry>::const_iterator found =
-          storedGeom.find(name);
+      std::string const name  = wktOut.substr(1);
+      const auto        found = storedGeom.find(name);
 
       if (found == storedGeom.end()) {
         BOOST_CHECK_MESSAGE(false, numLine << ": can't find the geometry named "
