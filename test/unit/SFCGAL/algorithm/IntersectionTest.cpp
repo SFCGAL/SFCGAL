@@ -27,7 +27,7 @@ using namespace boost::unit_test;
 
 void
 insertOrReplace(std::unordered_map<std::string, std::unique_ptr<Geometry>> &map,
-                std::string key, std::unique_ptr<Geometry> value)
+                const std::string &key, std::unique_ptr<Geometry> value)
 {
   const auto found = map.find(key);
 
