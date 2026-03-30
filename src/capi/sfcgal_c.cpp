@@ -76,6 +76,7 @@
 #include "SFCGAL/algorithm/rotate.h"
 #include "SFCGAL/algorithm/scale.h"
 #include "SFCGAL/algorithm/simplification.h"
+#include "SFCGAL/algorithm/split.h"
 #include "SFCGAL/algorithm/straightSkeleton.h"
 #include "SFCGAL/algorithm/surfaceSimplification.h"
 #include "SFCGAL/algorithm/tesselate.h"
@@ -3727,4 +3728,31 @@ sfcgal_geometry_projected_medial_axis(const sfcgal_geometry_t *geom)
   }
 
   return multiLineString.release();
+}
+
+extern "C" auto
+sfcgal_geometry_split(const sfcgal_geometry_t *geom, double ptx, double pty,
+                      double ptz, double normalx, double normaly,
+                      double normalz, bool close_geometries)
+    -> sfcgal_geometry_t *
+{
+  const SFCGAL::Point            planePoint(ptx, pty, ptz);
+  const SFCGAL::Kernel::Vector_3 planeNormal(normalx, normaly, normalz);
+
+  const auto *geometry = reinterpret_cast<const SFCGAL::Geometry *>(geom);
+  std::unique_ptr<SFCGAL::GeometryCollection> splitGeom;
+
+  try {
+    splitGeom = SFCGAL::algorithm::split(*geometry, planePoint, planeNormal,
+                                         close_geometries);
+  } catch (std::exception &e) {
+    SFCGAL_WARNING("During split(A):");
+    SFCGAL_WARNING(
+        "  with A: %s",
+        static_cast<const SFCGAL::Geometry *>(geom)->asText().c_str());
+    SFCGAL_ERROR("%s", e.what());
+    return nullptr;
+  }
+
+  return splitGeom.release();
 }
