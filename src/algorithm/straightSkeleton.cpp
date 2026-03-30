@@ -747,7 +747,7 @@ extrudeStraightSkeleton(const Geometry &geom, double building_height,
       building->as<Solid>().exteriorShell());
 
   // Add filtered roof patches
-  result->addPatchs(*roof);
+  result->addPatches(*roof);
 
   propagateValidityFlag(*result, true);
 

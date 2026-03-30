@@ -207,7 +207,7 @@ PolyhedralSurface::addPatch(std::unique_ptr<Polygon> patch)
 }
 
 void
-PolyhedralSurface::addPatchs(const PolyhedralSurface &polyhedralSurface)
+PolyhedralSurface::addPatches(const PolyhedralSurface &polyhedralSurface)
 {
   _polygons.reserve(_polygons.size() + polyhedralSurface.numPatches());
   for (size_t i = 0; i < polyhedralSurface.numPatches(); i++) {
@@ -230,7 +230,7 @@ PolyhedralSurface::addPolygon(Polygon *polygon)
 void
 PolyhedralSurface::addPolygons(const PolyhedralSurface &polyhedralSurface)
 {
-  addPatchs(polyhedralSurface);
+  addPatches(polyhedralSurface);
 }
 
 void

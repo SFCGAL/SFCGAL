@@ -247,7 +247,7 @@ public:
    * @param polyhedralSurface The polyhedral surface to add patches from
    */
   void
-  addPatchs(const PolyhedralSurface &polyhedralSurface);
+  addPatches(const PolyhedralSurface &polyhedralSurface);
 
   /**
    * @brief [SFA/OGC]Returns the n-th polygon
@@ -288,7 +288,7 @@ public:
   /**
    * @brief add polygons from an other PolyhedralSurface
    * @param polyhedralSurface The polyhedral surface to add polygons from
-   * @deprecated see addPatchs()
+   * @deprecated see addPatches()
    */
   void
   addPolygons(const PolyhedralSurface &polyhedralSurface);
