@@ -75,7 +75,7 @@ extrude(const Geometry &geom, const double &displacementX,
 /**
  * @brief Extrude geometry using a displacement vector.
  * @param inputGeometry The specified Geometry.
- * @param vector The displacement vector.
+ * @param extrusionVector The displacement vector.
  * @return A Geometry equal to inputGeometry extruded by the displacement
  * vector.
  * @pre inputGeometry must be a valid geometry.
@@ -88,7 +88,7 @@ extrude(const Geometry &geom, const double &displacementX,
  *   topology.
  */
 SFCGAL_API auto
-extrude(const Geometry &inputGeometry, const Kernel::Vector_3 &vector)
+extrude(const Geometry &inputGeometry, const Kernel::Vector_3 &extrusionVector)
     -> std::unique_ptr<Geometry>;
 
 /**
