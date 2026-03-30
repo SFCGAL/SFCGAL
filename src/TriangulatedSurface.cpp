@@ -262,18 +262,18 @@ public:
   void
   operator()(HDS &hds) override
   {
-    const size_t nrPatchs = surf.numPatches();
+    const size_t nrPatches = surf.numPatches();
     // Postcondition: `hds' is a valid polyhedral surface.
     CGAL::Polyhedron_incremental_builder_3<HDS> builder(hds, true);
-    builder.begin_surface(/* vertices */ nrPatchs * 3,
-                          /* facets */ nrPatchs,
-                          /* halfedges */ nrPatchs * 3);
+    builder.begin_surface(/* vertices */ nrPatches * 3,
+                          /* facets */ nrPatches,
+                          /* halfedges */ nrPatches * 3);
 
     size_t vertex_idx = 0;
 
     // first pass: insert vertices, only if they are not shared between faces
     // thanks to a binary tree (PointMap)
-    for (size_t i = 0; i < nrPatchs; i++) {
+    for (size_t i = 0; i < nrPatches; i++) {
       for (size_t j = 0; j < 3; j++) {
         Point const point =
             surf.patchN(i).vertex(static_cast<int>(j)).toPoint_3();
@@ -292,7 +292,7 @@ public:
     // "The convention is that the halfedges are oriented counterclockwise
     // around facets as seen from the outside of the polyhedron"
 
-    for (size_t i = 0; i < nrPatchs; i++) {
+    for (size_t i = 0; i < nrPatches; i++) {
       builder.begin_facet();
       CGAL::Triangle_3<K> const tri(surf.patchN(i).toTriangle_3());
       CGAL::Point_3<K> const    pointA(tri[0]);
