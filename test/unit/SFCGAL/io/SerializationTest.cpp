@@ -136,21 +136,18 @@ BOOST_AUTO_TEST_CASE(extBinaryTest)
       "POLYGON ((9.70065196277574 -2.37991360574961,3.74221071600914 "
       "5.33515858836472,-4.30443822173402 -2.37991360574961,3.74221071600914 "
       "-12.1891073728912,9.70065196277574 -2.37991360574961))");
-  SFCGAL::Geometry *mg1 = ng1.release();
-  SFCGAL::Geometry *ng2 = nullptr;
+  std::unique_ptr<SFCGAL::Geometry> ng2 = nullptr;
 
   std::string const    str;
   std::ostringstream   ostr(str);
   io::BinarySerializer arc(ostr);
-  arc << mg1;
+  arc << ng1;
 
   std::istringstream     istr(ostr.str());
   io::BinaryUnserializer iarc(istr);
   iarc >> ng2;
 
-  BOOST_CHECK(mg1->asText() == ng2->asText());
-  delete mg1;
-  delete ng2;
+  BOOST_CHECK(ng1->asText() == ng2->asText());
 }
 
 BOOST_AUTO_TEST_CASE(preparedGeometryTest)
