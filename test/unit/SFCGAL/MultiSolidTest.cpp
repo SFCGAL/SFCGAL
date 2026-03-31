@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(swapXY)
 
 BOOST_AUTO_TEST_CASE(getCoordinateType)
 {
-  std::unique_ptr<Geometry> geom{
+  std::unique_ptr<Geometry> geom =
       io::readWkt("MULTISOLID ZM ((("
                   "((0 0 0 1, 1 0 0 1, 1 1 0 1, 0 1 0 1, 0 0 0 1)),"
                   "((0 0 1 1, 1 0 1 1, 1 1 1 1, 0 1 1 1, 0 0 1 1)),"
@@ -137,8 +137,8 @@ BOOST_AUTO_TEST_CASE(getCoordinateType)
                   "((1 0 0 1, 1 1 0 1, 1 1 1 1, 1 0 1 1, 1 0 0 1)),"
                   "((0 0 0 1, 1 0 0 1, 1 0 1 1, 0 0 1 1, 0 0 0 1)),"
                   "((0 1 0 1, 1 1 0 1, 1 1 1 1, 0 1 1 1, 0 1 0 1)) "
-                  ")))")
-          .release()};
+                  ")))");
+
   BOOST_CHECK_EQUAL(geom->getCoordinateType(), CoordinateType::COORDINATE_XYZM);
   std::unique_ptr<Geometry> cube{geom->clone()};
   cube->dropM();

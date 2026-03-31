@@ -246,8 +246,8 @@ BOOST_AUTO_TEST_CASE(testDropZM)
   BOOST_CHECK(!polygon3D.isMeasured());
   BOOST_CHECK(!polygon3D.dropM());
 
-  std::unique_ptr<Geometry> polygonM(
-      io::readWkt("POLYGON M ((0 0 4, 0 3 5, 3 3 6, 3 0 7, 0 0 4))").release());
+  std::unique_ptr<Geometry> polygonM =
+      io::readWkt("POLYGON M ((0 0 4, 0 3 5, 3 3 6, 3 0 7, 0 0 4))");
   BOOST_CHECK(!polygonM->is3D());
   BOOST_CHECK(polygonM->isMeasured());
   BOOST_CHECK(!polygonM->dropZ());
@@ -307,8 +307,8 @@ BOOST_AUTO_TEST_CASE(testSwapXY)
                     "POLYGON Z ((0.0 3.0 2.0,0.0 1.0 2.0,1.0 1.0 2.0,1.0 0.0 "
                     "2.0,2.0 7.0 2.0))");
 
-  std::unique_ptr<Geometry> polygonM(
-      io::readWkt("POLYGON M ((0 0 4, 0 3 5, 3 3 6, 3 0 7, 0 0 4))").release());
+  std::unique_ptr<Geometry> polygonM =
+      io::readWkt("POLYGON M ((0 0 4, 0 3 5, 3 3 6, 3 0 7, 0 0 4))");
   polygonM->swapXY();
   BOOST_CHECK_EQUAL(polygonM->asText(0),
                     "POLYGON M ((0 0 4,3 0 5,3 3 6,0 3 7,0 0 4))");

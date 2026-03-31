@@ -435,8 +435,8 @@ BOOST_AUTO_TEST_CASE(testDropZM)
   BOOST_CHECK(!line3D.is3D());
   BOOST_CHECK(!line3D.dropZ());
 
-  std::unique_ptr<Geometry> lineM(
-      io::readWkt("LINESTRING M (0 0 4, 1 1 5, 2 2 6)").release());
+  std::unique_ptr<Geometry> lineM =
+      io::readWkt("LINESTRING M (0 0 4, 1 1 5, 2 2 6)");
   BOOST_CHECK(!lineM->is3D());
   BOOST_CHECK(lineM->isMeasured());
   BOOST_CHECK(!lineM->dropZ());
@@ -480,8 +480,8 @@ BOOST_AUTO_TEST_CASE(testSwapXY)
   line3D.swapXY();
   BOOST_CHECK_EQUAL(line3D.asText(0), "LINESTRING Z (0 -2 2,1 5 5)");
 
-  std::unique_ptr<Geometry> lineM(
-      io::readWkt("LINESTRING M (0 0 4, 1 1 5, 2 2 6)").release());
+  std::unique_ptr<Geometry> lineM =
+      io::readWkt("LINESTRING M (0 0 4, 1 1 5, 2 2 6)");
   lineM->swapXY();
   BOOST_CHECK_EQUAL(lineM->asText(0), "LINESTRING M (0 0 4,1 1 5,2 2 6)");
 
