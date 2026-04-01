@@ -1,4 +1,4 @@
-build:windows-docker-image:
+docker:build:windows-image:
   stage: docker
   tags:
     - saas-windows-medium-amd64
@@ -31,7 +31,7 @@ build:windows-docker-image:
   after_script:
     - docker logout $env:CI_REGISTRY
 
-push:windows-docker-latest:
+docker:push:windows-latest:
   stage: docker
   tags:
     - saas-windows-medium-amd64
@@ -40,7 +40,7 @@ push:windows-docker-latest:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: always
       allow_failure: true
-  needs: ["build:windows-docker-image"]
+  needs: ["docker:build:windows-image"]
   before_script:
     - Start-Service -Name "docker"
     - docker login -u $env:CI_REGISTRY_USER -p $env:CI_REGISTRY_PASSWORD $env:CI_REGISTRY
@@ -51,7 +51,7 @@ push:windows-docker-latest:
   after_script:
     - docker logout $env:CI_REGISTRY
 
-push:windows-docker-tag:
+docker:push:windows-tag:
   stage: docker
   tags:
     - saas-windows-medium-amd64
@@ -60,6 +60,7 @@ push:windows-docker-tag:
     - if: $CI_COMMIT_TAG
       when: always
       allow_failure: true
+  needs: ["docker:build:windows-image"]
   before_script:
     - Start-Service -Name "docker"
     - docker login -u $env:CI_REGISTRY_USER -p $env:CI_REGISTRY_PASSWORD $env:CI_REGISTRY
