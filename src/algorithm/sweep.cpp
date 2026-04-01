@@ -19,6 +19,11 @@
 #include <SFCGAL/algorithm/isValid.h>
 #include <SFCGAL/detail/tools/Registry.h>
 
+#include <CGAL/Polygon_mesh_processing/autorefinement.h>
+#include <CGAL/Polygon_mesh_processing/orient_polygon_soup.h>
+#include <CGAL/Polygon_mesh_processing/polygon_mesh_to_polygon_soup.h>
+#include <CGAL/Polygon_mesh_processing/polygon_soup_to_polygon_mesh.h>
+#include <CGAL/Polygon_mesh_processing/self_intersections.h>
 #include <CGAL/Surface_mesh.h>
 
 #include <algorithm>
@@ -29,6 +34,8 @@
 namespace SFCGAL::algorithm {
 
 using Surface_mesh_3 = CGAL::Surface_mesh<Kernel::Point_3>;
+
+namespace PMP = CGAL::Polygon_mesh_processing;
 
 // Forward declarations of internal helpers
 namespace {
@@ -452,7 +459,7 @@ compute_bisector_plane(const Kernel::Point_3 &p1, const Kernel::Point_3 &p2,
 }
 
 /**
- * @brief Project point onto plane along a direction
+ * @brief Project point onto plane along a direction (ray-plane intersection)
  */
 auto
 project_onto_bisector_plane(const Kernel::Point_3 &p_prev,
@@ -560,8 +567,9 @@ build_sweep_mesh(Surface_mesh_3                                  &mesh,
 
     for (size_t j = 0; j < n_profile_points; ++j) {
       size_t next_j = (j + 1) % n_profile_points;
-      // Add quad face
-      mesh.add_face(ring1[j], ring2[j], ring2[next_j], ring1[next_j]);
+      // Two triangles instead of quad (avoids non-planar faces at corners)
+      mesh.add_face(ring1[j], ring2[j], ring2[next_j]);
+      mesh.add_face(ring1[j], ring2[next_j], ring1[next_j]);
     }
   }
 
@@ -706,7 +714,6 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
         Kernel::Point_3 start_point  = mesh.point(start_ring[pt_idx]);
         Kernel::Point_3 target_point = end_profile[pt_idx];
 
-        // Update the *existing* first vertex to be on the bisector plane
         Kernel::Point_3 projected = project_onto_bisector_plane(
             start_point, target_point, closing_bisector);
 
@@ -728,7 +735,8 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
       for (size_t pt_idx = 0; pt_idx < profile_points.size(); ++pt_idx) {
         Kernel::Point_3 end_point = end_profile[pt_idx];
 
-        // If there is a corner ahead, project onto bisector
+        // If there is a corner ahead, project onto bisector plane along
+        // the ray from start to end (preserves correct miter geometry)
         if (seg_idx < path_points.size() - 2) {
           Kernel::Point_3 start_point = mesh.point(start_ring[pt_idx]);
           end_point = project_onto_bisector_plane(start_point, end_point,
@@ -740,18 +748,21 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
 
     prev_end_ring = end_ring;
 
-    // Connect faces
+    // Connect faces between start and end rings.
+    // Use triangles instead of quads to avoid non-planar face issues
+    // at miter join corners (where bisector projection shifts vertices
+    // by different amounts).
     size_t n_pts = profile_points.size();
     for (size_t i = 0; i < n_pts - 1; ++i) {
-      mesh.add_face(start_ring[i], start_ring[i + 1], end_ring[i + 1],
-                    end_ring[i]);
+      mesh.add_face(start_ring[i], start_ring[i + 1], end_ring[i + 1]);
+      mesh.add_face(start_ring[i], end_ring[i + 1], end_ring[i]);
     }
     // Close tube
     if (profile.geometryTypeId() == TYPE_POLYGON ||
         (profile.geometryTypeId() == TYPE_LINESTRING &&
          profile.as<LineString>().isClosed())) {
-      mesh.add_face(start_ring[n_pts - 1], start_ring[0], end_ring[0],
-                    end_ring[n_pts - 1]);
+      mesh.add_face(start_ring[n_pts - 1], start_ring[0], end_ring[0]);
+      mesh.add_face(start_ring[n_pts - 1], end_ring[0], end_ring[n_pts - 1]);
     }
 
     if (seg_idx == 0) {

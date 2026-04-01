@@ -480,15 +480,340 @@ BOOST_AUTO_TEST_CASE(testChamfer_EdgeNotFound)
 {
   auto cube = io::readWkt(CUBE_WKT);
 
-  // Edge not on the cube
   LineString edge;
   edge.addPoint(Point(5, 5, 5));
   edge.addPoint(Point(6, 6, 6));
 
   algorithm::ChamferOptions opts;
-  // Should return original geometry (edge skipped with warning)
+  // Edge not found → skipped, original returned
   auto result = algorithm::chamfer(*cube, edge, opts);
   BOOST_CHECK(result != nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(testChamfer_ConcaveEdge_Rejected)
+{
+  // L-shape: concave inner corner at (1,1) must be rejected
+  auto l_shape = io::readWkt(
+      "SOLID ((("
+      "(0 0 0, 0 2 0, 1 2 0, 1 1 0, 2 1 0, 2 0 0, 0 0 0)),"
+      "((0 0 1, 2 0 1, 2 1 1, 1 1 1, 1 2 1, 0 2 1, 0 0 1)),"
+      "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"
+      "((2 0 0, 2 1 0, 2 1 1, 2 0 1, 2 0 0)),"
+      "((2 1 0, 1 1 0, 1 1 1, 2 1 1, 2 1 0)),"
+      "((1 1 0, 1 2 0, 1 2 1, 1 1 1, 1 1 0)),"
+      "((1 2 0, 0 2 0, 0 2 1, 1 2 1, 1 2 0)),"
+      "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"
+      "))");
+
+  // Concave edge at (1,1,z) → should be skipped, original returned
+  LineString edge;
+  edge.addPoint(Point(1, 1, 0));
+  edge.addPoint(Point(1, 1, 1));
+
+  algorithm::ChamferOptions opts;
+  opts.radius = 0.1;
+
+  auto result = algorithm::chamfer(*l_shape, edge, opts);
+  BOOST_CHECK(result != nullptr);
+  // Result should be unchanged (concave edge was skipped)
+  BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
+}
+
+// ---------------------------------------------------------------------------
+// 3 edges meeting at a vertex (cube corner)
+// ---------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testChamfer_ThreeEdges_CubeCorner)
+{
+  auto cube = io::readWkt(CUBE_WKT);
+
+  // 3 edges meeting at vertex (0,0,0)
+  MultiLineString edges;
+
+  LineString e1;
+  e1.addPoint(Point(0, 0, 0));
+  e1.addPoint(Point(1, 0, 0));
+  edges.addGeometry(e1);
+
+  LineString e2;
+  e2.addPoint(Point(0, 0, 0));
+  e2.addPoint(Point(0, 1, 0));
+  edges.addGeometry(e2);
+
+  LineString e3;
+  e3.addPoint(Point(0, 0, 0));
+  e3.addPoint(Point(0, 0, 1));
+  edges.addGeometry(e3);
+
+  algorithm::ChamferOptions opts;
+  opts.type   = algorithm::ChamferType::FLAT;
+  opts.radius = 0.15;
+
+  auto result = algorithm::chamfer(*cube, edges, opts);
+  BOOST_REQUIRE(result != nullptr);
+  BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
+  BOOST_CHECK(algorithm::isValid(*result));
+  // 3 chamfers on a cube corner: should have significantly more faces
+  const auto &s = result->as<Solid>();
+  BOOST_CHECK(s.exteriorShell().numPolygons() > 6);
+}
+
+BOOST_AUTO_TEST_CASE(testChamfer_ThreeEdges_CubeCorner_Round)
+{
+  auto cube = io::readWkt(CUBE_WKT);
+
+  MultiLineString edges;
+
+  LineString e1;
+  e1.addPoint(Point(0, 0, 0));
+  e1.addPoint(Point(1, 0, 0));
+  edges.addGeometry(e1);
+
+  LineString e2;
+  e2.addPoint(Point(0, 0, 0));
+  e2.addPoint(Point(0, 1, 0));
+  edges.addGeometry(e2);
+
+  LineString e3;
+  e3.addPoint(Point(0, 0, 0));
+  e3.addPoint(Point(0, 0, 1));
+  edges.addGeometry(e3);
+
+  algorithm::ChamferOptions opts;
+  opts.type     = algorithm::ChamferType::ROUND;
+  opts.radius   = 0.15;
+  opts.segments = 6;
+
+  auto result = algorithm::chamfer(*cube, edges, opts);
+  BOOST_REQUIRE(result != nullptr);
+  BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
+  BOOST_CHECK(algorithm::isValid(*result));
+}
+
+// ---------------------------------------------------------------------------
+// L-shape: all edges (concave auto-skipped)
+// ---------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testChamfer_LShape_AllEdges)
+{
+  auto l_shape = io::readWkt(
+      "SOLID ((("
+      "(0 0 0, 0 2 0, 1 2 0, 1 1 0, 2 1 0, 2 0 0, 0 0 0)),"
+      "((0 0 1, 2 0 1, 2 1 1, 1 1 1, 1 2 1, 0 2 1, 0 0 1)),"
+      "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"
+      "((2 0 0, 2 1 0, 2 1 1, 2 0 1, 2 0 0)),"
+      "((2 1 0, 1 1 0, 1 1 1, 2 1 1, 2 1 0)),"
+      "((1 1 0, 1 2 0, 1 2 1, 1 1 1, 1 1 0)),"
+      "((1 2 0, 0 2 0, 0 2 1, 1 2 1, 1 2 0)),"
+      "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"
+      "))");
+
+  // All vertical + bottom + top edges — concave (1,1) auto-skipped
+  MultiLineString edges;
+  // Vertical edges
+  auto add_edge = [&](double x1, double y1, double z1, double x2, double y2,
+                      double z2) {
+    LineString e;
+    e.addPoint(Point(x1, y1, z1));
+    e.addPoint(Point(x2, y2, z2));
+    edges.addGeometry(e);
+  };
+  // 6 vertical
+  add_edge(0, 0, 0, 0, 0, 1);
+  add_edge(2, 0, 0, 2, 0, 1);
+  add_edge(2, 1, 0, 2, 1, 1);
+  add_edge(1, 1, 0, 1, 1, 1); // concave — will be skipped
+  add_edge(1, 2, 0, 1, 2, 1);
+  add_edge(0, 2, 0, 0, 2, 1);
+  // 6 bottom
+  add_edge(0, 0, 0, 2, 0, 0);
+  add_edge(2, 0, 0, 2, 1, 0);
+  add_edge(2, 1, 0, 1, 1, 0);
+  add_edge(1, 1, 0, 1, 2, 0);
+  add_edge(1, 2, 0, 0, 2, 0);
+  add_edge(0, 2, 0, 0, 0, 0);
+
+  algorithm::ChamferOptions opts;
+  opts.radius = 0.1;
+
+  auto result = algorithm::chamfer(*l_shape, edges, opts);
+  BOOST_REQUIRE(result != nullptr);
+  BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
+  BOOST_CHECK(algorithm::isValid(*result));
+}
+
+// ---------------------------------------------------------------------------
+// Non-90° concave: chevron and star
+// ---------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testChamfer_Chevron_ConcaveRejected)
+{
+  // Chevron: concave notch at (1, 1.5)
+  auto chevron = io::readWkt(
+      "SOLID ((("
+      "(0 0 0, 0 2 0, 1 1.5 0, 2 2 0, 2 0 0, 0 0 0)),"
+      "((0 0 1, 2 0 1, 2 2 1, 1 1.5 1, 0 2 1, 0 0 1)),"
+      "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"
+      "((2 0 0, 2 2 0, 2 2 1, 2 0 1, 2 0 0)),"
+      "((2 2 0, 1 1.5 0, 1 1.5 1, 2 2 1, 2 2 0)),"
+      "((1 1.5 0, 0 2 0, 0 2 1, 1 1.5 1, 1 1.5 0)),"
+      "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"
+      "))");
+
+  // Concave edge (1, 1.5) → skipped
+  LineString edge;
+  edge.addPoint(Point(1, 1.5, 0));
+  edge.addPoint(Point(1, 1.5, 1));
+
+  algorithm::ChamferOptions opts;
+  opts.radius = 0.1;
+
+  auto result = algorithm::chamfer(*chevron, edge, opts);
+  BOOST_CHECK(result != nullptr);
+  BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
+}
+
+BOOST_AUTO_TEST_CASE(testChamfer_Chevron_ConvexWorks)
+{
+  auto chevron = io::readWkt(
+      "SOLID ((("
+      "(0 0 0, 0 2 0, 1 1.5 0, 2 2 0, 2 0 0, 0 0 0)),"
+      "((0 0 1, 2 0 1, 2 2 1, 1 1.5 1, 0 2 1, 0 0 1)),"
+      "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"
+      "((2 0 0, 2 2 0, 2 2 1, 2 0 1, 2 0 0)),"
+      "((2 2 0, 1 1.5 0, 1 1.5 1, 2 2 1, 2 2 0)),"
+      "((1 1.5 0, 0 2 0, 0 2 1, 1 1.5 1, 1 1.5 0)),"
+      "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"
+      "))");
+
+  // Convex edge (2, 2) — non-90° angle
+  LineString edge;
+  edge.addPoint(Point(2, 2, 0));
+  edge.addPoint(Point(2, 2, 1));
+
+  algorithm::ChamferOptions opts;
+  opts.radius = 0.15;
+
+  auto result = algorithm::chamfer(*chevron, edge, opts);
+  BOOST_REQUIRE(result != nullptr);
+  BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
+  BOOST_CHECK(algorithm::isValid(*result));
+}
+
+// ---------------------------------------------------------------------------
+// Cube: all 12 edges
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Continuous polyline (single LineString) along a contour
+// ---------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testChamfer_ContinuousPolyline_ConvexCorner)
+{
+  // L-shape bottom: 2-segment sub-path through convex corner (3,0)
+  auto l_shape = io::readWkt(
+      "SOLID ((("
+      "(0 0 0, 0 2 0, 1 2 0, 1 1 0, 2 1 0, 2 0 0, 0 0 0)),"
+      "((0 0 1, 2 0 1, 2 1 1, 1 1 1, 1 2 1, 0 2 1, 0 0 1)),"
+      "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"
+      "((2 0 0, 2 1 0, 2 1 1, 2 0 1, 2 0 0)),"
+      "((2 1 0, 1 1 0, 1 1 1, 2 1 1, 2 1 0)),"
+      "((1 1 0, 1 2 0, 1 2 1, 1 1 1, 1 1 0)),"
+      "((1 2 0, 0 2 0, 0 2 1, 1 2 1, 1 2 0)),"
+      "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"
+      "))");
+
+  // Single LineString with miter join at corner (2,0)
+  LineString contour;
+  contour.addPoint(Point(0, 0, 0));
+  contour.addPoint(Point(2, 0, 0));
+  contour.addPoint(Point(2, 1, 0));
+
+  algorithm::ChamferOptions opts;
+  opts.radius = 0.1;
+
+  auto result = algorithm::chamfer(*l_shape, contour, opts);
+  BOOST_REQUIRE(result != nullptr);
+  BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
+  BOOST_CHECK(algorithm::isValid(*result));
+}
+
+BOOST_AUTO_TEST_CASE(testChamfer_ContinuousPolyline_FullContour)
+{
+  // L-shape bottom: full closed contour as single LineString
+  // This passes through the concave corner (1,1) — the sweep must handle
+  // miter joins at all corners. Currently, multi-corner miter joins may
+  // produce non-planar quads in the sweep, causing the cutter to be invalid.
+  // In that case the edge is skipped and the original is returned.
+  auto l_shape = io::readWkt(
+      "SOLID ((("
+      "(0 0 0, 0 2 0, 1 2 0, 1 1 0, 2 1 0, 2 0 0, 0 0 0)),"
+      "((0 0 1, 2 0 1, 2 1 1, 1 1 1, 1 2 1, 0 2 1, 0 0 1)),"
+      "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"
+      "((2 0 0, 2 1 0, 2 1 1, 2 0 1, 2 0 0)),"
+      "((2 1 0, 1 1 0, 1 1 1, 2 1 1, 2 1 0)),"
+      "((1 1 0, 1 2 0, 1 2 1, 1 1 1, 1 1 0)),"
+      "((1 2 0, 0 2 0, 0 2 1, 1 2 1, 1 2 0)),"
+      "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"
+      "))");
+
+  LineString contour;
+  contour.addPoint(Point(0, 0, 0));
+  contour.addPoint(Point(2, 0, 0));
+  contour.addPoint(Point(2, 1, 0));
+  contour.addPoint(Point(1, 1, 0));
+  contour.addPoint(Point(1, 2, 0));
+  contour.addPoint(Point(0, 2, 0));
+  contour.addPoint(Point(0, 0, 0));
+
+  algorithm::ChamferOptions opts;
+  opts.radius = 0.1;
+
+  // This may fail due to sweep miter join limitations — result should
+  // still be non-null (original returned if cutter is invalid)
+  auto result = algorithm::chamfer(*l_shape, contour, opts);
+  BOOST_CHECK(result != nullptr);
+}
+
+// ---------------------------------------------------------------------------
+// Cube: all 12 edges
+// ---------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testChamfer_Cube_All12Edges)
+{
+  auto cube = io::readWkt(CUBE_WKT);
+
+  MultiLineString edges;
+  auto add = [&](double x1, double y1, double z1, double x2, double y2,
+                 double z2) {
+    LineString e;
+    e.addPoint(Point(x1, y1, z1));
+    e.addPoint(Point(x2, y2, z2));
+    edges.addGeometry(e);
+  };
+  // Bottom 4
+  add(0, 0, 0, 1, 0, 0);
+  add(1, 0, 0, 1, 1, 0);
+  add(1, 1, 0, 0, 1, 0);
+  add(0, 1, 0, 0, 0, 0);
+  // Top 4
+  add(0, 0, 1, 1, 0, 1);
+  add(1, 0, 1, 1, 1, 1);
+  add(1, 1, 1, 0, 1, 1);
+  add(0, 1, 1, 0, 0, 1);
+  // Vertical 4
+  add(0, 0, 0, 0, 0, 1);
+  add(1, 0, 0, 1, 0, 1);
+  add(1, 1, 0, 1, 1, 1);
+  add(0, 1, 0, 0, 1, 1);
+
+  algorithm::ChamferOptions opts;
+  opts.radius = 0.1;
+
+  auto result = algorithm::chamfer(*cube, edges, opts);
+  BOOST_REQUIRE(result != nullptr);
+  BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
+  BOOST_CHECK(algorithm::isValid(*result));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -5,8 +5,11 @@
 #include "SFCGAL/algorithm/collectionHomogenize.h"
 #include "SFCGAL/algorithm/difference.h"
 #include "SFCGAL/algorithm/isClosed.h"
+#include "SFCGAL/algorithm/isValid.h"
 #include "SFCGAL/algorithm/sweep.h"
 #include "SFCGAL/algorithm/union.h"
+
+#include <SFCGAL/Exception.h>
 
 #include <SFCGAL/Geometry.h>
 #include <SFCGAL/Kernel.h>
@@ -274,6 +277,18 @@ create_cutter_for_edge(const Surface_mesh_3 &mesh, const LineString &edge,
   const Vector_3 n1 = PMP::compute_face_normal(f1, mesh);
   const Vector_3 n2 = PMP::compute_face_normal(f2, mesh);
 
+  // Reject concave (reflex) edges: the opposite vertex of f1 must lie
+  // on the interior side of f2's plane (dot with n2 < 0).
+  {
+    const auto     v_opp = mesh.target(mesh.next(hd));
+    const Vector_3 to_opp = mesh.point(v_opp) - p1;
+    if (CGAL::to_double(to_opp * n2) >= 0.0) {
+      throw std::invalid_argument(
+          "Edge is concave (reflex). "
+          "Chamfer is only supported on convex edges.");
+    }
+  }
+
   // Compute dihedral angle between faces (angle between outward normals)
   const double dot_val       = CGAL::to_double(n1 * n2);
   const double alpha         = std::acos(std::clamp(dot_val, -1.0, 1.0));
@@ -319,12 +334,8 @@ create_cutter_for_edge(const Surface_mesh_3 &mesh, const LineString &edge,
   // Pass n1 as reference normal for consistent orientation
   sweep_opts.reference_normal = n1;
 
-  auto cutter_surf  = sweep(edge, *profile, sweep_opts);
-
-  auto cutter_solid = std::make_unique<Solid>(cutter_surf.release());
-
-  // Return the cutter (difference will be applied later)
-  return cutter_solid;
+  auto cutter_surf = sweep(edge, *profile, sweep_opts);
+  return std::make_unique<Solid>(cutter_surf.release());
 }
 
 } // anonymous namespace
@@ -352,15 +363,28 @@ chamfer(const Geometry &solid_geom, const Geometry &edge_geom,
         "Input geometry must be a Solid or PolyhedralSurface");
   }
 
-  // Collect edges from input geometry
-  std::vector<const LineString *> edges;
+  // Collect individual edge segments from input geometry.
+  // Multi-segment LineStrings are decomposed into individual 2-point segments
+  // because each edge of the solid has its own face normals, dihedral angle,
+  // and convexity. The union of per-segment cutters produces the correct
+  // continuous chamfer with proper miter-like transitions at convex corners.
+  std::vector<LineString> segments;
+
+  auto add_segments = [&](const LineString &ls) {
+    for (size_t i = 0; i + 1 < ls.numPoints(); ++i) {
+      LineString seg;
+      seg.addPoint(ls.pointN(i));
+      seg.addPoint(ls.pointN(i + 1));
+      segments.push_back(std::move(seg));
+    }
+  };
 
   if (edge_geom.geometryTypeId() == TYPE_LINESTRING) {
-    edges.push_back(&edge_geom.as<LineString>());
+    add_segments(edge_geom.as<LineString>());
   } else if (edge_geom.geometryTypeId() == TYPE_MULTILINESTRING) {
     const auto &multi = edge_geom.as<MultiLineString>();
     for (size_t i = 0; i < multi.numGeometries(); ++i) {
-      edges.push_back(&multi.lineStringN(i));
+      add_segments(multi.lineStringN(i));
     }
   } else {
     throw std::invalid_argument(
@@ -370,9 +394,9 @@ chamfer(const Geometry &solid_geom, const Geometry &edge_geom,
   // Create all cutters first (before modifying the solid)
   std::vector<std::unique_ptr<Geometry>> cutters;
 
-  for (const LineString *edge : edges) {
+  for (const auto &seg : segments) {
     try {
-      auto cutter = create_cutter_for_edge(mesh, *edge, options);
+      auto cutter = create_cutter_for_edge(mesh, seg, options);
       cutters.push_back(std::move(cutter));
     } catch (const std::exception &e) {
       SFCGAL_WARNING(std::string("Chamfer: skipping edge - ") + e.what());
