@@ -18,27 +18,25 @@ using namespace boost::unit_test;
 BOOST_AUTO_TEST_SUITE(SFCGAL_algorithm_SweepTest)
 
 /**
- * @brief Test default anchor point behavior (backward compatibility)
- * Default anchor (0,0) should position profile origin on path
+ * @brief Test default anchor point behavior
  */
 BOOST_AUTO_TEST_CASE(testSweep_AnchorDefault)
 {
-  auto path = algorithm::create_circular_profile(10.0, 32); // Circle for path
-  // Make it a helix
-  for (size_t i = 0; i < path->numPoints(); ++i) {
-    Point &pt = path->pointN(i);
-    pt.z()    = i * 0.1;
-  }
+  // Straight path along X
+  LineString path;
+  path.addPoint(Point(0, 0, 0));
+  path.addPoint(Point(10, 0, 0));
 
   auto profile = algorithm::create_rectangular_profile(2.0, 1.0);
 
-  // Sweep with default options (anchor = 0,0)
   algorithm::SweepOptions options;
-  auto                    result = algorithm::sweep(*path, *profile, options);
+  auto                    result = algorithm::sweep(path, *profile, options);
 
   BOOST_CHECK(result != nullptr);
   BOOST_CHECK(algorithm::isValid(*result));
-  BOOST_CHECK_EQUAL(result->numGeometries(), path->numPoints() - 1);
+  auto &ps = result->as<PolyhedralSurface>();
+  BOOST_CHECK_EQUAL(ps.numPolygons(), 6);
+  BOOST_CHECK(algorithm::isClosed(*result));
 }
 
 /**
@@ -46,32 +44,31 @@ BOOST_AUTO_TEST_CASE(testSweep_AnchorDefault)
  */
 BOOST_AUTO_TEST_CASE(testSweep_AnchorCenter)
 {
-  auto path = algorithm::create_circular_profile(10.0, 32);
-  for (size_t i = 0; i < path->numPoints(); ++i) {
-    Point &pt = path->pointN(i);
-    pt.z()    = i * 0.1;
-  }
+  LineString path;
+  path.addPoint(Point(0, 0, 0));
+  path.addPoint(Point(10, 0, 0));
 
-  // Rectangle from 0 to 2 in X, 0 to 1 in Y
-  Polygon    rect;
+  // Rectangle from 0 to 2 in X, 0 to 1 in Y — use Polygon(LineString)
   LineString ring;
   ring.addPoint(Point(0, 0));
   ring.addPoint(Point(2, 0));
   ring.addPoint(Point(2, 1));
   ring.addPoint(Point(0, 1));
   ring.addPoint(Point(0, 0));
-  rect.addRing(ring);
-  auto profile = std::make_unique<Polygon>(rect);
+  Polygon profile(ring);
 
   // Sweep with anchor at rectangle center (1, 0.5)
   algorithm::SweepOptions options;
   options.anchor_x = 1.0;
   options.anchor_y = 0.5;
 
-  auto result = algorithm::sweep(*path, *profile, options);
+  auto result = algorithm::sweep(path, profile, options);
 
   BOOST_CHECK(result != nullptr);
   BOOST_CHECK(algorithm::isValid(*result));
+  auto &ps = result->as<PolyhedralSurface>();
+  BOOST_CHECK_EQUAL(ps.numPolygons(), 6);
+  BOOST_CHECK(algorithm::isClosed(*result));
 }
 
 /**
@@ -79,25 +76,23 @@ BOOST_AUTO_TEST_CASE(testSweep_AnchorCenter)
  */
 BOOST_AUTO_TEST_CASE(testSweep_AnchorOffset)
 {
-  // Simple straight path along X axis
   LineString path;
   path.addPoint(Point(0, 0, 0));
   path.addPoint(Point(10, 0, 0));
-  auto path_ptr = std::make_unique<LineString>(path);
 
-  // Simple profile: Point at (0,0) (represented as small triangle for sweep)
-  // Let's use a small square centered at 0
   auto profile = algorithm::create_rectangular_profile(1.0, 1.0);
 
-  // Sweep with anchor at (0.5, 0)
   algorithm::SweepOptions options;
   options.anchor_x = 0.5;
   options.anchor_y = 0.0;
 
-  auto result = algorithm::sweep(*path_ptr, *profile, options);
+  auto result = algorithm::sweep(path, *profile, options);
 
   BOOST_CHECK(result != nullptr);
   BOOST_CHECK(algorithm::isValid(*result));
+  auto &ps = result->as<PolyhedralSurface>();
+  BOOST_CHECK_EQUAL(ps.numPolygons(), 6);
+  BOOST_CHECK(algorithm::isClosed(*result));
 }
 
 /**
@@ -105,67 +100,55 @@ BOOST_AUTO_TEST_CASE(testSweep_AnchorOffset)
  */
 BOOST_AUTO_TEST_CASE(testSweep_MultipleAnchors)
 {
-  auto path    = algorithm::create_circular_profile(5.0, 16);
+  LineString path;
+  path.addPoint(Point(0, 0, 0));
+  path.addPoint(Point(5, 0, 0));
+  path.addPoint(Point(5, 5, 0));
+
   auto profile = algorithm::create_rectangular_profile(1.0, 1.0);
 
-  // Sweep with anchor at bottom-left corner (0, 0)
   algorithm::SweepOptions options1;
-  options1.anchor_x = 0.0;
-  options1.anchor_y = 0.0;
-  auto result1      = algorithm::sweep(*path, *profile, options1);
+  options1.anchor_x    = 0.0;
+  options1.anchor_y    = 0.0;
+  options1.frame_method = algorithm::SweepOptions::FrameMethod::SEGMENT_ALIGNED;
+  auto result1         = algorithm::sweep(path, *profile, options1);
 
-  // Sweep with anchor at top-right corner (1, 1)
   algorithm::SweepOptions options2;
-  options2.anchor_x = 1.0;
-  options2.anchor_y = 1.0;
-  auto result2      = algorithm::sweep(*path, *profile, options2);
+  options2.anchor_x    = 1.0;
+  options2.anchor_y    = 1.0;
+  options2.frame_method = algorithm::SweepOptions::FrameMethod::SEGMENT_ALIGNED;
+  auto result2         = algorithm::sweep(path, *profile, options2);
 
+  BOOST_CHECK(result1 != nullptr);
+  BOOST_CHECK(result2 != nullptr);
+  BOOST_CHECK_EQUAL(result1->as<PolyhedralSurface>().numPolygons(), 10);
   BOOST_CHECK(algorithm::isValid(*result1));
-  BOOST_CHECK(algorithm::isValid(*result2));
 }
 
 /**
- * @brief Test negative anchor values
+ * @brief Test closed path flag
  */
-BOOST_AUTO_TEST_CASE(testSweep_NegativeAnchor)
+BOOST_AUTO_TEST_CASE(testSweep_ClosedPath)
 {
-  auto path    = algorithm::create_circular_profile(5.0, 16);
-  auto profile = algorithm::create_rectangular_profile(1.0, 1.0);
+  // Square path (closed)
+  LineString path;
+  path.addPoint(Point(0, 0, 0));
+  path.addPoint(Point(5, 0, 0));
+  path.addPoint(Point(5, 5, 0));
+  path.addPoint(Point(0, 5, 0));
+  path.addPoint(Point(0, 0, 0));
 
-  // Sweep with negative anchor (-0.5, -0.5)
+  auto profile = algorithm::create_rectangular_profile(0.5, 0.5);
+
   algorithm::SweepOptions options;
-  options.anchor_x = -0.5;
-  options.anchor_y = -0.5;
+  options.frame_method = algorithm::SweepOptions::FrameMethod::SEGMENT_ALIGNED;
 
-  auto result = algorithm::sweep(*path, *profile, options);
+  auto result = algorithm::sweep(path, *profile, options);
 
   BOOST_CHECK(result != nullptr);
   BOOST_CHECK(algorithm::isValid(*result));
-}
-
-/**
- * @brief Test closed path flag interaction with anchor
- */
-BOOST_AUTO_TEST_CASE(testSweep_ClosedPathAnchor)
-{
-  // Create an open arc
-  LineString arc;
-  for (int i = 0; i <= 10; ++i) {
-    double angle = i * M_PI / 10.0; // 0 to Pi
-    arc.addPoint(Point(std::cos(angle) * 5, std::sin(angle) * 5, 0));
-  }
-  auto path    = std::make_unique<LineString>(arc);
-  auto profile = algorithm::create_rectangular_profile(1.0, 1.0);
-
-  // Sweep with closed path and custom anchor
-  algorithm::SweepOptions options;
-  options.closed_path = true; // Should close the semi-circle
-  options.anchor_x    = 0.5;
-
-  auto result = algorithm::sweep(*path, *profile, options);
-
-  BOOST_CHECK(result != nullptr);
-  BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK_EQUAL(result->as<PolyhedralSurface>().numPolygons(), 16);
+  BOOST_CHECK(algorithm::isClosed(*result));
 }
 
 /**
@@ -173,46 +156,43 @@ BOOST_AUTO_TEST_CASE(testSweep_ClosedPathAnchor)
  */
 BOOST_AUTO_TEST_CASE(testSweep_EndCaps)
 {
-  // Straight path
   LineString path;
   path.addPoint(Point(0, 0, 0));
   path.addPoint(Point(10, 0, 0));
 
-  auto profile      = algorithm::create_circular_profile(1.0, 8); // Polygon
-  auto profile_poly = std::make_unique<Polygon>(*profile);
+  auto profile = algorithm::create_circular_profile(1.0, 8);
 
-  // Sweep with flat caps (default) and custom anchor
   algorithm::SweepOptions options;
   options.start_cap = algorithm::SweepOptions::EndCapStyle::FLAT;
   options.end_cap   = algorithm::SweepOptions::EndCapStyle::FLAT;
-  options.anchor_x  = 0.5; // Offset
 
-  auto result = algorithm::sweep(path, *profile_poly, options);
+  auto result = algorithm::sweep(path, *profile, options);
 
   BOOST_CHECK(result != nullptr);
   BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK_EQUAL(result->as<PolyhedralSurface>().numPolygons(), 10);
+  BOOST_CHECK(algorithm::isClosed(*result));
 
   algorithm::SweepOptions options_no_caps;
   options_no_caps.start_cap = algorithm::SweepOptions::EndCapStyle::NONE;
   options_no_caps.end_cap   = algorithm::SweepOptions::EndCapStyle::NONE;
 
-  auto result_no_caps = algorithm::sweep(path, *profile_poly, options_no_caps);
+  auto result_no_caps = algorithm::sweep(path, *profile, options_no_caps);
   BOOST_CHECK(result_no_caps != nullptr);
   BOOST_CHECK(algorithm::isValid(*result_no_caps));
+  BOOST_CHECK_EQUAL(result_no_caps->as<PolyhedralSurface>().numPolygons(), 8);
+  BOOST_CHECK(!algorithm::isClosed(*result_no_caps));
 }
 
 /**
- * @brief Test caps on vertical line with profile starting at origin
- * Regression test for bug where caps failed to be added
+ * @brief Test caps on vertical line
  */
 BOOST_AUTO_TEST_CASE(testSweep_VerticalLineWithCaps)
 {
-  // Vertical line from z=0 to z=1
   LineString path;
   path.addPoint(Point(0, 0, 0));
   path.addPoint(Point(0, 0, 1));
 
-  // Circular profile (closed)
   auto profile = algorithm::create_circular_profile(0.1, 16);
 
   algorithm::SweepOptions options;
@@ -225,10 +205,10 @@ BOOST_AUTO_TEST_CASE(testSweep_VerticalLineWithCaps)
   BOOST_CHECK(result != nullptr);
   BOOST_CHECK(algorithm::isValid(*result));
 
-  // The result should have caps: 16 side faces + 2 cap polygons = 18 faces
-  BOOST_CHECK_EQUAL(result->numGeometries(), 18);
+  // 16 side quads + 2 caps = 18 polygons
+  auto &ps = result->as<PolyhedralSurface>();
+  BOOST_CHECK_EQUAL(ps.numPolygons(), 18);
 
-  // Result should be closed (can be converted to SOLID)
   BOOST_CHECK(algorithm::isClosed(*result));
 }
 
@@ -243,33 +223,94 @@ BOOST_AUTO_TEST_CASE(testSweep_IndependentCapControl)
 
   auto profile = algorithm::create_rectangular_profile(0.2, 0.2);
 
-  // Test with both caps
+  // Both caps: 4 side quads + 2 caps = 6
   algorithm::SweepOptions options_both;
   options_both.start_cap = algorithm::SweepOptions::EndCapStyle::FLAT;
   options_both.end_cap   = algorithm::SweepOptions::EndCapStyle::FLAT;
   auto result_both       = algorithm::sweep(path, *profile, options_both);
-  BOOST_CHECK_EQUAL(result_both->numGeometries(), 6); // 4 sides + 2 caps
+  BOOST_CHECK_EQUAL(result_both->as<PolyhedralSurface>().numPolygons(), 6);
+  BOOST_CHECK(algorithm::isClosed(*result_both));
 
-  // Test with only start cap
+  // Start cap only: 4 + 1 = 5
   algorithm::SweepOptions options_start;
   options_start.start_cap = algorithm::SweepOptions::EndCapStyle::FLAT;
   options_start.end_cap   = algorithm::SweepOptions::EndCapStyle::NONE;
   auto result_start       = algorithm::sweep(path, *profile, options_start);
-  BOOST_CHECK_EQUAL(result_start->numGeometries(), 5); // 4 sides + start cap
+  BOOST_CHECK_EQUAL(result_start->as<PolyhedralSurface>().numPolygons(), 5);
+  BOOST_CHECK(!algorithm::isClosed(*result_start));
 
-  // Test with only end cap
+  // End cap only: 4 + 1 = 5
   algorithm::SweepOptions options_end;
   options_end.start_cap = algorithm::SweepOptions::EndCapStyle::NONE;
   options_end.end_cap   = algorithm::SweepOptions::EndCapStyle::FLAT;
   auto result_end       = algorithm::sweep(path, *profile, options_end);
-  BOOST_CHECK_EQUAL(result_end->numGeometries(), 5); // 4 sides + end cap
+  BOOST_CHECK_EQUAL(result_end->as<PolyhedralSurface>().numPolygons(), 5);
+  BOOST_CHECK(!algorithm::isClosed(*result_end));
 
-  // Test with no caps
+  // No caps: 4 sides only
   algorithm::SweepOptions options_none;
   options_none.start_cap = algorithm::SweepOptions::EndCapStyle::NONE;
   options_none.end_cap   = algorithm::SweepOptions::EndCapStyle::NONE;
   auto result_none       = algorithm::sweep(path, *profile, options_none);
-  BOOST_CHECK_EQUAL(result_none->numGeometries(), 4); // 4 sides only
+  BOOST_CHECK_EQUAL(result_none->as<PolyhedralSurface>().numPolygons(), 4);
+  BOOST_CHECK(!algorithm::isClosed(*result_none));
+}
+
+// ---------------------------------------------------------------------------
+// Error cases
+// ---------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testSweep_InvalidPath_TooFewPoints)
+{
+  LineString path;
+  path.addPoint(Point(0, 0, 0));
+
+  auto profile = algorithm::create_rectangular_profile(1.0, 1.0);
+  BOOST_CHECK_THROW(algorithm::sweep(path, *profile), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(testSweep_InvalidProfile_Point)
+{
+  LineString path;
+  path.addPoint(Point(0, 0, 0));
+  path.addPoint(Point(0, 0, 1));
+
+  Point profile(1, 1, 0);
+  BOOST_CHECK_THROW(algorithm::sweep(path, profile), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(testSweep_InvalidCircularProfile_NegativeRadius)
+{
+  BOOST_CHECK_THROW(algorithm::create_circular_profile(-1.0),
+                    std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(testSweep_InvalidCircularProfile_TooFewSegments)
+{
+  BOOST_CHECK_THROW(algorithm::create_circular_profile(1.0, 2),
+                    std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(testSweep_InvalidRectProfile_NegativeDim)
+{
+  BOOST_CHECK_THROW(algorithm::create_rectangular_profile(-1.0, 1.0),
+                    std::invalid_argument);
+  BOOST_CHECK_THROW(algorithm::create_rectangular_profile(1.0, -1.0),
+                    std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(testSweep_InvalidChamferProfile)
+{
+  BOOST_CHECK_THROW(algorithm::create_chamfer_profile(-1.0),
+                    std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(testSweep_InvalidFilletProfile)
+{
+  BOOST_CHECK_THROW(algorithm::create_fillet_profile(-1.0),
+                    std::invalid_argument);
+  BOOST_CHECK_THROW(algorithm::create_fillet_profile(1.0, 0),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -5,11 +5,8 @@
 #include "SFCGAL/algorithm/collectionHomogenize.h"
 #include "SFCGAL/algorithm/difference.h"
 #include "SFCGAL/algorithm/isClosed.h"
-#include "SFCGAL/algorithm/isValid.h"
 #include "SFCGAL/algorithm/sweep.h"
 #include "SFCGAL/algorithm/union.h"
-
-#include <SFCGAL/Exception.h>
 
 #include <SFCGAL/Geometry.h>
 #include <SFCGAL/Kernel.h>
@@ -30,7 +27,6 @@
 
 namespace SFCGAL::algorithm {
 
-using Kernel         = SFCGAL::Kernel;
 using Point_3        = Kernel::Point_3;
 using Vector_3       = Kernel::Vector_3;
 using Surface_mesh_3 = SFCGAL::Surface_mesh_3;
@@ -39,15 +35,35 @@ namespace PMP = CGAL::Polygon_mesh_processing;
 
 namespace {
 
-// Helper to normalize vectors
+// Thresholds for numerical comparisons
+constexpr double ZERO_LENGTH_SQ   = 1e-20;  // Squared length below which a vector is zero
+constexpr double NEAR_ZERO_LENGTH = 1e-10;  // Length below which a projection is degenerate
+constexpr double EPS_SCALE        = 1e-3;   // Profile origin shift as fraction of radius
+constexpr double MIN_OPENING_DEG  = 10.0;   // Minimum supported opening angle (degrees)
+constexpr double MAX_OPENING_DEG  = 170.0;  // Maximum supported opening angle (degrees)
+
+// ============================================================================
+// Algorithm overview:
+// 1. Convert solid to CGAL Surface_mesh (once for all edges)
+// 2. Decompose multi-segment LineStrings into individual 2-point segments
+// 3. For each segment: find halfedge, check convexity, compute dihedral angle,
+//    build angle-adapted cutting profile, sweep along edge → cutter solid
+// 4. Union all cutters
+// 5. Boolean difference: solid - combined_cutter
+// Edges that fail step 3 are skipped with a warning (not propagated).
+// ============================================================================
+
+// Normalize a vector to unit length.
+// Returns zero vector if input length is below threshold.
+// Uses CGAL::to_double for sqrt — unavoidable with EPECK kernel.
 auto
 normalize(const Vector_3 &v) -> Vector_3
 {
-  const double len = std::sqrt(CGAL::to_double(v.squared_length()));
-  if (len < 1e-12) {
+  const Kernel::FT len_sq = v * v;
+  if (len_sq < Kernel::FT(ZERO_LENGTH_SQ)) {
     return Vector_3(0, 0, 0);
   }
-  return v / len;
+  return v / std::sqrt(CGAL::to_double(len_sq));
 }
 
 // Find the halfedge in mesh that matches edge (p1 -> p2)
@@ -114,10 +130,10 @@ create_chamfer_profile_for_angle(double r1, double r2, double theta_2)
 
   // Small outward extension along the outward bisector of the two normals
   // to avoid coplanar faces in boolean ops.
-  const double EPS       = std::max(std::min(r1, r2) * 1e-3, 1e-10);
-  const double bis_angle = theta_2 / 2.0;
-  const double origin_x  = EPS * std::cos(bis_angle);
-  const double origin_y  = EPS * std::sin(bis_angle);
+  const double eps_shift  = std::max(std::min(r1, r2) * EPS_SCALE, NEAR_ZERO_LENGTH);
+  const double bis_angle  = theta_2 / 2.0;
+  const double origin_x   = eps_shift * std::cos(bis_angle);
+  const double origin_y   = eps_shift * std::sin(bis_angle);
 
   std::vector<Point> points;
   points.reserve(4);
@@ -149,11 +165,21 @@ create_fillet_profile_for_angle(double radius, int segments, double theta_2)
   auto [f1_angle, f2_angle] = compute_face_surface_angles(theta_2);
 
   // Opening angle γ = π - |θ₂|
-  const double gamma     = M_PI - std::abs(theta_2);
-  const double half_gamma = gamma / 2.0;
+  const double gamma      = M_PI - std::abs(theta_2);
+  const double half_gamma  = gamma / 2.0;
+  const double sin_theta_2 = std::sin(theta_2);
+  const double tan_half    = std::tan(half_gamma);
+
+  // Guard against degenerate angles (coplanar or knife-edge faces)
+  if (std::abs(sin_theta_2) < NEAR_ZERO_LENGTH ||
+      std::abs(tan_half) < NEAR_ZERO_LENGTH) {
+    throw std::invalid_argument(
+        "Degenerate dihedral angle for fillet: faces are nearly "
+        "coplanar or form a knife-edge");
+  }
 
   // Leg distance from edge = R / tan(γ/2)
-  const double leg_dist = radius / std::tan(half_gamma);
+  const double leg_dist = radius / tan_half;
 
   const double leg1_x = leg_dist * std::cos(f1_angle);
   const double leg1_y = leg_dist * std::sin(f1_angle);
@@ -167,7 +193,7 @@ create_fillet_profile_for_angle(double radius, int segments, double theta_2)
   //   Face 2 equation: x·cos(θ₂) + y·sin(θ₂) = 0 → offset: = -R
   // Solving: cx = -R, cy = R·(cos(θ₂) - 1) / sin(θ₂)
   const double cx = -radius;
-  const double cy = radius * (std::cos(theta_2) - 1.0) / std::sin(theta_2);
+  const double cy = radius * (std::cos(theta_2) - 1.0) / sin_theta_2;
 
   // Arc from leg1 to leg2 around center (cx, cy)
   double start_angle = std::atan2(leg1_y - cy, leg1_x - cx);
@@ -183,10 +209,10 @@ create_fillet_profile_for_angle(double radius, int segments, double theta_2)
   }
 
   // Origin: small outward shift along the outward bisector
-  const double EPS       = std::max(radius * 1e-3, 1e-10);
-  const double bis_angle = theta_2 / 2.0;
-  const double origin_x  = EPS * std::cos(bis_angle);
-  const double origin_y  = EPS * std::sin(bis_angle);
+  const double eps_shift  = std::max(radius * EPS_SCALE, NEAR_ZERO_LENGTH);
+  const double bis_angle  = theta_2 / 2.0;
+  const double origin_x   = eps_shift * std::cos(bis_angle);
+  const double origin_y   = eps_shift * std::sin(bis_angle);
 
   std::vector<Point> points;
   points.reserve(segments + 3);
@@ -206,9 +232,12 @@ create_fillet_profile_for_angle(double radius, int segments, double theta_2)
   return std::make_unique<Polygon>(LineString(points));
 }
 
-// Compute the continuous angle of n2's projection in the local frame (N, B)
-// where N is derived from n1 (projected ⊥ to edge) and B = T × N.
-// Returns theta_2 in radians.
+// Compute the signed angle of n2 relative to n1 in the plane perpendicular
+// to the edge. Looking along the edge: n1's projection defines angle 0,
+// and this returns the angle to n2's projection (counter-clockwise positive).
+//   |theta_2| ≈ pi/2  → 90° corner (cube)
+//   |theta_2| ≈ pi     → nearly flat (coplanar faces)
+//   |theta_2| ≈ 0      → knife-edge
 auto
 compute_n2_angle(const Vector_3 &edge_dir, const Vector_3 &n1,
                  const Vector_3 &n2) -> double
@@ -219,7 +248,7 @@ compute_n2_angle(const Vector_3 &edge_dir, const Vector_3 &n1,
   Vector_3 N     = n1 - (n1 * T) * T;
   double   N_len = std::sqrt(CGAL::to_double(N.squared_length()));
 
-  if (N_len < 1e-10) {
+  if (N_len < NEAR_ZERO_LENGTH) {
     throw std::invalid_argument("Face normal n1 is parallel to edge direction");
   }
   N = N / N_len;
@@ -231,7 +260,7 @@ compute_n2_angle(const Vector_3 &edge_dir, const Vector_3 &n1,
   Vector_3 n2_perp     = n2 - (n2 * T) * T;
   double   n2_perp_len = std::sqrt(CGAL::to_double(n2_perp.squared_length()));
 
-  if (n2_perp_len < 1e-10) {
+  if (n2_perp_len < NEAR_ZERO_LENGTH) {
     throw std::invalid_argument("Face normal n2 is parallel to edge direction");
   }
   n2_perp = n2_perp / n2_perp_len;
@@ -243,7 +272,10 @@ compute_n2_angle(const Vector_3 &edge_dir, const Vector_3 &n1,
   return std::atan2(proj_B, proj_N);
 }
 
-// Create cutter solid for one edge
+// Create the cutter solid for a single 2-point edge segment.
+// Finds the halfedge, checks convexity, computes dihedral angle,
+// builds the cutting profile, and sweeps it along the edge.
+// Throws std::invalid_argument on validation failure.
 auto
 create_cutter_for_edge(const Surface_mesh_3 &mesh, const LineString &edge,
                        const ChamferOptions &options)
@@ -295,8 +327,8 @@ create_cutter_for_edge(const Surface_mesh_3 &mesh, const LineString &edge,
   const double opening_angle = M_PI - alpha;
 
   // Validate opening angle range
-  constexpr double MIN_OPENING = 10.0 * M_PI / 180.0;  // ~10 degrees
-  constexpr double MAX_OPENING = 170.0 * M_PI / 180.0; // ~170 degrees
+  constexpr double MIN_OPENING = MIN_OPENING_DEG * M_PI / 180.0;
+  constexpr double MAX_OPENING = MAX_OPENING_DEG * M_PI / 180.0;
 
   if (opening_angle < MIN_OPENING) {
     throw std::invalid_argument(
@@ -335,7 +367,13 @@ create_cutter_for_edge(const Surface_mesh_3 &mesh, const LineString &edge,
   sweep_opts.reference_normal = n1;
 
   auto cutter_surf = sweep(edge, *profile, sweep_opts);
-  return std::make_unique<Solid>(cutter_surf.release());
+
+  if (!isClosed(*cutter_surf)) {
+    throw std::invalid_argument(
+        "Sweep produced an open surface (non-closed cutter)");
+  }
+
+  return std::make_unique<Solid>(std::move(cutter_surf));
 }
 
 } // anonymous namespace
@@ -398,7 +436,8 @@ chamfer(const Geometry &solid_geom, const Geometry &edge_geom,
     try {
       auto cutter = create_cutter_for_edge(mesh, seg, options);
       cutters.push_back(std::move(cutter));
-    } catch (const std::exception &e) {
+    } catch (const std::invalid_argument &e) {
+      // Expected: edge not found, concave, angle out of range
       SFCGAL_WARNING(std::string("Chamfer: skipping edge - ") + e.what());
     }
   }

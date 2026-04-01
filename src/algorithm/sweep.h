@@ -88,50 +88,55 @@ struct SweepOptions {
   double anchor_y = 0.0;
 
   /**
-   * @brief Optional reference normal to orient the frame
+   * @brief Optional reference vector to orient the profile consistently.
    *
-   * If provided, the frame's normal will be aligned with this vector
+   * If provided, the frame's normal direction is aligned with this vector
    * (projected onto the plane perpendicular to the path tangent).
-   * This ensures consistent orientation for chamfer/fillet operations
-   * on arbitrarily oriented solids.
+   * Used internally by chamfer to align the cutting profile with face normals.
+   * Only affects SEGMENT_ALIGNED frame method.
    */
   std::optional<Kernel::Vector_3> reference_normal = std::nullopt;
 };
 
 /**
- * @brief Frame structure for sweep operations
- * Represents a local coordinate system (Coordinate Frame) at a point on the
- * path.
+ * @brief Right-handed orthonormal basis at a point on the sweep path.
+ *
+ * Defines how the 2D profile is oriented in 3D space at each path vertex.
+ * The profile's X-axis maps to @c normal and its Y-axis maps to @c binormal.
+ * The three vectors satisfy: binormal = tangent × normal.
  */
 struct Frame {
-  Kernel::Vector_3 tangent;  ///< Z-axis of local frame (direction of motion)
-  Kernel::Vector_3 normal;   ///< X-axis of local frame
-  Kernel::Vector_3 binormal; ///< Y-axis of local frame
+  Kernel::Vector_3 tangent;  ///< Direction of motion along the path
+  Kernel::Vector_3 normal;   ///< Profile X-axis direction
+  Kernel::Vector_3 binormal; ///< Profile Y-axis direction (tangent × normal)
 };
 
 /**
- * @brief Sweep a 2D profile along a 3D path to create a 3D surface
+ * @brief Sweep a 2D profile along a 3D path to create a polyhedral surface.
  *
- * This function extrudes a 2D profile (polygon or linestring) along a 3D path
- * to create a polyhedral surface. The profile is defined in the XY plane where:
- * - X corresponds to the Normal direction of the path frame
- * - Y corresponds to the Binormal direction of the path frame
+ * Extrudes a 2D cross-section (the @p profile) along a 3D curve (the @p path).
+ * At each path vertex, the profile is placed in a local coordinate frame:
+ * - Profile X → frame Normal direction
+ * - Profile Y → frame Binormal direction
  *
- * @param path 3D LineString defining the sweep path
- * @param profile 2D Geometry (LineString or Polygon) defining the cross-section
- * @param options SweepOptions controlling frame method, end caps, etc.
- * @return std::unique_ptr<PolyhedralSurface> The resulting 3D surface
- * @throws std::invalid_argument if inputs are invalid
+ * The anchor point (anchor_x, anchor_y) controls which point of the profile
+ * rides exactly along the path (default: origin).
  *
- * @example
- * // Sweep with default options (RMF, flat caps, origin on path)
- * auto surface1 = sweep(helix, circle);
+ * @par Limitations
+ * - Profile must be a Polygon or LineString; only exterior ring is used.
+ * - Only X and Y coordinates of the profile are used; Z is discarded.
+ * - FRENET method is undefined on straight lines; prefer ROTATION_MINIMIZING
+ *   or SEGMENT_ALIGNED.
+ * - End caps are only added on open (non-closed) paths.
  *
- * // Sweep with anchor at rectangle center (1, 0.5)
- * SweepOptions opts;
- * opts.anchor_x = 1.0;
- * opts.anchor_y = 0.5;
- * auto surface2 = sweep(helix, rect, opts);
+ * @param path 3D LineString (>= 2 points).
+ * @param profile 2D Polygon or LineString cross-section.
+ * @param options Frame method, end caps, anchor, closure.
+ * @return The resulting 3D polyhedral surface.
+ *
+ * @throws std::invalid_argument If path has < 2 points.
+ * @throws std::invalid_argument If profile is not Polygon or LineString.
+ * @throws std::invalid_argument If profile has < 2 distinct points.
  */
 SFCGAL_API auto
 sweep(const LineString &path, const Geometry &profile,
@@ -142,11 +147,12 @@ sweep(const LineString &path, const Geometry &profile,
  * Generates a Polygon approximating a circle centered at (0,0).
  * @param radius Radius of the circle
  * @param segments Number of segments to approximate the circle
- * @return std::unique_ptr<LineString> (Closed LineString)
+ * @return std::unique_ptr<Polygon>
+ * @throws std::invalid_argument If radius <= 0 or segments < 3.
  */
 SFCGAL_API auto
 create_circular_profile(double radius, int segments = 32)
-    -> std::unique_ptr<LineString>;
+    -> std::unique_ptr<Polygon>;
 
 /**
  * @brief Create a rectangular profile for sweep operations
@@ -154,13 +160,15 @@ create_circular_profile(double radius, int segments = 32)
  * @param width Width (X dimension)
  * @param height Height (Y dimension)
  * @return std::unique_ptr<Polygon>
+ * @throws std::invalid_argument If width <= 0 or height <= 0.
  */
 SFCGAL_API auto
 create_rectangular_profile(double width, double height)
     -> std::unique_ptr<Polygon>;
 
 /**
- * @brief Create a triangular profile for chamfer operations
+ * @brief Create a triangular profile for chamfer operations, for 90-degree
+ * edges only
  *
  * Generates a right-angled triangle in the 3rd quadrant, intended for
  * subtracting material (chamfer) from a 90-degree corner.
@@ -173,13 +181,15 @@ create_rectangular_profile(double width, double height)
  * @param radius_x Length of the chamfer along X axis
  * @param radius_y Length of the chamfer along Y axis (if < 0, uses radius_x)
  * @return std::unique_ptr<Polygon>
+ * @throws std::invalid_argument If radius_x <= 0.
  */
 SFCGAL_API auto
 create_chamfer_profile(double radius_x, double radius_y = -1.0)
     -> std::unique_ptr<Polygon>;
 
 /**
- * @brief Create a fillet (rounded) profile for rounding operations
+ * @brief Create a fillet (rounded) profile for rounding operations, for
+ * 90-degree edges only
  *
  * Generates a profile representing the material to be removed to create a
  * rounded corner (fillet) of a specific radius. The shape is located in the
@@ -191,6 +201,7 @@ create_chamfer_profile(double radius_x, double radius_y = -1.0)
  * @param radius Radius of the fillet
  * @param segments Number of segments to approximate the 90-degree arc
  * @return std::unique_ptr<Polygon>
+ * @throws std::invalid_argument If radius <= 0 or segments < 1.
  */
 SFCGAL_API auto
 create_fillet_profile(double radius, int segments = 4)

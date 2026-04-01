@@ -9,6 +9,7 @@
 #include <SFCGAL/Solid.h>
 #include <SFCGAL/algorithm/Chamfer.h>
 #include <SFCGAL/algorithm/isValid.h>
+#include <SFCGAL/algorithm/volume.h>
 #include <SFCGAL/io/wkt.h>
 
 #include <boost/test/unit_test.hpp>
@@ -143,6 +144,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_Cube90_Flat)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
   BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*cube));
   // Flat chamfer on cube adds 1 face (triangle replaces edge corner)
   const auto &s = result->as<Solid>();
   BOOST_CHECK(s.exteriorShell().numPolygons() > 6);
@@ -165,6 +167,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_Cube90_Round)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
   BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*cube));
   const auto &s = result->as<Solid>();
   BOOST_CHECK(s.exteriorShell().numPolygons() > 6);
 }
@@ -193,6 +196,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_TriangularPrism_Flat)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
   BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*prism));
 }
 
 BOOST_AUTO_TEST_CASE(testChamfer_TriangularPrism_Round)
@@ -213,6 +217,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_TriangularPrism_Round)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
   BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*prism));
 }
 
 // ---------------------------------------------------------------------------
@@ -236,6 +241,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_SquarePrism_Flat)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
   BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*prism));
 }
 
 // ---------------------------------------------------------------------------
@@ -261,6 +267,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_HexagonalPrism_Flat)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
   BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*prism));
 }
 
 BOOST_AUTO_TEST_CASE(testChamfer_HexagonalPrism_Round)
@@ -281,6 +288,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_HexagonalPrism_Round)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
   BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*prism));
 }
 
 // ---------------------------------------------------------------------------
@@ -306,6 +314,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_OctagonalPrism_Flat)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
   BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*prism));
 }
 
 // ---------------------------------------------------------------------------
@@ -330,6 +339,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_Asymmetric_TriangularPrism)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
   BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*prism));
 }
 
 // ---------------------------------------------------------------------------
@@ -361,6 +371,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_MultiEdge_Cube)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
   BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*cube));
 }
 
 // ---------------------------------------------------------------------------
@@ -385,6 +396,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_BottomEdge_TriangularPrism)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
   BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*prism));
 }
 
 // ---------------------------------------------------------------------------
@@ -410,6 +422,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_PentagonPrism_Flat)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
   BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*prism));
 }
 
 BOOST_AUTO_TEST_CASE(testChamfer_PentagonPrism_Round)
@@ -430,6 +443,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_PentagonPrism_Round)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
   BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*prism));
 }
 
 // ---------------------------------------------------------------------------
@@ -516,6 +530,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_ConcaveEdge_Skipped)
   auto result = algorithm::chamfer(*l_shape, edge, opts);
   BOOST_CHECK(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
+  BOOST_CHECK(algorithm::volume(*result) == algorithm::volume(*l_shape));
 }
 
 // ---------------------------------------------------------------------------
@@ -552,6 +567,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_ThreeEdges_CubeCorner)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
   BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*cube));
   // 3 chamfers on a cube corner: should have significantly more faces
   const auto &s = result->as<Solid>();
   BOOST_CHECK(s.exteriorShell().numPolygons() > 6);
@@ -587,6 +603,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_ThreeEdges_CubeCorner_Round)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
   BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*cube));
 }
 
 // ---------------------------------------------------------------------------
@@ -639,6 +656,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_LShape_AllEdges)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
   BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*l_shape));
 }
 
 // ---------------------------------------------------------------------------
@@ -670,6 +688,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_Chevron_ConcaveSkipped)
   auto result = algorithm::chamfer(*chevron, edge, opts);
   BOOST_CHECK(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
+  BOOST_CHECK(algorithm::volume(*result) == algorithm::volume(*chevron));
 }
 
 BOOST_AUTO_TEST_CASE(testChamfer_Chevron_ConvexWorks)
@@ -697,6 +716,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_Chevron_ConvexWorks)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
   BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*chevron));
 }
 
 // ---------------------------------------------------------------------------
@@ -735,6 +755,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_ContinuousPolyline_ConvexCorner)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
   BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*l_shape));
 }
 
 BOOST_AUTO_TEST_CASE(testChamfer_ContinuousPolyline_FullContour)
@@ -813,6 +834,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_Cube_All12Edges)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
   BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*cube));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

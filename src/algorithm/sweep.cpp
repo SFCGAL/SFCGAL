@@ -16,26 +16,16 @@
 #include <SFCGAL/Triangle.h>
 #include <SFCGAL/TriangulatedSurface.h>
 #include <SFCGAL/algorithm/isClosed.h>
-#include <SFCGAL/algorithm/isValid.h>
-#include <SFCGAL/detail/tools/Registry.h>
+#include <SFCGAL/detail/tools/Log.h>
 
-#include <CGAL/Polygon_mesh_processing/autorefinement.h>
-#include <CGAL/Polygon_mesh_processing/orient_polygon_soup.h>
-#include <CGAL/Polygon_mesh_processing/polygon_mesh_to_polygon_soup.h>
-#include <CGAL/Polygon_mesh_processing/polygon_soup_to_polygon_mesh.h>
-#include <CGAL/Polygon_mesh_processing/self_intersections.h>
 #include <CGAL/Surface_mesh.h>
 
-#include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <stdexcept>
 
 namespace SFCGAL::algorithm {
 
 using Surface_mesh_3 = CGAL::Surface_mesh<Kernel::Point_3>;
-
-namespace PMP = CGAL::Polygon_mesh_processing;
 
 // Forward declarations of internal helpers
 namespace {
@@ -259,8 +249,7 @@ propagate_frame_rmf(const Frame &prev_frame, const Kernel::Point_3 &prev_point,
  * Distributes the closing error angle smoothly across all frames.
  */
 void
-correct_holonomy(std::vector<Frame> &frames,
-                 const std::vector<Kernel::Point_3> & /*points*/)
+correct_holonomy(std::vector<Frame> &frames)
 {
   if (frames.size() < 2) {
     return;
@@ -340,7 +329,7 @@ compute_rmf_frames(const std::vector<Kernel::Point_3> &points, bool closed)
 
   // Apply holonomy correction for closed paths
   if (closed) {
-    correct_holonomy(frames, points);
+    correct_holonomy(frames);
   }
 
   return frames;
@@ -357,10 +346,10 @@ compute_rmf_frames(const std::vector<Kernel::Point_3> &points, bool closed)
  * and at inflection points.
  */
 auto
-compute_frenet_frames(const std::vector<Kernel::Point_3> &points, bool closed)
+compute_frenet_frames(const std::vector<Kernel::Point_3> &points,
+                      [[maybe_unused]] bool               closed)
     -> std::vector<Frame>
 {
-  (void)closed;
   std::vector<Frame> frames;
   if (points.size() < 2) {
     return frames;
@@ -534,7 +523,8 @@ transform_profile_point(const Kernel::Point_2 &profile_pt,
 }
 
 /**
- * @brief Build sweep mesh by connecting consecutive profile instances
+ * @brief Connect consecutive profile rings with quad faces.
+ * @pre All entries in @p profiles must have the same number of points.
  */
 auto
 build_sweep_mesh(Surface_mesh_3                                  &mesh,
@@ -567,9 +557,7 @@ build_sweep_mesh(Surface_mesh_3                                  &mesh,
 
     for (size_t j = 0; j < n_profile_points; ++j) {
       size_t next_j = (j + 1) % n_profile_points;
-      // Two triangles instead of quad (avoids non-planar faces at corners)
-      mesh.add_face(ring1[j], ring2[j], ring2[next_j]);
-      mesh.add_face(ring1[j], ring2[next_j], ring1[next_j]);
+      mesh.add_face(ring1[j], ring2[j], ring2[next_j], ring1[next_j]);
     }
   }
 
@@ -577,18 +565,14 @@ build_sweep_mesh(Surface_mesh_3                                  &mesh,
 }
 
 /**
- * @brief Add flat end caps to mesh
+ * @brief Add flat end caps to close the tube.
  *
- * For closed profiles, adds the profile itself as a single polygonal face.
- * For open profiles, no caps are added (open-ended tube).
- *
- * @param add_start If true, adds the start cap
- * @param add_end If true, adds the end cap
+ * Tries reversed winding first, falls back to direct order if rejected
+ * by the mesh (winding depends on path direction vs profile orientation).
  */
 void
 add_flat_caps(
     Surface_mesh_3                                               &mesh,
-    [[maybe_unused]] const std::vector<Kernel::Point_3>          &path,
     const std::vector<std::vector<Surface_mesh_3::Vertex_index>> &vertex_rings,
     bool add_start, bool add_end)
 {
@@ -599,25 +583,30 @@ add_flat_caps(
   const auto &first_ring = vertex_rings.front();
   const auto &last_ring  = vertex_rings.back();
 
-  // Start cap: reversed orientation (inward-facing normal)
+  // Caps close the tube ends. The winding must be opposite to the
+  // lateral faces' edge orientation on the boundary.
   if (add_start) {
-    std::vector<Surface_mesh_3::Vertex_index> start_cap_vertices;
-    start_cap_vertices.reserve(first_ring.size());
-    for (auto it = first_ring.rbegin(); it != first_ring.rend(); ++it) {
-      start_cap_vertices.push_back(*it);
+    // Try reversed first, fall back to direct order
+    std::vector<Surface_mesh_3::Vertex_index> cap_rev(first_ring.rbegin(),
+                                                      first_ring.rend());
+    auto f = mesh.add_face(cap_rev);
+    if (f == Surface_mesh_3::null_face()) {
+      f = mesh.add_face(first_ring);
     }
-
-    auto start_face = mesh.add_face(start_cap_vertices);
-    if (start_face == Surface_mesh_3::null_face()) {
-      std::cerr << "Warning: Failed to add start cap face" << std::endl;
+    if (f == Surface_mesh_3::null_face()) {
+      SFCGAL_WARNING("Failed to add start cap face");
     }
   }
 
-  // End cap: normal orientation (outward-facing normal)
   if (add_end) {
-    auto end_face = mesh.add_face(last_ring);
-    if (end_face == Surface_mesh_3::null_face()) {
-      std::cerr << "Warning: Failed to add end cap face" << std::endl;
+    auto f = mesh.add_face(last_ring);
+    if (f == Surface_mesh_3::null_face()) {
+      std::vector<Surface_mesh_3::Vertex_index> cap_rev(last_ring.rbegin(),
+                                                        last_ring.rend());
+      f = mesh.add_face(cap_rev);
+    }
+    if (f == Surface_mesh_3::null_face()) {
+      SFCGAL_WARNING("Failed to add end cap face");
     }
   }
 }
@@ -627,11 +616,11 @@ add_flat_caps(
 // ----------------------------------------------------------------------------
 
 /**
- * @brief Discrete sweep for Miter joins (Architecture/CAD style)
+ * @brief Discrete sweep with miter joins at corners.
  *
- * This implementation treats each segment as a rigid tube and computes
- * intersections (miters) at corners. It avoids the "twisting" issues of
- * continuous frames at sharp corners.
+ * Each path segment gets a constant frame. At corners, profile vertices
+ * are projected onto the bisector plane to create clean miter joins.
+ * Best for rectilinear paths (beams, walls, CAD extrusions).
  */
 auto
 sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
@@ -754,15 +743,15 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
     // by different amounts).
     size_t n_pts = profile_points.size();
     for (size_t i = 0; i < n_pts - 1; ++i) {
-      mesh.add_face(start_ring[i], start_ring[i + 1], end_ring[i + 1]);
-      mesh.add_face(start_ring[i], end_ring[i + 1], end_ring[i]);
+      mesh.add_face(start_ring[i], start_ring[i + 1], end_ring[i + 1],
+                    end_ring[i]);
     }
     // Close tube
     if (profile.geometryTypeId() == TYPE_POLYGON ||
         (profile.geometryTypeId() == TYPE_LINESTRING &&
          profile.as<LineString>().isClosed())) {
-      mesh.add_face(start_ring[n_pts - 1], start_ring[0], end_ring[0]);
-      mesh.add_face(start_ring[n_pts - 1], end_ring[0], end_ring[n_pts - 1]);
+      mesh.add_face(start_ring[n_pts - 1], start_ring[0], end_ring[0],
+                    end_ring[n_pts - 1]);
     }
 
     if (seg_idx == 0) {
@@ -777,7 +766,7 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
                   options.end_cap == SweepOptions::EndCapStyle::FLAT)) {
     bool add_start = (options.start_cap == SweepOptions::EndCapStyle::FLAT);
     bool add_end   = (options.end_cap == SweepOptions::EndCapStyle::FLAT);
-    add_flat_caps(mesh, path_points, vertex_rings, add_start, add_end);
+    add_flat_caps(mesh, vertex_rings, add_start, add_end);
   }
 
   return std::make_unique<PolyhedralSurface>(mesh);
@@ -830,7 +819,7 @@ sweep_continuous(const std::vector<Kernel::Point_3> &path_points,
                   options.end_cap == SweepOptions::EndCapStyle::FLAT)) {
     bool add_start = (options.start_cap == SweepOptions::EndCapStyle::FLAT);
     bool add_end   = (options.end_cap == SweepOptions::EndCapStyle::FLAT);
-    add_flat_caps(mesh, path_points, vertex_rings, add_start, add_end);
+    add_flat_caps(mesh, vertex_rings, add_start, add_end);
   }
 
   return std::make_unique<PolyhedralSurface>(mesh);
@@ -857,19 +846,19 @@ sweep(const LineString &path, const Geometry &profile,
     path_points.emplace_back(point.x(), point.y(), point.z());
   }
 
-  // Force closed flag if geometry is closed
-  SweepOptions opts = options;
-  if (static_cast<bool>(isClosed(path))) {
-    opts.closed_path = true;
-  }
+  // Determine if path is closed (explicit option or geometric closure)
+  bool closed = options.closed_path || isClosed(path);
 
-  // If closed is requested but path is not geometrically closed, close it by
-  // duplicating start point
-  if (opts.closed_path && !path_points.empty()) {
+  // If closed but not geometrically closed, duplicate start point
+  if (closed && !path_points.empty()) {
     if (path_points.front() != path_points.back()) {
       path_points.push_back(path_points.front());
     }
   }
+
+  // Build effective options with resolved closed flag
+  SweepOptions opts = options;
+  opts.closed_path  = closed;
 
   if (opts.frame_method == SweepOptions::FrameMethod::SEGMENT_ALIGNED) {
     return sweep_discrete(path_points, profile, opts);
@@ -880,7 +869,7 @@ sweep(const LineString &path, const Geometry &profile,
 
 auto
 create_circular_profile(double radius, int segments)
-    -> std::unique_ptr<LineString>
+    -> std::unique_ptr<Polygon>
 {
   if (radius <= 0.0) {
     throw std::invalid_argument("Radius must be positive");
@@ -890,7 +879,7 @@ create_circular_profile(double radius, int segments)
   }
 
   std::vector<Point> points;
-  points.reserve(segments);
+  points.reserve(segments + 1);
 
   for (int i = 0; i < segments; ++i) {
     double angle = 2.0 * M_PI * i / segments;
@@ -900,7 +889,8 @@ create_circular_profile(double radius, int segments)
   }
   points.emplace_back(points[0]); // Close
 
-  return std::make_unique<LineString>(points);
+  LineString ring(points);
+  return std::make_unique<Polygon>(ring);
 }
 
 auto
