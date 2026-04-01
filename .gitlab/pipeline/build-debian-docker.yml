@@ -1,4 +1,4 @@
-build:debian-docker-image:
+docker:build:debian-image:
   stage: docker
   rules:
     # on default branch
@@ -14,6 +14,7 @@ build:debian-docker-image:
   services:
     - name: docker:dind
   needs: []
+  dependencies: []
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
@@ -29,7 +30,7 @@ build:debian-docker-image:
   after_script:
     - docker logout $CI_REGISTRY
 
-push:debian-docker-latest:
+docker:push:debian-latest:
   stage: docker
   rules:
     # on default branch
@@ -40,7 +41,7 @@ push:debian-docker-latest:
     - name: docker:dind
   variables:
     GIT_STRATEGY: none
-  needs: ["build:debian-docker-image"]
+  needs: ["docker:build:debian-image"]
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
@@ -50,7 +51,7 @@ push:debian-docker-latest:
   after_script:
     - docker logout $CI_REGISTRY
 
-push:debian-docker-tag:
+docker:push:debian-tag:
   stage: docker
   rules:
     # on a tag
@@ -61,6 +62,7 @@ push:debian-docker-tag:
     - name: docker:dind
   variables:
     GIT_STRATEGY: none
+  needs: ["docker:build:debian-image"]
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
