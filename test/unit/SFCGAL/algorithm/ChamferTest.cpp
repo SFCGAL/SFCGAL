@@ -490,9 +490,9 @@ BOOST_AUTO_TEST_CASE(testChamfer_EdgeNotFound)
   BOOST_CHECK(result != nullptr);
 }
 
-BOOST_AUTO_TEST_CASE(testChamfer_ConcaveEdge_Rejected)
+BOOST_AUTO_TEST_CASE(testChamfer_ConcaveEdge_Skipped)
 {
-  // L-shape: concave inner corner at (1,1) must be rejected
+  // L-shape: concave inner corner at (1,1) is skipped (limitation)
   auto l_shape = io::readWkt(
       "SOLID ((("
       "(0 0 0, 0 2 0, 1 2 0, 1 1 0, 2 1 0, 2 0 0, 0 0 0)),"
@@ -505,7 +505,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_ConcaveEdge_Rejected)
       "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"
       "))");
 
-  // Concave edge at (1,1,z) → should be skipped, original returned
+  // Concave edge at (1,1,z) — skipped, original returned
   LineString edge;
   edge.addPoint(Point(1, 1, 0));
   edge.addPoint(Point(1, 1, 1));
@@ -515,7 +515,6 @@ BOOST_AUTO_TEST_CASE(testChamfer_ConcaveEdge_Rejected)
 
   auto result = algorithm::chamfer(*l_shape, edge, opts);
   BOOST_CHECK(result != nullptr);
-  // Result should be unchanged (concave edge was skipped)
   BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
 }
 
@@ -646,9 +645,9 @@ BOOST_AUTO_TEST_CASE(testChamfer_LShape_AllEdges)
 // Non-90° concave: chevron and star
 // ---------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(testChamfer_Chevron_ConcaveRejected)
+BOOST_AUTO_TEST_CASE(testChamfer_Chevron_ConcaveSkipped)
 {
-  // Chevron: concave notch at (1, 1.5)
+  // Chevron: concave notch at (1, 1.5) — skipped (limitation)
   auto chevron = io::readWkt(
       "SOLID ((("
       "(0 0 0, 0 2 0, 1 1.5 0, 2 2 0, 2 0 0, 0 0 0)),"
@@ -660,7 +659,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_Chevron_ConcaveRejected)
       "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"
       "))");
 
-  // Concave edge (1, 1.5) → skipped
+  // Concave edge (1, 1.5) → skipped, original returned
   LineString edge;
   edge.addPoint(Point(1, 1.5, 0));
   edge.addPoint(Point(1, 1.5, 1));
