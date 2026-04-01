@@ -14,6 +14,8 @@ sonar:get-binaries:
     paths:
       - build-wrapper/
       - sonar-scanner/
+  dependencies: []
+  needs: []
   before_script:
     - apt-get update -qq
     - apt-get install --yes sudo curl wget build-essential unzip
