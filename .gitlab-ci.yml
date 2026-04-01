@@ -1,8 +1,8 @@
 stages:
   - lint
   - test # for sast tests
-  - sonar-build-test
   - plateform-build-test
+  - sonar-build-test
   - doc
   - docker
   - .post

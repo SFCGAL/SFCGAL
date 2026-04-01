@@ -39,3 +39,20 @@ debian_gcc:
     PACKAGE: "build-essential"
     C_COMPILER: "gcc"
     CXX_COMPILER: "g++"
+
+debian_gcc_auto:
+  extends: .debian_test_base
+  variables:
+    PACKAGE: "build-essential"
+    C_COMPILER: "gcc"
+    CXX_COMPILER: "g++"
+  rules:
+    # on default branch
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always
+  parallel:
+    matrix:
+      - CGAL_VERSION: [$CGAL_LATEST_VERSION]
+        OS_VERSION: ["testing"]
