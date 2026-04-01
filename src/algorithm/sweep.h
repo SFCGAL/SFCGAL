@@ -12,6 +12,7 @@
 #include <SFCGAL/PolyhedralSurface.h>
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace SFCGAL::algorithm {
@@ -85,6 +86,16 @@ struct SweepOptions {
    * @brief Anchor point Y coordinate in profile space (default: 0.0)
    */
   double anchor_y = 0.0;
+
+  /**
+   * @brief Optional reference normal to orient the frame
+   *
+   * If provided, the frame's normal will be aligned with this vector
+   * (projected onto the plane perpendicular to the path tangent).
+   * This ensures consistent orientation for chamfer/fillet operations
+   * on arbitrarily oriented solids.
+   */
+  std::optional<Kernel::Vector_3> reference_normal = std::nullopt;
 };
 
 /**
