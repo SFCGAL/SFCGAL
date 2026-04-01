@@ -1,4 +1,4 @@
 include:
-  - local: /.gitlab/pipeline/opensuse.yml
-  - local: /.gitlab/pipeline/fedora.yml
-  - local: /.gitlab/pipeline/debian.yml
+  - local: /.gitlab/pipeline/build-linux-opensuse.yml
+  - local: /.gitlab/pipeline/build-linux-fedora.yml
+  - local: /.gitlab/pipeline/build-linux-debian.yml
