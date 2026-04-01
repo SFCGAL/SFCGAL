@@ -14,9 +14,10 @@ RUN apt update -qq && \
     apt install --no-install-recommends --yes sudo wget build-essential
 
 ARG CGAL_VERSION
+ENV CI_PROJECT_DIR=/opt
 RUN ./before_install.sh $CGAL_VERSION
 
-RUN CGAL_DIR=/CGAL cmake -B build \
+RUN CGAL_DIR=${CI_PROJECT_DIR}/CGAL cmake -B build \
     -DSFCGAL_BUILD_TESTS=ON \
     -DCMAKE_C_COMPILER=/usr/bin/gcc \
     -DCMAKE_CXX_COMPILER=/usr/bin/g++ \
