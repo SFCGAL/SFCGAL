@@ -478,20 +478,33 @@ project_onto_bisector_plane(const Kernel::Point_3 &p_prev,
  * @brief Compute frame perpendicular to segment axis (for Segment Aligned)
  */
 auto
-compute_segment_frame(const Kernel::Vector_3 &axis) -> Frame
+compute_segment_frame(const Kernel::Vector_3 &axis,
+                      const std::optional<Kernel::Vector_3> &ref_normal = std::nullopt) -> Frame
 {
   Frame            frame;
   Kernel::Vector_3 normalized_axis = normalizeVector(axis);
 
   frame.tangent = normalized_axis;
 
-  // Try Z-axis first, if parallel try Y-axis
-  Kernel::Vector_3 perpendicular =
-      CGAL::cross_product(normalized_axis, Kernel::Vector_3(0, 0, 1));
-  if (perpendicular * perpendicular < Kernel::FT(1e-10)) {
-    perpendicular =
-        CGAL::cross_product(normalized_axis, Kernel::Vector_3(0, 1, 0));
+  Kernel::Vector_3 perpendicular;
+
+  if (ref_normal.has_value()) {
+    // Use reference normal: project it onto plane perpendicular to tangent
+    perpendicular = *ref_normal - (*ref_normal * frame.tangent) * frame.tangent;
   }
+
+  // Fallback if no reference or degenerate reference
+  if (!ref_normal.has_value() ||
+      perpendicular * perpendicular < Kernel::FT(1e-10)) {
+    // Try Z-axis first, if parallel try Y-axis (original method)
+    perpendicular =
+        CGAL::cross_product(normalized_axis, Kernel::Vector_3(0, 0, 1));
+    if (perpendicular * perpendicular < Kernel::FT(1e-10)) {
+      perpendicular =
+          CGAL::cross_product(normalized_axis, Kernel::Vector_3(0, 1, 0));
+    }
+  }
+
   frame.normal = normalizeVector(perpendicular);
   frame.binormal =
       normalizeVector(CGAL::cross_product(frame.tangent, frame.normal));
@@ -647,7 +660,7 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
   for (size_t seg_idx = 0; seg_idx < path_points.size() - 1; ++seg_idx) {
     // Constant frame for this segment
     Kernel::Vector_3 axis = path_points[seg_idx + 1] - path_points[seg_idx];
-    Frame            segment_frame = compute_segment_frame(axis);
+    Frame            segment_frame = compute_segment_frame(axis, options.reference_normal);
 
     // --- Start Ring ---
     std::vector<Surface_mesh_3::Vertex_index> start_ring;

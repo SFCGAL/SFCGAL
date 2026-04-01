@@ -5,6 +5,7 @@
 #include <SFCGAL/Point.h>
 #include <SFCGAL/Polygon.h>
 #include <SFCGAL/PolyhedralSurface.h>
+#include <SFCGAL/algorithm/isClosed.h>
 #include <SFCGAL/algorithm/isValid.h>
 #include <SFCGAL/algorithm/sweep.h>
 #include <SFCGAL/io/wkt.h>
@@ -228,7 +229,7 @@ BOOST_AUTO_TEST_CASE(testSweep_VerticalLineWithCaps)
   BOOST_CHECK_EQUAL(result->numGeometries(), 18);
 
   // Result should be closed (can be converted to SOLID)
-  BOOST_CHECK(isClosed(*result));
+  BOOST_CHECK(algorithm::isClosed(*result));
 }
 
 /**
