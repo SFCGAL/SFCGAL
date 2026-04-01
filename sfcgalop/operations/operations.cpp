@@ -52,6 +52,7 @@
 #include "SFCGAL/algorithm/rotate.h"
 #include "SFCGAL/algorithm/scale.h"
 #include "SFCGAL/algorithm/simplification.h"
+#include "SFCGAL/algorithm/split.h"
 #include "SFCGAL/algorithm/straightSkeleton.h"
 #include "SFCGAL/algorithm/surfaceSimplification.h"
 #include "SFCGAL/algorithm/tesselate.h"
@@ -1474,6 +1475,37 @@ const std::vector<Operation> operations = {
        double tolerance = params.count("tolerance") ? params["tolerance"] : 1.0;
        bool   preserveTopology = true;
        return SFCGAL::algorithm::simplify(*geom_a, tolerance, preserveTopology);
+     }},
+
+    {"split", "Transformations", "Split geometry with a plane", false,
+     "Split the given geometry with a plane defined by a point and a normal vector\n\n"
+     "Input A: Polygon geometry\n\n"
+     "Parameters:\n"
+     "  ptx=X: X-coordinate of a point belonging to the splitting plane\n"
+     "  pty=Y: Y-coordinate of a point belonging to the splitting plane\n"
+     "  ptz=Z: Z-coordinate of a point belonging to the splitting plane\n"
+     "  nx=X: X-coordinate of the normal vector of the splitting plane\n"
+     "  ny=Y: Y-coordinate of the normal vector of the splitting plane\n"
+     "  nz=Z: Z-coordinate of the normal vector of the splitting plane\n"
+     "  close_geometries=BOOL: If true, ensures resulting geometries are closed\n\n"
+     "Example:\n "
+     "  sfcgalop -a \"SOLID(...)\" split \"ptx=1,pty=0,ptz=0,nx=1,ny=1,nz=0,close_geometries=false\"",
+     "A, params", "G",
+     [](const std::string &args, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       auto   params = parse_params(args);
+       double ptx     = params["ptx"];
+       double pty     = params["pty"];
+       double ptz     = params["ptz"];
+       double nx     = params["nx"];
+       double ny     = params["ny"];
+       double nz     = params["nz"];
+       bool closeGeometries =
+           parse_boolean_param(params, "close_geometries", args, false);
+       const SFCGAL::Point plane_pt(ptx, pty, ptz);
+       const SFCGAL::Kernel::Vector_3 plane_normal(nx, ny, nz);
+       auto result = SFCGAL::algorithm::split(*geom_a, plane_pt, plane_normal, closeGeometries);
+       return result;
      }},
 
 #if SFCGAL_CGAL_VERSION_MAJOR >= 6
