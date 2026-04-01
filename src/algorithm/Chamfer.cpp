@@ -114,10 +114,10 @@ create_chamfer_profile_for_angle(double r1, double r2, double theta_2)
 
   // Small outward extension along the outward bisector of the two normals
   // to avoid coplanar faces in boolean ops.
-  const double EPS        = std::max(std::min(r1, r2) * 1e-3, 1e-10);
-  const double bis_angle  = theta_2 / 2.0;
-  const double origin_x   = EPS * std::cos(bis_angle);
-  const double origin_y   = EPS * std::sin(bis_angle);
+  const double EPS       = std::max(std::min(r1, r2) * 1e-3, 1e-10);
+  const double bis_angle = theta_2 / 2.0;
+  const double origin_x  = EPS * std::cos(bis_angle);
+  const double origin_y  = EPS * std::sin(bis_angle);
 
   std::vector<Point> points;
   points.reserve(4);
@@ -280,7 +280,7 @@ create_cutter_for_edge(const Surface_mesh_3 &mesh, const LineString &edge,
   // Reject concave (reflex) edges: the opposite vertex of f1 must lie
   // on the interior side of f2's plane (dot with n2 < 0).
   {
-    const auto     v_opp = mesh.target(mesh.next(hd));
+    const auto     v_opp  = mesh.target(mesh.next(hd));
     const Vector_3 to_opp = mesh.point(v_opp) - p1;
     if (CGAL::to_double(to_opp * n2) >= 0.0) {
       throw std::invalid_argument(
@@ -404,7 +404,6 @@ chamfer(const Geometry &solid_geom, const Geometry &edge_geom,
   }
 
   if (cutters.empty()) {
-    // No valid cutters, return original geometry
     return solid_geom.clone();
   }
 
@@ -416,9 +415,6 @@ chamfer(const Geometry &solid_geom, const Geometry &edge_geom,
 
   // Apply single difference at the end
   auto result = difference3D(solid_geom, *combined_cutter);
-
-  // Homogenize: if difference3D returns a GeometryCollection containing
-  // a single Solid, extract it
   return collectionHomogenize(std::move(result));
 }
 
