@@ -81,14 +81,14 @@ processFile(const std::string &filename)
 {
   std::vector<InputData> data = readInputFile(filename);
 
-  std::unique_ptr<GeometryCollection> result(new GeometryCollection());
+  auto result = std::make_unique<GeometryCollection>();
 
   std::cout << "#" << data.size() << std::endl;
   for (size_t i = 0; i < data.size(); i++) {
     std::unique_ptr<Geometry> g(io::readWkt(data[i].wkt));
     std::unique_ptr<Geometry> building(
         generator::building(*g, data[i].wallHeight, data[i].roofSlope));
-    result->addGeometry(building.release());
+    result->addGeometry(std::move(building));
   }
 
   io::osgWriteFile(*result, "building.osg");
