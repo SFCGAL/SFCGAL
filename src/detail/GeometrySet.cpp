@@ -954,8 +954,8 @@ GeometrySet<Dim>::recompose() const -> std::unique_ptr<Geometry>
   bool      hasCommonType = true;
   int const commonType    = geometries[0]->geometryTypeId();
 
-  for (auto &geometrie : geometries) {
-    if (geometrie->geometryTypeId() != commonType) {
+  for (auto &geometry : geometries) {
+    if (geometry->geometryTypeId() != commonType) {
       hasCommonType = false;
       break;
     }
