@@ -1,10 +1,11 @@
 """
 merge_boost_reports.py
 ----------------------
-Lit plusieurs rapports de tests au format Boost XML et produit un rapport
-fusionné au format CppUnit XML.
+This python script has been produced by Claude
 
-Format d'entrée (Boost) :
+Reads multiple test reports in Boost XML format and produces a merged report in CppUnit XML format.
+
+Input format (Boost):
     <TestResult>
       <TestSuite name="RootSuite" result="..." assertions_passed="..." ...>
         <TestSuite name="SpecificSuite" ...>
@@ -39,7 +40,7 @@ Format de sortie (CppUnit) :
 Usage :
     python merge_boost_reports.py rapport1.xml rapport2.xml [...] -o merged.xml
 
-    # Avec un glob :
+    # With glob :
     python merge_boost_reports.py boost_report_*.xml -o merged.xml
 """
 
@@ -52,33 +53,36 @@ from xml.etree import ElementTree as ET
 
 
 # ---------------------------------------------------------------------------
-# Structures de données intermédiaires
+# Intermediate Data Structures
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class TestCaseData:
-    """Représente un cas de test extrait d'un rapport Boost."""
-    suite_name: str          # nom de la <TestSuite> parente
-    name: str                # nom du <TestCase>
-    result: str              # "passed" ou "failed"
+    """Represents a test case extracted from a Boost report."""
+
+    suite_name: str  # parent <TestSuite> name
+    name: str  # <TestCase> name
+    isSuccess: bool  # "passed" or "failed" ==> true or false
     assertions_passed: int
     assertions_failed: int
 
 
 @dataclass
 class MergedData:
-    """Résultat de la lecture et fusion de tous les fichiers d'entrée."""
+    """Reading result and merging all input files."""
+
     test_cases: list[TestCaseData] = field(default_factory=list)
 
-    # Statistiques agrégées
+    # Aggregated statistics
     @property
     def total_tests(self) -> int:
         return len(self.test_cases)
 
     @property
     def failures(self) -> int:
-        """Nombre de cas de test en échec."""
-        return sum(1 for tc in self.test_cases if tc.result == "failed")
+        """Number of failed test cases."""
+        return sum(not tc.isSuccess for tc in self.test_cases)
 
     @property
     def assertions_failed(self) -> int:
@@ -86,50 +90,53 @@ class MergedData:
 
     @property
     def successful(self) -> list[TestCaseData]:
-        return [tc for tc in self.test_cases if tc.result == "passed"]
+        return [tc for tc in self.test_cases if tc.isSuccess]
 
     @property
     def failed(self) -> list[TestCaseData]:
-        return [tc for tc in self.test_cases if tc.result == "failed"]
+        return [tc for tc in self.test_cases if not tc.isSuccess]
 
 
 # ---------------------------------------------------------------------------
-# Lecture des rapports Boost
+# Reading Boost reports
 # ---------------------------------------------------------------------------
+
 
 def parse_boost_report(path: Path) -> list[TestCaseData]:
     """
-    Parse un rapport Boost XML et retourne la liste des TestCaseData trouvés.
-    Seuls les <TestCase> directs enfants des <TestSuite> de second niveau sont
-    collectés (on ignore la suite racine).
+        Parses a Boost XML report and returns the list of Test Case Data found
+    Only the direct <Test Case> children of the second level <Test Suite> are
+    collected (we ignore the root sequence).
     """
     try:
         tree = ET.parse(path)
     except ET.ParseError as exc:
-        sys.exit(f"Erreur de parsing dans {path}: {exc}")
+        sys.exit(f"Parsing error in {path}: {exc}")
 
     root = tree.getroot()
     if root.tag != "TestResult":
-        sys.exit(f"Racine inattendue '{root.tag}' dans {path} (attendu: TestResult)")
+        sys.exit(f"Unexpected root '{root.tag}' in {path} (expected: TestResult)")
 
     root_suite = root.find("TestSuite")
     if root_suite is None:
-        sys.exit(f"Aucune <TestSuite> trouvée dans {path}")
+        sys.exit(f"No <TestSuite> found in {path}")
 
     cases: list[TestCaseData] = []
 
-    # Parcours récursif de toutes les suites enfants
+    # Recursive traversal of all child sequences
     def walk(suite: ET.Element) -> None:
         suite_name = suite.get("name", "")
         for child in suite:
             if child.tag == "TestCase":
-                cases.append(TestCaseData(
-                    suite_name=suite_name,
-                    name=child.get("name", ""),
-                    result=child.get("result", "passed"),
-                    assertions_passed=int(child.get("assertions_passed", 0)),
-                    assertions_failed=int(child.get("assertions_failed", 0)),
-                ))
+                cases.append(
+                    TestCaseData(
+                        suite_name=suite_name,
+                        name=child.get("name", ""),
+                        isSuccess=child.get("result", "passed") == "passed",
+                        assertions_passed=int(child.get("assertions_passed", 0)),
+                        assertions_failed=int(child.get("assertions_failed", 0)),
+                    )
+                )
             elif child.tag == "TestSuite":
                 walk(child)
 
@@ -141,7 +148,7 @@ def parse_boost_report(path: Path) -> list[TestCaseData]:
 
 
 def merge_reports(input_files: list[Path]) -> MergedData:
-    """Fusionne les données de tous les fichiers Boost en un seul MergedData."""
+    """Merges data from all Boost files into one MergedData."""
     merged = MergedData()
     for path in input_files:
         merged.test_cases.extend(parse_boost_report(path))
@@ -149,11 +156,12 @@ def merge_reports(input_files: list[Path]) -> MergedData:
 
 
 # ---------------------------------------------------------------------------
-# Génération du rapport CppUnit XML
+# Generating the CppUnit XML report
 # ---------------------------------------------------------------------------
 
+
 def build_cppunit_xml(data: MergedData) -> ET.Element:
-    """Construit l'arbre XML CppUnit à partir des données fusionnées."""
+    """Constructs the CppUnit XML tree from the merged data."""
     test_run = ET.Element("TestRun")
 
     # ── <FailedTests> ───────────────────────────────────────────────────────
@@ -170,9 +178,8 @@ def build_cppunit_xml(data: MergedData) -> ET.Element:
 
     # ── <SuccessfulTests> ───────────────────────────────────────────────────
     successful_tests_el = ET.SubElement(test_run, "SuccessfulTests")
-    # L'id continue la numérotation globale après les tests en échec
-    offset = len(data.failed)
-    for idx, tc in enumerate(data.successful, start=offset + 1):
+    # global ID numbering after failed tests
+    for idx, tc in enumerate(data.successful, start=len(data.failed) + 1):
         test_el = ET.SubElement(successful_tests_el, "Test", id=str(idx))
         ET.SubElement(test_el, "Name").text = f"{tc.suite_name}::{tc.name}"
 
@@ -180,59 +187,60 @@ def build_cppunit_xml(data: MergedData) -> ET.Element:
     stats = ET.SubElement(test_run, "Statistics")
     ET.SubElement(stats, "Tests").text = str(data.total_tests)
     ET.SubElement(stats, "FailuresTotal").text = str(data.failures)
-    ET.SubElement(stats, "Errors").text = "0"       # non disponible dans Boost
+    ET.SubElement(stats, "Errors").text = "0"  # not available in Boost
     ET.SubElement(stats, "Failures").text = str(data.failures)
 
     return test_run
 
 
 # ---------------------------------------------------------------------------
-# Point d'entrée
+# Entrypoint
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
-            "Fusionne plusieurs rapports Boost XML et produit un rapport "
-            "au format CppUnit XML."
+            "Merges multiple Boost XML reports and produces a report au format Cpp Unit XML."
         )
     )
     parser.add_argument(
         "inputs",
         nargs="+",
         metavar="FILE",
-        help="Fichiers Boost XML à fusionner (les globs sont acceptés).",
+        help="Boost XML files to merge (globs are accepted).",
     )
     parser.add_argument(
-        "-o", "--output",
+        "-o",
+        "--output",
         default="merged_report.xml",
         metavar="FILE",
-        help="Fichier de sortie CppUnit (défaut : merged_report.xml).",
+        help="CppUnit output file (default: merged report xml).",
     )
     args = parser.parse_args()
 
-    # Résolution des globs éventuels
+    # Resolution of possible globs
     resolved: list[Path] = []
     for pattern in args.inputs:
         matches = [Path(p) for p in glob.glob(pattern)]
         resolved.extend(sorted(matches) if matches else [Path(pattern)])
 
     if not resolved:
-        sys.exit("Aucun fichier d'entrée trouvé.")
+        sys.exit("No input files found.")
 
-    print(f"Fusion de {len(resolved)} fichier(s) :")
+    print(f"Merged {len(resolved)} file(s) :")
     for f in resolved:
         print(f"  - {f}")
 
-    # Lecture + fusion
+    # Read + merge
     data = merge_reports(resolved)
 
-    # Construction du XML CppUnit
+    # XML CppUnit building
     cppunit_root = build_cppunit_xml(data)
 
-    # Écriture avec indentation
+    # Writing with indentation
     tree = ET.ElementTree(cppunit_root)
-    ET.indent(tree, space="  ")   # Python ≥ 3.9
+    ET.indent(tree, space="  ")  # Python ≥ 3.9
 
     output_path = Path(args.output)
     with output_path.open("w", encoding="utf-8") as fh:
@@ -240,16 +248,16 @@ def main() -> None:
         tree.write(fh, encoding="unicode", xml_declaration=False)
         fh.write("\n")
 
-    print(f"\nRapport CppUnit écrit dans : {output_path}")
+    print(f"\nCppUnit report written in: {output_path}")
 
-    # Résumé
+    # Summary
     status = "FAILED" if data.failures else "OK"
-    print("\n── Résumé ──────────────────────────────")
-    print(f"  Statut global  : {status}")
-    print(f"  Tests total    : {data.total_tests}")
-    print(f"  Tests réussis  : {len(data.successful)}")
-    print(f"  Tests échoués  : {data.failures}")
-    print(f"  Assertions ✗   : {data.assertions_failed}")
+    print("\n── Summary ───────────────────────────")
+    print(f"  Global status : {status}")
+    print(f"  All tests     : {data.total_tests}")
+    print(f"  Success       : {len(data.successful)}")
+    print(f"  Failures      : {data.failures}")
+    print(f"  Assertions ✗  : {data.assertions_failed}")
     print("────────────────────────────────────────")
 
 
