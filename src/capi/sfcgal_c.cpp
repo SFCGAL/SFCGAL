@@ -1799,7 +1799,8 @@ sfcgal_geometry_extrude_straight_skeleton_with_angles(
   std::unique_ptr<SFCGAL::PolyhedralSurface> polys;
 
   try {
-    polys = SFCGAL::algorithm::extrudeStraightSkeleton(*g1, height, anglesVec);
+    polys = SFCGAL::algorithm::extrudeStraightSkeleton(*g1, height, {{}},
+                                                       anglesVec);
   } catch (std::exception &e) {
     SFCGAL_WARNING("During extrude_straight_skeleton_with_angles(A):");
     SFCGAL_WARNING(
@@ -1835,8 +1836,8 @@ sfcgal_geometry_extrude_polygon_straight_skeleton_with_angles(
   std::unique_ptr<SFCGAL::Geometry> polys;
 
   try {
-    polys = SFCGAL::algorithm::extrudeStraightSkeleton(*g1, building_height,
-                                                       roof_height, anglesVec);
+    polys = SFCGAL::algorithm::extrudeStraightSkeleton(
+        *g1, building_height, roof_height, {{}}, anglesVec);
   } catch (std::exception &e) {
     SFCGAL_WARNING("During extrude_polygon_straight_skeleton_with_angles(A):");
     SFCGAL_WARNING(
