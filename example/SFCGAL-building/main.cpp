@@ -19,8 +19,18 @@
 
 using namespace SFCGAL;
 
+/**
+ * @brief Input parameters for building geometry generation.
+ */
 class InputData {
 public:
+  /**
+   * @brief Constructs an InputData object.
+   *
+   * @param wkt_        WKT polygon string representing the building footprint.
+   * @param wallHeight_ Wall height in meters.
+   * @param roofSlope_  Roof slope ratio.
+   */
   InputData(const std::string &wkt_ = "", double wallHeight_ = 5.0,
             double roofSlope_ = 1.0)
       : wkt(wkt_), roofSlope(roofSlope_), wallHeight(wallHeight_)
@@ -28,9 +38,9 @@ public:
   }
 
 public:
-  std::string wkt;
-  double      roofSlope;
-  double      wallHeight;
+  std::string wkt;        ///< WKT polygon string representing the building footprint.
+  double      roofSlope;  ///< Roof slope ratio.
+  double      wallHeight; ///< Wall height.
 };
 
 /**
