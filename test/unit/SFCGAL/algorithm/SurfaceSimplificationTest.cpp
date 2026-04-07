@@ -96,8 +96,8 @@ createCubeTriangulatedSurface(const Point &origin = Point(0, 0, 0),
   auto cube = std::make_unique<TriangulatedSurface>();
 
   for (const auto &face : makeCube(origin, size)) {
-    cube->addTriangle(Triangle(face[0], face[1], face[2]));
-    cube->addTriangle(Triangle(face[0], face[2], face[3]));
+    cube->addPatch(Triangle(face[0], face[1], face[2]));
+    cube->addPatch(Triangle(face[0], face[2], face[3]));
   }
 
   return cube;
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(testSimplify_TriangulatedSurface_GarlandHeckbert)
 {
   auto cube = createCubeTriangulatedSurface();
 
-  BOOST_CHECK_EQUAL(cube->numTriangles(), 12);
+  BOOST_CHECK_EQUAL(cube->numPatches(), 12);
 
   // Simplify using edge count ratio with Garland-Heckbert strategy
   auto simplified = surfaceSimplification(
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(testSimplify_TriangulatedSurface_GarlandHeckbert)
   BOOST_CHECK(simplified->is<TriangulatedSurface>());
 
   const auto &simplifiedTin = simplified->as<TriangulatedSurface>();
-  BOOST_CHECK_LT(simplifiedTin.numTriangles(), cube->numTriangles());
+  BOOST_CHECK_LT(simplifiedTin.numPatches(), cube->numPatches());
 }
 
 // Test TriangulatedSurface simplification with Lindstrom-Turk strategy
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(testSimplify_TriangulatedSurface_LindstromTurk)
 {
   auto cube = createCubeTriangulatedSurface();
 
-  BOOST_CHECK_EQUAL(cube->numTriangles(), 12);
+  BOOST_CHECK_EQUAL(cube->numPatches(), 12);
 
   // Simplify using edge count ratio with Lindstrom-Turk strategy
   auto simplified = surfaceSimplification(
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(testSimplify_TriangulatedSurface_LindstromTurk)
   BOOST_CHECK(simplified->is<TriangulatedSurface>());
 
   const auto &simplifiedTin = simplified->as<TriangulatedSurface>();
-  BOOST_CHECK_LT(simplifiedTin.numTriangles(), cube->numTriangles());
+  BOOST_CHECK_LT(simplifiedTin.numPatches(), cube->numPatches());
 }
 
 // Test PolyhedralSurface simplification with Garland-Heckbert strategy
