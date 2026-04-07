@@ -171,19 +171,13 @@ make_solid(std::unique_ptr<SFCGAL::Geometry> polyhedralsurface)
     -> std::unique_ptr<SFCGAL::Geometry>
 {
   // Check if input is a PolyhedralSurface
-  auto *polyhedral_ptr =
-      dynamic_cast<SFCGAL::PolyhedralSurface *>(polyhedralsurface.get());
-  if (polyhedral_ptr == nullptr) {
+  if (polyhedralsurface->geometryTypeId() != SFCGAL::TYPE_POLYHEDRALSURFACE) {
     throw std::invalid_argument(
         "make_solid: input geometry must be a PolyhedralSurface");
   }
 
-  // Create a copy of the PolyhedralSurface for the Solid
-  auto polyhedral_copy =
-      std::make_unique<SFCGAL::PolyhedralSurface>(*polyhedral_ptr);
-
   // Create and return the Solid with the PolyhedralSurface as exterior shell
-  return std::make_unique<SFCGAL::Solid>(polyhedral_copy.release());
+  return std::make_unique<SFCGAL::Solid>(polyhedralsurface->clone());
 }
 
 } // namespace Constructors
