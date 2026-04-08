@@ -848,6 +848,7 @@ recompose_surfaces(const GeometrySet<3>::SurfaceCollection &surfaces,
   if (1 == numComponents) {
     output.push_back(std::move(tri));
   } else {
+    const size_t offset = output.size();
     for (unsigned c = 0; c < numComponents; c++) {
       output.push_back(std::make_unique<TriangulatedSurface>());
     }
@@ -855,7 +856,8 @@ recompose_surfaces(const GeometrySet<3>::SurfaceCollection &surfaces,
     const size_t numPatches = tri->numPatches();
 
     for (size_t t = 0; t != numPatches; ++t) {
-      output[component[t]]->as<TriangulatedSurface>().addPatch(tri->patchN(t));
+      output[offset + component[t]]->as<TriangulatedSurface>().addPatch(
+          tri->patchN(t));
     }
   }
 }
