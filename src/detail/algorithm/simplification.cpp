@@ -376,9 +376,11 @@ organizeSimplifiedConstraints(
       break;
 
     default:
-      std::cerr << "Unknown constraint type encountered during simplification."
-                << std::endl;
-      break;
+      BOOST_THROW_EXCEPTION(NotImplementedException(
+          (boost::format("Unknown constraint type '%d' encountered during "
+                         "simplification.") %
+           static_cast<int>(info.type))
+              .str()));
     }
   }
 }
