@@ -2727,6 +2727,8 @@ BOOST_AUTO_TEST_CASE(testMinkowskiSum3D)
 BOOST_AUTO_TEST_CASE(testReadObjFile)
 {
   sfcgal_set_error_handlers(printf, on_error);
+  hasError = false;
+
   std::string objFile  = std::string(SFCGAL_TEST_DIRECTORY) + "/data/bunny.obj";
   fs::path    temp_dir = fs::temp_directory_path() / random_string();
   fs::create_directories(temp_dir);
@@ -2743,6 +2745,7 @@ BOOST_AUTO_TEST_CASE(testReadObjFile)
   // read again
   sfcgal_geometry_t *copied_geometry =
       sfcgal_io_read_obj_file(copyFile.string().c_str());
+  BOOST_CHECK(!hasError);
   BOOST_REQUIRE(copied_geometry != nullptr);
 
   // compare both geometries

@@ -396,6 +396,8 @@ save(const Geometry &geom, const std::string &filename)
         Exception("Unable to open file " + filename + " for writing."));
   }
   save(geom, out);
+  out.flush();
+  out.close();
 }
 
 auto
