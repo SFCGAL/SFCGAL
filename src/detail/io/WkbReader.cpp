@@ -76,8 +76,6 @@ auto
 WkbReader::readInnerLineString() -> LineString
 {
   SFCGAL::LineString result;
-  if (_reader.eof())
-    return result;
   try {
     const uint32_t numPoints{read<uint32_t>()};
     for (uint32_t i = 0; i < numPoints; ++i) {
@@ -127,8 +125,9 @@ WkbReader::readInnerTriangle() -> Triangle
     // Special case for empty triangle: no count or number of point/linestring
     // is expected. To avoid a 'stoi' error because there is no more data, we
     // check if the buffer still have data:
-    if (_reader.eof())
+    if (_reader.eof()) {
       return {};
+    }
 
     SFCGAL::Polygon poly{readInnerPolygon()};
     if (poly.isEmpty()) {
