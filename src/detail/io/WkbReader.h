@@ -242,7 +242,7 @@ private:
     default:
       std::ostringstream oss;
       oss << "WkbReader: type '" << geometryType << "' is not supported";
-      std::cerr << oss.str() << std::endl;
+      BOOST_THROW_EXCEPTION(SFCGAL::WkbParseException(oss.str()));
 
       return {};
     }

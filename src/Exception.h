@@ -268,6 +268,43 @@ public:
   ~WktParseException() noexcept override;
 };
 
+/**
+ * SFCGAL Exception thrown when parsing WKB
+ */
+class SFCGAL_API WkbParseException : public Exception {
+public:
+  /**
+   * @brief Constructor with message
+   * @param message The exception message
+   */
+  explicit WkbParseException(std::string const &message) noexcept;
+  /**
+   * @brief Copy constructor
+   */
+  WkbParseException(const WkbParseException &) noexcept = default;
+  /**
+   * @brief Copy assignment operator
+   * @return Reference to this exception
+   */
+  auto
+  operator=(const WkbParseException &) noexcept
+      -> WkbParseException & = default;
+  /**
+   * @brief Move constructor
+   */
+  WkbParseException(WkbParseException &&) noexcept = default;
+  /**
+   * @brief Move assignment operator
+   * @return Reference to this exception
+   */
+  auto
+  operator=(WkbParseException &&) noexcept -> WkbParseException & = default;
+  /**
+   * @brief Destructor
+   */
+  ~WkbParseException() noexcept override;
+};
+
 } // namespace SFCGAL
 
 #endif // SFCGAL_EXCEPTION_H_

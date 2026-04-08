@@ -85,7 +85,23 @@ BOOST_AUTO_TEST_CASE(readWkb)
   while (std::getline(ifs, inputWkt)) {
     std::getline(efs, expectedWkb);
     std::unique_ptr<Geometry> g(io::readWkt(inputWkt));
-    std::unique_ptr<Geometry> gWkb(io::readWkb(expectedWkb, true));
+
+    // check if geom loaded from wtk matched the expected wkb
+    BOOST_CHECK_EQUAL(g->asWkb(boost::endian::order::native, true),
+                      expectedWkb);
+
+    std::unique_ptr<Geometry> gWkb;
+    try {
+      gWkb = io::readWkb(expectedWkb, true);
+    } catch (SFCGAL::WkbParseException &e) {
+      // Check if we are allowed to fail:
+      BOOST_REQUIRE_MESSAGE(std::find(allowedBeThyFail.begin(),
+                                      allowedBeThyFail.end(),
+                                      inputWkt) != std::end(allowedBeThyFail),
+                            std::string("err with wkb: '" + expectedWkb +
+                                        "'. Reason:" + e.what()));
+    }
+
     if (std::find(allowedBeThyFail.begin(), allowedBeThyFail.end(), inputWkt) ==
         std::end(allowedBeThyFail)) {
       BOOST_CHECK_EQUAL(g->asText(0), gWkb->asText(0));
