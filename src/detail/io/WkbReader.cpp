@@ -29,39 +29,44 @@ namespace SFCGAL::detail::io {
 auto
 WkbReader::readInnerPoint() -> Point
 {
-  double const x{read<double>()};
-  double const y{read<double>()};
+  try {
+    double const x{read<double>()};
+    double const y{read<double>()};
 
-  if (!(std::isfinite(x) && std::isfinite(y))) {
-    return {};
-  }
-  if (_is3D && _isMeasured) {
-    double const z{read<double>()};
-    double const m{read<double>()};
-
-    if (!(std::isfinite(z) && std::isfinite(m))) {
+    if (!(std::isfinite(x) && std::isfinite(y))) {
       return {};
     }
-    return SFCGAL::Point{x, y, z, m};
-  }
-  if (_is3D) {
-    double const z{read<double>()};
-    if (!(std::isfinite(z))) {
-      return {};
-    }
-    return SFCGAL::Point{x, y, z};
-  }
-  if (_isMeasured) {
+    if (_is3D && _isMeasured) {
+      double const z{read<double>()};
+      double const m{read<double>()};
 
-    double const m{read<double>()};
-    if (!(std::isfinite(m))) {
-      return {};
+      if (!(std::isfinite(z) && std::isfinite(m))) {
+        return {};
+      }
+      return SFCGAL::Point{x, y, z, m};
     }
-    SFCGAL::Point result{x, y};
-    result.setM(m);
-    return result;
+    if (_is3D) {
+      double const z{read<double>()};
+      if (!(std::isfinite(z))) {
+        return {};
+      }
+      return SFCGAL::Point{x, y, z};
+    }
+    if (_isMeasured) {
+
+      double const m{read<double>()};
+      if (!(std::isfinite(m))) {
+        return {};
+      }
+      SFCGAL::Point result{x, y};
+      result.setM(m);
+      return result;
+    }
+    return SFCGAL::Point{x, y};
+  } catch (std::exception &e) {
+    BOOST_THROW_EXCEPTION(WkbParseException(
+        (boost::format("InnerPoint error: %s") % e.what()).str()));
   }
-  return SFCGAL::Point{x, y};
 }
 
 /**
@@ -71,14 +76,16 @@ auto
 WkbReader::readInnerLineString() -> LineString
 {
   SFCGAL::LineString result;
+  if (_reader.eof())
+    return result;
   try {
     const uint32_t numPoints{read<uint32_t>()};
     for (uint32_t i = 0; i < numPoints; ++i) {
       result.addPoint(readInnerPoint());
     }
   } catch (std::exception &e) {
-    BOOST_THROW_EXCEPTION(
-        Exception((boost::format("WkbReader error: %s") % e.what()).str()));
+    BOOST_THROW_EXCEPTION(WkbParseException(
+        (boost::format("InnerLineString error: %s") % e.what()).str()));
   }
   return result;
 }
@@ -90,6 +97,7 @@ auto
 WkbReader::readInnerPolygon() -> Polygon
 {
   SFCGAL::Polygon result;
+
   try {
     const uint32_t numRings{read<uint32_t>()};
     for (uint32_t i = 0; i < numRings; ++i) {
@@ -102,9 +110,10 @@ WkbReader::readInnerPolygon() -> Polygon
       }
     }
   } catch (std::exception &e) {
-    BOOST_THROW_EXCEPTION(
-        Exception((boost::format("WkbReader error: %s") % e.what()).str()));
+    BOOST_THROW_EXCEPTION(WkbParseException(
+        (boost::format("InnerPolygon error: %s") % e.what()).str()));
   }
+
   return result;
 }
 
@@ -115,6 +124,12 @@ auto
 WkbReader::readInnerTriangle() -> Triangle
 {
   try {
+    // Special case for empty triangle: no count or number of point/linestring
+    // is expected. To avoid a 'stoi' error because there is no more data, we
+    // check if the buffer still have data:
+    if (_reader.eof())
+      return {};
+
     SFCGAL::Polygon poly{readInnerPolygon()};
     if (poly.isEmpty()) {
       return {};
@@ -127,7 +142,8 @@ WkbReader::readInnerTriangle() -> Triangle
 
     return SFCGAL::Triangle{geom.pointN(0), geom.pointN(1), geom.pointN(2)};
   } catch (std::exception &e) {
-    std::cerr << e.what();
+    BOOST_THROW_EXCEPTION(WkbParseException(
+        (boost::format("InnerTriangle error: %s") % e.what()).str()));
   }
   return {};
 }
@@ -148,8 +164,8 @@ WkbReader::readInnerMultiGeometries() -> M
       result.addGeometry(geom);
     }
   } catch (std::exception &e) {
-    BOOST_THROW_EXCEPTION(
-        Exception((boost::format("WkbReader error: %s") % e.what()).str()));
+    BOOST_THROW_EXCEPTION(WkbParseException(
+        (boost::format("InnerMultiGeometries error: %s") % e.what()).str()));
   }
   return result;
 }
@@ -170,8 +186,8 @@ WkbReader::readInnerGeometryCollection() -> GeometryCollection
       }
     }
   } catch (std::exception &e) {
-    BOOST_THROW_EXCEPTION(
-        Exception((boost::format("WkbReader error: %s") % e.what()).str()));
+    BOOST_THROW_EXCEPTION(WkbParseException(
+        (boost::format("InnerGeometryCollection error: %s") % e.what()).str()));
   }
   return result;
 }
@@ -193,8 +209,9 @@ WkbReader::readInnerTriangulatedSurface() -> TriangulatedSurface
       }
     }
   } catch (std::exception &e) {
-    BOOST_THROW_EXCEPTION(
-        Exception((boost::format("WkbReader error: %s") % e.what()).str()));
+    BOOST_THROW_EXCEPTION(WkbParseException(
+        (boost::format("InnerTriangulatedSurface error: %s") % e.what())
+            .str()));
   }
   return result;
 }
@@ -215,8 +232,8 @@ WkbReader::readInnerPolyhedralSurface() -> PolyhedralSurface
       }
     }
   } catch (std::exception &e) {
-    BOOST_THROW_EXCEPTION(
-        Exception((boost::format("WkbReader error: %s") % e.what()).str()));
+    BOOST_THROW_EXCEPTION(WkbParseException(
+        (boost::format("InnerPolyhedralSurface error: %s") % e.what()).str()));
   }
   SFCGAL::PolyhedralSurface const result{geoms};
   return result;
@@ -238,8 +255,8 @@ WkbReader::readInnerSolid() -> Solid
       }
     }
   } catch (std::exception &e) {
-    std::cerr << e.what();
-    return {};
+    BOOST_THROW_EXCEPTION(WkbParseException(
+        (boost::format("InnerSolid error: %s") % e.what()).str()));
   }
   SFCGAL::Solid const result{geoms};
   return result;
