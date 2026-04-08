@@ -147,7 +147,7 @@ def parse_boost_report(path: Path) -> list[TestCaseData]:
     return cases
 
 
-def merge_reports(input_files: list[Pat]) -> MergedData:
+def merge_reports(input_files: list[Path]) -> MergedData:
     """Merges data from all Boost files into one MergedData."""
     merged = MergedData()
     for path in input_files:
