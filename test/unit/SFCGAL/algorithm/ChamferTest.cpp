@@ -25,11 +25,11 @@ namespace {
 const std::string CUBE_WKT =
     "SOLID ((("
     "(0 0 0, 0 1 0, 1 1 0, 1 0 0, 0 0 0)),"  // bottom (z=0)
-    "((0 0 0, 0 0 1, 0 1 1, 0 1 0, 0 0 0)),"  // left (x=0)
-    "((0 0 0, 1 0 0, 1 0 1, 0 0 1, 0 0 0)),"  // front (y=0)
-    "((1 1 1, 0 1 1, 0 0 1, 1 0 1, 1 1 1)),"  // top (z=1)
-    "((1 1 1, 1 0 1, 1 0 0, 1 1 0, 1 1 1)),"  // right (x=1)
-    "((1 1 1, 1 1 0, 0 1 0, 0 1 1, 1 1 1))"   // back (y=1)
+    "((0 0 0, 0 0 1, 0 1 1, 0 1 0, 0 0 0))," // left (x=0)
+    "((0 0 0, 1 0 0, 1 0 1, 0 0 1, 0 0 0))," // front (y=0)
+    "((1 1 1, 0 1 1, 0 0 1, 1 0 1, 1 1 1))," // top (z=1)
+    "((1 1 1, 1 0 1, 1 0 0, 1 1 0, 1 1 1))," // right (x=1)
+    "((1 1 1, 1 1 0, 0 1 0, 0 1 1, 1 1 1))"  // back (y=1)
     "))";
 
 // Helper to create a regular N-gon prism along the Z axis
@@ -37,8 +37,7 @@ const std::string CUBE_WKT =
 // extruded from z=0 to z=h.
 auto
 make_regular_prism(int n_sides, double circumradius, double height,
-                   double cx = 0.0, double cy = 0.0)
-    -> std::unique_ptr<Solid>
+                   double cx = 0.0, double cy = 0.0) -> std::unique_ptr<Solid>
 {
   // Compute base polygon vertices
   std::vector<std::pair<double, double>> base_pts;
@@ -106,8 +105,8 @@ get_prism_vertical_edge(int n_sides, double circumradius, double height, int i,
 
 // Helper: get a bottom edge of a regular prism (from vertex i to vertex i+1)
 auto
-get_prism_bottom_edge(int n_sides, double circumradius, int i,
-                      double cx = 0.0, double cy = 0.0) -> LineString
+get_prism_bottom_edge(int n_sides, double circumradius, int i, double cx = 0.0,
+                      double cy = 0.0) -> LineString
 {
   double angle1 = 2.0 * M_PI * i / n_sides;
   double angle2 = 2.0 * M_PI * ((i + 1) % n_sides) / n_sides;
@@ -147,7 +146,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_Cube90_Flat)
   BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*cube));
   // Flat chamfer on cube adds 1 face (triangle replaces edge corner)
   const auto &s = result->as<Solid>();
-  BOOST_CHECK(s.exteriorShell().numPolygons() > 6);
+  BOOST_CHECK(s.exteriorShell().numPatches() > 6);
 }
 
 BOOST_AUTO_TEST_CASE(testChamfer_Cube90_Round)
@@ -169,7 +168,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_Cube90_Round)
   BOOST_CHECK(algorithm::isValid(*result));
   BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*cube));
   const auto &s = result->as<Solid>();
-  BOOST_CHECK(s.exteriorShell().numPolygons() > 6);
+  BOOST_CHECK(s.exteriorShell().numPatches() > 6);
 }
 
 // ---------------------------------------------------------------------------
@@ -452,7 +451,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_PentagonPrism_Round)
 
 BOOST_AUTO_TEST_CASE(testChamfer_InvalidInput_NotSolid)
 {
-  Polygon poly;
+  Polygon    poly;
   LineString edge;
   edge.addPoint(Point(0, 0, 0));
   edge.addPoint(Point(1, 0, 0));
@@ -507,17 +506,17 @@ BOOST_AUTO_TEST_CASE(testChamfer_EdgeNotFound)
 BOOST_AUTO_TEST_CASE(testChamfer_ConcaveEdge_Skipped)
 {
   // L-shape: concave inner corner at (1,1) is skipped (limitation)
-  auto l_shape = io::readWkt(
-      "SOLID ((("
-      "(0 0 0, 0 2 0, 1 2 0, 1 1 0, 2 1 0, 2 0 0, 0 0 0)),"
-      "((0 0 1, 2 0 1, 2 1 1, 1 1 1, 1 2 1, 0 2 1, 0 0 1)),"
-      "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"
-      "((2 0 0, 2 1 0, 2 1 1, 2 0 1, 2 0 0)),"
-      "((2 1 0, 1 1 0, 1 1 1, 2 1 1, 2 1 0)),"
-      "((1 1 0, 1 2 0, 1 2 1, 1 1 1, 1 1 0)),"
-      "((1 2 0, 0 2 0, 0 2 1, 1 2 1, 1 2 0)),"
-      "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"
-      "))");
+  auto l_shape =
+      io::readWkt("SOLID ((("
+                  "(0 0 0, 0 2 0, 1 2 0, 1 1 0, 2 1 0, 2 0 0, 0 0 0)),"
+                  "((0 0 1, 2 0 1, 2 1 1, 1 1 1, 1 2 1, 0 2 1, 0 0 1)),"
+                  "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"
+                  "((2 0 0, 2 1 0, 2 1 1, 2 0 1, 2 0 0)),"
+                  "((2 1 0, 1 1 0, 1 1 1, 2 1 1, 2 1 0)),"
+                  "((1 1 0, 1 2 0, 1 2 1, 1 1 1, 1 1 0)),"
+                  "((1 2 0, 0 2 0, 0 2 1, 1 2 1, 1 2 0)),"
+                  "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"
+                  "))");
 
   // Concave edge at (1,1,z) — skipped, original returned
   LineString edge;
@@ -570,7 +569,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_ThreeEdges_CubeCorner)
   BOOST_CHECK(algorithm::volume(*result) < algorithm::volume(*cube));
   // 3 chamfers on a cube corner: should have significantly more faces
   const auto &s = result->as<Solid>();
-  BOOST_CHECK(s.exteriorShell().numPolygons() > 6);
+  BOOST_CHECK(s.exteriorShell().numPatches() > 6);
 }
 
 BOOST_AUTO_TEST_CASE(testChamfer_ThreeEdges_CubeCorner_Round)
@@ -612,17 +611,17 @@ BOOST_AUTO_TEST_CASE(testChamfer_ThreeEdges_CubeCorner_Round)
 
 BOOST_AUTO_TEST_CASE(testChamfer_LShape_AllEdges)
 {
-  auto l_shape = io::readWkt(
-      "SOLID ((("
-      "(0 0 0, 0 2 0, 1 2 0, 1 1 0, 2 1 0, 2 0 0, 0 0 0)),"
-      "((0 0 1, 2 0 1, 2 1 1, 1 1 1, 1 2 1, 0 2 1, 0 0 1)),"
-      "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"
-      "((2 0 0, 2 1 0, 2 1 1, 2 0 1, 2 0 0)),"
-      "((2 1 0, 1 1 0, 1 1 1, 2 1 1, 2 1 0)),"
-      "((1 1 0, 1 2 0, 1 2 1, 1 1 1, 1 1 0)),"
-      "((1 2 0, 0 2 0, 0 2 1, 1 2 1, 1 2 0)),"
-      "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"
-      "))");
+  auto l_shape =
+      io::readWkt("SOLID ((("
+                  "(0 0 0, 0 2 0, 1 2 0, 1 1 0, 2 1 0, 2 0 0, 0 0 0)),"
+                  "((0 0 1, 2 0 1, 2 1 1, 1 1 1, 1 2 1, 0 2 1, 0 0 1)),"
+                  "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"
+                  "((2 0 0, 2 1 0, 2 1 1, 2 0 1, 2 0 0)),"
+                  "((2 1 0, 1 1 0, 1 1 1, 2 1 1, 2 1 0)),"
+                  "((1 1 0, 1 2 0, 1 2 1, 1 1 1, 1 1 0)),"
+                  "((1 2 0, 0 2 0, 0 2 1, 1 2 1, 1 2 0)),"
+                  "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"
+                  "))");
 
   // All vertical + bottom + top edges — concave (1,1) auto-skipped
   MultiLineString edges;
@@ -666,16 +665,15 @@ BOOST_AUTO_TEST_CASE(testChamfer_LShape_AllEdges)
 BOOST_AUTO_TEST_CASE(testChamfer_Chevron_ConcaveSkipped)
 {
   // Chevron: concave notch at (1, 1.5) — skipped (limitation)
-  auto chevron = io::readWkt(
-      "SOLID ((("
-      "(0 0 0, 0 2 0, 1 1.5 0, 2 2 0, 2 0 0, 0 0 0)),"
-      "((0 0 1, 2 0 1, 2 2 1, 1 1.5 1, 0 2 1, 0 0 1)),"
-      "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"
-      "((2 0 0, 2 2 0, 2 2 1, 2 0 1, 2 0 0)),"
-      "((2 2 0, 1 1.5 0, 1 1.5 1, 2 2 1, 2 2 0)),"
-      "((1 1.5 0, 0 2 0, 0 2 1, 1 1.5 1, 1 1.5 0)),"
-      "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"
-      "))");
+  auto chevron = io::readWkt("SOLID ((("
+                             "(0 0 0, 0 2 0, 1 1.5 0, 2 2 0, 2 0 0, 0 0 0)),"
+                             "((0 0 1, 2 0 1, 2 2 1, 1 1.5 1, 0 2 1, 0 0 1)),"
+                             "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"
+                             "((2 0 0, 2 2 0, 2 2 1, 2 0 1, 2 0 0)),"
+                             "((2 2 0, 1 1.5 0, 1 1.5 1, 2 2 1, 2 2 0)),"
+                             "((1 1.5 0, 0 2 0, 0 2 1, 1 1.5 1, 1 1.5 0)),"
+                             "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"
+                             "))");
 
   // Concave edge (1, 1.5) → skipped, original returned
   LineString edge;
@@ -693,16 +691,15 @@ BOOST_AUTO_TEST_CASE(testChamfer_Chevron_ConcaveSkipped)
 
 BOOST_AUTO_TEST_CASE(testChamfer_Chevron_ConvexWorks)
 {
-  auto chevron = io::readWkt(
-      "SOLID ((("
-      "(0 0 0, 0 2 0, 1 1.5 0, 2 2 0, 2 0 0, 0 0 0)),"
-      "((0 0 1, 2 0 1, 2 2 1, 1 1.5 1, 0 2 1, 0 0 1)),"
-      "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"
-      "((2 0 0, 2 2 0, 2 2 1, 2 0 1, 2 0 0)),"
-      "((2 2 0, 1 1.5 0, 1 1.5 1, 2 2 1, 2 2 0)),"
-      "((1 1.5 0, 0 2 0, 0 2 1, 1 1.5 1, 1 1.5 0)),"
-      "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"
-      "))");
+  auto chevron = io::readWkt("SOLID ((("
+                             "(0 0 0, 0 2 0, 1 1.5 0, 2 2 0, 2 0 0, 0 0 0)),"
+                             "((0 0 1, 2 0 1, 2 2 1, 1 1.5 1, 0 2 1, 0 0 1)),"
+                             "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"
+                             "((2 0 0, 2 2 0, 2 2 1, 2 0 1, 2 0 0)),"
+                             "((2 2 0, 1 1.5 0, 1 1.5 1, 2 2 1, 2 2 0)),"
+                             "((1 1.5 0, 0 2 0, 0 2 1, 1 1.5 1, 1 1.5 0)),"
+                             "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"
+                             "))");
 
   // Convex edge (2, 2) — non-90° angle
   LineString edge;
@@ -730,17 +727,17 @@ BOOST_AUTO_TEST_CASE(testChamfer_Chevron_ConvexWorks)
 BOOST_AUTO_TEST_CASE(testChamfer_ContinuousPolyline_ConvexCorner)
 {
   // L-shape bottom: 2-segment sub-path through convex corner (3,0)
-  auto l_shape = io::readWkt(
-      "SOLID ((("
-      "(0 0 0, 0 2 0, 1 2 0, 1 1 0, 2 1 0, 2 0 0, 0 0 0)),"
-      "((0 0 1, 2 0 1, 2 1 1, 1 1 1, 1 2 1, 0 2 1, 0 0 1)),"
-      "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"
-      "((2 0 0, 2 1 0, 2 1 1, 2 0 1, 2 0 0)),"
-      "((2 1 0, 1 1 0, 1 1 1, 2 1 1, 2 1 0)),"
-      "((1 1 0, 1 2 0, 1 2 1, 1 1 1, 1 1 0)),"
-      "((1 2 0, 0 2 0, 0 2 1, 1 2 1, 1 2 0)),"
-      "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"
-      "))");
+  auto l_shape =
+      io::readWkt("SOLID ((("
+                  "(0 0 0, 0 2 0, 1 2 0, 1 1 0, 2 1 0, 2 0 0, 0 0 0)),"
+                  "((0 0 1, 2 0 1, 2 1 1, 1 1 1, 1 2 1, 0 2 1, 0 0 1)),"
+                  "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"
+                  "((2 0 0, 2 1 0, 2 1 1, 2 0 1, 2 0 0)),"
+                  "((2 1 0, 1 1 0, 1 1 1, 2 1 1, 2 1 0)),"
+                  "((1 1 0, 1 2 0, 1 2 1, 1 1 1, 1 1 0)),"
+                  "((1 2 0, 0 2 0, 0 2 1, 1 2 1, 1 2 0)),"
+                  "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"
+                  "))");
 
   // Single LineString with miter join at corner (2,0)
   LineString contour;
@@ -765,17 +762,17 @@ BOOST_AUTO_TEST_CASE(testChamfer_ContinuousPolyline_FullContour)
   // miter joins at all corners. Currently, multi-corner miter joins may
   // produce non-planar quads in the sweep, causing the cutter to be invalid.
   // In that case the edge is skipped and the original is returned.
-  auto l_shape = io::readWkt(
-      "SOLID ((("
-      "(0 0 0, 0 2 0, 1 2 0, 1 1 0, 2 1 0, 2 0 0, 0 0 0)),"
-      "((0 0 1, 2 0 1, 2 1 1, 1 1 1, 1 2 1, 0 2 1, 0 0 1)),"
-      "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"
-      "((2 0 0, 2 1 0, 2 1 1, 2 0 1, 2 0 0)),"
-      "((2 1 0, 1 1 0, 1 1 1, 2 1 1, 2 1 0)),"
-      "((1 1 0, 1 2 0, 1 2 1, 1 1 1, 1 1 0)),"
-      "((1 2 0, 0 2 0, 0 2 1, 1 2 1, 1 2 0)),"
-      "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"
-      "))");
+  auto l_shape =
+      io::readWkt("SOLID ((("
+                  "(0 0 0, 0 2 0, 1 2 0, 1 1 0, 2 1 0, 2 0 0, 0 0 0)),"
+                  "((0 0 1, 2 0 1, 2 1 1, 1 1 1, 1 2 1, 0 2 1, 0 0 1)),"
+                  "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"
+                  "((2 0 0, 2 1 0, 2 1 1, 2 0 1, 2 0 0)),"
+                  "((2 1 0, 1 1 0, 1 1 1, 2 1 1, 2 1 0)),"
+                  "((1 1 0, 1 2 0, 1 2 1, 1 1 1, 1 1 0)),"
+                  "((1 2 0, 0 2 0, 0 2 1, 1 2 1, 1 2 0)),"
+                  "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"
+                  "))");
 
   LineString contour;
   contour.addPoint(Point(0, 0, 0));

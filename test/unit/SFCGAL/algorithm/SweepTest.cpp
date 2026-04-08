@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(testSweep_AnchorDefault)
   BOOST_CHECK(result != nullptr);
   BOOST_CHECK(algorithm::isValid(*result));
   auto &ps = result->as<PolyhedralSurface>();
-  BOOST_CHECK_EQUAL(ps.numPolygons(), 6);
+  BOOST_CHECK_EQUAL(ps.numPatches(), 6);
   BOOST_CHECK(algorithm::isClosed(*result));
 }
 
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(testSweep_AnchorCenter)
   BOOST_CHECK(result != nullptr);
   BOOST_CHECK(algorithm::isValid(*result));
   auto &ps = result->as<PolyhedralSurface>();
-  BOOST_CHECK_EQUAL(ps.numPolygons(), 6);
+  BOOST_CHECK_EQUAL(ps.numPatches(), 6);
   BOOST_CHECK(algorithm::isClosed(*result));
 }
 
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(testSweep_AnchorOffset)
   BOOST_CHECK(result != nullptr);
   BOOST_CHECK(algorithm::isValid(*result));
   auto &ps = result->as<PolyhedralSurface>();
-  BOOST_CHECK_EQUAL(ps.numPolygons(), 6);
+  BOOST_CHECK_EQUAL(ps.numPatches(), 6);
   BOOST_CHECK(algorithm::isClosed(*result));
 }
 
@@ -108,20 +108,20 @@ BOOST_AUTO_TEST_CASE(testSweep_MultipleAnchors)
   auto profile = algorithm::create_rectangular_profile(1.0, 1.0);
 
   algorithm::SweepOptions options1;
-  options1.anchor_x    = 0.0;
-  options1.anchor_y    = 0.0;
+  options1.anchor_x     = 0.0;
+  options1.anchor_y     = 0.0;
   options1.frame_method = algorithm::SweepOptions::FrameMethod::SEGMENT_ALIGNED;
-  auto result1         = algorithm::sweep(path, *profile, options1);
+  auto result1          = algorithm::sweep(path, *profile, options1);
 
   algorithm::SweepOptions options2;
-  options2.anchor_x    = 1.0;
-  options2.anchor_y    = 1.0;
+  options2.anchor_x     = 1.0;
+  options2.anchor_y     = 1.0;
   options2.frame_method = algorithm::SweepOptions::FrameMethod::SEGMENT_ALIGNED;
-  auto result2         = algorithm::sweep(path, *profile, options2);
+  auto result2          = algorithm::sweep(path, *profile, options2);
 
   BOOST_CHECK(result1 != nullptr);
   BOOST_CHECK(result2 != nullptr);
-  BOOST_CHECK_EQUAL(result1->as<PolyhedralSurface>().numPolygons(), 10);
+  BOOST_CHECK_EQUAL(result1->as<PolyhedralSurface>().numPatches(), 10);
   BOOST_CHECK(algorithm::isValid(*result1));
 }
 
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(testSweep_ClosedPath)
 
   BOOST_CHECK(result != nullptr);
   BOOST_CHECK(algorithm::isValid(*result));
-  BOOST_CHECK_EQUAL(result->as<PolyhedralSurface>().numPolygons(), 16);
+  BOOST_CHECK_EQUAL(result->as<PolyhedralSurface>().numPatches(), 16);
   BOOST_CHECK(algorithm::isClosed(*result));
 }
 
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(testSweep_EndCaps)
 
   BOOST_CHECK(result != nullptr);
   BOOST_CHECK(algorithm::isValid(*result));
-  BOOST_CHECK_EQUAL(result->as<PolyhedralSurface>().numPolygons(), 10);
+  BOOST_CHECK_EQUAL(result->as<PolyhedralSurface>().numPatches(), 10);
   BOOST_CHECK(algorithm::isClosed(*result));
 
   algorithm::SweepOptions options_no_caps;
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(testSweep_EndCaps)
   auto result_no_caps = algorithm::sweep(path, *profile, options_no_caps);
   BOOST_CHECK(result_no_caps != nullptr);
   BOOST_CHECK(algorithm::isValid(*result_no_caps));
-  BOOST_CHECK_EQUAL(result_no_caps->as<PolyhedralSurface>().numPolygons(), 8);
+  BOOST_CHECK_EQUAL(result_no_caps->as<PolyhedralSurface>().numPatches(), 8);
   BOOST_CHECK(!algorithm::isClosed(*result_no_caps));
 }
 
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(testSweep_VerticalLineWithCaps)
 
   // 16 side quads + 2 caps = 18 polygons
   auto &ps = result->as<PolyhedralSurface>();
-  BOOST_CHECK_EQUAL(ps.numPolygons(), 18);
+  BOOST_CHECK_EQUAL(ps.numPatches(), 18);
 
   BOOST_CHECK(algorithm::isClosed(*result));
 }
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(testSweep_IndependentCapControl)
   options_both.start_cap = algorithm::SweepOptions::EndCapStyle::FLAT;
   options_both.end_cap   = algorithm::SweepOptions::EndCapStyle::FLAT;
   auto result_both       = algorithm::sweep(path, *profile, options_both);
-  BOOST_CHECK_EQUAL(result_both->as<PolyhedralSurface>().numPolygons(), 6);
+  BOOST_CHECK_EQUAL(result_both->as<PolyhedralSurface>().numPatches(), 6);
   BOOST_CHECK(algorithm::isClosed(*result_both));
 
   // Start cap only: 4 + 1 = 5
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(testSweep_IndependentCapControl)
   options_start.start_cap = algorithm::SweepOptions::EndCapStyle::FLAT;
   options_start.end_cap   = algorithm::SweepOptions::EndCapStyle::NONE;
   auto result_start       = algorithm::sweep(path, *profile, options_start);
-  BOOST_CHECK_EQUAL(result_start->as<PolyhedralSurface>().numPolygons(), 5);
+  BOOST_CHECK_EQUAL(result_start->as<PolyhedralSurface>().numPatches(), 5);
   BOOST_CHECK(!algorithm::isClosed(*result_start));
 
   // End cap only: 4 + 1 = 5
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(testSweep_IndependentCapControl)
   options_end.start_cap = algorithm::SweepOptions::EndCapStyle::NONE;
   options_end.end_cap   = algorithm::SweepOptions::EndCapStyle::FLAT;
   auto result_end       = algorithm::sweep(path, *profile, options_end);
-  BOOST_CHECK_EQUAL(result_end->as<PolyhedralSurface>().numPolygons(), 5);
+  BOOST_CHECK_EQUAL(result_end->as<PolyhedralSurface>().numPatches(), 5);
   BOOST_CHECK(!algorithm::isClosed(*result_end));
 
   // No caps: 4 sides only
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(testSweep_IndependentCapControl)
   options_none.start_cap = algorithm::SweepOptions::EndCapStyle::NONE;
   options_none.end_cap   = algorithm::SweepOptions::EndCapStyle::NONE;
   auto result_none       = algorithm::sweep(path, *profile, options_none);
-  BOOST_CHECK_EQUAL(result_none->as<PolyhedralSurface>().numPolygons(), 4);
+  BOOST_CHECK_EQUAL(result_none->as<PolyhedralSurface>().numPatches(), 4);
   BOOST_CHECK(!algorithm::isClosed(*result_none));
 }
 
