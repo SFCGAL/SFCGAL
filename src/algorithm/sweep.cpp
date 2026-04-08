@@ -743,15 +743,15 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
     // by different amounts).
     size_t n_pts = profile_points.size();
     for (size_t i = 0; i < n_pts - 1; ++i) {
-      mesh.add_face(start_ring[i], start_ring[i + 1], end_ring[i + 1],
-                    end_ring[i]);
+      mesh.add_face(start_ring[i], start_ring[i + 1], end_ring[i]);
+      mesh.add_face(start_ring[i + 1], end_ring[i + 1], end_ring[i]);
     }
     // Close tube
     if (profile.geometryTypeId() == TYPE_POLYGON ||
         (profile.geometryTypeId() == TYPE_LINESTRING &&
          profile.as<LineString>().isClosed())) {
-      mesh.add_face(start_ring[n_pts - 1], start_ring[0], end_ring[0],
-                    end_ring[n_pts - 1]);
+      mesh.add_face(start_ring[n_pts - 1], start_ring[0], end_ring[n_pts - 1]);
+      mesh.add_face(start_ring[0], end_ring[0], end_ring[n_pts - 1]);
     }
 
     if (seg_idx == 0) {
