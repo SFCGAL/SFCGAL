@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(testSweep_MultipleAnchors)
 
   BOOST_CHECK(result1 != nullptr);
   BOOST_CHECK(result2 != nullptr);
-  BOOST_CHECK_EQUAL(result1->as<PolyhedralSurface>().numPatches(), 10);
+  BOOST_CHECK_EQUAL(result1->as<PolyhedralSurface>().numPatches(), 18);
   BOOST_CHECK(algorithm::isValid(*result1));
 }
 
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(testSweep_ClosedPath)
 
   BOOST_CHECK(result != nullptr);
   BOOST_CHECK(algorithm::isValid(*result));
-  BOOST_CHECK_EQUAL(result->as<PolyhedralSurface>().numPatches(), 16);
+  BOOST_CHECK_EQUAL(result->as<PolyhedralSurface>().numPatches(), 32);
   BOOST_CHECK(algorithm::isClosed(*result));
 }
 
@@ -205,9 +205,9 @@ BOOST_AUTO_TEST_CASE(testSweep_VerticalLineWithCaps)
   BOOST_CHECK(result != nullptr);
   BOOST_CHECK(algorithm::isValid(*result));
 
-  // 16 side quads + 2 caps = 18 polygons
+  // 16 side triangles pairs + 2 caps = 34 polygons
   auto &ps = result->as<PolyhedralSurface>();
-  BOOST_CHECK_EQUAL(ps.numPatches(), 18);
+  BOOST_CHECK_EQUAL(ps.numPatches(), 34);
 
   BOOST_CHECK(algorithm::isClosed(*result));
 }
