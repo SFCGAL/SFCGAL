@@ -366,21 +366,26 @@ create_cutter_for_edge(const Surface_mesh_3 &mesh, const LineString &edge,
   sweep_opts.frame_method = SweepOptions::FrameMethod::SEGMENT_ALIGNED;
   sweep_opts.closed_path  = isClosed(edge);
 
-  // Do NOT set reference_normal: the fallback in compute_segment_frame uses
-  // tangent × Z_up which gives binormal=(0,0,-1) consistently for all
-  // horizontal tangent directions (+X, -X, +Y, -Y), preventing frame flips.
+  // For single-segment edges, use n1 as the sweep frame reference so the
+  // chamfer profile legs align with the solid's face surfaces.
+  // For multi-segment paths, skip: n1 may be parallel to some segment, causing
+  // a degenerate reference and frame flips at corners.
+  if (edge.numPoints() == 2) {
+    sweep_opts.reference_normal = n1;
+  }
 
-  std::cout << "ici\n";
   auto cutter_surf = sweep(edge, *profile, sweep_opts);
-  std::cout << cutter_surf->asText(8) << "\n";
 
   // Repair self-intersections that can arise at concave corners of the path
   // (miter joins extend the tube through the corner, creating face overlaps).
+  // Only run if actual self-intersections exist — autorefine can corrupt valid meshes.
   Surface_mesh_3 repair_mesh = cutter_surf->toSurfaceMesh();
-  if (!PMP::experimental::autorefine_and_remove_self_intersections(repair_mesh)) {
-    SFCGAL_WARNING("Chamfer: could not fully repair self-intersections in cutter");
+  if (PMP::does_self_intersect(repair_mesh)) {
+    if (!PMP::experimental::autorefine_and_remove_self_intersections(repair_mesh)) {
+      SFCGAL_WARNING("Chamfer: could not fully repair self-intersections in cutter");
+    }
+    cutter_surf = std::make_unique<PolyhedralSurface>(repair_mesh);
   }
-  cutter_surf = std::make_unique<PolyhedralSurface>(repair_mesh);
 
   // if (!isClosed(*cutter_surf)) {
   //   throw std::invalid_argument(
@@ -422,7 +427,6 @@ chamfer(const Geometry &solid_geom, const Geometry &edge_geom,
     try {
       auto cutter =
           create_cutter_for_edge(mesh, edge_geom.as<LineString>(), options);
-      std::cout << cutter->asText(4) << "\n";
       cutters.push_back(std::move(cutter));
     } catch (const std::invalid_argument &e) {
       // Expected: edge not found, concave, angle out of range
