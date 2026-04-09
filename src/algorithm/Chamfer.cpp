@@ -387,11 +387,6 @@ create_cutter_for_edge(const Surface_mesh_3 &mesh, const LineString &edge,
     cutter_surf = std::make_unique<PolyhedralSurface>(repair_mesh);
   }
 
-  // if (!isClosed(*cutter_surf)) {
-  //   throw std::invalid_argument(
-  //       "Sweep produced an open surface (non-closed cutter)");
-  // }
-
   return std::make_unique<Solid>(std::move(cutter_surf));
 }
 
@@ -434,6 +429,7 @@ chamfer(const Geometry &solid_geom, const Geometry &edge_geom,
     }
   } else if (edge_geom.geometryTypeId() == TYPE_MULTILINESTRING) {
     const auto &multi = edge_geom.as<MultiLineString>();
+    cutters.reserve(multi.numGeometries());
     for (size_t i = 0; i < multi.numGeometries(); ++i) {
       try {
         auto cutter = create_cutter_for_edge(

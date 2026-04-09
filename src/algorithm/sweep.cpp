@@ -30,17 +30,24 @@ using Surface_mesh_3 = CGAL::Surface_mesh<Kernel::Point_3>;
 // Forward declarations of internal helpers
 namespace {
 
+// Numerical thresholds used throughout the sweep implementation.
+// Mirrors the named constants in Chamfer.cpp for consistency.
+constexpr double ZERO_SQ_LEN       = 1e-20; // squared-length below which a vector is zero
+constexpr double NEAR_ZERO_SQ_LEN  = 1e-10; // squared-length for degenerate checks
+constexpr double NEAR_PARALLEL_COS = 0.9;   // cos(≈26°): parallelism guard for helper axis
+
 /**
- * @brief Normalize a vector to unit length
+ * @brief Normalize a vector to unit length.
+ * Returns the zero vector if the input is degenerate (squared length < ZERO_SQ_LEN).
  */
 auto
 normalizeVector(const Kernel::Vector_3 &vector) -> Kernel::Vector_3
 {
-  Kernel::FT len_sq = vector * vector;
-  if (len_sq < Kernel::FT(1e-20)) {
+  const Kernel::FT len_sq = vector * vector;
+  if (len_sq < Kernel::FT(ZERO_SQ_LEN)) {
     return {0, 0, 0};
   }
-  double len = std::sqrt(CGAL::to_double(len_sq));
+  const double len = std::sqrt(CGAL::to_double(len_sq));
   return vector / len;
 }
 
@@ -171,7 +178,7 @@ compute_initial_frame(const Kernel::Vector_3 &tangent) -> Frame
   // Choose helper vector perpendicular to tangent
   // Try X-axis first, if too parallel try Y-axis
   Kernel::Vector_3 helper(1, 0, 0);
-  if (std::abs(CGAL::to_double(frame.tangent * helper)) > 0.9) {
+  if (std::abs(CGAL::to_double(frame.tangent * helper)) > NEAR_PARALLEL_COS) {
     helper = Kernel::Vector_3(0, 1, 0);
   }
 
@@ -203,10 +210,10 @@ propagate_frame_rmf(const Frame &prev_frame, const Kernel::Point_3 &prev_point,
   frame.tangent = normalizeVector(curr_tangent);
 
   // Vector from previous to current point (Chord)
-  Kernel::Vector_3 v1           = curr_point - prev_point;
-  Kernel::FT       v1_length_sq = v1 * v1;
+  const Kernel::Vector_3 v1           = curr_point - prev_point;
+  const Kernel::FT       v1_length_sq = v1 * v1;
 
-  if (v1_length_sq < Kernel::FT(1e-20)) {
+  if (v1_length_sq < Kernel::FT(ZERO_SQ_LEN)) {
     // Points are coincident, keep same frame
     frame.normal   = prev_frame.normal;
     frame.binormal = prev_frame.binormal;
@@ -218,24 +225,24 @@ propagate_frame_rmf(const Frame &prev_frame, const Kernel::Point_3 &prev_point,
   // R = P - 2(P.n)n where n is unit normal to reflection plane.
   // Here reflection plane normal is v1/|v1|.
   // R_1(n) = n - 2(n.v1/|v1|^2)v1
-  Kernel::FT       c1 = Kernel::FT(2) / v1_length_sq;
-  Kernel::Vector_3 reflected_normal =
+  const Kernel::FT       c1              = Kernel::FT(2) / v1_length_sq;
+  const Kernel::Vector_3 reflected_normal =
       prev_frame.normal - c1 * (v1 * prev_frame.normal) * v1;
-  Kernel::Vector_3 reflected_tangent =
+  const Kernel::Vector_3 reflected_tangent =
       prev_frame.tangent - c1 * (v1 * prev_frame.tangent) * v1;
 
   // Second reflection to align with new tangent
   // Reflection plane normal is bisector of (reflected_tangent, new_tangent)
-  Kernel::Vector_3 v2           = frame.tangent - reflected_tangent;
-  Kernel::FT       v2_length_sq = v2 * v2;
+  const Kernel::Vector_3 v2           = frame.tangent - reflected_tangent;
+  const Kernel::FT       v2_length_sq = v2 * v2;
 
-  if (v2_length_sq < Kernel::FT(1e-20)) {
+  if (v2_length_sq < Kernel::FT(ZERO_SQ_LEN)) {
     // Tangents are parallel, use first reflection result
     frame.normal = reflected_normal;
   } else {
     // Formula 11 again (R_2)
-    Kernel::FT c2 = Kernel::FT(2) / v2_length_sq;
-    frame.normal  = reflected_normal - c2 * (v2 * reflected_normal) * v2;
+    const Kernel::FT c2 = Kernel::FT(2) / v2_length_sq;
+    frame.normal        = reflected_normal - c2 * (v2 * reflected_normal) * v2;
   }
 
   frame.normal   = normalizeVector(frame.normal);
@@ -259,8 +266,8 @@ correct_holonomy(std::vector<Frame> &frames)
   const Frame &last_frame  = frames.back();
 
   // Compute angle between first and last normal vectors
-  Kernel::FT dot_product = first_frame.normal * last_frame.normal;
-  double     cos_angle   = CGAL::to_double(dot_product);
+  const Kernel::FT dot_product = first_frame.normal * last_frame.normal;
+  const double     cos_angle   = CGAL::to_double(dot_product);
 
   // If frames are already aligned, no correction needed
   if (std::abs(cos_angle - 1.0) < 1e-6) {
@@ -268,27 +275,27 @@ correct_holonomy(std::vector<Frame> &frames)
   }
 
   // Compute total angle to distribute
-  double total_angle = std::acos(std::max(-1.0, std::min(1.0, cos_angle)));
+  double total_angle = std::acos(std::clamp(cos_angle, -1.0, 1.0));
 
   // Determine rotation direction
-  Kernel::Vector_3 cross =
+  const Kernel::Vector_3 cross =
       CGAL::cross_product(last_frame.normal, first_frame.normal);
   if (cross * first_frame.tangent < Kernel::FT(0)) {
     total_angle = -total_angle;
   }
 
   // Apply incremental rotation to each frame
-  size_t n_frames = frames.size();
+  const size_t n_frames = frames.size();
   for (size_t i = 1; i < n_frames; ++i) {
-    double fraction =
+    const double fraction =
         static_cast<double>(i) / static_cast<double>(n_frames - 1);
-    double angle = total_angle * fraction;
+    const double angle = total_angle * fraction;
 
-    double cos_a = std::cos(angle);
-    double sin_a = std::sin(angle);
+    const double cos_a = std::cos(angle);
+    const double sin_a = std::sin(angle);
 
-    Kernel::Vector_3 original_normal   = frames[i].normal;
-    Kernel::Vector_3 original_binormal = frames[i].binormal;
+    const Kernel::Vector_3 original_normal   = frames[i].normal;
+    const Kernel::Vector_3 original_binormal = frames[i].binormal;
 
     frames[i].normal   = cos_a * original_normal + sin_a * original_binormal;
     frames[i].binormal = -sin_a * original_normal + cos_a * original_binormal;
@@ -344,6 +351,9 @@ compute_rmf_frames(const std::vector<Kernel::Point_3> &points, bool closed)
  *
  * Warning: This method is unstable on straight lines (curvature = 0)
  * and at inflection points.
+ *
+ * The @p closed parameter is accepted for API symmetry with compute_rmf_frames
+ * but has no effect: Frenet frames are local and require no holonomy correction.
  */
 auto
 compute_frenet_frames(const std::vector<Kernel::Point_3> &points,
@@ -390,7 +400,7 @@ compute_frenet_frames(const std::vector<Kernel::Point_3> &points,
         CGAL::cross_product(frame.tangent, acceleration);
     Kernel::FT binormal_len_sq = binormal * binormal;
 
-    if (binormal_len_sq > Kernel::FT(1e-10)) {
+    if (binormal_len_sq > Kernel::FT(NEAR_ZERO_SQ_LEN)) {
       // Normal curvature exists
       frame.binormal = normalizeVector(binormal);
       frame.normal   = CGAL::cross_product(frame.binormal, frame.tangent);
@@ -408,7 +418,7 @@ compute_frenet_frames(const std::vector<Kernel::Point_3> &points,
         Kernel::Vector_3 proj_normal =
             prev.normal - (prev.normal * frame.tangent) * frame.tangent;
 
-        if (proj_normal * proj_normal > Kernel::FT(1e-10)) {
+        if (proj_normal * proj_normal > Kernel::FT(NEAR_ZERO_SQ_LEN)) {
           frame.normal   = normalizeVector(proj_normal);
           frame.binormal = CGAL::cross_product(frame.tangent, frame.normal);
         } else {
@@ -432,13 +442,13 @@ auto
 compute_bisector_plane(const Kernel::Point_3 &p1, const Kernel::Point_3 &p2,
                        const Kernel::Point_3 &p3) -> Kernel::Plane_3
 {
-  Kernel::Vector_3 v1       = normalizeVector(p2 - p1);
-  Kernel::Vector_3 v2       = normalizeVector(p3 - p2);
-  Kernel::Vector_3 bisector = v1 + v2; // Bisector direction
+  const Kernel::Vector_3 v1       = normalizeVector(p2 - p1);
+  const Kernel::Vector_3 v2       = normalizeVector(p3 - p2);
+  const Kernel::Vector_3 bisector = v1 + v2; // Bisector direction
 
   // If segments are collinear (180 deg) or backtracking (0 deg), handle
   // robustly
-  if (bisector * bisector < Kernel::FT(1e-10)) {
+  if (bisector * bisector < Kernel::FT(NEAR_ZERO_SQ_LEN)) {
     // Degenerate case: plane passes through p2 perpendicular to v1
     return Kernel::Plane_3(p2, v1);
   }
@@ -454,18 +464,18 @@ project_onto_bisector_plane(const Kernel::Point_3 &p_prev,
                             const Kernel::Point_3 &p,
                             const Kernel::Plane_3 &plane) -> Kernel::Point_3
 {
-  Kernel::Vector_3 v = p - p_prev;
+  const Kernel::Vector_3 v = p - p_prev;
 
-  Kernel::FT numerator = -(plane.a() * p_prev.x() + plane.b() * p_prev.y() +
-                           plane.c() * p_prev.z() + plane.d());
-  Kernel::FT denominator =
+  const Kernel::FT numerator = -(plane.a() * p_prev.x() + plane.b() * p_prev.y() +
+                                 plane.c() * p_prev.z() + plane.d());
+  const Kernel::FT denominator =
       plane.a() * v.x() + plane.b() * v.y() + plane.c() * v.z();
 
-  if (CGAL::abs(denominator) < Kernel::FT(1e-10)) {
-    return p; // Parallel
+  if (CGAL::abs(denominator) < Kernel::FT(NEAR_ZERO_SQ_LEN)) {
+    return p; // Ray parallel to plane — keep original position
   }
 
-  Kernel::FT t = numerator / denominator;
+  const Kernel::FT t = numerator / denominator;
   return p_prev + t * v;
 }
 
@@ -477,8 +487,8 @@ compute_segment_frame(
     const Kernel::Vector_3                &axis,
     const std::optional<Kernel::Vector_3> &ref_normal = std::nullopt) -> Frame
 {
-  Frame            frame;
-  Kernel::Vector_3 normalized_axis = normalizeVector(axis);
+  Frame                  frame;
+  const Kernel::Vector_3 normalized_axis = normalizeVector(axis);
 
   frame.tangent = normalized_axis;
 
@@ -491,7 +501,7 @@ compute_segment_frame(
 
   // Fallback if no reference or degenerate reference
   if (!ref_normal.has_value() ||
-      perpendicular * perpendicular < Kernel::FT(1e-10)) {
+      perpendicular * perpendicular < Kernel::FT(NEAR_ZERO_SQ_LEN)) {
     // Try Z-axis first, if parallel try Y-axis (original method)
     perpendicular =
         CGAL::cross_product(normalized_axis, Kernel::Vector_3(0, 0, 1));
@@ -516,9 +526,9 @@ transform_profile_point(const Kernel::Point_2 &profile_pt,
                         const Kernel::Point_3 &path_pt, const Frame &frame,
                         double anchor_x, double anchor_y) -> Kernel::Point_3
 {
-  double           x      = CGAL::to_double(profile_pt.x()) - anchor_x;
-  double           y      = CGAL::to_double(profile_pt.y()) - anchor_y;
-  Kernel::Vector_3 offset = x * frame.normal + y * frame.binormal;
+  const double           x      = CGAL::to_double(profile_pt.x()) - anchor_x;
+  const double           y      = CGAL::to_double(profile_pt.y()) - anchor_y;
+  const Kernel::Vector_3 offset = x * frame.normal + y * frame.binormal;
   return path_pt + offset;
 }
 
@@ -628,10 +638,10 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
     -> std::unique_ptr<PolyhedralSurface>
 {
   Surface_mesh_3                                         mesh;
-  std::vector<std::vector<Surface_mesh_3::Vertex_index>> vertex_rings;
+  std::vector<std::vector<Surface_mesh_3::Vertex_index>> cap_rings;
   std::vector<Kernel::Point_2> profile_points = extract_profile_points(profile);
 
-  bool closed = options.closed_path;
+  const bool closed = options.closed_path;
 
   // 1. Pre-compute bisector planes
   std::vector<Kernel::Plane_3> bisector_planes;
@@ -656,8 +666,8 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
   // Process each segment
   for (size_t seg_idx = 0; seg_idx < path_points.size() - 1; ++seg_idx) {
     // Constant frame for this segment
-    Kernel::Vector_3 axis = path_points[seg_idx + 1] - path_points[seg_idx];
-    Frame segment_frame = compute_segment_frame(axis, options.reference_normal);
+    const Kernel::Vector_3 axis          = path_points[seg_idx + 1] - path_points[seg_idx];
+    const Frame            segment_frame = compute_segment_frame(axis, options.reference_normal);
 
     // --- Start Ring ---
     std::vector<Surface_mesh_3::Vertex_index> start_ring;
@@ -746,12 +756,12 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
     // Use triangles instead of quads to avoid non-planar face issues
     // at miter join corners (where bisector projection shifts vertices
     // by different amounts).
-    size_t n_pts = profile_points.size();
+    const size_t n_pts = profile_points.size();
     for (size_t i = 0; i < n_pts - 1; ++i) {
       mesh.add_face(start_ring[i], start_ring[i + 1], end_ring[i + 1]);
       mesh.add_face(start_ring[i], end_ring[i + 1], end_ring[i]);
     }
-    // Close tube
+    // Close the last profile edge (last vertex back to first)
     if (profile.geometryTypeId() == TYPE_POLYGON ||
         (profile.geometryTypeId() == TYPE_LINESTRING &&
          profile.as<LineString>().isClosed())) {
@@ -760,18 +770,18 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
     }
 
     if (seg_idx == 0) {
-      vertex_rings.push_back(start_ring);
+      cap_rings.push_back(start_ring);
     }
     if (seg_idx == path_points.size() - 2) {
-      vertex_rings.push_back(end_ring);
+      cap_rings.push_back(end_ring);
     }
   }
 
   if (!closed && (options.start_cap == SweepOptions::EndCapStyle::FLAT ||
                   options.end_cap == SweepOptions::EndCapStyle::FLAT)) {
-    bool add_start = (options.start_cap == SweepOptions::EndCapStyle::FLAT);
-    bool add_end   = (options.end_cap == SweepOptions::EndCapStyle::FLAT);
-    add_flat_caps(mesh, vertex_rings, add_start, add_end);
+    const bool add_start = (options.start_cap == SweepOptions::EndCapStyle::FLAT);
+    const bool add_end   = (options.end_cap == SweepOptions::EndCapStyle::FLAT);
+    add_flat_caps(mesh, cap_rings, add_start, add_end);
   }
 
   return std::make_unique<PolyhedralSurface>(mesh);
@@ -790,7 +800,7 @@ sweep_continuous(const std::vector<Kernel::Point_3> &path_points,
     -> std::unique_ptr<PolyhedralSurface>
 {
   std::vector<Kernel::Point_2> profile_points = extract_profile_points(profile);
-  bool                         closed         = options.closed_path;
+  const bool                   closed         = options.closed_path;
 
   // 1. Compute Frames
   std::vector<Frame> frames;
@@ -886,9 +896,9 @@ create_circular_profile(double radius, int segments) -> std::unique_ptr<Polygon>
   points.reserve(segments + 1);
 
   for (int i = 0; i < segments; ++i) {
-    double angle = 2.0 * M_PI * i / segments;
-    double x     = radius * std::cos(angle);
-    double y     = radius * std::sin(angle);
+    const double angle = 2.0 * M_PI * i / segments;
+    const double x     = radius * std::cos(angle);
+    const double y     = radius * std::sin(angle);
     points.emplace_back(x, y, 0);
   }
   points.emplace_back(points[0]); // Close
@@ -905,8 +915,8 @@ create_rectangular_profile(double width, double height)
     throw std::invalid_argument("Dimensions must be positive");
   }
 
-  double hw = width / 2.0;
-  double hh = height / 2.0;
+  const double hw = width / 2.0;
+  const double hh = height / 2.0;
 
   std::vector<Point> points;
   points.reserve(5);
