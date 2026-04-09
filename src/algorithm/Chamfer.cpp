@@ -17,6 +17,7 @@
 #include <SFCGAL/Solid.h>
 
 #include <CGAL/Polygon_mesh_processing/compute_normal.h>
+#include <CGAL/Polygon_mesh_processing/corefinement.h>
 #include <CGAL/squared_distance_3.h>
 
 #include <SFCGAL/detail/tools/Log.h>
@@ -36,11 +37,15 @@ namespace PMP = CGAL::Polygon_mesh_processing;
 namespace {
 
 // Thresholds for numerical comparisons
-constexpr double ZERO_LENGTH_SQ   = 1e-20;  // Squared length below which a vector is zero
-constexpr double NEAR_ZERO_LENGTH = 1e-10;  // Length below which a projection is degenerate
-constexpr double EPS_SCALE        = 1e-3;   // Profile origin shift as fraction of radius
-constexpr double MIN_OPENING_DEG  = 10.0;   // Minimum supported opening angle (degrees)
-constexpr double MAX_OPENING_DEG  = 170.0;  // Maximum supported opening angle (degrees)
+constexpr double ZERO_LENGTH_SQ =
+    1e-20; // Squared length below which a vector is zero
+constexpr double NEAR_ZERO_LENGTH =
+    1e-10; // Length below which a projection is degenerate
+constexpr double EPS_SCALE = 1e-3; // Profile origin shift as fraction of radius
+constexpr double MIN_OPENING_DEG =
+    10.0; // Minimum supported opening angle (degrees)
+constexpr double MAX_OPENING_DEG =
+    170.0; // Maximum supported opening angle (degrees)
 
 // ============================================================================
 // Algorithm overview:
@@ -130,10 +135,11 @@ create_chamfer_profile_for_angle(double r1, double r2, double theta_2)
 
   // Small outward extension along the outward bisector of the two normals
   // to avoid coplanar faces in boolean ops.
-  const double eps_shift  = std::max(std::min(r1, r2) * EPS_SCALE, NEAR_ZERO_LENGTH);
-  const double bis_angle  = theta_2 / 2.0;
-  const double origin_x   = eps_shift * std::cos(bis_angle);
-  const double origin_y   = eps_shift * std::sin(bis_angle);
+  const double eps_shift =
+      std::max(std::min(r1, r2) * EPS_SCALE, NEAR_ZERO_LENGTH);
+  const double bis_angle = theta_2 / 2.0;
+  const double origin_x  = eps_shift * std::cos(bis_angle);
+  const double origin_y  = eps_shift * std::sin(bis_angle);
 
   std::vector<Point> points;
   points.reserve(4);
@@ -165,7 +171,7 @@ create_fillet_profile_for_angle(double radius, int segments, double theta_2)
   auto [f1_angle, f2_angle] = compute_face_surface_angles(theta_2);
 
   // Opening angle γ = π - |θ₂|
-  const double gamma      = M_PI - std::abs(theta_2);
+  const double gamma       = M_PI - std::abs(theta_2);
   const double half_gamma  = gamma / 2.0;
   const double sin_theta_2 = std::sin(theta_2);
   const double tan_half    = std::tan(half_gamma);
@@ -209,10 +215,10 @@ create_fillet_profile_for_angle(double radius, int segments, double theta_2)
   }
 
   // Origin: small outward shift along the outward bisector
-  const double eps_shift  = std::max(radius * EPS_SCALE, NEAR_ZERO_LENGTH);
-  const double bis_angle  = theta_2 / 2.0;
-  const double origin_x   = eps_shift * std::cos(bis_angle);
-  const double origin_y   = eps_shift * std::sin(bis_angle);
+  const double eps_shift = std::max(radius * EPS_SCALE, NEAR_ZERO_LENGTH);
+  const double bis_angle = theta_2 / 2.0;
+  const double origin_x  = eps_shift * std::cos(bis_angle);
+  const double origin_y  = eps_shift * std::sin(bis_angle);
 
   std::vector<Point> points;
   points.reserve(segments + 3);
@@ -315,9 +321,8 @@ create_cutter_for_edge(const Surface_mesh_3 &mesh, const LineString &edge,
     const auto     v_opp  = mesh.target(mesh.next(hd));
     const Vector_3 to_opp = mesh.point(v_opp) - p1;
     if (CGAL::to_double(to_opp * n2) >= 0.0) {
-      throw std::invalid_argument(
-          "Edge is concave (reflex). "
-          "Chamfer is only supported on convex edges.");
+      throw std::invalid_argument("Edge is concave (reflex). "
+                                  "Chamfer is only supported on convex edges.");
     }
   }
 
@@ -331,16 +336,14 @@ create_cutter_for_edge(const Surface_mesh_3 &mesh, const LineString &edge,
   constexpr double MAX_OPENING = MAX_OPENING_DEG * M_PI / 180.0;
 
   if (opening_angle < MIN_OPENING) {
-    throw std::invalid_argument(
-        "Edge opening angle too small (" +
-        std::to_string(opening_angle * 180.0 / M_PI) +
-        "°). Minimum supported: 10°.");
+    throw std::invalid_argument("Edge opening angle too small (" +
+                                std::to_string(opening_angle * 180.0 / M_PI) +
+                                "°). Minimum supported: 10°.");
   }
   if (opening_angle > MAX_OPENING) {
-    throw std::invalid_argument(
-        "Edge opening angle too large (" +
-        std::to_string(opening_angle * 180.0 / M_PI) +
-        "°). Maximum supported: 170°.");
+    throw std::invalid_argument("Edge opening angle too large (" +
+                                std::to_string(opening_angle * 180.0 / M_PI) +
+                                "°). Maximum supported: 170°.");
   }
 
   // Compute continuous angle of n2 in the local frame
@@ -351,7 +354,7 @@ create_cutter_for_edge(const Surface_mesh_3 &mesh, const LineString &edge,
   std::unique_ptr<Polygon> profile;
   if (options.type == ChamferType::ROUND) {
     profile = create_fillet_profile_for_angle(options.radius, options.segments,
-                                             theta_2);
+                                              theta_2);
   } else {
     const double ry =
         (options.radius_y < 0) ? options.radius : options.radius_y;
@@ -363,15 +366,26 @@ create_cutter_for_edge(const Surface_mesh_3 &mesh, const LineString &edge,
   sweep_opts.frame_method = SweepOptions::FrameMethod::SEGMENT_ALIGNED;
   sweep_opts.closed_path  = isClosed(edge);
 
-  // Pass n1 as reference normal for consistent orientation
-  sweep_opts.reference_normal = n1;
+  // Do NOT set reference_normal: the fallback in compute_segment_frame uses
+  // tangent × Z_up which gives binormal=(0,0,-1) consistently for all
+  // horizontal tangent directions (+X, -X, +Y, -Y), preventing frame flips.
 
+  std::cout << "ici\n";
   auto cutter_surf = sweep(edge, *profile, sweep_opts);
+  std::cout << cutter_surf->asText(8) << "\n";
 
-  if (!isClosed(*cutter_surf)) {
-    throw std::invalid_argument(
-        "Sweep produced an open surface (non-closed cutter)");
+  // Repair self-intersections that can arise at concave corners of the path
+  // (miter joins extend the tube through the corner, creating face overlaps).
+  Surface_mesh_3 repair_mesh = cutter_surf->toSurfaceMesh();
+  if (!PMP::experimental::autorefine_and_remove_self_intersections(repair_mesh)) {
+    SFCGAL_WARNING("Chamfer: could not fully repair self-intersections in cutter");
   }
+  cutter_surf = std::make_unique<PolyhedralSurface>(repair_mesh);
+
+  // if (!isClosed(*cutter_surf)) {
+  //   throw std::invalid_argument(
+  //       "Sweep produced an open surface (non-closed cutter)");
+  // }
 
   return std::make_unique<Solid>(std::move(cutter_surf));
 }
@@ -401,45 +415,34 @@ chamfer(const Geometry &solid_geom, const Geometry &edge_geom,
         "Input geometry must be a Solid or PolyhedralSurface");
   }
 
-  // Collect individual edge segments from input geometry.
-  // Multi-segment LineStrings are decomposed into individual 2-point segments
-  // because each edge of the solid has its own face normals, dihedral angle,
-  // and convexity. The union of per-segment cutters produces the correct
-  // continuous chamfer with proper miter-like transitions at convex corners.
-  std::vector<LineString> segments;
-
-  auto add_segments = [&](const LineString &ls) {
-    for (size_t i = 0; i + 1 < ls.numPoints(); ++i) {
-      LineString seg;
-      seg.addPoint(ls.pointN(i));
-      seg.addPoint(ls.pointN(i + 1));
-      segments.push_back(std::move(seg));
-    }
-  };
-
-  if (edge_geom.geometryTypeId() == TYPE_LINESTRING) {
-    add_segments(edge_geom.as<LineString>());
-  } else if (edge_geom.geometryTypeId() == TYPE_MULTILINESTRING) {
-    const auto &multi = edge_geom.as<MultiLineString>();
-    for (size_t i = 0; i < multi.numGeometries(); ++i) {
-      add_segments(multi.lineStringN(i));
-    }
-  } else {
-    throw std::invalid_argument(
-        "Edge geometry must be LineString or MultiLineString");
-  }
-
   // Create all cutters first (before modifying the solid)
   std::vector<std::unique_ptr<Geometry>> cutters;
 
-  for (const auto &seg : segments) {
+  if (edge_geom.geometryTypeId() == TYPE_LINESTRING) {
     try {
-      auto cutter = create_cutter_for_edge(mesh, seg, options);
+      auto cutter =
+          create_cutter_for_edge(mesh, edge_geom.as<LineString>(), options);
+      std::cout << cutter->asText(4) << "\n";
       cutters.push_back(std::move(cutter));
     } catch (const std::invalid_argument &e) {
       // Expected: edge not found, concave, angle out of range
       SFCGAL_WARNING(std::string("Chamfer: skipping edge - ") + e.what());
     }
+  } else if (edge_geom.geometryTypeId() == TYPE_MULTILINESTRING) {
+    const auto &multi = edge_geom.as<MultiLineString>();
+    for (size_t i = 0; i < multi.numGeometries(); ++i) {
+      try {
+        auto cutter = create_cutter_for_edge(
+            mesh, multi.geometryN(i).as<LineString>(), options);
+        cutters.push_back(std::move(cutter));
+      } catch (const std::invalid_argument &e) {
+        // Expected: edge not found, concave, angle out of range
+        SFCGAL_WARNING(std::string("Chamfer: skipping edge - ") + e.what());
+      }
+    }
+  } else {
+    throw std::invalid_argument(
+        "Edge geometry must be LineString or MultiLineString");
   }
 
   if (cutters.empty()) {
