@@ -35,6 +35,13 @@ on_error(const char * /*msg*/, ...) -> int
   return 0;
 }
 
+auto
+print_error(const char *msg, ...) -> int
+{
+  std::cerr << msg << std::endl;
+  return 0;
+}
+
 //! Call sfcgal_geometry_delete when using a sfcgal_geometry_t unique_ptr
 struct SfcgalDeleter {
   /// @brief Automatically delete a sfcgal geometry pointer
@@ -2726,7 +2733,7 @@ BOOST_AUTO_TEST_CASE(testMinkowskiSum3D)
 
 BOOST_AUTO_TEST_CASE(testReadObjFile)
 {
-  sfcgal_set_error_handlers(printf, on_error);
+  sfcgal_set_error_handlers(print_error, on_error);
   hasError = false;
 
   std::string objFile  = std::string(SFCGAL_TEST_DIRECTORY) + "/data/bunny.obj";
@@ -2740,9 +2747,13 @@ BOOST_AUTO_TEST_CASE(testReadObjFile)
   BOOST_CHECK(!sfcgal_geometry_is_empty(geometry));
 
   // write it on disk
+  std::cerr << "before sfcgal_geometry_as_obj_file to" << copyFile.string()
+            << std::endl;
   sfcgal_geometry_as_obj_file(geometry, copyFile.string().c_str());
+  BOOST_CHECK(!hasError);
 
   // read again
+  std::cerr << "before sfcgal_io_read_obj_file" << std::endl;
   sfcgal_geometry_t *copied_geometry =
       sfcgal_io_read_obj_file(copyFile.string().c_str());
   BOOST_CHECK(!hasError);
