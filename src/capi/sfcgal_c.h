@@ -1869,6 +1869,8 @@ sfcgal_geometry_straight_skeleton_distance_in_m(const sfcgal_geometry_t *geom);
  * @pre isValid(geom) == true
  * @pre height != 0
  * @return The extrude straight skeleton of geom
+ * @note This is equivalent to calling
+ * sfcgal_geometry_extrude_polygon_straight_skeleton(geom, 0, height)
  * @ingroup capi
  */
 SFCGAL_API sfcgal_geometry_t *
