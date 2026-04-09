@@ -347,8 +347,7 @@ compute_rmf_frames(const std::vector<Kernel::Point_3> &points, bool closed)
  */
 auto
 compute_frenet_frames(const std::vector<Kernel::Point_3> &points,
-                      [[maybe_unused]] bool               closed)
-    -> std::vector<Frame>
+                      [[maybe_unused]] bool closed) -> std::vector<Frame>
 {
   std::vector<Frame> frames;
   if (points.size() < 2) {
@@ -474,8 +473,9 @@ project_onto_bisector_plane(const Kernel::Point_3 &p_prev,
  * @brief Compute frame perpendicular to segment axis (for Segment Aligned)
  */
 auto
-compute_segment_frame(const Kernel::Vector_3 &axis,
-                      const std::optional<Kernel::Vector_3> &ref_normal = std::nullopt) -> Frame
+compute_segment_frame(
+    const Kernel::Vector_3                &axis,
+    const std::optional<Kernel::Vector_3> &ref_normal = std::nullopt) -> Frame
 {
   Frame            frame;
   Kernel::Vector_3 normalized_axis = normalizeVector(axis);
@@ -589,7 +589,7 @@ add_flat_caps(
     // Try reversed first, fall back to direct order
     std::vector<Surface_mesh_3::Vertex_index> cap_rev(first_ring.rbegin(),
                                                       first_ring.rend());
-    auto f = mesh.add_face(cap_rev);
+    auto                                      f = mesh.add_face(cap_rev);
     if (f == Surface_mesh_3::null_face()) {
       f = mesh.add_face(first_ring);
     }
@@ -657,7 +657,7 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
   for (size_t seg_idx = 0; seg_idx < path_points.size() - 1; ++seg_idx) {
     // Constant frame for this segment
     Kernel::Vector_3 axis = path_points[seg_idx + 1] - path_points[seg_idx];
-    Frame            segment_frame = compute_segment_frame(axis, options.reference_normal);
+    Frame segment_frame = compute_segment_frame(axis, options.reference_normal);
 
     // --- Start Ring ---
     std::vector<Surface_mesh_3::Vertex_index> start_ring;
@@ -667,10 +667,34 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
       std::vector<Kernel::Point_3> start_profile;
       start_profile.reserve(profile_points.size());
 
-      for (const auto &profile_pt : profile_points) {
-        start_profile.push_back(transform_profile_point(
-            profile_pt, path_points[seg_idx], segment_frame, options.anchor_x,
-            options.anchor_y));
+      if (closed && !bisector_planes.empty()) {
+        // For closed path: the first ring must lie on the closing bisector
+        // (miter join between the last segment and the first segment).
+        // Project natural last-segment positions at path[n-2] through natural
+        // last-segment positions at path[0] onto the closing bisector plane.
+        // This follows the same segment-direction ray convention used at
+        // every other interior corner.
+        Kernel::Vector_3 last_axis =
+            path_points[0] - path_points[path_points.size() - 2];
+        Frame           last_frame = compute_segment_frame(last_axis, options.reference_normal);
+        Kernel::Plane_3 closing_bisector = bisector_planes.back();
+
+        for (const auto &profile_pt : profile_points) {
+          Kernel::Point_3 p_prev = transform_profile_point(
+              profile_pt, path_points[path_points.size() - 2], last_frame,
+              options.anchor_x, options.anchor_y);
+          Kernel::Point_3 p_curr = transform_profile_point(
+              profile_pt, path_points[0], last_frame, options.anchor_x,
+              options.anchor_y);
+          start_profile.push_back(
+              project_onto_bisector_plane(p_prev, p_curr, closing_bisector));
+        }
+      } else {
+        for (const auto &profile_pt : profile_points) {
+          start_profile.push_back(transform_profile_point(
+              profile_pt, path_points[seg_idx], segment_frame, options.anchor_x,
+              options.anchor_y));
+        }
       }
 
       start_ring.reserve(profile_points.size());
@@ -687,28 +711,9 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
     std::vector<Surface_mesh_3::Vertex_index> end_ring;
 
     if (closed && seg_idx == path_points.size() - 2) {
-      // Closing segment: Project start ring onto closing bisector
-      std::vector<Kernel::Point_3> end_profile;
-      end_profile.reserve(profile_points.size());
-
-      for (const auto &profile_pt : profile_points) {
-        end_profile.push_back(transform_profile_point(
-            profile_pt, path_points[seg_idx + 1], segment_frame,
-            options.anchor_x, options.anchor_y));
-      }
-
-      Kernel::Plane_3 closing_bisector = bisector_planes.back();
-
-      for (size_t pt_idx = 0; pt_idx < first_start_ring.size(); ++pt_idx) {
-        Kernel::Point_3 start_point  = mesh.point(start_ring[pt_idx]);
-        Kernel::Point_3 target_point = end_profile[pt_idx];
-
-        Kernel::Point_3 projected = project_onto_bisector_plane(
-            start_point, target_point, closing_bisector);
-
-        mesh.point(first_start_ring[pt_idx]) = projected;
-      }
-      end_ring = first_start_ring; // Loop back
+      // Closing segment: first_start_ring already lies on the closing bisector.
+      // Simply loop back to close the tube topology.
+      end_ring = first_start_ring;
     } else {
       // Normal segment
       std::vector<Kernel::Point_3> end_profile;
@@ -743,15 +748,15 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
     // by different amounts).
     size_t n_pts = profile_points.size();
     for (size_t i = 0; i < n_pts - 1; ++i) {
-      mesh.add_face(start_ring[i], start_ring[i + 1], end_ring[i]);
-      mesh.add_face(start_ring[i + 1], end_ring[i + 1], end_ring[i]);
+      mesh.add_face(start_ring[i], start_ring[i + 1], end_ring[i + 1]);
+      mesh.add_face(start_ring[i], end_ring[i + 1], end_ring[i]);
     }
     // Close tube
     if (profile.geometryTypeId() == TYPE_POLYGON ||
         (profile.geometryTypeId() == TYPE_LINESTRING &&
          profile.as<LineString>().isClosed())) {
-      mesh.add_face(start_ring[n_pts - 1], start_ring[0], end_ring[n_pts - 1]);
-      mesh.add_face(start_ring[0], end_ring[0], end_ring[n_pts - 1]);
+      mesh.add_face(start_ring[n_pts - 1], start_ring[0], end_ring[0]);
+      mesh.add_face(start_ring[n_pts - 1], end_ring[0], end_ring[n_pts - 1]);
     }
 
     if (seg_idx == 0) {
@@ -868,8 +873,7 @@ sweep(const LineString &path, const Geometry &profile,
 }
 
 auto
-create_circular_profile(double radius, int segments)
-    -> std::unique_ptr<Polygon>
+create_circular_profile(double radius, int segments) -> std::unique_ptr<Polygon>
 {
   if (radius <= 0.0) {
     throw std::invalid_argument("Radius must be positive");
