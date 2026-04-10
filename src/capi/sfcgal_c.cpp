@@ -2348,14 +2348,14 @@ sfcgal_geometry_transform(const sfcgal_geometry_t *geom,
 }
 
 extern "C" auto
-sfcgal_geometry_scale(const sfcgal_geometry_t *geom, double s)
+sfcgal_geometry_scale(const sfcgal_geometry_t *geom, double scale)
     -> sfcgal_geometry_t *
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
       const SFCGAL::Geometry &g =
           *reinterpret_cast<const SFCGAL::Geometry *>(geom);
       std::unique_ptr<SFCGAL::Geometry> result = g.clone();
-      SFCGAL::algorithm::scale(*result, s); return result.release();)
+      SFCGAL::algorithm::scale(*result, scale); return result.release();)
 }
 
 extern "C" auto

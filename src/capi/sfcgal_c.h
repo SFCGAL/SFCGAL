@@ -2512,12 +2512,12 @@ sfcgal_geometry_rotate_z(const sfcgal_geometry_t *geom, double angle);
 /**
  * Scale a geometry by a given factor
  * @param geom The geometry to scale
- * @param s Scale factor
+ * @param scale Scale factor
  * @return The scaled geometry
  * @ingroup capi
  */
 SFCGAL_API sfcgal_geometry_t *
-sfcgal_geometry_scale(const sfcgal_geometry_t *geom, double s);
+sfcgal_geometry_scale(const sfcgal_geometry_t *geom, double scale);
 
 /**
  * Scale a geometry by different factors for each dimension
