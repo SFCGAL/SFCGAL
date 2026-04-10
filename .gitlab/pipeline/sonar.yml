@@ -21,11 +21,13 @@ sonar:get-binaries:
     - apt-get install --yes sudo curl wget build-essential unzip
   script:
     # Download sonar-scanner
-    - curl -sSLo ./sonar-scanner.zip "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}.zip"
+    - curl -sSLo ./sonar-scanner.zip
+      "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}.zip"
     - unzip -o sonar-scanner.zip
     - mv sonar-scanner-${SONAR_SCANNER_VERSION} sonar-scanner
     # Download build-wrapper
-    - curl -sSLo ./build-wrapper-linux-x86.zip "${SONAR_HOST_URL}/static/cpp/build-wrapper-linux-x86.zip"
+    - curl -sSLo ./build-wrapper-linux-x86.zip
+      "${SONAR_HOST_URL}/static/cpp/build-wrapper-linux-x86.zip"
     - unzip -oj build-wrapper-linux-x86.zip -d ./build-wrapper
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
@@ -42,24 +44,28 @@ sonar:build-test:
     paths:
       - build-wrapper/
       - sonar-scanner/
-  needs: ["sonar:get-binaries"]
+  needs: [ "sonar:get-binaries" ]
   before_script:
     - apt-get update -qq
     - apt-get install --yes sudo wget build-essential gcovr python3
     - ./ci/debian/before_install.sh $SONAR_CGAL_VERSION
   script:
     # prepare the build tree
-    - CGAL_DIR=$CI_PROJECT_DIR/CGAL cmake -S . -B build -DSFCGAL_WITH_EIGEN=ON -DSFCGAL_COVERAGE=ON -DSFCGAL_BUILD_TESTS=ON -DSFCGAL_BUILD_EXAMPLES=ON -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    - CGAL_DIR=$CI_PROJECT_DIR/CGAL cmake -S . -B build -DSFCGAL_WITH_EIGEN=ON
+      -DSFCGAL_COVERAGE=ON -DSFCGAL_BUILD_TESTS=ON -DSFCGAL_BUILD_EXAMPLES=ON
+      -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++
+      -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     # run the build inside the build wrapper
-    - build-wrapper/build-wrapper-linux-x86-64 --out-dir bw-output cmake --build build/ --config Release
+    - build-wrapper/build-wrapper-linux-x86-64 --out-dir bw-output cmake --build
+      build/ --config Release
     - mkdir -p reports/unit && mkdir -p reports/coverage
     - cd build
-    # run unit tests in parallel and generate boost reports
+    # run unit tests and generate boost reports
+    # (was in parallel with `-P$(nproc)` but it generates IO r/w errors with OBJ tests)
     - >
-      test/unit/unit-test-SFCGAL --list_content 2>&1
-      | egrep -v '^ '
-      | sed 's/\*//g'
-      | xargs -P$(nproc) -I {} test/unit/unit-test-SFCGAL --report_format=XML --report_level=detailed --report_sink=boost_report_{}.xml -t {}
+      test/unit/unit-test-SFCGAL --list_content 2>&1 | egrep -v '^ ' | sed
+      's/\*//g' | xargs -P1 -I {} test/unit/unit-test-SFCGAL --report_format=XML
+      --report_level=detailed --report_sink=boost_report_{}.xml -t {}
     # run other test and generate boost report
     - >
       for f in $(find test/ -type f -perm u=rwx,g=rwx,o=rx | grep -v unit); do
@@ -70,17 +76,17 @@ sonar:build-test:
     - mv merged_report.xml ../reports/unit/
     # generate coverage report
     - >
-      gcovr --xml-pretty --exclude-unreachable-branches --exclude-throw-branches --print-summary
-      -o ../reports/coverage/coverage.xml
-      --sonarqube=../reports/coverage/coverage_sonarqube.xml
-      --root ..
-      -e "\.\./test/"
+      gcovr --xml-pretty --exclude-unreachable-branches --exclude-throw-branches
+      --print-summary -o ../reports/coverage/coverage.xml
+      --sonarqube=../reports/coverage/coverage_sonarqube.xml --root .. -e
+      "\.\./test/"
     # run sonar scanner
     - cd ..
     - >
       sonar-scanner/bin/sonar-scanner
       -Dsonar.cfamily.compile-commands=bw-output/compile_commands.json
-      -Dsonar.cfamily.cppunit.reportsPath=reports/unit/ -Dsonar.coverageReportPaths=reports/coverage/coverage_sonarqube.xml
+      -Dsonar.cfamily.cppunit.reportsPath=reports/unit/
+      -Dsonar.coverageReportPaths=reports/coverage/coverage_sonarqube.xml
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: always
