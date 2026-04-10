@@ -115,7 +115,7 @@ print_geometry_info(const SFCGAL::Geometry &geom)
 {
   std::cout << "\033[1;36mGeometry Information:\033[0m\n";
   std::cout << "  Type: " << geom.geometryType() << "\n";
-  std::cout << "  Dimension: " << geom.dimension() << "D\n";
+  std::cout << "  Dimension: " << geom.dimension() << "\n";
   std::cout << "  Is 3D: " << (geom.is3D() ? "Yes" : "No") << "\n";
   std::cout << "  Is measured: " << (geom.isMeasured() ? "Yes" : "No") << "\n";
   std::cout << "  Is empty: " << (geom.isEmpty() ? "Yes" : "No") << "\n";
