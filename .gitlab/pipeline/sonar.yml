@@ -59,7 +59,7 @@ sonar:build-test:
       test/unit/unit-test-SFCGAL --list_content 2>&1
       | egrep -v '^ '
       | sed 's/\*//g'
-      | xargs -P$(nproc) -I {} test/unit/unit-test-SFCGAL --report_format=XML --report_level=detailed --report_sink=boost_report_{}.xml -t {}
+      | xargs -P1 -I {} test/unit/unit-test-SFCGAL --report_format=XML --report_level=detailed --report_sink=boost_report_{}.xml -t {}
     # run other test and generate boost report
     - >
       for f in $(find test/ -type f -perm u=rwx,g=rwx,o=rx | grep -v unit); do
