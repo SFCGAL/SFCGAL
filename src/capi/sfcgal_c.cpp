@@ -342,12 +342,12 @@ sfcgal_geometry_type_id(const sfcgal_geometry_t *geom) -> sfcgal_geometry_type_t
 
 extern "C" auto
 sfcgal_geometry_type(const sfcgal_geometry_t *geom, char **type,
-                     size_t *typeLen) -> void
+                     size_t *type_len) -> void
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
       std::string wkt =
           reinterpret_cast<const SFCGAL::Geometry *>(geom)->geometryType();
-      alloc_and_copy(wkt, type, typeLen);)
+      alloc_and_copy(wkt, type, type_len);)
 }
 
 extern "C" auto
@@ -492,7 +492,7 @@ sfcgal_geometry_drop_m(sfcgal_geometry_t *geom) -> int
 }
 
 extern "C" auto
-sfcgal_geometry_force_z(sfcgal_geometry_t *geom, double defaultZ) -> int
+sfcgal_geometry_force_z(sfcgal_geometry_t *geom, double default_z) -> int
 {
   auto *sfcgalGeom = reinterpret_cast<SFCGAL::Geometry *>(geom);
   // If the geometry is already 3D or empty, don't do anything
@@ -501,7 +501,7 @@ sfcgal_geometry_force_z(sfcgal_geometry_t *geom, double defaultZ) -> int
   }
 
   try {
-    SFCGAL::algorithm::force3D(*sfcgalGeom, defaultZ);
+    SFCGAL::algorithm::force3D(*sfcgalGeom, default_z);
   } catch (std::exception &e) {
     SFCGAL_ERROR("%s", e.what());
     return 0;
@@ -511,7 +511,7 @@ sfcgal_geometry_force_z(sfcgal_geometry_t *geom, double defaultZ) -> int
 }
 
 extern "C" auto
-sfcgal_geometry_force_m(sfcgal_geometry_t *geom, double defaultM) -> int
+sfcgal_geometry_force_m(sfcgal_geometry_t *geom, double default_m) -> int
 {
   auto *sfcgalGeom = reinterpret_cast<SFCGAL::Geometry *>(geom);
   // If the geometry is already measured or empty, don't do anything
@@ -520,7 +520,7 @@ sfcgal_geometry_force_m(sfcgal_geometry_t *geom, double defaultM) -> int
   }
 
   try {
-    SFCGAL::algorithm::forceMeasured(*sfcgalGeom, defaultM);
+    SFCGAL::algorithm::forceMeasured(*sfcgalGeom, default_m);
   } catch (std::exception &e) {
     SFCGAL_ERROR("%s", e.what());
     return 0;
@@ -552,12 +552,10 @@ sfcgal_geometry_delete(sfcgal_geometry_t *geom)
 }
 
 extern "C" auto
-sfcgal_geometry_num_geometries(const sfcgal_geometry_t *geometryCollection)
-    -> size_t
+sfcgal_geometry_num_geometries(const sfcgal_geometry_t *collection) -> size_t
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
-      return down_const_cast<SFCGAL::Geometry>(geometryCollection)
-          ->numGeometries();)
+      return down_const_cast<SFCGAL::Geometry>(collection)->numGeometries();)
 }
 
 extern "C" void
@@ -571,13 +569,13 @@ sfcgal_geometry_as_text(const sfcgal_geometry_t *pgeom, char **buffer,
 }
 
 extern "C" void
-sfcgal_geometry_as_text_decim(const sfcgal_geometry_t *pgeom, int numDecimals,
+sfcgal_geometry_as_text_decim(const sfcgal_geometry_t *pgeom, int num_decimals,
                               char **buffer, size_t *len)
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
       std::string wkt =
           reinterpret_cast<const SFCGAL::Geometry *>(pgeom)->asText(
-              numDecimals);
+              num_decimals);
       alloc_and_copy(wkt, buffer, len);)
 }
 
@@ -2009,7 +2007,7 @@ sfcgal_geometry_straight_skeleton_distance_in_m(const sfcgal_geometry_t *geom)
   std::unique_ptr<SFCGAL::MultiLineString> mls;
 
   try {
-    mls = SFCGAL::algorithm::straightSkeleton(*g1, /*autoOrientation*/ true,
+    mls = SFCGAL::algorithm::straightSkeleton(*g1, /*auto_orientation*/ true,
                                               /*innerOnly*/ false,
                                               /*outputDistanceInM*/ true);
   } catch (std::exception &e) {
@@ -2245,13 +2243,13 @@ sfcgal_geometry_visibility_point(const sfcgal_geometry_t *polygon,
 
 extern "C" auto
 sfcgal_geometry_visibility_segment(const sfcgal_geometry_t *polygon,
-                                   const sfcgal_geometry_t *pointA,
-                                   const sfcgal_geometry_t *pointB)
+                                   const sfcgal_geometry_t *point_a,
+                                   const sfcgal_geometry_t *point_b)
     -> sfcgal_geometry_t *
 {
   const auto *poly = reinterpret_cast<const SFCGAL::Geometry *>(polygon);
-  const auto *ptA  = reinterpret_cast<const SFCGAL::Geometry *>(pointA);
-  const auto *ptB  = reinterpret_cast<const SFCGAL::Geometry *>(pointB);
+  const auto *ptA  = reinterpret_cast<const SFCGAL::Geometry *>(point_a);
+  const auto *ptB  = reinterpret_cast<const SFCGAL::Geometry *>(point_b);
   std::unique_ptr<SFCGAL::Geometry> result;
 
   if (poly->geometryTypeId() != SFCGAL::TYPE_POLYGON) {
@@ -2473,7 +2471,7 @@ sfcgal_geometry_rotate_z(const sfcgal_geometry_t *geom, double angle)
 
 extern "C" auto
 sfcgal_geometry_straight_skeleton_partition(const sfcgal_geometry_t *geom,
-                                            bool autoOrientation)
+                                            bool auto_orientation)
     -> sfcgal_geometry_t *
 {
   std::unique_ptr<SFCGAL::Geometry> result;
@@ -2482,7 +2480,7 @@ sfcgal_geometry_straight_skeleton_partition(const sfcgal_geometry_t *geom,
         *(const SFCGAL::Geometry *)(geom));
   } catch (std::exception &e) {
     SFCGAL_WARNING("During straight_skeleton_partition (A, %g) :",
-                   static_cast<int>(autoOrientation));
+                   static_cast<int>(auto_orientation));
     SFCGAL_WARNING(
         "  with A: %s",
         static_cast<const SFCGAL::Geometry *>(geom)->asText().c_str());
@@ -2687,17 +2685,17 @@ sfcgal_geometry_is_almost_equals(const sfcgal_geometry_t *ga,
 
 extern "C" auto
 sfcgal_geometry_simplify(const sfcgal_geometry_t *geom, double threshold,
-                         bool preserveTopology) -> sfcgal_geometry_t *
+                         bool preserve_topology) -> sfcgal_geometry_t *
 {
   const auto *geometry = reinterpret_cast<const SFCGAL::Geometry *>(geom);
   std::unique_ptr<SFCGAL::Geometry> result;
 
   try {
     result =
-        SFCGAL::algorithm::simplify(*geometry, threshold, preserveTopology);
+        SFCGAL::algorithm::simplify(*geometry, threshold, preserve_topology);
   } catch (std::exception &e) {
     SFCGAL_WARNING("During simplify(A, %g, %d):", threshold,
-                   static_cast<int>(preserveTopology));
+                   static_cast<int>(preserve_topology));
     SFCGAL_WARNING("  with A: %s", geometry->asText().c_str());
     SFCGAL_ERROR("%s", e.what());
     return nullptr;
@@ -2735,13 +2733,13 @@ cSimplificationStrategyToCpp(sfcgal_simplification_strategy_t strategy)
 
 extern "C" auto
 sfcgal_geometry_simplify_surface_edge_count(
-    const sfcgal_geometry_t *geom, size_t edgeCount,
+    const sfcgal_geometry_t *geom, size_t edge_count,
     sfcgal_simplification_strategy_t strategy) -> sfcgal_geometry_t *
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
       const auto *geometry = reinterpret_cast<const SFCGAL::Geometry *>(geom);
       SFCGAL::algorithm::SimplificationStopPredicate stop_predicate =
-          SFCGAL::algorithm::SimplificationStopPredicate::edgeCount(edgeCount);
+          SFCGAL::algorithm::SimplificationStopPredicate::edgeCount(edge_count);
       std::unique_ptr<SFCGAL::Geometry> result =
           SFCGAL::algorithm::surfaceSimplification(
               *geometry, stop_predicate,
@@ -2751,14 +2749,14 @@ sfcgal_geometry_simplify_surface_edge_count(
 
 extern "C" auto
 sfcgal_geometry_simplify_surface_edge_ratio(
-    const sfcgal_geometry_t *geom, double edgeRatio,
+    const sfcgal_geometry_t *geom, double edge_ratio,
     sfcgal_simplification_strategy_t strategy) -> sfcgal_geometry_t *
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
       const auto *geometry = reinterpret_cast<const SFCGAL::Geometry *>(geom);
       SFCGAL::algorithm::SimplificationStopPredicate stop_predicate =
           SFCGAL::algorithm::SimplificationStopPredicate::edgeCountRatio(
-              edgeRatio);
+              edge_ratio);
       std::unique_ptr<SFCGAL::Geometry> result =
           SFCGAL::algorithm::surfaceSimplification(
               *geometry, stop_predicate,
@@ -2842,17 +2840,17 @@ sfcgal_primitive_is_almost_equals(const sfcgal_primitive_t *prim1,
 }
 
 extern "C" auto
-sfcgal_primitive_area(const sfcgal_primitive_t *prim, bool withDiscretization)
+sfcgal_primitive_area(const sfcgal_primitive_t *prim, bool with_discretization)
     -> double
 {
   const auto *primCast = reinterpret_cast<const SFCGAL::Primitive *>(prim);
 
   double result;
   try {
-    result = primCast->area3D(withDiscretization);
+    result = primCast->area3D(with_discretization);
   } catch (std::exception &e) {
     SFCGAL_WARNING("During primitive_area(A, %d):",
-                   static_cast<int>(withDiscretization));
+                   static_cast<int>(with_discretization));
     SFCGAL_WARNING(
         "  with A: %s",
         (primCast == nullptr ? "null" : primCast->toString().c_str()));
@@ -2864,17 +2862,17 @@ sfcgal_primitive_area(const sfcgal_primitive_t *prim, bool withDiscretization)
 }
 
 extern "C" auto
-sfcgal_primitive_volume(const sfcgal_primitive_t *prim, bool withDiscretization)
-    -> double
+sfcgal_primitive_volume(const sfcgal_primitive_t *prim,
+                        bool                      with_discretization) -> double
 {
   const auto *primCast = reinterpret_cast<const SFCGAL::Primitive *>(prim);
 
   double result;
   try {
-    result = primCast->volume(withDiscretization);
+    result = primCast->volume(with_discretization);
   } catch (std::exception &e) {
     SFCGAL_WARNING("During primitive_volume(A, %d):",
-                   static_cast<int>(withDiscretization));
+                   static_cast<int>(with_discretization));
     SFCGAL_WARNING(
         "  with A: %s",
         (primCast == nullptr ? "null" : primCast->toString().c_str()));
@@ -3033,14 +3031,14 @@ sfcgal_primitive_parameter(const sfcgal_primitive_t *primitive,
 
 extern "C" auto
 sfcgal_primitive_set_parameter(sfcgal_primitive_t *primitive, const char *name,
-                               const char *jsonChars) -> void
+                               const char *json_value) -> void
 {
   auto do_set_parameter = [](sfcgal_primitive_t *primitive, const char *name,
-                             const char *jsonChars) {
+                             const char *json_value) {
     try {
       auto *primitiveCast = reinterpret_cast<SFCGAL::Primitive *>(primitive);
 
-      nlohmann::json                 jsonObj = nlohmann::json::parse(jsonChars);
+      nlohmann::json jsonObj = nlohmann::json::parse(json_value);
       SFCGAL::PrimitiveParameterDesc newValue =
           jsonObj.template get<SFCGAL::PrimitiveParameterDesc>();
 
@@ -3053,7 +3051,7 @@ sfcgal_primitive_set_parameter(sfcgal_primitive_t *primitive, const char *name,
   };
 
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
-      do_set_parameter(primitive, name, jsonChars);)
+      do_set_parameter(primitive, name, json_value);)
 }
 
 extern "C" auto

@@ -14,3 +14,10 @@ Checks:
   - '-readability-magic-numbers'
   - '-readability-inconsistent-declaration-parameter-name'
   - '-bugprone-easily-swappable-parameters'
+CheckOptions:
+  - key: readability-identifier-naming.ParameterCase
+    value: lower_case
+  - key: readability-identifier-naming.FunctionCase
+    value: lower_case
+  - key: readability-inconsistent-declaration-parameter-name.Strict
+    value: 'true'
