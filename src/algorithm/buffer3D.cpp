@@ -124,18 +124,10 @@ Buffer3D::computeCylSphereBuffer() const -> std::unique_ptr<PolyhedralSurface>
   if (!_inputPoints.empty()) {
     Kernel::Point_3 start_sphere_center(
         _inputPoints[0].x(), _inputPoints[0].y(), _inputPoints[0].z());
-    Kernel::Vector_3 start_direction;
-    if (_inputPoints.size() > 1) {
-      start_direction = _inputPoints[1] - _inputPoints[0];
-    } else {
-      start_direction =
-          Kernel::Vector_3(0, 0, 1); // Default direction if only one point
-    }
 
     unsigned int subdivision_level =
         std::max(1U, static_cast<unsigned int>(_segments / 16));
-    Sphere start_sphere(_radius, start_sphere_center, subdivision_level,
-                        start_direction);
+    Sphere start_sphere(_radius, start_sphere_center, subdivision_level);
     CGAL::Polyhedron_3<Kernel> start_sphere_poly =
         start_sphere.generatePolyhedron();
     Nef_polyhedron start_sphere_nef(start_sphere_poly);
@@ -160,11 +152,9 @@ Buffer3D::computeCylSphereBuffer() const -> std::unique_ptr<PolyhedralSurface>
 
     // Add a sphere at the junctions (rounded corners)
     if (i < _inputPoints.size() - 1) {
-      Kernel::Point_3  sphereCenter(_inputPoints[i + 1].x(),
-                                    _inputPoints[i + 1].y(),
-                                    _inputPoints[i + 1].z());
-      Kernel::Vector_3 sphere_direction;
-
+      Kernel::Point_3 sphereCenter(_inputPoints[i + 1].x(),
+                                   _inputPoints[i + 1].y(),
+                                   _inputPoints[i + 1].z());
       if (i < _inputPoints.size() - 2) {
         // For intermediate points, use the bisector of the two adjacent
         // segments
@@ -174,18 +164,11 @@ Buffer3D::computeCylSphereBuffer() const -> std::unique_ptr<PolyhedralSurface>
             prev_dir / CGAL::sqrt(CGAL::to_double(prev_dir.squared_length()));
         next_dir =
             next_dir / CGAL::sqrt(CGAL::to_double(next_dir.squared_length()));
-        sphere_direction = prev_dir + next_dir;
-      } else {
-        // For the last point, use the direction of the last segment
-        sphere_direction = _inputPoints[i + 1] - _inputPoints[i];
       }
-      sphere_direction =
-          sphere_direction /
-          CGAL::sqrt(CGAL::to_double(sphere_direction.squared_length()));
 
       unsigned int subdivision_level =
           std::max(1U, static_cast<unsigned int>(_segments / 16));
-      Sphere sphere(_radius, sphereCenter, subdivision_level, sphere_direction);
+      Sphere sphere(_radius, sphereCenter, subdivision_level);
       CGAL::Polyhedron_3<Kernel> sphere_poly = sphere.generatePolyhedron();
       Nef_polyhedron             sphere_nef(sphere_poly);
       result = result.join(sphere_nef);

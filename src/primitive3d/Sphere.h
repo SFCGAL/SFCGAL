@@ -35,13 +35,10 @@ public:
    * @param center The center point of the sphere
    * @param num_subdivisions The number of icosahedron subdivisions (0=12
    * vertices, 1=42, 2=162, etc.)
-   * @param direction The direction vector for sphere orientation
    */
-  Sphere(const Kernel::FT       &radius           = 1.0,
-         const Kernel::Point_3  &center           = Kernel::Point_3(0, 0, 0),
-         unsigned int            num_subdivisions = 2,
-         const Kernel::Vector_3 &direction        = Kernel::Vector_3(0, 0, 1));
-
+  Sphere(const Kernel::FT      &radius           = 1.0,
+         const Kernel::Point_3 &center           = Kernel::Point_3(0, 0, 0),
+         unsigned int           num_subdivisions = 2);
   /**
    * @brief Copy constructor
    * @param other copy from
@@ -99,16 +96,6 @@ public:
   }
 
   /**
-   * @brief Sets the direction of the sphere
-   * @param direction The new direction vector
-   */
-  void
-  setDirection(const Kernel::Vector_3 &direction)
-  {
-    validateAndSetParameter("direction", direction);
-  }
-
-  /**
    * @brief Gets the radius of the sphere
    * @return The radius
    */
@@ -136,16 +123,6 @@ public:
   numSubdivisions() const -> unsigned int
   {
     return std::get<unsigned int>(m_parameters.at("num_subdivisions"));
-  }
-
-  /**
-   * @brief Gets the direction of the sphere
-   * @return The direction vector
-   */
-  [[nodiscard]] auto
-  direction() const -> const Kernel::Vector_3 &
-  {
-    return std::get<Kernel::Vector_3>(m_parameters.at("direction"));
   }
 
   /**
