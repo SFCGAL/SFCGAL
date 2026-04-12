@@ -6,6 +6,7 @@
 #include "SFCGAL/algorithm/offset.h"
 
 #include "SFCGAL/Curve.h"
+#include "SFCGAL/Geometry.h"
 #include "SFCGAL/LineString.h"
 #include "SFCGAL/MultiPolygon.h"
 #include "SFCGAL/NURBSCurve.h"
@@ -306,6 +307,18 @@ offset(const Polygon &g, const double &radius, Offset_polygon_set_2 &polygonSet)
   }
 }
 
+template <typename SurfaceType>
+void
+offsetSurface(const SurfaceType &surface, const double &radius,
+              Offset_polygon_set_2 &polygonSet)
+{
+  SFCGAL_OFFSET_ASSERT_FINITE_RADIUS(radius);
+
+  for (size_t idx = 0; idx < surface.numPatches(); ++idx) {
+    offset(surface.patchN(idx), radius, polygonSet);
+  }
+}
+
 void
 offsetCollection(const Geometry &g, const double &radius,
                  Offset_polygon_set_2 &polygonSet)
@@ -363,13 +376,20 @@ offset(const Geometry &g, const double &radius,
     return;
   }
 
+  case TYPE_POLYHEDRALSURFACE: {
+    offsetSurface(g.as<PolyhedralSurface>(), radius, polygonSet);
+    return;
+  }
+  case TYPE_TRIANGULATEDSURFACE: {
+    offsetSurface(g.as<TriangulatedSurface>(), radius, polygonSet);
+    return;
+  }
+
   case TYPE_MULTISOLID:
   case TYPE_MULTIPOINT:
   case TYPE_MULTILINESTRING:
   case TYPE_MULTIPOLYGON:
-  case TYPE_GEOMETRYCOLLECTION:
-  case TYPE_TRIANGULATEDSURFACE:
-  case TYPE_POLYHEDRALSURFACE: {
+  case TYPE_GEOMETRYCOLLECTION: {
     offsetCollection(g, radius, polygonSet);
     return;
   }
