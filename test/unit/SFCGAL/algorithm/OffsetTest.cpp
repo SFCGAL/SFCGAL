@@ -5,6 +5,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "SFCGAL/Geometry.h"
 #include "SFCGAL/GeometryCollection.h"
 #include "SFCGAL/Kernel.h"
 #include "SFCGAL/LineString.h"
@@ -634,6 +635,29 @@ BOOST_AUTO_TEST_CASE(testGeometryCollection)
       "1.71,0.26 1.67,0.22 1.63,0.18 1.58,0.15 1.52,0.11 1.46,0.07 1.38,0.04 "
       "1.27,-0.00 1.00)))"));
   BOOST_CHECK(algorithm::covers(*result, *expected));
+}
+
+BOOST_AUTO_TEST_CASE(testPolyhedralSurface)
+{
+  const std::unique_ptr<Geometry> input =
+      io::readWkt("POLYHEDRALSURFACE Z (((0 0 0,1 0 0,1 1 0,0 1 0,0 0 0)),((0 "
+                  "0 1,0 1 1,1 1 1,1 0 1,0 0 1)),((0 0 0,0 0 1,1 0 1,1 0 0,0 0 "
+                  "0)),((1 0 0,1 0 1,1 1 1,1 1 0,1 0 0)),((1 1 0,1 1 1,0 1 1,0 "
+                  "1 0,1 1 0)),((0 1 0,0 1 1,0 0 1,0 0 0,0 1 0)))");
+
+  const std::unique_ptr<Geometry> offsetGeom = algorithm::offset(*input, 1.0);
+  const std::unique_ptr<Geometry> result = io::readWkt(offsetGeom->asText(2));
+
+  const std::unique_ptr<Geometry> expectedResult = io::readWkt(
+      "MULTIPOLYGON (((-1.00 1.00,-1.00 0.00,-0.88 -0.48,-0.75 -0.66,-0.62 "
+      "-0.78,-0.50 -0.87,-0.38 -0.93,-0.25 -0.97,-0.12 -0.99,0.00 -1.00,1.00 "
+      "-1.00,1.12 -0.99,1.25 -0.97,1.38 -0.93,1.50 -0.87,1.62 -0.78,1.75 "
+      "-0.66,1.88 -0.48,2.00 0.00,2.00 1.00,1.88 1.48,1.75 1.66,1.62 1.78,1.50 "
+      "1.87,1.38 1.93,1.25 1.97,1.12 1.99,1.00 2.00,0.00 2.00,-0.12 1.99,-0.25 "
+      "1.97,-0.38 1.93,-0.50 1.87,-0.62 1.78,-0.75 1.66,-0.88 1.48,-1.00 "
+      "1.00)))");
+
+  BOOST_CHECK(algorithm::covers(*result, *expectedResult));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
