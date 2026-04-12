@@ -1789,7 +1789,7 @@ BOOST_AUTO_TEST_CASE(testSphereTest)
   sfcgal_primitive_parameters(sphere, &params, &paramsLen);
   std::string paramsStr(params, paramsLen);
   std::string expectedStr(
-      R"([{"name":"center","type":"point3"},{"name":"direction","type":"vector3"},{"name":"num_subdivisions","type":"int"},{"name":"radius","type":"double"}])");
+      R"([{"name":"center","type":"point3"},{"name":"num_subdivisions","type":"int"},{"name":"radius","type":"double"}])");
   BOOST_CHECK(compare_json(paramsStr, expectedStr));
   sfcgal_free_buffer(params);
 
@@ -1846,25 +1846,6 @@ BOOST_AUTO_TEST_CASE(testSphereTest)
       sfcgal_primitive_parameter_int(sphere, "num_subdivisions");
   BOOST_CHECK_EQUAL(newNumSubdivisions, 3);
 
-  // direction parameter
-  double *direction = sfcgal_primitive_parameter_vector(sphere, "direction");
-  BOOST_CHECK(direction != nullptr);
-  BOOST_CHECK_CLOSE(direction[0], 0.0, 1e-6);
-  BOOST_CHECK_CLOSE(direction[1], 0.0, 1e-6);
-  BOOST_CHECK_CLOSE(direction[2], 1.0, 1e-6);
-  sfcgal_free_buffer(direction);
-
-  std::array<double, 3> expectedDirection{1.1, 2.1, 3.1};
-  sfcgal_primitive_set_parameter_vector(sphere, "direction",
-                                        expectedDirection.data());
-
-  double *newDirection = sfcgal_primitive_parameter_vector(sphere, "direction");
-  BOOST_CHECK(newDirection != nullptr);
-  BOOST_CHECK_CLOSE(newDirection[0], expectedDirection[0], 1e-6);
-  BOOST_CHECK_CLOSE(newDirection[1], expectedDirection[1], 1e-6);
-  BOOST_CHECK_CLOSE(newDirection[2], expectedDirection[2], 1e-6);
-  sfcgal_free_buffer(newDirection);
-
   // check clone
   sfcgal_primitive_t *sphere2 = sfcgal_primitive_clone(sphere);
   BOOST_CHECK(sfcgal_primitive_is_almost_equals(sphere, sphere2, 0.0));
@@ -1884,16 +1865,6 @@ BOOST_AUTO_TEST_CASE(testSphereTest)
   BOOST_CHECK_CLOSE(center1[2], center2[2], 1e-6);
   sfcgal_free_buffer(center1);
   sfcgal_free_buffer(center2);
-
-  double *direction1 = sfcgal_primitive_parameter_vector(sphere, "direction");
-  double *direction2 = sfcgal_primitive_parameter_vector(sphere2, "direction");
-  BOOST_CHECK(direction1 != nullptr);
-  BOOST_CHECK(direction2 != nullptr);
-  BOOST_CHECK_CLOSE(direction1[0], direction2[0], 1e-6);
-  BOOST_CHECK_CLOSE(direction1[1], direction2[1], 1e-6);
-  BOOST_CHECK_CLOSE(direction1[2], direction2[2], 1e-6);
-  sfcgal_free_buffer(direction1);
-  sfcgal_free_buffer(direction2);
 
   sfcgal_primitive_delete(sphere2);
 

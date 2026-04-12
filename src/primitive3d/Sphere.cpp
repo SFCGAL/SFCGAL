@@ -28,10 +28,9 @@ namespace SFCGAL {
 template <class HDS>
 class Sphere_builder : public CGAL::Modifier_base<HDS> {
 public:
-  Sphere_builder(double radius, unsigned int num_subdivisions, Point_3 center,
-                 const Kernel::Vector_3 &direction)
+  Sphere_builder(double radius, unsigned int num_subdivisions, Point_3 center)
       : radius(radius), num_subdivisions(num_subdivisions),
-        center(std::move(center)), direction(normalizeVector(direction))
+        center(std::move(center))
   {
   }
 
@@ -86,9 +85,6 @@ public:
       // Apply radius scaling
       vec = vec * radius;
 
-      // Apply orientation (simple case - keep Z-up for now)
-      // In future, could apply rotation matrix based on direction vector
-
       // Translate to center
       vertex = Point_3(center.x() + vec.x(), center.y() + vec.y(),
                        center.z() + vec.z());
@@ -127,10 +123,9 @@ public:
   }
 
 private:
-  double           radius;
-  unsigned int     num_subdivisions;
-  Point_3          center;
-  Kernel::Vector_3 direction;
+  double       radius;
+  unsigned int num_subdivisions;
+  Point_3      center;
 
   void
   subdivideIcosahedron(std::vector<Point_3>            &vertices,
@@ -191,12 +186,11 @@ private:
 /// @publicsection
 
 Sphere::Sphere(const Kernel::FT &radius, const Kernel::Point_3 &center,
-               unsigned int num_subdivisions, const Kernel::Vector_3 &direction)
+               unsigned int num_subdivisions)
 {
   m_parameters["radius"]           = Kernel::FT(radius);
   m_parameters["num_subdivisions"] = num_subdivisions;
   m_parameters["center"]           = center;
-  m_parameters["direction"]        = normalizeVector(direction);
 
   Sphere::validateParameters(m_parameters);
 }
@@ -247,8 +241,8 @@ auto
 Sphere::generateSpherePolyhedron() const -> Polyhedron_3
 {
   Polyhedron_3                             P;
-  Sphere_builder<Polyhedron_3::HalfedgeDS> builder(
-      CGAL::to_double(radius()), numSubdivisions(), center(), direction());
+  Sphere_builder<Polyhedron_3::HalfedgeDS> builder(CGAL::to_double(radius()),
+                                                   numSubdivisions(), center());
   P.delegate(builder);
   return P;
 }
