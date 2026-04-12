@@ -18,12 +18,12 @@ namespace SFCGAL {
  * @brief Enumeration of available primitive types.
  */
 enum class PrimitiveType : std::int8_t {
-  TYPE_CYLINDER = 0,
-  TYPE_SPHERE   = 1,
-  TYPE_TORUS    = 2,
-  TYPE_BOX      = 3,
-  TYPE_CUBE     = 4,
-  TYPE_CONE     = 5
+  TYPE_BOX = 0,
+  TYPE_CONE,
+  TYPE_CUBE,
+  TYPE_CYLINDER,
+  TYPE_SPHERE,
+  TYPE_TORUS,
 };
 
 /**
