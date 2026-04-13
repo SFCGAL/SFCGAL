@@ -160,8 +160,8 @@ Cylinder::generateSurfaceMesh() const -> Surface_mesh_3
   // Add side faces
   for (unsigned int i = 0; i < numRadial(); ++i) {
     unsigned int next = (i + 1) % numRadial();
-    mesh.add_face(base_vertices[i], top_vertices[i], top_vertices[next]);
-    mesh.add_face(base_vertices[i], top_vertices[next], base_vertices[next]);
+    mesh.add_face(base_vertices[i], top_vertices[next], top_vertices[i]);
+    mesh.add_face(base_vertices[i], base_vertices[next], top_vertices[next]);
   }
 
   // Add base and top faces
@@ -171,8 +171,8 @@ Cylinder::generateSurfaceMesh() const -> Surface_mesh_3
 
   for (unsigned int i = 0; i < numRadial(); ++i) {
     unsigned int next = (i + 1) % numRadial();
-    mesh.add_face(base_center, base_vertices[i], base_vertices[next]);
-    mesh.add_face(top_center, top_vertices[next], top_vertices[i]);
+    mesh.add_face(base_center, base_vertices[next], base_vertices[i]);
+    mesh.add_face(top_center, top_vertices[i], top_vertices[next]);
   }
   m_surface_mesh = mesh;
   return mesh;
