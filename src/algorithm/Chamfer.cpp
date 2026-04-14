@@ -40,7 +40,7 @@ namespace {
 // Thresholds for numerical comparisons
 constexpr double TOLERANCE_NEAR_ZERO_LENGTH =
     1e-12; // Length below which a projection is degenerate
-constexpr double TOLERANCE_EPS_SCALE = 1e-4; // Profile origin shift as fraction of radius
+constexpr double TOLERANCE_EPS_SCALE = 0.0; // Profile origin shift disabled for exact kernels
 constexpr double TOLERANCE_DEFAULT_EPSILON = 1e-6; // Default tolerance for halfedge matching
 constexpr double MIN_OPENING_DEG =
     5.0; // Minimum supported opening angle (degrees)
@@ -59,7 +59,7 @@ constexpr double MAX_OPENING_DEG =
 // Edges that fail validation (not found, concave, etc.) are skipped with a warning.
 // ============================================================================
 
-// Find the halfedge in mesh that matches edge (start_pt -> end_pt)
+// Find the halfedge in mesh that contains the segment (start_pt -> end_pt)
 auto
 find_halfedge(const Surface_mesh_3 &mesh, const Point_3 &start_pt, const Point_3 &end_pt,
               double epsilon = TOLERANCE_DEFAULT_EPSILON) -> Surface_mesh_3::Halfedge_index
@@ -70,12 +70,38 @@ find_halfedge(const Surface_mesh_3 &mesh, const Point_3 &start_pt, const Point_3
     const Point_3 &src = mesh.point(mesh.source(halfedge));
     const Point_3 &tgt = mesh.point(mesh.target(halfedge));
 
-    const double dist_sq_1 = CGAL::to_double(CGAL::squared_distance(src, start_pt));
-    const double dist_sq_2 = CGAL::to_double(CGAL::squared_distance(tgt, end_pt));
-
-    if (dist_sq_1 < eps_sq && dist_sq_2 < eps_sq) {
-      return halfedge;
+    // Check if both start_pt and end_pt lie on the segment [src, tgt]
+    // 1. Collinearity check using squared distance to the line containing the segment
+    const Kernel::Line_3 mesh_line(src, tgt);
+    double d1 = CGAL::to_double(CGAL::squared_distance(mesh_line, start_pt));
+    double d2 = CGAL::to_double(CGAL::squared_distance(mesh_line, end_pt));
+    if (d1 > eps_sq || d2 > eps_sq) {
+      continue;
     }
+
+    // 2. Bounded side check using dot products: point P is between A and B if
+    //    (P-A).(B-A) >= 0 AND (P-B).(A-B) >= 0
+    const Vector_3 AB = tgt - src;
+    const Vector_3 BA = src - tgt;
+
+    auto is_between = [&](const Point_3 &P) {
+      double dot1 = CGAL::to_double((P - src) * AB);
+      double dot2 = CGAL::to_double((P - tgt) * BA);
+      return dot1 >= -epsilon && dot2 >= -epsilon;
+    };
+
+    if (!is_between(start_pt) || !is_between(end_pt)) {
+      continue;
+    }
+
+    // 3. Direction check: (end - start) must point in same direction as (tgt - src)
+    const Vector_3 edge_vec = end_pt - start_pt;
+    double dot_dir = CGAL::to_double(AB * edge_vec);
+    if (dot_dir <= 0.0) {
+      continue;
+    }
+
+    return halfedge;
   }
 
   return Surface_mesh_3::null_halfedge();
@@ -266,9 +292,9 @@ compute_n2_angle(const Vector_3 &edge_dir, const Vector_3 &normal_1,
   return std::atan2(proj_B, proj_N);
 }
 
-// Create the cutter solid for a single 2-point edge segment.
-// Finds the halfedge, checks convexity, computes dihedral angle,
-// builds the cutting profile, and sweeps it along the edge.
+// Create the cutter solid for a single LineString edge path.
+// Finds the halfedge for the first segment, checks convexity, computes
+// dihedral angle, builds the cutting profile, and sweeps it along the path.
 // Throws std::invalid_argument on validation failure.
 // NOLINTBEGIN(readability-function-cognitive-complexity)
 auto
@@ -280,22 +306,27 @@ create_cutter_for_edge(const Surface_mesh_3 &mesh, const LineString &edge,
     throw std::invalid_argument("Edge must have at least 2 points");
   }
 
-  // Get first segment of edge for orientation
+  // Get first segment of edge for orientation and dihedral properties.
+  // We assume the dihedral angle and incident faces are compatible along
+  // the entire path.
   const Point_3 start_pt = edge.pointN(0).toPoint_3();
-  const Point_3 end_pt = edge.pointN(1).toPoint_3();
+  const Point_3 end_pt   = edge.pointN(1).toPoint_3();
 
   // Find corresponding halfedge in mesh
-  const auto halfedge_desc = find_halfedge(mesh, start_pt, end_pt, options.epsilon);
+  const auto halfedge_desc =
+      find_halfedge(mesh, start_pt, end_pt, options.epsilon);
   if (halfedge_desc == Surface_mesh_3::null_halfedge()) {
-    throw std::invalid_argument("Edge not found in solid mesh. "
-                                "Ensure the edge coincides with a mesh edge.");
+    throw std::invalid_argument(
+        "Edge not found in solid mesh. "
+        "Ensure the edge coincides with a mesh edge.");
   }
 
   // Get the two incident faces
   const auto face_1 = mesh.face(halfedge_desc);
   const auto face_2 = mesh.face(mesh.opposite(halfedge_desc));
 
-  if (face_1 == Surface_mesh_3::null_face() || face_2 == Surface_mesh_3::null_face()) {
+  if (face_1 == Surface_mesh_3::null_face() ||
+      face_2 == Surface_mesh_3::null_face()) {
     throw std::invalid_argument(
         "Edge is not shared by two faces (boundary edge?)");
   }
@@ -307,11 +338,12 @@ create_cutter_for_edge(const Surface_mesh_3 &mesh, const LineString &edge,
   // Reject concave (reflex) edges: the opposite vertex of face_1 must lie
   // on the interior side of face_2's plane (dot with normal_2 < 0).
   {
-    const auto     vertex_opp  = mesh.target(mesh.next(halfedge_desc));
-    const Vector_3 to_opp = mesh.point(vertex_opp) - start_pt;
+    const auto     vertex_opp = mesh.target(mesh.next(halfedge_desc));
+    const Vector_3 to_opp     = mesh.point(vertex_opp) - start_pt;
     if (CGAL::to_double(to_opp * normal_2) >= 0.0) {
-      throw std::invalid_argument("Edge is concave (reflex). "
-                                  "Chamfer is only supported on convex edges.");
+      throw std::invalid_argument(
+          "Edge is concave (reflex). "
+          "Chamfer is only supported on convex edges.");
     }
   }
 
@@ -347,7 +379,8 @@ create_cutter_for_edge(const Surface_mesh_3 &mesh, const LineString &edge,
   } else {
     const double radius_y_val =
         (options.radius_y < 0) ? options.radius : options.radius_y;
-    profile = create_chamfer_profile_for_angle(options.radius, radius_y_val, theta_2);
+    profile =
+        create_chamfer_profile_for_angle(options.radius, radius_y_val, theta_2);
   }
 
   // Sweep profile along edge to create cutter
