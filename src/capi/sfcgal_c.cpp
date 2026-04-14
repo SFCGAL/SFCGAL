@@ -229,9 +229,9 @@ static sfcgal_error_handler_t __sfcgal_error_handler   = printf;
 
 template <class T>
 inline auto
-down_cast(sfcgal_geometry_t *p) -> T *
+down_cast(sfcgal_geometry_t *geom) -> T *
 {
-  T *result = dynamic_cast<T *>(static_cast<SFCGAL::Geometry *>(p));
+  T *result = dynamic_cast<T *>(static_cast<SFCGAL::Geometry *>(geom));
 
   if (!result) {
     BOOST_THROW_EXCEPTION(SFCGAL::Exception("wrong geometry type"));
@@ -242,16 +242,16 @@ down_cast(sfcgal_geometry_t *p) -> T *
 
 template <class T>
 inline auto
-down_const_cast(const sfcgal_geometry_t *p) -> const T *
+down_const_cast(const sfcgal_geometry_t *geom) -> const T *
 {
-  const T *q =
-      dynamic_cast<const T *>(static_cast<const SFCGAL::Geometry *>(p));
+  const T *result =
+      dynamic_cast<const T *>(static_cast<const SFCGAL::Geometry *>(geom));
 
-  if (!q) {
+  if (!result) {
     BOOST_THROW_EXCEPTION(SFCGAL::Exception("wrong geometry type"));
   }
 
-  return q;
+  return result;
 }
 
 static sfcgal_alloc_handler_t sfcgal_alloc_handler = malloc;
@@ -1425,10 +1425,10 @@ SFCGAL_GEOMETRY_FUNCTION_UNARY_MEASURE(area_3d, SFCGAL::algorithm::area3D)
 extern "C" auto
 sfcgal_geometry_volume(const sfcgal_geometry_t *geom) -> double
 {
-  double r = std::numeric_limits<double>::quiet_NaN();
+  double volume = std::numeric_limits<double>::quiet_NaN();
 
   try {
-    r = CGAL::to_double(SFCGAL::algorithm::volume(
+    volume = CGAL::to_double(SFCGAL::algorithm::volume(
         *static_cast<const SFCGAL::Geometry *>(geom)));
   } catch (std::exception &e) {
     SFCGAL_WARNING("During volume(A) :");
@@ -1439,7 +1439,7 @@ sfcgal_geometry_volume(const sfcgal_geometry_t *geom) -> double
     return -1.0;
   }
 
-  return r;
+  return volume;
 }
 
 extern "C" auto
@@ -1452,10 +1452,10 @@ sfcgal_geometry_is_planar(const sfcgal_geometry_t *geom) -> int
     return -1;
   }
 
-  bool r = false;
+  bool isPlanar = false;
 
   try {
-    r = SFCGAL::algorithm::isPlane3D<SFCGAL::Kernel>(
+    isPlanar = SFCGAL::algorithm::isPlane3D<SFCGAL::Kernel>(
         g->as<const SFCGAL::Polygon>(), 1e-9);
   } catch (std::exception &e) {
     SFCGAL_WARNING("During is_planar(A) :");
@@ -1466,7 +1466,7 @@ sfcgal_geometry_is_planar(const sfcgal_geometry_t *geom) -> int
     return -1.0;
   }
 
-  return r ? 1 : 0;
+  return isPlanar ? 1 : 0;
 }
 
 /*
@@ -1491,10 +1491,10 @@ sfcgal_geometry_orientation(const sfcgal_geometry_t *geom) -> int
     return 0;
   }
 
-  bool r = false;
+  bool orientation = false;
 
   try {
-    r = g->as<const SFCGAL::Polygon>().isCounterClockWiseOriented();
+    orientation = g->as<const SFCGAL::Polygon>().isCounterClockWiseOriented();
   } catch (std::exception &e) {
     SFCGAL_WARNING("During orientation(A) :");
     SFCGAL_WARNING(
@@ -1504,7 +1504,7 @@ sfcgal_geometry_orientation(const sfcgal_geometry_t *geom) -> int
     return -1;
   }
 
-  return r ? -1 : 1;
+  return orientation ? -1 : 1;
 }
 
 extern "C" auto
@@ -2051,10 +2051,10 @@ sfcgal_geometry_line_sub_string(const sfcgal_geometry_t *geom, double start,
     SFCGAL_ERROR("line_sub_string(): the first argument must be a lineString");
     return nullptr;
   }
-  std::unique_ptr<SFCGAL::LineString> ls;
+  std::unique_ptr<SFCGAL::LineString> subString;
   try {
-    ls = SFCGAL::algorithm::lineSubstring(g1->as<const SFCGAL::LineString>(),
-                                          start, end);
+    subString = SFCGAL::algorithm::lineSubstring(
+        g1->as<const SFCGAL::LineString>(), start, end);
   } catch (std::exception &e) {
     SFCGAL_WARNING("During line_sub_string(A, %g, %g):", start, end);
     SFCGAL_WARNING(
@@ -2064,7 +2064,7 @@ sfcgal_geometry_line_sub_string(const sfcgal_geometry_t *geom, double start,
     return nullptr;
   }
 
-  return ls.release();
+  return subString.release();
 }
 
 #if !_MSC_VER
