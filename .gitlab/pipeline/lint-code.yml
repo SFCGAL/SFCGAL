@@ -85,3 +85,15 @@ lint:clang-tidy:
     when: on_failure
     paths:
       - errors.yml
+
+lint:commitizen:
+  stage: lint
+  image: ${PYTHON_DOCKER_IMAGE}
+  before_script:
+    - apt update && apt install -y git
+    - pip install commitizen
+  script:
+    - cz check --rev-range $CI_MERGE_REQUEST_DIFF_BASE_SHA..HEAD
+  only:
+    refs:
+      - merge_requests

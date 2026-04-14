@@ -46,7 +46,6 @@ include:
   - local: /.gitlab/pipeline/docker-debian.yml
   - local: /.gitlab/pipeline/docker-windows.yml
   - local: /.gitlab/pipeline/documentation.yml
-  - local: /.gitlab/pipeline/commitizen.yml
   - local: /.gitlab/pipeline/thread-safety.yml
 
 semgrep-sast:
