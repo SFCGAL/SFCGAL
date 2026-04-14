@@ -787,12 +787,12 @@ sfcgal_linestring_num_points(const sfcgal_geometry_t *linestring) -> size_t
 }
 
 extern "C" auto
-sfcgal_linestring_point_n(const sfcgal_geometry_t *linestring, size_t i)
+sfcgal_linestring_point_n(const sfcgal_geometry_t *linestring, size_t index)
     -> const sfcgal_geometry_t *
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
       return static_cast<const SFCGAL::Geometry *>(&(
-          down_const_cast<SFCGAL::LineString>(linestring)->pointN(i)));)
+          down_const_cast<SFCGAL::LineString>(linestring)->pointN(index)));)
 }
 
 extern "C" void
@@ -836,37 +836,38 @@ sfcgal_triangle_create_from_points(const sfcgal_geometry_t *pta,
 }
 
 extern "C" auto
-sfcgal_triangle_vertex(const sfcgal_geometry_t *triangle, int i)
+sfcgal_triangle_vertex(const sfcgal_geometry_t *triangle, int index)
     -> const sfcgal_geometry_t *
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
       return static_cast<const SFCGAL::Geometry *>(
-                 &down_const_cast<SFCGAL::Triangle>(triangle)->vertex(i));)
+                 &down_const_cast<SFCGAL::Triangle>(triangle)->vertex(index));)
 }
 
 extern "C" void
-sfcgal_triangle_set_vertex(sfcgal_geometry_t *triangle, int i,
+sfcgal_triangle_set_vertex(sfcgal_geometry_t *triangle, int index,
                            const sfcgal_geometry_t *vertex)
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
-      down_cast<SFCGAL::Triangle>(triangle)->vertex(i) =
+      down_cast<SFCGAL::Triangle>(triangle)->vertex(index) =
           *down_const_cast<const SFCGAL::Point>(vertex);)
 }
 
 extern "C" void
-sfcgal_triangle_set_vertex_from_xy(sfcgal_geometry_t *triangle, int i, double x,
-                                   double y)
+sfcgal_triangle_set_vertex_from_xy(sfcgal_geometry_t *triangle, int index,
+                                   double x, double y)
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
-      down_cast<SFCGAL::Triangle>(triangle)->vertex(i) = SFCGAL::Point(x, y);)
+      down_cast<SFCGAL::Triangle>(triangle)->vertex(index) =
+          SFCGAL::Point(x, y);)
 }
 
 extern "C" void
-sfcgal_triangle_set_vertex_from_xyz(sfcgal_geometry_t *triangle, int i,
+sfcgal_triangle_set_vertex_from_xyz(sfcgal_geometry_t *triangle, int index,
                                     double x, double y, double z)
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
-      down_cast<SFCGAL::Triangle>(triangle)->vertex(i) =
+      down_cast<SFCGAL::Triangle>(triangle)->vertex(index) =
           SFCGAL::Point(x, y, z);)
 }
 
@@ -917,12 +918,13 @@ sfcgal_polygon_num_interior_rings(const sfcgal_geometry_t *polygon) -> size_t
 }
 
 extern "C" auto
-sfcgal_polygon_interior_ring_n(const sfcgal_geometry_t *polygon, size_t i)
+sfcgal_polygon_interior_ring_n(const sfcgal_geometry_t *polygon, size_t index)
     -> const sfcgal_geometry_t *
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
       return static_cast<const SFCGAL::Geometry *>(
-                 &down_const_cast<SFCGAL::Polygon>(polygon)->interiorRingN(i));)
+                 &down_const_cast<SFCGAL::Polygon>(polygon)->interiorRingN(
+                     index));)
 }
 
 extern "C" void
@@ -957,23 +959,23 @@ sfcgal_geometry_collection_num_geometries(const sfcgal_geometry_t *collection)
 
 extern "C" auto
 sfcgal_geometry_collection_geometry_n(const sfcgal_geometry_t *collection,
-                                      size_t i) -> const sfcgal_geometry_t *
+                                      size_t index) -> const sfcgal_geometry_t *
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
       const auto *g = down_const_cast<SFCGAL::GeometryCollection>(collection);
-      return static_cast<const SFCGAL::Geometry *>(&g->geometryN(i));)
+      return static_cast<const SFCGAL::Geometry *>(&g->geometryN(index));)
 }
 
 extern "C" auto
 sfcgal_geometry_collection_set_geometry_n(sfcgal_geometry_t *collection,
-                                          sfcgal_geometry_t *geometry, size_t i)
-    -> void
+                                          sfcgal_geometry_t *geometry,
+                                          size_t             index) -> void
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
       return down_cast<SFCGAL::GeometryCollection>(collection)
           ->setGeometryN(std::unique_ptr<SFCGAL::Geometry>(
                              reinterpret_cast<SFCGAL::Geometry *>(geometry)),
-                         i);)
+                         index);)
 }
 
 extern "C" void
@@ -1045,20 +1047,20 @@ sfcgal_polyhedral_surface_num_polygons(const sfcgal_geometry_t *polyhedral)
 }
 
 extern "C" auto
-sfcgal_polyhedral_surface_patch_n(const sfcgal_geometry_t *polyhedral, size_t i)
-    -> const sfcgal_geometry_t *
+sfcgal_polyhedral_surface_patch_n(const sfcgal_geometry_t *polyhedral,
+                                  size_t index) -> const sfcgal_geometry_t *
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
       return static_cast<const SFCGAL::Geometry *>(
                  &down_const_cast<SFCGAL::PolyhedralSurface>(polyhedral)
-                      ->patchN(i));)
+                      ->patchN(index));)
 }
 
 extern "C" auto
 sfcgal_polyhedral_surface_polygon_n(const sfcgal_geometry_t *polyhedral,
-                                    size_t i) -> const sfcgal_geometry_t *
+                                    size_t index) -> const sfcgal_geometry_t *
 {
-  return sfcgal_polyhedral_surface_patch_n(polyhedral, i);
+  return sfcgal_polyhedral_surface_patch_n(polyhedral, index);
 }
 
 extern "C" void
@@ -1073,13 +1075,13 @@ sfcgal_polyhedral_surface_add_patch(sfcgal_geometry_t *polyhedral,
 
 extern "C" void
 sfcgal_polyhedral_surface_set_patch_n(sfcgal_geometry_t *polyhedral,
-                                      sfcgal_geometry_t *patch, size_t i)
+                                      sfcgal_geometry_t *patch, size_t index)
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
       return down_cast<SFCGAL::PolyhedralSurface>(polyhedral)
           ->setPatchN(std::unique_ptr<SFCGAL::Polygon>(
                           down_cast<SFCGAL::Polygon>(patch)),
-                      i);)
+                      index);)
 }
 
 extern "C" void
@@ -1116,30 +1118,31 @@ sfcgal_triangulated_surface_num_triangles(const sfcgal_geometry_t *tin)
 }
 
 extern "C" auto
-sfcgal_triangulated_surface_patch_n(const sfcgal_geometry_t *tin, size_t i)
+sfcgal_triangulated_surface_patch_n(const sfcgal_geometry_t *tin, size_t index)
     -> const sfcgal_geometry_t *
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
       return static_cast<const SFCGAL::Geometry *>(
                  &down_const_cast<SFCGAL::TriangulatedSurface>(tin)->patchN(
-                     i));)
+                     index));)
 }
 
 extern "C" auto
-sfcgal_triangulated_surface_triangle_n(const sfcgal_geometry_t *tin, size_t i)
+sfcgal_triangulated_surface_triangle_n(const sfcgal_geometry_t *tin,
+                                       size_t                   index)
     -> const sfcgal_geometry_t *
 {
-  return sfcgal_triangulated_surface_patch_n(tin, i);
+  return sfcgal_triangulated_surface_patch_n(tin, index);
 }
 
 extern "C" void
 sfcgal_triangulated_surface_set_patch_n(sfcgal_geometry_t *tin,
-                                        sfcgal_geometry_t *patch, size_t i)
+                                        sfcgal_geometry_t *patch, size_t index)
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
       return down_cast<SFCGAL::TriangulatedSurface>(tin)->setPatchN(
           std::unique_ptr<SFCGAL::Triangle>(down_cast<SFCGAL::Triangle>(patch)),
-          i);)
+          index);)
 }
 
 extern "C" void
@@ -1188,12 +1191,12 @@ sfcgal_solid_num_shells(const sfcgal_geometry_t *solid) -> size_t
 }
 
 extern "C" auto
-sfcgal_solid_shell_n(const sfcgal_geometry_t *solid, size_t i)
+sfcgal_solid_shell_n(const sfcgal_geometry_t *solid, size_t index)
     -> const sfcgal_geometry_t *
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
       return static_cast<const SFCGAL::Geometry *>(
-                 &down_const_cast<SFCGAL::Solid>(solid)->shellN(i));)
+                 &down_const_cast<SFCGAL::Solid>(solid)->shellN(index));)
 }
 
 extern "C" void

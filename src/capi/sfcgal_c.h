@@ -595,23 +595,22 @@ sfcgal_linestring_num_points(const sfcgal_geometry_t *linestring);
 /**
  * Returns the ith point of a given SFCGAL::LineString
  * @param linestring the input SFCGAL::LineString
- * @param i is the point index in the SFCGAL::LineString
+ * @param index is the point index in the SFCGAL::LineString
  * @pre linestring must be a SFCGAL::LineString
- * @pre i >= and i < sfcgal_linestring_num_points
+ * @pre index >= 0 and indx < sfcgal_linestring_num_points
  * @post the returned SFCGAL::Point is not writable and must not be deallocated
  * by the caller
  * @return the ith point of linestring
  * @ingroup capi
  */
 SFCGAL_API const sfcgal_geometry_t *
-sfcgal_linestring_point_n(const sfcgal_geometry_t *linestring, size_t i);
+sfcgal_linestring_point_n(const sfcgal_geometry_t *linestring, size_t index);
 
 /**
  * Adds a point to a SFCGAL::LineString
  * @param linestring is the SFCGAL::LineString where the SFCGAL::Point has to be
  * added to
  * @param point is the SFCGAL::Point to add to the given SFCGAL::LineString
- * @pre i >= and i < sfcgal_linestring_num_points
  * @post the ownership of SFCGAL::Point is taken by the function
  * @ingroup capi
  */
@@ -656,60 +655,60 @@ sfcgal_triangle_create_from_points(const sfcgal_geometry_t *pta,
 /**
  * Returns one the SFCGAL::Triangle's vertex as a SFCGAL::Point
  * @param triangle the input geometry
- * @param i index of the vertex in the triangle
+ * @param index index of the vertex in the triangle
  * @pre triangle must be a SFCGAL::Triangle
- * @pre i >= 0 and i < 3
+ * @pre index >= 0 and index < 3
  * @post returns a pointer to one of the vertices as a SFCGAL::Point. This
  * pointer is not writable and must not be deallocated by the caller
  * @return One the SFCGAL::Triangle's vertex as a SFCGAL::Point
  * @ingroup capi
  */
 SFCGAL_API const sfcgal_geometry_t *
-sfcgal_triangle_vertex(const sfcgal_geometry_t *triangle, int i);
+sfcgal_triangle_vertex(const sfcgal_geometry_t *triangle, int index);
 
 /**
  * Sets one vertex of a SFCGAL::Triangle
  * @param triangle the input geometry
- * @param i index of the vertex in the triangle
+ * @param index index of the vertex in the triangle
  * @param vertex new point
  * @pre triangle must be a SFCGAL::Triangle
  * @pre vertex must be a SFCGAL::Point
- * @pre i >= 0 and i < 3
+ * @pre index >= 0 and index < 3
  * @post the ownership of the vertex is not taken. The caller is still
  * responsible of its deallocation.
  * @ingroup capi
  */
 SFCGAL_API void
-sfcgal_triangle_set_vertex(sfcgal_geometry_t *triangle, int i,
+sfcgal_triangle_set_vertex(sfcgal_geometry_t *triangle, int index,
                            const sfcgal_geometry_t *vertex);
 
 /**
  * Sets one vertex of a SFCGAL::Triangle from two coordinates
  * @param triangle the input geometry
- * @param i index of the vertex in the triangle
+ * @param index index of the vertex in the triangle
  * @param x new point x
  * @param y new point y
  * @pre triangle must be a SFCGAL::Triangle
- * @pre i >= 0 and i < 3
+ * @pre index >= 0 and index < 3
  * @ingroup capi
  */
 SFCGAL_API void
-sfcgal_triangle_set_vertex_from_xy(sfcgal_geometry_t *triangle, int i, double x,
-                                   double y);
+sfcgal_triangle_set_vertex_from_xy(sfcgal_geometry_t *triangle, int index,
+                                   double x, double y);
 
 /**
  * Sets one vertex of a SFCGAL::Triangle from three coordinates
  * @param triangle the input geometry
- * @param i index of the vertex in the triangle
+ * @param index index of the vertex in the triangle
  * @param x new point x
  * @param y new point y
  * @param z new point z
  * @pre triangle must be a SFCGAL::Triangle
- * @pre i >= 0 and i < 3
+ * @pre index >= 0 and index < 3
  * @ingroup capi
  */
 SFCGAL_API void
-sfcgal_triangle_set_vertex_from_xyz(sfcgal_geometry_t *triangle, int i,
+sfcgal_triangle_set_vertex_from_xyz(sfcgal_geometry_t *triangle, int index,
                                     double x, double y, double z);
 
 /**
@@ -772,16 +771,16 @@ sfcgal_polygon_num_interior_rings(const sfcgal_geometry_t *polygon);
 /**
  * Returns the ith interior ring of a given SFCGAL::Polygon
  * @param polygon the input geometry
- * @param i index of the ring in the polygon
+ * @param index index of the ring in the polygon
  * @pre polygon must be a SFCGAL::Polygon
- * @pre i >= 0 and i < sfcgal_polygon_num_interior_rings
+ * @pre index >= 0 and index < sfcgal_polygon_num_interior_rings
  * @post the returned ring is a SFCGAL::LineString, is not writable and must not
  * be deallocated by the caller
  * @return The ith interior ring of polygon
  * @ingroup capi
  */
 SFCGAL_API const sfcgal_geometry_t *
-sfcgal_polygon_interior_ring_n(const sfcgal_geometry_t *polygon, size_t i);
+sfcgal_polygon_interior_ring_n(const sfcgal_geometry_t *polygon, size_t index);
 
 /**
  * Adds an interior ring to a given SFCGAL::Polygon
@@ -820,9 +819,9 @@ sfcgal_geometry_collection_num_geometries(const sfcgal_geometry_t *collection);
 /**
  * Returns the ith geometry of a SFCGAL::GeometryCollection
  * @param collection the input geometry
- * @param i index of the geometry in the collection
+ * @param index index of the geometry in the collection
  * @pre collection is a SFCGAL::GeometryCollection
- * @pre i >= 0 and i < sfcgal_geometry_collection_num_geometries
+ * @pre index >= 0 and index < sfcgal_geometry_collection_num_geometries
  * @post the returned Geometry is not writable and must not be deallocated by
  * the caller
  * @return the ith geometry of the collection
@@ -830,15 +829,15 @@ sfcgal_geometry_collection_num_geometries(const sfcgal_geometry_t *collection);
  */
 SFCGAL_API const sfcgal_geometry_t *
 sfcgal_geometry_collection_geometry_n(const sfcgal_geometry_t *collection,
-                                      size_t                   i);
+                                      size_t                   index);
 
 /**
  * Set the ith geometry of a given SFCGAL::GeometryCollection
  * @param collection the input geometry
  * @param geometry the new geometry
- * @param i index of the geometry in the collection
+ * @param index index of the geometry in the collection
  * @pre collection is a SFCGAL::GeometryCollection
- * @pre i >= 0 and i < sfcgal_geometry_num_geometries( collection )
+ * @pre index >= 0 and index < sfcgal_geometry_num_geometries( collection )
  * @post The ownership of the geometry is taken. The caller is not responsible
  * anymore of its deallocation.
  * @ingroup capi
@@ -846,7 +845,7 @@ sfcgal_geometry_collection_geometry_n(const sfcgal_geometry_t *collection,
 SFCGAL_API void
 sfcgal_geometry_collection_set_geometry_n(sfcgal_geometry_t *collection,
                                           sfcgal_geometry_t *geometry,
-                                          size_t             i);
+                                          size_t             index);
 
 /**
  * Adds a Geometry to a given SFCGAL::GeometryCollection
@@ -926,9 +925,9 @@ sfcgal_polyhedral_surface_num_polygons(const sfcgal_geometry_t *polyhedral);
 /**
  * Returns the ith patch of a given SFCGAL::PolyhedralSurface
  * @param polyhedral the input geometry
- * @param i index of the patch in the polyhedral
+ * @param index index of the patch in the polyhedral
  * @pre polyhedral must be a SFCGAL::PolyhedralSurface
- * @pre i >= 0 and i < sfcgal_polyhedral_surface_num_patches(polyhedral)
+ * @pre index >= 0 and index < sfcgal_polyhedral_surface_num_patches(polyhedral)
  * @post the returned SFCGAL::Polygon is not writable and must not be
  * deallocated by the caller
  * @return The ith patch of geom
@@ -936,14 +935,14 @@ sfcgal_polyhedral_surface_num_polygons(const sfcgal_geometry_t *polyhedral);
  */
 SFCGAL_API const sfcgal_geometry_t *
 sfcgal_polyhedral_surface_patch_n(const sfcgal_geometry_t *polyhedral,
-                                  size_t                   i);
+                                  size_t                   index);
 
 /**
  * Returns the ith polygon of a given SFCGAL::PolyhedralSurface
  * @param polyhedral the input geometry
- * @param i index of the patch in the polyhedral
+ * @param index index of the patch in the polyhedral
  * @pre polyhedral must be a SFCGAL::PolyhedralSurface
- * @pre i >= 0 and i < sfcgal_polyhedral_surface_num_patches(polyhedral)
+ * @pre index >= 0 and index < sfcgal_polyhedral_surface_num_patches(polyhedral)
  * @post the returned SFCGAL::Polygon is not writable and must not be
  * deallocated by the caller
  * @return The ith patch of geom
@@ -953,7 +952,7 @@ sfcgal_polyhedral_surface_patch_n(const sfcgal_geometry_t *polyhedral,
 SFCGAL_DEPRECATED("Use sfcgal_polyhedral_surface_patch_n instead.")
 SFCGAL_API const sfcgal_geometry_t *
 sfcgal_polyhedral_surface_polygon_n(const sfcgal_geometry_t *polyhedral,
-                                    size_t                   i);
+                                    size_t                   index);
 
 /**
  * Adds a patch to a given SFCGAL::PolyhedralSurface
@@ -973,17 +972,17 @@ sfcgal_polyhedral_surface_add_patch(sfcgal_geometry_t *polyhedral,
  * Set the ith patch of a given SFCGAL::PolyhedralSurface
  * @param polyhedral the input geometry
  * @param patch the new patch
- * @param i index of the patch in the polyhedral
+ * @param index index of the patch in the polyhedral
  * @pre polyhedral must be a SFCGAL::PolyhedralSurface.
  * @pre patch must be a SFCGAL::Polygon.
- * @pre i >= 0 and i < sfcgal_polyhedral_surface_num_patches(polyhedral)
+ * @pre index >= 0 and index < sfcgal_polyhedral_surface_num_patches(polyhedral)
  * @post The ownership of the polygon is taken. The caller is not responsible
  * anymore of its deallocation.
  * @ingroup capi
  */
 SFCGAL_API void
 sfcgal_polyhedral_surface_set_patch_n(sfcgal_geometry_t *polyhedral,
-                                      sfcgal_geometry_t *patch, size_t i);
+                                      sfcgal_geometry_t *patch, size_t index);
 
 /**
  * Adds a SFCGAL::Polygon to a given SFCGAL::PolyhedralSurface
@@ -1035,23 +1034,23 @@ sfcgal_triangulated_surface_num_triangles(const sfcgal_geometry_t *tin);
  * Returns the ith patch of a given
  * SFCGAL::TriangulatedSurface
  * @param tin the input geometry
- * @param i index of the patch in the tin
+ * @param index index of the patch in the tin
  * @pre tin must be a SFCGAL::TriangulatedSurface
- * @pre i >= 0 and i < sfcgal_triangulated_surface_num_patches( tin )
+ * @pre index >= 0 and index < sfcgal_triangulated_surface_num_patches( tin )
  * @post the returned SFCGAL::Triangle is not writable and must not be
  * deallocated by the caller
  * @return The ith patch of tin
  * @ingroup capi
  */
 SFCGAL_API const sfcgal_geometry_t *
-sfcgal_triangulated_surface_patch_n(const sfcgal_geometry_t *tin, size_t i);
+sfcgal_triangulated_surface_patch_n(const sfcgal_geometry_t *tin, size_t index);
 
 /**
  * Returns the ith SFCGAL::Triangle of a given SFCGAL::TriangulatedSurface
  * @param tin the input geometry
- * @param i index of the patch in the tin
+ * @param index index of the patch in the tin
  * @pre tin must be a SFCGAL::TriangulatedSurface
- * @pre i >= 0 and i < sfcgal_triangulated_surface_num_patches( tin )
+ * @pre index >= 0 and index < sfcgal_triangulated_surface_num_patches( tin )
  * @post the returned SFCGAL::Triangle is not writable and must not be
  * deallocated by the caller
  * @return The ith patch of tin
@@ -1060,23 +1059,24 @@ sfcgal_triangulated_surface_patch_n(const sfcgal_geometry_t *tin, size_t i);
  */
 SFCGAL_DEPRECATED("Use sfcgal_triangulated_surface_patch_n instead.")
 SFCGAL_API const sfcgal_geometry_t *
-sfcgal_triangulated_surface_triangle_n(const sfcgal_geometry_t *tin, size_t i);
+sfcgal_triangulated_surface_triangle_n(const sfcgal_geometry_t *tin,
+                                       size_t                   index);
 
 /**
  * Set the ith patch of a given SFCGAL::TriangulatedSurface
  * @param tin the input geometry
  * @param patch the new patch
- * @param i index of the patch in the tin
+ * @param index index of the patch in the tin
  * @pre tin must be a SFCGAL::TriangulatedSurface
  * @pre patch must be a SFCGAL::Triangle.
- * @pre i >= 0 and i < sfcgal_triangulated_surface_num_patches( tin )
+ * @pre index >= 0 and index < sfcgal_triangulated_surface_num_patches( tin )
  * @post The ownership of the triangle is taken. The caller is not responsible
  * anymore of its deallocation.
  * @ingroup capi
  */
 SFCGAL_API void
 sfcgal_triangulated_surface_set_patch_n(sfcgal_geometry_t *tin,
-                                        sfcgal_geometry_t *patch, size_t i);
+                                        sfcgal_geometry_t *patch, size_t index);
 
 /**
  * Adds a patch to a given SFCGAL::TriangulatedSurface
@@ -1141,16 +1141,16 @@ sfcgal_solid_num_shells(const sfcgal_geometry_t *solid);
 /**
  * Returns the ith shell of a given SFCGAL::Solid
  * @param solid the input geometry
- * @param i index of the shell in the solid
+ * @param index index of the shell in the solid
  * @pre solid must be a SFCGAL::Solid
- * @pre i >= 0 and i < sfcgal_solid_num_shells( tin )
+ * @pre indx >= 0 and index < sfcgal_solid_num_shells( tin )
  * @post the returned SFCGAL::PolyhedralSurface is not writable and must not be
  * deallocated by the caller
  * @return The ith shell of solid
  * @ingroup capi
  */
 SFCGAL_API const sfcgal_geometry_t *
-sfcgal_solid_shell_n(const sfcgal_geometry_t *solid, size_t i);
+sfcgal_solid_shell_n(const sfcgal_geometry_t *solid, size_t index);
 
 /**
  * Adds a shell to a given SFCGAL::Solid
@@ -3281,7 +3281,7 @@ sfcgal_nurbs_curve_set_control_point_n(sfcgal_geometry_t *curve, size_t index,
  * @param index weight index
  * @return The weight value at the specified index
  * @pre curve must be a NURBS curve
- * @pre i >= 0 and i < sfcgal_nurbs_curve_num_control_points
+ * @pre index >= 0 and index < sfcgal_nurbs_curve_num_control_points
  * @ingroup capi
  */
 SFCGAL_API double
