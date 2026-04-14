@@ -398,12 +398,6 @@ build_sweep_mesh(Surface_mesh_3                                  &mesh,
   return vertex_rings;
 }
 
-/**
- * @brief Add flat end caps to close the tube.
- *
- * Tries reversed winding first, falls back to direct order if rejected
- * by the mesh (winding depends on path direction vs profile orientation).
- */
 void
 add_flat_caps(
     Surface_mesh_3                                               &mesh,
@@ -417,8 +411,6 @@ add_flat_caps(
   const auto &first_ring = vertex_rings.front();
   const auto &last_ring  = vertex_rings.back();
 
-  // Caps close the tube ends. The winding must be opposite to the
-  // lateral faces' edge orientation on the boundary.
   if (add_start) {
     // Try reversed first, fall back to direct order
     std::vector<Surface_mesh_3::Vertex_index> cap_rev(first_ring.rbegin(),
@@ -426,9 +418,6 @@ add_flat_caps(
     auto                                      face_idx = mesh.add_face(cap_rev);
     if (face_idx == Surface_mesh_3::null_face()) {
       face_idx = mesh.add_face(first_ring);
-    }
-    if (face_idx == Surface_mesh_3::null_face()) {
-      SFCGAL_WARNING("Failed to add start cap face");
     }
   }
 
@@ -438,9 +427,6 @@ add_flat_caps(
       std::vector<Surface_mesh_3::Vertex_index> cap_rev(last_ring.rbegin(),
                                                         last_ring.rend());
       face_idx = mesh.add_face(cap_rev);
-    }
-    if (face_idx == Surface_mesh_3::null_face()) {
-      SFCGAL_WARNING("Failed to add end cap face");
     }
   }
 }
