@@ -1746,14 +1746,14 @@ sfcgal_geometry_distance_3d(const sfcgal_geometry_t *geom1,
 /**
  * Round coordinates of the given Geometry
  * @param geom the input geometry
- * @param r rounding precision
+ * @param scale rounding precision
  * @pre isValid(geom) == true
  * @post isValid(return) == true
  * @return The rounded geometry
  * @ingroup capi
  */
 SFCGAL_API sfcgal_geometry_t *
-sfcgal_geometry_round(const sfcgal_geometry_t *geom, int r);
+sfcgal_geometry_round(const sfcgal_geometry_t *geom, int scale);
 
 /**
  * Returns the 2D minkowski sum geom1 + geom2
@@ -2989,14 +2989,14 @@ typedef void (*sfcgal_free_handler_t)(void *);
 /**
  * Sets the allocation handlers. These functions are called on memory allocation
  * and deallocation.
- * @param malloc_handler is the function to call for memory allocation. The
+ * @param alloc_handler is the function to call for memory allocation. The
  * default behaviour is to call malloc()
  * @param free_handler is the function to call for memory deallocation. The
  * default behaviour is to call free()
  * @ingroup capi
  */
 SFCGAL_API void
-sfcgal_set_alloc_handlers(sfcgal_alloc_handler_t malloc_handler,
+sfcgal_set_alloc_handlers(sfcgal_alloc_handler_t alloc_handler,
                           sfcgal_free_handler_t  free_handler);
 
 /**
