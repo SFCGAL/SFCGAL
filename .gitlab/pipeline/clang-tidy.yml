@@ -19,8 +19,11 @@ test:clang-tidy:
     - git fetch --depth 1 origin $CI_MERGE_REQUEST_DIFF_BASE_SHA
     - TIDY_DIFF="$(command -v clang-tidy-diff-19.py || command -v clang-tidy-diff.py)"
     - |
-      git diff -U0 $CI_MERGE_REQUEST_DIFF_BASE_SHA $CI_COMMIT_SHA \
-        '***.cpp' '***.hpp' '***.c' '***.h' \
+      echo "Inspected files:"
+      git diff --name-only $CI_MERGE_REQUEST_DIFF_BASE_SHA $CI_COMMIT_SHA -- '*.cpp' '*.hpp' '*.c' '*.h'
+    - |
+      git diff -U0 $CI_MERGE_REQUEST_DIFF_BASE_SHA $CI_COMMIT_SHA -- \
+        '*.cpp' '*.hpp' '*.c' '*.h' \
       | python3 "$TIDY_DIFF" -p1 \
           -path=build \
           -use-color \
