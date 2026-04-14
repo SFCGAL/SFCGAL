@@ -1824,10 +1824,9 @@ const std::vector<Operation> operations = {
     {"sweep", "Construction",
      "Sweep a 2D profile along a 3D path to create a 3D surface", true,
      "Parameters:\n"
-     "  frame_method=0|1|3: Frame computation method (default: 0)\n"
+     "  frame_method=0|1: Frame computation method (default: 0)\n"
      "    0 = ROTATION_MINIMIZING (RMF) - minimal twist for general paths\n"
-     "    1 = FRENET - Frenet-Serret frames\n"
-     "    2 = SEGMENT_ALIGNED - segment aligned frames (ideal for "
+     "    1 = SEGMENT_ALIGNED - segment aligned frames (ideal for "
      "architecture)\n"
      "  start_cap=0|1: Start cap style (default: 1)\n"
      "    0 = NONE - no cap\n"
@@ -1876,10 +1875,6 @@ const std::vector<Operation> operations = {
            params.count("frame_method") ? params["frame_method"] : 0);
        switch (frame_method) {
        case 1:
-         options.frame_method =
-             SFCGAL::algorithm::SweepOptions::FrameMethod::FRENET;
-         break;
-       case 2:
          options.frame_method =
              SFCGAL::algorithm::SweepOptions::FrameMethod::SEGMENT_ALIGNED;
          break;
