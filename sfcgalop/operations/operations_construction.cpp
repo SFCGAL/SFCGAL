@@ -340,6 +340,13 @@ const std::vector<Operation> operations_construction = {
        return SFCGAL::algorithm::centroid(*geom_a);
      }},
 
+    {"centroid_3d", "Construction",
+     "Compute the geometric centroid of a 3D geometry", false, "", "A", "G",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       return SFCGAL::algorithm::centroid3D(*geom_a);
+     }},
+
     {"chamfer", "Processing",
      "Apply a chamfer or fillet operation to a solid along an edge", true,
      "Parameters:\n"
@@ -393,13 +400,6 @@ const std::vector<Operation> operations_construction = {
          std::cerr << "chamfer error: " << e.what() << "\n";
          return std::nullopt;
        }
-     }},
-
-    {"centroid_3d", "Construction",
-     "Compute the geometric centroid of a 3D geometry", false, "", "A", "G",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       return SFCGAL::algorithm::centroid3D(*geom_a);
      }},
 
     {"convex_hull", "Construction", "Compute the 2D convex hull of a geometry",
@@ -846,12 +846,11 @@ const std::vector<Operation> operations_construction = {
     {"sweep", "Construction",
      "Sweep a 2D profile along a 3D path to create a 3D surface", true,
      "Parameters:\n"
-     "  frame_method=0|1|3: Frame computation method (default: 0)\n"
+     "  frame_method=0|1: Frame computation method (default: 0)\n"
      "    0 = ROTATION_MINIMIZING (RMF) - minimal twist for general paths\n"
-     "    1 = FRENET - Frenet-Serret frames\n"
-     "    2 = SEGMENT_ALIGNED - segment aligned frames (ideal for "
+     "    1 = SEGMENT_ALIGNED - segment aligned frames (ideal for "
      "architecture)\n"
-     "  start_cap=0|1|2: Start cap style (default: 1)\n"
+     "  start_cap=0|1: Start cap style (default: 1)\n"
      "    0 = NONE - no cap\n"
      "    1 = FLAT - flat planar cap\n"
      "  end_cap=0|1: End cap style (default: 1)\n"
@@ -898,10 +897,6 @@ const std::vector<Operation> operations_construction = {
            params.count("frame_method") ? params["frame_method"] : 0);
        switch (frame_method) {
        case 1:
-         options.frame_method =
-             SFCGAL::algorithm::SweepOptions::FrameMethod::FRENET;
-         break;
-       case 2:
          options.frame_method =
              SFCGAL::algorithm::SweepOptions::FrameMethod::SEGMENT_ALIGNED;
          break;

@@ -36,15 +36,6 @@ struct SweepOptions {
     ROTATION_MINIMIZING,
 
     /**
-     * @brief Frenet-Serret Frame.
-     *
-     * Classic differential geometry frame defined by tangent and curvature.
-     * Warning: Undefined on straight lines and flips at inflection points.
-     * Use only if specifically required by mathematical definition.
-     */
-    FRENET,
-
-    /**
      * @brief Segment Aligned (Discrete Miter).
      *
      * Best for architecture, mechanical parts, and CAD (beams, walls).
@@ -125,8 +116,6 @@ struct Frame {
  * @par Limitations
  * - Profile must be a Polygon or LineString; only exterior ring is used.
  * - Only X and Y coordinates of the profile are used; Z is discarded.
- * - FRENET method is undefined on straight lines; prefer ROTATION_MINIMIZING
- *   or SEGMENT_ALIGNED.
  * - End caps are only added on open (non-closed) paths.
  *
  * @param path 3D LineString (>= 2 points).
