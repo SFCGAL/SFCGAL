@@ -3,7 +3,7 @@
 #######################
 # Check if the C++ code is consistent in code formatting (correct amount of tabs/spaces,
 # correct indentation etc.)
-clang-format:
+lint:clang-format:
   stage: lint
   image:
     name: debian:stable-slim
@@ -25,7 +25,7 @@ clang-format:
         - ".clang-format-ignore"
 
 # check doxygen warnings
-doxygen-warnings:
+lint:doxygen-warnings:
   stage: lint
   image:
     name: fedora:43

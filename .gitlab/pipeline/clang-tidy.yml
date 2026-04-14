@@ -1,4 +1,4 @@
-test:clang-tidy:
+lint:clang-tidy:
   stage: lint
   image: debian:stable-slim
   variables:

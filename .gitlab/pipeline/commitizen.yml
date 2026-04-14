@@ -1,4 +1,4 @@
-lint-commitizen:
+lint:commitizen:
   stage: lint
   image: ${PYTHON_DOCKER_IMAGE}
   before_script:
