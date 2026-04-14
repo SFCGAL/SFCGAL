@@ -259,18 +259,4 @@ BOOST_AUTO_TEST_CASE(testSweep_Error_RectProfile_NegativeDimension)
                     std::invalid_argument);
 }
 
-BOOST_AUTO_TEST_CASE(testSweep_Error_ChamferProfile_NegativeRadius)
-{
-  BOOST_CHECK_THROW(algorithm::create_chamfer_profile(-1.0),
-                    std::invalid_argument);
-}
-
-BOOST_AUTO_TEST_CASE(testSweep_Error_FilletProfile_Invalid)
-{
-  BOOST_CHECK_THROW(algorithm::create_fillet_profile(-1.0, 4),
-                    std::invalid_argument);
-  BOOST_CHECK_THROW(algorithm::create_fillet_profile(1.0, 0),
-                    std::invalid_argument);
-}
-
 BOOST_AUTO_TEST_SUITE_END()

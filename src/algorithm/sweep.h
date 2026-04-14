@@ -166,47 +166,6 @@ SFCGAL_API auto
 create_rectangular_profile(double width, double height)
     -> std::unique_ptr<Polygon>;
 
-/**
- * @brief Create a triangular profile for chamfer operations, for 90-degree
- * edges only
- *
- * Generates a right-angled triangle in the 3rd quadrant, intended for
- * subtracting material (chamfer) from a 90-degree corner.
- *
- * The triangle vertices are:
- * (0, 0)       - The corner
- * (0, -radius_y)
- * (-radius_x, 0)
- *
- * @param radius_x Length of the chamfer along X axis
- * @param radius_y Length of the chamfer along Y axis (if < 0, uses radius_x)
- * @return std::unique_ptr<Polygon>
- * @throws std::invalid_argument If radius_x <= 0.
- */
-SFCGAL_API auto
-create_chamfer_profile(double radius_x, double radius_y = -1.0)
-    -> std::unique_ptr<Polygon>;
-
-/**
- * @brief Create a fillet (rounded) profile for rounding operations, for
- * 90-degree edges only
- *
- * Generates a profile representing the material to be removed to create a
- * rounded corner (fillet) of a specific radius. The shape is located in the
- * 3rd quadrant.
- *
- * The shape connects:
- * (0, 0) -> (0, -radius) -> arc to (-radius, 0) -> (0, 0)
- *
- * @param radius Radius of the fillet
- * @param segments Number of segments to approximate the 90-degree arc
- * @return std::unique_ptr<Polygon>
- * @throws std::invalid_argument If radius <= 0 or segments < 1.
- */
-SFCGAL_API auto
-create_fillet_profile(double radius, int segments = 4)
-    -> std::unique_ptr<Polygon>;
-
 } // namespace SFCGAL::algorithm
 
 #endif // SFCGAL_ALGORITHM_SWEEP_H_

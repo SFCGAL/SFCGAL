@@ -17,6 +17,7 @@
 #include <SFCGAL/TriangulatedSurface.h>
 #include <SFCGAL/algorithm/isClosed.h>
 #include <SFCGAL/detail/tools/Log.h>
+#include <SFCGAL/numeric.h>
 
 #include <CGAL/Surface_mesh.h>
 
@@ -33,136 +34,51 @@ namespace {
 // Numerical thresholds used throughout the sweep implementation.
 // Mirrors the named constants in Chamfer.cpp for consistency.
 constexpr double ZERO_SQ_LEN       = 1e-20; // squared-length below which a vector is zero
-constexpr double NEAR_ZERO_SQ_LEN  = 1e-10; // squared-length for degenerate checks
-constexpr double NEAR_PARALLEL_COS = 0.9;   // cos(≈26°): parallelism guard for helper axis
+constexpr double NEAR_ZERO_SQ_LEN  = 1e-12; // squared-length for degenerate checks
+constexpr double NEAR_PARALLEL_COS = 0.99;  // parallelism guard for helper axis
+constexpr double TOLERANCE_ALIGNMENT = 1e-6; // threshold for normal vector alignment
+constexpr double TOLERANCE_PERPENDICULAR = 1e-10; // threshold for fallback perpendicular vector
 
 /**
- * @brief Normalize a vector to unit length.
- * Returns the zero vector if the input is degenerate (squared length < ZERO_SQ_LEN).
- */
-auto
-normalizeVector(const Kernel::Vector_3 &vector) -> Kernel::Vector_3
-{
-  const Kernel::FT len_sq = vector * vector;
-  if (len_sq < Kernel::FT(ZERO_SQ_LEN)) {
-    return {0, 0, 0};
-  }
-  const double len = std::sqrt(CGAL::to_double(len_sq));
-  return vector / len;
-}
-
-/**
- * @brief Visitor to extract 2D profile points from geometry
- */
-class ProfilePointExtractor : public ConstGeometryVisitor {
-public:
-  std::vector<Kernel::Point_2> points;
-
-  void
-  visit(const LineString &linestring) override
-  {
-    size_t num_points = linestring.numPoints();
-
-    // Check if the linestring is closed (last point equals first point)
-    // If so, skip the last point to avoid duplicates
-    if (num_points > 1 &&
-        linestring.pointN(0) == linestring.pointN(num_points - 1)) {
-      num_points--;
-    }
-
-    for (size_t i = 0; i < num_points; ++i) {
-      const Point &point = linestring.pointN(i);
-      points.emplace_back(point.x(), point.y());
-    }
-  }
-
-  void
-  visit(const Polygon &polygon) override
-  {
-    const auto &ring       = polygon.exteriorRing();
-    size_t      num_points = ring.numPoints();
-
-    // Polygon rings are always closed (last point equals first)
-    // Skip the last point to avoid duplicates
-    if (num_points > 0) {
-      num_points--;
-    }
-
-    for (size_t i = 0; i < num_points; ++i) {
-      const Point &point = ring.pointN(i);
-      points.emplace_back(point.x(), point.y());
-    }
-  }
-
-  // Default implementations for unsupported types
-  void
-  visit(const Point & /*point*/) override
-  {
-    throw std::invalid_argument("Profile cannot be a Point");
-  }
-  void
-  visit(const Triangle & /*triangle*/) override
-  {
-    throw std::invalid_argument("Profile cannot be a Triangle");
-  }
-  void
-  visit(const Solid & /*solid*/) override
-  {
-    throw std::invalid_argument("Profile cannot be a Solid");
-  }
-  void
-  visit(const MultiPoint & /*multipoint*/) override
-  {
-    throw std::invalid_argument("Profile cannot be a MultiPoint");
-  }
-  void
-  visit(const MultiLineString & /*multilinestring*/) override
-  {
-    throw std::invalid_argument("Profile cannot be a MultiLineString");
-  }
-  void
-  visit(const MultiPolygon & /*multipolygon*/) override
-  {
-    throw std::invalid_argument("Profile cannot be a MultiPolygon");
-  }
-  void
-  visit(const MultiSolid & /*multisolid*/) override
-  {
-    throw std::invalid_argument("Profile cannot be a MultiSolid");
-  }
-  void
-  visit(const GeometryCollection & /*collection*/) override
-  {
-    throw std::invalid_argument("Profile cannot be a GeometryCollection");
-  }
-  void
-  visit(const PolyhedralSurface & /*surface*/) override
-  {
-    throw std::invalid_argument("Profile cannot be a PolyhedralSurface");
-  }
-  void
-  visit(const TriangulatedSurface & /*surface*/) override
-  {
-    throw std::invalid_argument("Profile cannot be a TriangulatedSurface");
-  }
-};
-
-/**
- * @brief Extract 2D profile points from geometry using visitor pattern
+ * @brief Extract 2D profile points from geometry
  * @return Vector of 2D points (X, Y) in profile coordinate system
  */
 auto
 extract_profile_points(const Geometry &profile) -> std::vector<Kernel::Point_2>
 {
-  ProfilePointExtractor extractor;
-  profile.accept(extractor);
+  std::vector<Kernel::Point_2> points;
 
-  if (extractor.points.size() < 2) {
-    throw std::invalid_argument("Profile must have at least 2 points, got: " +
-                                std::to_string(extractor.points.size()));
+  if (profile.geometryTypeId() == TYPE_LINESTRING) {
+    const auto &linestring = profile.as<LineString>();
+    size_t num_points = linestring.numPoints();
+    if (num_points > 1 && linestring.pointN(0) == linestring.pointN(num_points - 1)) {
+      num_points--;
+    }
+    for (size_t i = 0; i < num_points; ++i) {
+      const Point &point = linestring.pointN(i);
+      points.emplace_back(point.x(), point.y());
+    }
+  } else if (profile.geometryTypeId() == TYPE_POLYGON) {
+    const auto &polygon = profile.as<Polygon>();
+    const auto &ring    = polygon.exteriorRing();
+    size_t      num_points = ring.numPoints();
+    if (num_points > 0) {
+      num_points--;
+    }
+    for (size_t i = 0; i < num_points; ++i) {
+      const Point &point = ring.pointN(i);
+      points.emplace_back(point.x(), point.y());
+    }
+  } else {
+    throw std::invalid_argument("Profile cannot be of this Geometry Type. Must be LineString or Polygon.");
   }
 
-  return extractor.points;
+  if (points.size() < 2) {
+    throw std::invalid_argument("Profile must have at least 2 points, got: " +
+                                std::to_string(points.size()));
+  }
+
+  return points;
 }
 
 /**
@@ -210,39 +126,39 @@ propagate_frame_rmf(const Frame &prev_frame, const Kernel::Point_3 &prev_point,
   frame.tangent = normalizeVector(curr_tangent);
 
   // Vector from previous to current point (Chord)
-  const Kernel::Vector_3 v1           = curr_point - prev_point;
-  const Kernel::FT       v1_length_sq = v1 * v1;
+  const Kernel::Vector_3 chord_vec    = curr_point - prev_point;
+  const Kernel::FT       chord_len_sq = chord_vec * chord_vec;
 
-  if (v1_length_sq < Kernel::FT(ZERO_SQ_LEN)) {
+  if (chord_len_sq < Kernel::FT(ZERO_SQ_LEN)) {
     // Points are coincident, keep same frame
     frame.normal   = prev_frame.normal;
     frame.binormal = prev_frame.binormal;
     return frame;
   }
 
-  // First reflection: reflect normal across plane perpendicular to v1
+  // First reflection: reflect normal across plane perpendicular to chord_vec
   // Formula 11 from Wang et al. (R_1)
   // R = P - 2(P.n)n where n is unit normal to reflection plane.
-  // Here reflection plane normal is v1/|v1|.
-  // R_1(n) = n - 2(n.v1/|v1|^2)v1
-  const Kernel::FT       c1              = Kernel::FT(2) / v1_length_sq;
+  // Here reflection plane normal is chord_vec/|chord_vec|.
+  // R_1(n) = n - 2(n.chord_vec/|chord_vec|^2)chord_vec
+  const Kernel::FT       reflection_factor_1 = Kernel::FT(2) / chord_len_sq;
   const Kernel::Vector_3 reflected_normal =
-      prev_frame.normal - c1 * (v1 * prev_frame.normal) * v1;
+      prev_frame.normal - reflection_factor_1 * (chord_vec * prev_frame.normal) * chord_vec;
   const Kernel::Vector_3 reflected_tangent =
-      prev_frame.tangent - c1 * (v1 * prev_frame.tangent) * v1;
+      prev_frame.tangent - reflection_factor_1 * (chord_vec * prev_frame.tangent) * chord_vec;
 
   // Second reflection to align with new tangent
   // Reflection plane normal is bisector of (reflected_tangent, new_tangent)
-  const Kernel::Vector_3 v2           = frame.tangent - reflected_tangent;
-  const Kernel::FT       v2_length_sq = v2 * v2;
+  const Kernel::Vector_3 tangent_diff    = frame.tangent - reflected_tangent;
+  const Kernel::FT       tangent_diff_sq = tangent_diff * tangent_diff;
 
-  if (v2_length_sq < Kernel::FT(ZERO_SQ_LEN)) {
+  if (tangent_diff_sq < Kernel::FT(ZERO_SQ_LEN)) {
     // Tangents are parallel, use first reflection result
     frame.normal = reflected_normal;
   } else {
     // Formula 11 again (R_2)
-    const Kernel::FT c2 = Kernel::FT(2) / v2_length_sq;
-    frame.normal        = reflected_normal - c2 * (v2 * reflected_normal) * v2;
+    const Kernel::FT reflection_factor_2 = Kernel::FT(2) / tangent_diff_sq;
+    frame.normal        = reflected_normal - reflection_factor_2 * (tangent_diff * reflected_normal) * tangent_diff;
   }
 
   frame.normal   = normalizeVector(frame.normal);
@@ -270,7 +186,7 @@ correct_holonomy(std::vector<Frame> &frames)
   const double     cos_angle   = CGAL::to_double(dot_product);
 
   // If frames are already aligned, no correction needed
-  if (std::abs(cos_angle - 1.0) < 1e-6) {
+  if (SFCGAL::almostEqual(cos_angle, 1.0, TOLERANCE_ALIGNMENT)) {
     return;
   }
 
@@ -342,141 +258,49 @@ compute_rmf_frames(const std::vector<Kernel::Point_3> &points, bool closed)
   return frames;
 }
 
-/**
- * @brief Compute Frenet-Serret frames along path
- *
- * T(t) = P'(t) / |P'(t)|
- * B(t) = (P'(t) x P''(t)) / |P'(t) x P''(t)|
- * N(t) = B(t) x T(t)
- *
- * Warning: This method is unstable on straight lines (curvature = 0)
- * and at inflection points.
- *
- * The @p closed parameter is accepted for API symmetry with compute_rmf_frames
- * but has no effect: Frenet frames are local and require no holonomy correction.
- */
-auto
-compute_frenet_frames(const std::vector<Kernel::Point_3> &points,
-                      [[maybe_unused]] bool closed) -> std::vector<Frame>
-{
-  std::vector<Frame> frames;
-  if (points.size() < 2) {
-    return frames;
-  }
-
-  for (size_t i = 0; i < points.size(); ++i) {
-    Frame frame;
-
-    // 1. Compute Tangent (Velocity)
-    Kernel::Vector_3 tangent;
-    if (i < points.size() - 1) {
-      tangent = points[i + 1] - points[i];
-    } else {
-      tangent = points[i] - points[i - 1];
-    }
-    frame.tangent = normalizeVector(tangent);
-
-    // 2. Compute Acceleration (Curvature direction)
-    // We use central difference approximation for internal points
-    Kernel::Vector_3 acceleration(0, 0, 0);
-
-    if (i > 0 && i < points.size() - 1) {
-      // Central difference: (P_{i+1} - 2P_i + P_{i-1})
-      Kernel::Vector_3 v_in  = points[i] - points[i - 1];
-      Kernel::Vector_3 v_out = points[i + 1] - points[i];
-      acceleration           = v_out - v_in;
-    } else if (i == 0 && points.size() > 2) {
-      // Forward difference approximation
-      // P'' ≈ P_2 - 2P_1 + P_0
-      acceleration = (points[2] - points[1]) - (points[1] - points[0]);
-    } else if (i == points.size() - 1 && points.size() > 2) {
-      // Backward difference
-      acceleration =
-          (points[i] - points[i - 1]) - (points[i - 1] - points[i - 2]);
-    }
-
-    // 3. Compute Binormal = Tangent x Acceleration
-    Kernel::Vector_3 binormal =
-        CGAL::cross_product(frame.tangent, acceleration);
-    Kernel::FT binormal_len_sq = binormal * binormal;
-
-    if (binormal_len_sq > Kernel::FT(NEAR_ZERO_SQ_LEN)) {
-      // Normal curvature exists
-      frame.binormal = normalizeVector(binormal);
-      frame.normal   = CGAL::cross_product(frame.binormal, frame.tangent);
-    } else {
-      // Degenerate case (Straight line or inflection point)
-      // Fallback:
-      if (frames.empty()) {
-        // If it's the very first point and it's straight, pick arbitrary
-        frame = compute_initial_frame(frame.tangent);
-      } else {
-        // Propagate previous frame (Parallel transport approximation)
-        Frame prev = frames.back();
-        // Ensure orthogonality with new tangent
-        // Project previous normal onto plane perpendicular to new tangent
-        Kernel::Vector_3 proj_normal =
-            prev.normal - (prev.normal * frame.tangent) * frame.tangent;
-
-        if (proj_normal * proj_normal > Kernel::FT(NEAR_ZERO_SQ_LEN)) {
-          frame.normal   = normalizeVector(proj_normal);
-          frame.binormal = CGAL::cross_product(frame.tangent, frame.normal);
-        } else {
-          // New tangent is parallel to old normal? Unlikely if curve is smooth.
-          // Fallback to initial frame computation
-          frame = compute_initial_frame(frame.tangent);
-        }
-      }
-    }
-
-    frames.push_back(frame);
-  }
-
-  return frames;
-}
 
 /**
  * @brief Compute bisector plane at a corner (miter join)
  */
 auto
-compute_bisector_plane(const Kernel::Point_3 &p1, const Kernel::Point_3 &p2,
-                       const Kernel::Point_3 &p3) -> Kernel::Plane_3
+compute_bisector_plane(const Kernel::Point_3 &prev_point, const Kernel::Point_3 &curr_point,
+                       const Kernel::Point_3 &next_point) -> Kernel::Plane_3
 {
-  const Kernel::Vector_3 v1       = normalizeVector(p2 - p1);
-  const Kernel::Vector_3 v2       = normalizeVector(p3 - p2);
-  const Kernel::Vector_3 bisector = v1 + v2; // Bisector direction
+  const Kernel::Vector_3 vec_in   = normalizeVector(curr_point - prev_point);
+  const Kernel::Vector_3 vec_out  = normalizeVector(next_point - curr_point);
+  const Kernel::Vector_3 bisector = vec_in + vec_out; // Bisector direction
 
   // If segments are collinear (180 deg) or backtracking (0 deg), handle
   // robustly
   if (bisector * bisector < Kernel::FT(NEAR_ZERO_SQ_LEN)) {
-    // Degenerate case: plane passes through p2 perpendicular to v1
-    return Kernel::Plane_3(p2, v1);
+    // Degenerate case: plane passes through curr_point perpendicular to vec_in
+    return {curr_point, vec_in};
   }
 
-  return Kernel::Plane_3(p2, bisector);
+  return {curr_point, bisector};
 }
 
 /**
  * @brief Project point onto plane along a direction (ray-plane intersection)
  */
 auto
-project_onto_bisector_plane(const Kernel::Point_3 &p_prev,
-                            const Kernel::Point_3 &p,
+project_onto_bisector_plane(const Kernel::Point_3 &ray_origin,
+                            const Kernel::Point_3 &ray_target,
                             const Kernel::Plane_3 &plane) -> Kernel::Point_3
 {
-  const Kernel::Vector_3 v = p - p_prev;
+  const Kernel::Vector_3 ray_dir = ray_target - ray_origin;
 
-  const Kernel::FT numerator = -(plane.a() * p_prev.x() + plane.b() * p_prev.y() +
-                                 plane.c() * p_prev.z() + plane.d());
+  const Kernel::FT numerator = -(plane.a() * ray_origin.x() + plane.b() * ray_origin.y() +
+                                 plane.c() * ray_origin.z() + plane.d());
   const Kernel::FT denominator =
-      plane.a() * v.x() + plane.b() * v.y() + plane.c() * v.z();
+      plane.a() * ray_dir.x() + plane.b() * ray_dir.y() + plane.c() * ray_dir.z();
 
   if (CGAL::abs(denominator) < Kernel::FT(NEAR_ZERO_SQ_LEN)) {
-    return p; // Ray parallel to plane — keep original position
+    return ray_target; // Ray parallel to plane — keep original position
   }
 
-  const Kernel::FT t = numerator / denominator;
-  return p_prev + t * v;
+  const Kernel::FT intersection_param = numerator / denominator;
+  return ray_origin + intersection_param * ray_dir;
 }
 
 /**
@@ -505,7 +329,7 @@ compute_segment_frame(
     // Try Z-axis first, if parallel try Y-axis (original method)
     perpendicular =
         CGAL::cross_product(normalized_axis, Kernel::Vector_3(0, 0, 1));
-    if (perpendicular * perpendicular < Kernel::FT(1e-10)) {
+    if (perpendicular * perpendicular < Kernel::FT(TOLERANCE_PERPENDICULAR)) {
       perpendicular =
           CGAL::cross_product(normalized_axis, Kernel::Vector_3(0, 1, 0));
     }
@@ -526,9 +350,9 @@ transform_profile_point(const Kernel::Point_2 &profile_pt,
                         const Kernel::Point_3 &path_pt, const Frame &frame,
                         double anchor_x, double anchor_y) -> Kernel::Point_3
 {
-  const double           x      = CGAL::to_double(profile_pt.x()) - anchor_x;
-  const double           y      = CGAL::to_double(profile_pt.y()) - anchor_y;
-  const Kernel::Vector_3 offset = x * frame.normal + y * frame.binormal;
+  const double           profile_x = CGAL::to_double(profile_pt.x()) - anchor_x;
+  const double           profile_y = CGAL::to_double(profile_pt.y()) - anchor_y;
+  const Kernel::Vector_3 offset    = profile_x * frame.normal + profile_y * frame.binormal;
   return path_pt + offset;
 }
 
@@ -599,23 +423,23 @@ add_flat_caps(
     // Try reversed first, fall back to direct order
     std::vector<Surface_mesh_3::Vertex_index> cap_rev(first_ring.rbegin(),
                                                       first_ring.rend());
-    auto                                      f = mesh.add_face(cap_rev);
-    if (f == Surface_mesh_3::null_face()) {
-      f = mesh.add_face(first_ring);
+    auto                                      face_idx = mesh.add_face(cap_rev);
+    if (face_idx == Surface_mesh_3::null_face()) {
+      face_idx = mesh.add_face(first_ring);
     }
-    if (f == Surface_mesh_3::null_face()) {
+    if (face_idx == Surface_mesh_3::null_face()) {
       SFCGAL_WARNING("Failed to add start cap face");
     }
   }
 
   if (add_end) {
-    auto f = mesh.add_face(last_ring);
-    if (f == Surface_mesh_3::null_face()) {
+    auto face_idx = mesh.add_face(last_ring);
+    if (face_idx == Surface_mesh_3::null_face()) {
       std::vector<Surface_mesh_3::Vertex_index> cap_rev(last_ring.rbegin(),
                                                         last_ring.rend());
-      f = mesh.add_face(cap_rev);
+      face_idx = mesh.add_face(cap_rev);
     }
-    if (f == Surface_mesh_3::null_face()) {
+    if (face_idx == Surface_mesh_3::null_face()) {
       SFCGAL_WARNING("Failed to add end cap face");
     }
   }
@@ -632,6 +456,7 @@ add_flat_caps(
  * are projected onto the bisector plane to create clean miter joins.
  * Best for rectilinear paths (beams, walls, CAD extrusions).
  */
+// NOLINTBEGIN(readability-function-cognitive-complexity)
 auto
 sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
                const Geometry &profile, const SweepOptions &options)
@@ -687,7 +512,7 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
         Kernel::Vector_3 last_axis =
             path_points[0] - path_points[path_points.size() - 2];
         Frame           last_frame = compute_segment_frame(last_axis, options.reference_normal);
-        Kernel::Plane_3 closing_bisector = bisector_planes.back();
+        const Kernel::Plane_3 &closing_bisector = bisector_planes.back();
 
         for (const auto &profile_pt : profile_points) {
           Kernel::Point_3 p_prev = transform_profile_point(
@@ -742,7 +567,7 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
         // If there is a corner ahead, project onto bisector plane along
         // the ray from start to end (preserves correct miter geometry)
         if (seg_idx < path_points.size() - 2) {
-          Kernel::Point_3 start_point = mesh.point(start_ring[pt_idx]);
+          const Kernel::Point_3 &start_point = mesh.point(start_ring[pt_idx]);
           end_point = project_onto_bisector_plane(start_point, end_point,
                                                   bisector_planes[seg_idx]);
         }
@@ -786,6 +611,7 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
 
   return std::make_unique<PolyhedralSurface>(mesh);
 }
+// NOLINTEND(readability-function-cognitive-complexity)
 
 // ----------------------------------------------------------------------------
 // Continuous Sweep Implementation (Point Based)
@@ -806,8 +632,6 @@ sweep_continuous(const std::vector<Kernel::Point_3> &path_points,
   std::vector<Frame> frames;
   if (options.frame_method == SweepOptions::FrameMethod::ROTATION_MINIMIZING) {
     frames = compute_rmf_frames(path_points, closed);
-  } else if (options.frame_method == SweepOptions::FrameMethod::FRENET) {
-    frames = compute_frenet_frames(path_points, closed);
   }
 
   // 2. Transform profile at each point
@@ -877,9 +701,8 @@ sweep(const LineString &path, const Geometry &profile,
 
   if (opts.frame_method == SweepOptions::FrameMethod::SEGMENT_ALIGNED) {
     return sweep_discrete(path_points, profile, opts);
-  } else {
-    return sweep_continuous(path_points, profile, opts);
   }
+  return sweep_continuous(path_points, profile, opts);
 }
 
 auto
@@ -915,87 +738,16 @@ create_rectangular_profile(double width, double height)
     throw std::invalid_argument("Dimensions must be positive");
   }
 
-  const double hw = width / 2.0;
-  const double hh = height / 2.0;
+  const double half_width  = width / 2.0;
+  const double half_height = height / 2.0;
 
   std::vector<Point> points;
   points.reserve(5);
-  points.emplace_back(-hw, -hh, 0);
-  points.emplace_back(hw, -hh, 0);
-  points.emplace_back(hw, hh, 0);
-  points.emplace_back(-hw, hh, 0);
-  points.emplace_back(-hw, -hh, 0);
-
-  LineString ring(points);
-  return std::make_unique<Polygon>(ring);
-}
-
-auto
-create_chamfer_profile(double radius_x, double radius_y)
-    -> std::unique_ptr<Polygon>
-{
-  if (radius_x <= 0.0) {
-    throw std::invalid_argument("Radius X must be positive");
-  }
-
-  double ry = (radius_y < 0.0) ? radius_x : radius_y; // Default to symmetric
-  if (ry <= 0.0) {
-    throw std::invalid_argument("Radius Y must be positive");
-  }
-
-  // Create a triangle in the 3rd quadrant (negative X, negative Y)
-  // Vertices: (0,0) -> (0, -ry) -> (-rx, 0) -> (0,0)
-  std::vector<Point> points;
-  points.reserve(4);
-  points.emplace_back(0, 0, 0);
-  points.emplace_back(0, -ry, 0);
-  points.emplace_back(-radius_x, 0, 0);
-  points.emplace_back(0, 0, 0);
-
-  LineString ring(points);
-  return std::make_unique<Polygon>(ring);
-}
-
-auto
-create_fillet_profile(double radius, int segments) -> std::unique_ptr<Polygon>
-{
-  if (radius <= 0.0) {
-    throw std::invalid_argument("Radius must be positive");
-  }
-  if (segments < 1) {
-    throw std::invalid_argument("Segments must be at least 1");
-  }
-
-  // Center of the arc is at (-radius, -radius)
-  double cx = -radius;
-  double cy = -radius;
-
-  std::vector<Point> points;
-  points.reserve(segments + 3);
-
-  points.emplace_back(0, 0, 0); // Origin
-
-  // Arc from 0 degrees (0, -r) to 90 degrees (-r, 0) relative to center
-  // In global coords, this goes from (0, -radius) to (-radius, 0)
-  // We iterate backwards to keep consistent winding order if needed,
-  // or just follow the path: (0,0) -> (0, -r) ... arc ... -> (-r, 0) -> (0,0)
-
-  // Start of arc (0, -radius) corresponds to angle 0 relative to center (-r,
-  // -r)? Center (-r, -r). Point (0, -r). x = -r + r*cos(0) = 0. y = -r +
-  // r*sin(0) = -r. Correct.
-
-  // End of arc (-r, 0).
-  // x = -r + r*cos(90) = -r. y = -r + r*sin(90) = 0. Correct.
-
-  // We want the points between angle 0 and 90 degrees.
-  for (int i = 0; i <= segments; ++i) {
-    double angle = (M_PI / 2.0) * (double(i) / segments);
-    double x     = cx + radius * std::cos(angle);
-    double y     = cy + radius * std::sin(angle);
-    points.emplace_back(x, y, 0);
-  }
-
-  points.emplace_back(0, 0, 0); // Close back to origin
+  points.emplace_back(-half_width, -half_height, 0);
+  points.emplace_back(half_width, -half_height, 0);
+  points.emplace_back(half_width, half_height, 0);
+  points.emplace_back(-half_width, half_height, 0);
+  points.emplace_back(-half_width, -half_height, 0);
 
   LineString ring(points);
   return std::make_unique<Polygon>(ring);

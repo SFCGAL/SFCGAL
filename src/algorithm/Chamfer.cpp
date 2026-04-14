@@ -1,12 +1,12 @@
 // Copyright (c) 2025-2026, SFCGAL Team.
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
-#include "SFCGAL/algorithm/Chamfer.h"
-#include "SFCGAL/algorithm/collectionHomogenize.h"
-#include "SFCGAL/algorithm/difference.h"
-#include "SFCGAL/algorithm/isClosed.h"
-#include "SFCGAL/algorithm/sweep.h"
-#include "SFCGAL/algorithm/union.h"
+#include <SFCGAL/algorithm/Chamfer.h>
+#include <SFCGAL/algorithm/collectionHomogenize.h>
+#include <SFCGAL/algorithm/difference.h>
+#include <SFCGAL/algorithm/isClosed.h>
+#include <SFCGAL/algorithm/sweep.h>
+#include <SFCGAL/algorithm/union.h>
 
 #include <SFCGAL/Geometry.h>
 #include <SFCGAL/Kernel.h>
@@ -40,12 +40,12 @@ namespace {
 constexpr double ZERO_LENGTH_SQ =
     1e-20; // Squared length below which a vector is zero
 constexpr double NEAR_ZERO_LENGTH =
-    1e-10; // Length below which a projection is degenerate
-constexpr double EPS_SCALE = 1e-3; // Profile origin shift as fraction of radius
+    1e-12; // Length below which a projection is degenerate
+constexpr double EPS_SCALE = 1e-4; // Profile origin shift as fraction of radius
 constexpr double MIN_OPENING_DEG =
-    10.0; // Minimum supported opening angle (degrees)
+    5.0; // Minimum supported opening angle (degrees)
 constexpr double MAX_OPENING_DEG =
-    170.0; // Maximum supported opening angle (degrees)
+    175.0; // Maximum supported opening angle (degrees)
 
 // ============================================================================
 // Algorithm overview:
