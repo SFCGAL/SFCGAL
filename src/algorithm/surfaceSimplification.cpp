@@ -170,8 +170,7 @@ applyEdgeCollapserThroughEdgeCount(Mesh &mesh, const size_t targetEdgeCount,
     return static_cast<size_t>(0);
   }
 
-  size_t const edgesToRemove = initialEdgeCount - targetEdgeCount;
-  SMS::Edge_count_stop_predicate<Mesh> predicate(edgesToRemove);
+  SMS::Edge_count_stop_predicate<Mesh> predicate(targetEdgeCount);
   return edgeCollapseFn(mesh, predicate);
 }
 

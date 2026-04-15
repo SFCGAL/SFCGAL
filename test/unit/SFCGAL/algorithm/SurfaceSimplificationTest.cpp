@@ -243,12 +243,16 @@ BOOST_AUTO_TEST_CASE(testSimplify_EdgeCountPredicate)
   // manifold)
 
   // Simplify to a specific edge count (keep 10 edges)
-  auto simplified =
-      surfaceSimplification(*cube, SimplificationStopPredicate::edgeCount(10),
-                            SimplificationStrategy::EDGE_LENGTH);
+  size_t edge_count(10);
+  auto   simplified = surfaceSimplification(
+      *cube, SimplificationStopPredicate::edgeCount(edge_count),
+      SimplificationStrategy::EDGE_LENGTH);
 
   BOOST_CHECK(simplified);
   BOOST_CHECK(simplified->is<TriangulatedSurface>());
+  // The edge amount in the simplified geometry is smaller than the threshold.
+  BOOST_CHECK_GT(edge_count,
+                 simplified->as<TriangulatedSurface>().numPatches());
 }
 
 // Test empty geometries

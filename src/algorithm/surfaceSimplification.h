@@ -100,13 +100,18 @@ struct SimplificationStopPredicate {
   enum class PredicateType : unsigned char {
     /**
      * @brief Stop when edge count reaches the specified value
+     *
+     * The simplification stops when the number of undirected edges left in
+     * the surface mesh drops below the specified number.
      */
     EDGE_COUNT,
 
     /**
      * @brief Stop when edge count ratio reaches the specified value
      *
-     * The ratio is calculated as: remaining_edges / original_edges
+     * The simplification stops when the number of undirected edges drops
+     * below a given ratio of the initial edge count. The ratio is calculated
+     * as: remaining_edges / original_edges.
      */
     EDGE_COUNT_RATIO
   };
