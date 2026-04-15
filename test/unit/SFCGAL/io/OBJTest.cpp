@@ -24,9 +24,9 @@ using namespace boost::unit_test;
 
 #include "../../../test_config.h"
 
-BOOST_AUTO_TEST_SUITE(SFCGAL_io_OBJWriterTest)
-
 namespace fs = std::filesystem;
+
+BOOST_AUTO_TEST_SUITE(SFCGAL_io_OBJWriterTest)
 
 auto
 compareFiles(const std::string &file1, const std::string &file2) -> bool
@@ -379,6 +379,64 @@ BOOST_AUTO_TEST_CASE(test_error_no_geometry)
   std::string obj_content = "# Just comments\n";
 
   BOOST_CHECK_THROW(SFCGAL::io::OBJ::load(obj_content), SFCGAL::Exception);
+}
+
+static std::unique_ptr<SFCGAL::Geometry>
+loadOBJFixture(const std::string &name)
+{
+  fs::path file = std::string(SFCGAL_TEST_DIRECTORY) + "/data/" + name;
+
+  BOOST_REQUIRE_MESSAGE(fs::exists(file),
+                        "Missing OBJ fixture: " + file.string());
+
+  return SFCGAL::io::OBJ::loadFromFile(file);
+}
+
+BOOST_AUTO_TEST_CASE(test_obj_roundtrip_stability)
+{
+  // Read the mesh fixture files, as triangulated surfaces.
+
+  // Writing then re-reading the file should produce a comparable geometry, i.e.
+  // with the same amount of components (we can't guarantee any topological
+  // equivalence).
+
+  std::vector<std::string> files = {"bunny.obj", "teapot.obj", "teddy.obj",
+                                    "cow-nonormals.obj"};
+
+  fs::path temp_dir = fs::temp_directory_path() / random_string();
+  fs::create_directories(temp_dir);
+
+  for (const auto &file : files) {
+    auto geom = loadOBJFixture(file);
+
+    // check the reading process is OK
+    BOOST_CHECK_MESSAGE(geom != nullptr, "Failed to load " + file);
+
+    // The resulting geometries should be triangulated surfaces
+    BOOST_CHECK(geom->geometryType() == "TriangulatedSurface");
+
+    // minimal sanity check
+    size_t n_patches = geom->as<SFCGAL::TriangulatedSurface>().numPatches();
+    BOOST_CHECK_GT(n_patches, 0);
+
+    // write the geometry into a temporary file...
+    fs::path tmp_file = temp_dir / file;
+    SFCGAL::io::OBJ::save(*geom, tmp_file.string());
+
+    // ...then re-read it to check the roundtrip stability
+    auto copied_geom = SFCGAL::io::OBJ::loadFromFile(tmp_file);
+
+    BOOST_REQUIRE(copied_geom);
+    BOOST_CHECK(copied_geom->geometryType() == "TriangulatedSurface");
+
+    BOOST_CHECK_EQUAL(geom->dimension(), copied_geom->dimension());
+    size_t copied_n_patches =
+        copied_geom->as<SFCGAL::TriangulatedSurface>().numPatches();
+    BOOST_CHECK_EQUAL(n_patches, copied_n_patches);
+
+    std::cout << "The OBJ IO process is stable for " << file << '.' << '\n';
+  }
+  fs::remove_all(temp_dir);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
