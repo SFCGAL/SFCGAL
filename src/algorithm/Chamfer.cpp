@@ -407,40 +407,44 @@ create_cutter_for_edge(const Surface_mesh_3 &mesh, const LineString &edge,
     sweep_opts.reference_normal = normal_1;
   }
 
+  // TODO: works on slanted geometry, but produce invalid geometry on straight
+  // one, like L-shape
+  // *******************************************************************************************
   // For open paths, extend the edge slightly at both ends to ensure the cutter
   // fully covers the edge even when slanted (due to perpendicular end caps).
-  if (!sweep_opts.closed_path) {
-    const double radius_y_val =
-        (options.radius_y < 0) ? options.radius : options.radius_y;
-    const double extension_length =
-        std::max(options.radius, radius_y_val) * 2.0;
-
-    LineString extended_edge;
-    extended_edge.reserve(edge.numPoints() + 2);
-
-    // Extend start
-    const Vector_3 v_start = SFCGAL::normalizeVector(
-        edge.pointN(1).toPoint_3() - edge.pointN(0).toPoint_3());
-    const Point_3 p_start =
-        edge.pointN(0).toPoint_3() - v_start * extension_length;
-    extended_edge.addPoint(Point(p_start));
-
-    // Original points
-    for (size_t i = 0; i < edge.numPoints(); ++i) {
-      extended_edge.addPoint(edge.pointN(i));
-    }
-
-    // Extend end
-    const Vector_3 v_end = SFCGAL::normalizeVector(
-        edge.pointN(edge.numPoints() - 1).toPoint_3() -
-        edge.pointN(edge.numPoints() - 2).toPoint_3());
-    const Point_3 p_end = edge.pointN(edge.numPoints() - 1).toPoint_3() +
-                          v_end * extension_length;
-    extended_edge.addPoint(Point(p_end));
-
-    auto cutter_surf = sweep(extended_edge, *profile, sweep_opts);
-    return std::make_unique<Solid>(std::move(cutter_surf));
-  }
+  // if (!sweep_opts.closed_path) {
+  //   const double radius_y_val =
+  //       (options.radius_y < 0) ? options.radius : options.radius_y;
+  //   const double extension_length =
+  //       std::max(options.radius, radius_y_val) * 2.0;
+  //
+  //   LineString extended_edge;
+  //   extended_edge.reserve(edge.numPoints() + 2);
+  //
+  //   // Extend start
+  //   const Vector_3 v_start = SFCGAL::normalizeVector(
+  //       edge.pointN(1).toPoint_3() - edge.pointN(0).toPoint_3());
+  //   const Point_3 p_start =
+  //       edge.pointN(0).toPoint_3() - v_start * extension_length;
+  //   extended_edge.addPoint(Point(p_start));
+  //
+  //   // Original points
+  //   for (size_t i = 0; i < edge.numPoints(); ++i) {
+  //     extended_edge.addPoint(edge.pointN(i));
+  //   }
+  //
+  //   // Extend end
+  //   const Vector_3 v_end = SFCGAL::normalizeVector(
+  //       edge.pointN(edge.numPoints() - 1).toPoint_3() -
+  //       edge.pointN(edge.numPoints() - 2).toPoint_3());
+  //   const Point_3 p_end = edge.pointN(edge.numPoints() - 1).toPoint_3() +
+  //                         v_end * extension_length;
+  //   extended_edge.addPoint(Point(p_end));
+  //
+  //   auto cutter_surf = sweep(extended_edge, *profile, sweep_opts);
+  //   return std::make_unique<Solid>(std::move(cutter_surf));
+  // }
+  // *******************************************************************************************
 
   auto cutter_surf = sweep(edge, *profile, sweep_opts);
 
