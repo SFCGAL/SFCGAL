@@ -40,8 +40,10 @@ namespace {
 // Thresholds for numerical comparisons
 constexpr double TOLERANCE_NEAR_ZERO_LENGTH =
     1e-12; // Length below which a projection is degenerate
-constexpr double TOLERANCE_EPS_SCALE = 0.0; // Profile origin shift disabled for exact kernels
-constexpr double TOLERANCE_DEFAULT_EPSILON = 1e-6; // Default tolerance for halfedge matching
+constexpr double TOLERANCE_EPS_SCALE =
+    1e-3; // Profile origin shift to avoid coplanar faces
+constexpr double TOLERANCE_DEFAULT_EPSILON =
+    1e-8; // Default tolerance for halfedge matching
 constexpr double MIN_OPENING_DEG =
     5.0; // Minimum supported opening angle (degrees)
 constexpr double MAX_OPENING_DEG =
@@ -73,7 +75,8 @@ find_halfedge(const Surface_mesh_3 &mesh, const Point_3 &start_pt,
     const Point_3 &tgt = mesh.point(mesh.target(halfedge));
 
     // Check if both start_pt and end_pt lie on the segment [src, tgt]
-    // 1. Collinearity check using squared distance to the line containing the segment
+    // 1. Collinearity check using squared distance to the line containing the
+    // segment
     const Kernel::Line_3 mesh_line(src, tgt);
     double d1 = CGAL::to_double(CGAL::squared_distance(mesh_line, start_pt));
     double d2 = CGAL::to_double(CGAL::squared_distance(mesh_line, end_pt));
@@ -96,9 +99,10 @@ find_halfedge(const Surface_mesh_3 &mesh, const Point_3 &start_pt,
       continue;
     }
 
-    // 3. Direction check: (end - start) must point in same direction as (tgt - src)
+    // 3. Direction check: (end - start) must point in same direction as (tgt -
+    // src)
     const Vector_3 edge_vec = end_pt - start_pt;
-    double dot_dir = CGAL::to_double(AB * edge_vec);
+    double         dot_dir  = CGAL::to_double(AB * edge_vec);
     if (dot_dir <= 0.0) {
       continue;
     }
@@ -325,9 +329,8 @@ create_cutter_for_edge(const Surface_mesh_3 &mesh, const LineString &edge,
   const auto halfedge_desc =
       find_halfedge(mesh, start_pt, end_pt, options.epsilon);
   if (halfedge_desc == Surface_mesh_3::null_halfedge()) {
-    throw std::invalid_argument(
-        "Edge not found in solid mesh. "
-        "Ensure the edge coincides with a mesh edge.");
+    throw std::invalid_argument("Edge not found in solid mesh. "
+                                "Ensure the edge coincides with a mesh edge.");
   }
 
   // Get the two incident faces
@@ -350,9 +353,8 @@ create_cutter_for_edge(const Surface_mesh_3 &mesh, const LineString &edge,
     const auto     vertex_opp = mesh.target(mesh.next(halfedge_desc));
     const Vector_3 to_opp     = mesh.point(vertex_opp) - start_pt;
     if (CGAL::to_double(to_opp * normal_2) >= 0.0) {
-      throw std::invalid_argument(
-          "Edge is concave (reflex). "
-          "Chamfer is only supported on convex edges.");
+      throw std::invalid_argument("Edge is concave (reflex). "
+                                  "Chamfer is only supported on convex edges.");
     }
   }
 
@@ -406,20 +408,6 @@ create_cutter_for_edge(const Surface_mesh_3 &mesh, const LineString &edge,
   }
 
   auto cutter_surf = sweep(edge, *profile, sweep_opts);
-
-  // Repair self-intersections that can arise at concave corners of the path
-  // (miter joins extend the tube through the corner, creating face overlaps).
-  // Only run if actual self-intersections exist — autorefine can corrupt valid
-  // meshes.
-  Surface_mesh_3 repair_mesh = cutter_surf->toSurfaceMesh();
-  if (PMP::does_self_intersect(repair_mesh)) {
-    if (!PMP::experimental::autorefine_and_remove_self_intersections(
-            repair_mesh)) {
-      SFCGAL_WARNING(
-          "Chamfer: could not fully repair self-intersections in cutter");
-    }
-    cutter_surf = std::make_unique<PolyhedralSurface>(repair_mesh);
-  }
 
   return std::make_unique<Solid>(std::move(cutter_surf));
 }
@@ -484,11 +472,27 @@ chamfer(const Geometry &solid_geom, const Geometry &edge_geom,
     return solid_geom.clone();
   }
 
-  // Combine all cutters using union
-  std::unique_ptr<Geometry> combined_cutter = std::move(cutters[0]);
-  for (size_t i = 1; i < cutters.size(); ++i) {
-    combined_cutter = union3D(*combined_cutter, *cutters[i]);
-  }
+  // Combine all cutters using a balanced tree union for better performance
+  auto union_recursive = [&](auto &self, size_t start,
+                             size_t end) -> std::unique_ptr<Geometry> {
+    const size_t count = end - start;
+    if (count == 0) {
+      throw std::logic_error("chamfer: internal error - empty cutter range");
+    }
+    if (count == 1) {
+      return std::move(cutters[start]);
+    }
+    if (count == 2) {
+      return union3D(*cutters[start], *cutters[start + 1]);
+    }
+
+    const size_t mid   = start + count / 2;
+    auto         left  = self(self, start, mid);
+    auto         right = self(self, mid, end);
+    return union3D(*left, *right);
+  };
+
+  auto combined_cutter = union_recursive(union_recursive, 0, cutters.size());
 
   // Apply single difference at the end
   auto result = difference3D(solid_geom, *combined_cutter);
