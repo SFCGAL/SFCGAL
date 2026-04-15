@@ -511,27 +511,11 @@ chamfer(const Geometry &solid_geom, const Geometry &edge_geom,
     return solid_geom.clone();
   }
 
-  // Combine all cutters using a balanced tree union for better performance
-  auto union_recursive = [&](auto &self, size_t start,
-                             size_t end) -> std::unique_ptr<Geometry> {
-    const size_t count = end - start;
-    if (count == 0) {
-      throw std::logic_error("chamfer: internal error - empty cutter range");
-    }
-    if (count == 1) {
-      return std::move(cutters[start]);
-    }
-    if (count == 2) {
-      return union3D(*cutters[start], *cutters[start + 1]);
-    }
-
-    const size_t mid   = start + count / 2;
-    auto         left  = self(self, start, mid);
-    auto         right = self(self, mid, end);
-    return union3D(*left, *right);
-  };
-
-  auto combined_cutter = union_recursive(union_recursive, 0, cutters.size());
+  // Combine all cutters using a sequential union
+  auto combined_cutter = std::move(cutters[0]);
+  for (size_t i = 1; i < cutters.size(); ++i) {
+    combined_cutter = union3D(*combined_cutter, *cutters[i]);
+  }
 
   // Apply single difference at the end
   auto result = difference3D(solid_geom, *combined_cutter);
