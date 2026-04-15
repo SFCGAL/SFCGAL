@@ -19,6 +19,9 @@
 #include <SFCGAL/detail/tools/Log.h>
 #include <SFCGAL/numeric.h>
 
+#include <CGAL/Polygon_mesh_processing/compute_normal.h>
+#include <CGAL/Polygon_mesh_processing/corefinement.h>
+#include <CGAL/Polygon_mesh_processing/self_intersections.h>
 #include <CGAL/Surface_mesh.h>
 
 #include <cmath>
@@ -685,10 +688,25 @@ sweep(const LineString &path, const Geometry &profile,
   SweepOptions opts = options;
   opts.closed_path  = closed;
 
+  std::unique_ptr<PolyhedralSurface> result;
   if (opts.frame_method == SweepOptions::FrameMethod::SEGMENT_ALIGNED) {
-    return sweep_discrete(path_points, profile, opts);
+    result = sweep_discrete(path_points, profile, opts);
+  } else {
+    result = sweep_continuous(path_points, profile, opts);
   }
-  return sweep_continuous(path_points, profile, opts);
+
+  // Automatically repair self-intersections (essential for valid solids from
+  // sharp miters).
+  namespace PMP = CGAL::Polygon_mesh_processing;
+  Surface_mesh_3 repair_mesh = result->toSurfaceMesh();
+  if (PMP::does_self_intersect(repair_mesh)) {
+    if (!PMP::experimental::autorefine_and_remove_self_intersections(repair_mesh)) {
+      SFCGAL_WARNING("Sweep: could not fully repair self-intersections");
+    }
+    result = std::make_unique<PolyhedralSurface>(repair_mesh);
+  }
+
+  return result;
 }
 
 auto
