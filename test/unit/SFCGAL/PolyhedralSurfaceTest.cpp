@@ -194,4 +194,12 @@ BOOST_AUTO_TEST_CASE(getCoordinateType)
       CoordinateType::COORDINATE_XYZM);
 }
 
+BOOST_AUTO_TEST_CASE(getNumEdges)
+{
+  SFCGAL::PolyhedralSurface phs =
+      io::readWkt("POLYHEDRALSURFACE (((0 0, 1 0, 0 1, 0 0)))")
+          ->as<PolyhedralSurface>();
+  BOOST_CHECK_EQUAL(phs.numEdges(), 3);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -1047,6 +1047,15 @@ sfcgal_polyhedral_surface_num_polygons(const sfcgal_geometry_t *polyhedral)
 }
 
 extern "C" auto
+sfcgal_polyhedral_surface_num_edges(const sfcgal_geometry_t *polyhedral)
+    -> size_t
+{
+  SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
+      return down_const_cast<SFCGAL::PolyhedralSurface>(polyhedral)
+          ->numEdges();)
+}
+
+extern "C" auto
 sfcgal_polyhedral_surface_patch_n(const sfcgal_geometry_t *polyhedral,
                                   size_t index) -> const sfcgal_geometry_t *
 {
@@ -1115,6 +1124,13 @@ sfcgal_triangulated_surface_num_triangles(const sfcgal_geometry_t *tin)
     -> size_t
 {
   return sfcgal_triangulated_surface_num_patches(tin);
+}
+
+extern "C" auto
+sfcgal_triangulated_surface_num_edges(const sfcgal_geometry_t *tin) -> size_t
+{
+  SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
+      return down_const_cast<SFCGAL::TriangulatedSurface>(tin)->numEdges();)
 }
 
 extern "C" auto

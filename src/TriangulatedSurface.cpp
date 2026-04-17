@@ -397,6 +397,13 @@ TriangulatedSurface::toSurfaceMesh() const -> Surface_mesh_3
   return mesh;
 }
 
+auto
+TriangulatedSurface::numEdges() const -> size_t
+{
+  Surface_mesh_3 mesh = toSurfaceMesh();
+  return mesh.number_of_edges();
+}
+
 /**
  * @brief Explicit template instantiation of toPolyhedron_3 for
  * MarkedPolyhedron.

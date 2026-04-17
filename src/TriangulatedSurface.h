@@ -420,6 +420,17 @@ public:
   toSurfaceMesh() const -> Surface_mesh_3;
 
   /**
+   * @brief Returns the number of edges in the geometry
+   *
+   * Convert the geometry to a CGAL::Surface_mesh and use the mesh
+   * number_of_edges accessor.
+   *
+   * @return Number of edges in the geometry
+   */
+  [[nodiscard]] auto
+  numEdges() const -> size_t;
+
+  /**
    * Serializer
    * @param ar Archive for serialization
    */

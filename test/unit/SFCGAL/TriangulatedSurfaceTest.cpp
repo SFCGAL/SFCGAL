@@ -375,4 +375,11 @@ BOOST_AUTO_TEST_CASE(getCoordinateType)
       CoordinateType::COORDINATE_XYZM);
 }
 
+BOOST_AUTO_TEST_CASE(getNumEdges)
+{
+  SFCGAL::TriangulatedSurface tin =
+      io::readWkt("TIN(((0 0, 1 0, 0 1, 0 0)))")->as<TriangulatedSurface>();
+  BOOST_CHECK_EQUAL(tin.numEdges(), 3);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
