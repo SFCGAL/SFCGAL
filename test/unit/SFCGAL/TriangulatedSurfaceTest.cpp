@@ -9,6 +9,7 @@
 #include "SFCGAL/PolyhedralSurface.h"
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/io/wkt.h"
+#include "SFCGAL/primitive3d/Cube.h"
 #include "SFCGAL/triangulate/triangulatePolygon.h"
 
 #include <boost/test/unit_test.hpp>
@@ -373,6 +374,28 @@ BOOST_AUTO_TEST_CASE(getCoordinateType)
       io::readWkt("TIN ZM(((0 0 1 2, 1 0 1 2, 0 1 1 2, 0 0 1 2)))")
           ->getCoordinateType(),
       CoordinateType::COORDINATE_XYZM);
+}
+
+BOOST_AUTO_TEST_CASE(getNumEdges_dummytin)
+{
+  // First consider a mono-triangle tin
+  SFCGAL::TriangulatedSurface tin =
+      io::readWkt("TIN(((0 0, 1 0, 0 1, 0 0)))")->as<TriangulatedSurface>();
+  BOOST_CHECK_EQUAL(tin.numEdges(), 3);
+  // Then add an adjacent triangle
+  tin.addPatch(io::readWkt("TRIANGLE ((1 1, 0 1, 1 0, 1 1))")->as<Triangle>());
+  BOOST_CHECK_EQUAL(tin.numEdges(), 5);
+  // Finally add a disjoint triangle, the numEdges does not require validity.
+  tin.addPatch(io::readWkt("TRIANGLE ((1 0, 2 0, 2 1, 1 0))")->as<Triangle>());
+  BOOST_CHECK_EQUAL(tin.numEdges(), 8);
+}
+
+BOOST_AUTO_TEST_CASE(getNumEdges_cube)
+{
+  SFCGAL::Cube cube(24);
+  auto         polyhedral_surface = cube.generatePolyhedralSurface();
+  SFCGAL::TriangulatedSurface tin = polyhedral_surface.toTriangulatedSurface();
+  BOOST_CHECK_EQUAL(tin.numEdges(), 18);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

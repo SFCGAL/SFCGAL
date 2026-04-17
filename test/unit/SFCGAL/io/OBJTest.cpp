@@ -400,13 +400,16 @@ BOOST_AUTO_TEST_CASE(test_obj_roundtrip_stability)
   // with the same amount of components (we can't guarantee any topological
   // equivalence).
 
-  std::vector<std::string> files = {"bunny.obj", "teapot.obj", "teddy.obj",
-                                    "cow-nonormals.obj"};
+  std::vector<std::pair<std::string, size_t>> files_with_expected_edges = {
+      {"bunny.obj", 7473},
+      {"teapot.obj", 9556},
+      {"teddy.obj", 4788},
+      {"cow-nonormals.obj", 8706}};
 
   fs::path temp_dir = fs::temp_directory_path() / random_string();
   fs::create_directories(temp_dir);
 
-  for (const auto &file : files) {
+  for (const auto &[file, expected_edges] : files_with_expected_edges) {
     auto geom = loadOBJFixture(file);
 
     // check the reading process is OK
@@ -418,6 +421,8 @@ BOOST_AUTO_TEST_CASE(test_obj_roundtrip_stability)
     // minimal sanity check
     size_t n_patches = geom->as<SFCGAL::TriangulatedSurface>().numPatches();
     BOOST_CHECK_GT(n_patches, 0);
+    size_t n_edges = geom->as<SFCGAL::TriangulatedSurface>().numEdges();
+    BOOST_CHECK_EQUAL(n_edges, expected_edges);
 
     // write the geometry into a temporary file...
     fs::path tmp_file = temp_dir / file;
@@ -433,6 +438,9 @@ BOOST_AUTO_TEST_CASE(test_obj_roundtrip_stability)
     size_t copied_n_patches =
         copied_geom->as<SFCGAL::TriangulatedSurface>().numPatches();
     BOOST_CHECK_EQUAL(n_patches, copied_n_patches);
+    size_t copied_n_edges =
+        copied_geom->as<SFCGAL::TriangulatedSurface>().numEdges();
+    BOOST_CHECK_EQUAL(n_edges, copied_n_edges);
 
     std::cout << "The OBJ IO process is stable for " << file << '.' << '\n';
   }

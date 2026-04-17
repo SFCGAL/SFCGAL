@@ -307,6 +307,13 @@ PolyhedralSurface::toSurfaceMesh() const -> Surface_mesh_3
   return triangulated.toSurfaceMesh();
 }
 
+auto
+PolyhedralSurface::numEdges() const -> size_t
+{
+  Surface_mesh_3 mesh = toSurfaceMesh();
+  return mesh.number_of_edges();
+}
+
 // Explicit instantiations
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 template PolyhedralSurface::PolyhedralSurface(const detail::MarkedPolyhedron &);

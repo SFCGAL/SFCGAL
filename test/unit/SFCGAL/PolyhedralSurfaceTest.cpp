@@ -7,6 +7,7 @@
 #include "SFCGAL/Polygon.h"
 #include "SFCGAL/PolyhedralSurface.h"
 #include "SFCGAL/io/wkt.h"
+#include "SFCGAL/primitive3d/Cube.h"
 
 #include <boost/test/unit_test.hpp>
 #include <memory>
@@ -192,6 +193,28 @@ BOOST_AUTO_TEST_CASE(getCoordinateType)
           "POLYHEDRALSURFACE ZM(((0 0 1 2, 1 0 1 2, 0 1 1 2, 0 0 1 2)))")
           ->getCoordinateType(),
       CoordinateType::COORDINATE_XYZM);
+}
+
+BOOST_AUTO_TEST_CASE(getNumEdges_dummypolyhedron)
+{
+  // First consider a polyhedral surface with only one polygon
+  SFCGAL::PolyhedralSurface phs =
+      io::readWkt("POLYHEDRALSURFACE (((0 0, 1 0, 0 1, 0 0)))")
+          ->as<PolyhedralSurface>();
+  BOOST_CHECK_EQUAL(phs.numEdges(), 3);
+  // Then add an adjacent polygon
+  phs.addPatch(io::readWkt("POLYGON ((1 1, 0 1, 1 0, 1 1))")->as<Polygon>());
+  BOOST_CHECK_EQUAL(phs.numEdges(), 5);
+  // Finally add a disjoint polygon, the numEdges does not require validity.
+  phs.addPatch(io::readWkt("POLYGON ((1 0, 2 0, 2 1, 1 0))")->as<Polygon>());
+  BOOST_CHECK_EQUAL(phs.numEdges(), 8);
+}
+
+BOOST_AUTO_TEST_CASE(getNumEdges_cube)
+{
+  SFCGAL::Cube cube(24);
+  auto         polyhedral_surface = cube.generatePolyhedralSurface();
+  BOOST_CHECK_EQUAL(polyhedral_surface.numEdges(), 18);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
