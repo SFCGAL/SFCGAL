@@ -6,6 +6,7 @@
 #include "SFCGAL/Exception.h"
 #include <utility>
 
+// NOLINTBEGIN(bugprone-throw-keyword-missing)
 namespace SFCGAL {
 
 Exception::Exception() noexcept : _message("unknown exception") {}
@@ -72,10 +73,11 @@ WktParseException::WktParseException(std::string const &message) noexcept
 WktParseException::~WktParseException() noexcept = default;
 
 WkbParseException::WkbParseException(std::string const &message) noexcept
-    : Exception(message) // NOLINT(bugprone-throw-keyword-missing)
+    : Exception(message)
 {
 }
 
 WkbParseException::~WkbParseException() noexcept = default;
 
 } // namespace SFCGAL
+// NOLINTEND(bugprone-throw-keyword-missing)
