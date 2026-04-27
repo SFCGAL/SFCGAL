@@ -259,4 +259,15 @@ BOOST_AUTO_TEST_CASE(testDistancePolygonSolid_disjoint)
   BOOST_CHECK_CLOSE(polygonA->distance3D(*solidB), 1.7320508, 1e-6);
 }
 
+BOOST_AUTO_TEST_CASE(testDistance3D_issue310)
+{
+  std::unique_ptr<Geometry>       geometryA(io::readWkt(
+      "POLYHEDRALSURFACE(((0 0 0, 4 0 0, 4 3 0, 0 3 0, 0 0 0)),((0 0 0, 0 0 5, "
+            "4 0 5, 4 0 0, 0 0 0)),((0 3 0, 4 3 0, 4 3 5, 0 3 5, 0 3 0)),((0 0 0, 0 "
+            "3 0, 0 3 5, 0 0 5, 0 0 0)),((4 0 0, 4 0 5, 4 3 5, 4 3 0, 4 0 0)),((0 0 "
+            "5, 0 3 5, 4 3 5, 4 0 5, 0 0 5)))"));
+  std::unique_ptr<Geometry> const geometryB(io::readWkt("POINT(0 0 8)"));
+  BOOST_CHECK_CLOSE(geometryA->distance3D(*geometryB), 3, 1e-6);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
