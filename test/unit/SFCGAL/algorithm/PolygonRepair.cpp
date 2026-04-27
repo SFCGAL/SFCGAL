@@ -78,6 +78,23 @@ BOOST_AUTO_TEST_CASE(testSelfIntersectingPolygon)
 }
 
 /**
+ * Test with complex self-intersecting polygon (double figure-8)
+ */
+BOOST_AUTO_TEST_CASE(testComplexSelfIntersectingPolygon)
+{
+  // A double figure-8 polygon
+  auto polygon =
+      io::readWkt("POLYGON((0 0, 2 2, 2 0, 0 2, 0 0, -2 2, -2 0, 0 2, 0 0))");
+  auto result = polygonRepair(*polygon);
+
+  BOOST_CHECK(!result->isEmpty());
+  BOOST_CHECK_EQUAL(result->asText(2),
+                    "MULTIPOLYGON (((-2.00 0.00,-1.00 1.00,-2.00 2.00,-2.00 "
+                    "0.00)),((-1.00 1.00,0.00 0.00,1.00 1.00,0.00 2.00,-1.00 "
+                    "1.00)),((1.00 1.00,2.00 0.00,2.00 2.00,1.00 1.00)))");
+}
+
+/**
  * Test with polygon with holes
  */
 BOOST_AUTO_TEST_CASE(testPolygonWithHoles)

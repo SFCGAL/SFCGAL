@@ -2499,12 +2499,22 @@ BOOST_AUTO_TEST_CASE(testConeTest)
 #if SFCGAL_CGAL_VERSION_MAJOR >= 6
 BOOST_AUTO_TEST_CASE(testPolygonRepairTest)
 {
+  // Test with a self-intersecting (bowtie) polygon
+  // polygon_repair produces a multipolygon that may touch at a point,
+  // which is not OGC valid but is the expected output
   std::unique_ptr<Geometry> polygon(
       io::readWkt("POLYGON((0 0, 2 2, 2 0, 0 2, 0 0))"));
 
   sfcgal_geometry_t *repaired = sfcgal_geometry_polygon_repair(
       polygon.get(), SFCGAL_POLYGON_REPAIR_EVEN_ODD);
-  BOOST_CHECK(sfcgal_geometry_is_valid(repaired));
+
+  char  *wkt_dec2;
+  size_t len_dec2;
+  sfcgal_geometry_as_text_decim(repaired, 2, &wkt_dec2, &len_dec2);
+  BOOST_CHECK_EQUAL(std::string(wkt_dec2),
+                    "MULTIPOLYGON (((0.00 0.00,1.00 1.00,0.00 2.00,0.00 "
+                    "0.00)),((1.00 1.00,2.00 0.00,2.00 2.00,1.00 1.00)))");
+  sfcgal_free_buffer(wkt_dec2);
 
   char  *wkt;
   size_t len;
