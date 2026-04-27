@@ -19,6 +19,7 @@ RUN ./before_install.sh $CGAL_VERSION
 
 RUN CGAL_DIR=${CI_PROJECT_DIR}/CGAL cmake -B build \
     -DSFCGAL_BUILD_TESTS=ON \
+    -DSFCGAL_WITH_EIGEN=ON \
     -DCMAKE_C_COMPILER=/usr/bin/gcc \
     -DCMAKE_CXX_COMPILER=/usr/bin/g++ \
     -DCMAKE_BUILD_TYPE=Release && \
