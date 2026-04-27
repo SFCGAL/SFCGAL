@@ -521,6 +521,10 @@ approximateMedialAxis(const Geometry &geom, bool projectToEdges)
 
   auto mx = std::make_unique<MultiLineString>();
 
+  if (geom.isEmpty()) {
+    return mx;
+  }
+
   std::vector<Polygon> polys;
   extractPolygons(geom, polys);
 
