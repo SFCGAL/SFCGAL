@@ -72,7 +72,7 @@ WktParseException::WktParseException(std::string const &message) noexcept
 WktParseException::~WktParseException() noexcept = default;
 
 WkbParseException::WkbParseException(std::string const &message) noexcept
-    : Exception(message)
+    : Exception(message) // NOLINT(bugprone-throw-keyword-missing)
 {
 }
 
