@@ -47,6 +47,7 @@
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/TriangulatedSurface.h"
 #include "SFCGAL/algorithm/isValid.h"
+#include "SFCGAL/algorithm/translate.h"
 #include "SFCGAL/detail/GeometrySet.h"
 #include "SFCGAL/triangulate/triangulatePolygon.h"
 
@@ -488,6 +489,66 @@ minkowskiSum3D(const Geometry &gA, const Geometry &gB,
                NoValidityCheck /*unused*/) -> std::unique_ptr<Geometry>
 {
   if (gA.isEmpty() || gB.isEmpty()) {
+    return emptyResult();
+  }
+
+  // Special case: Minkowski(A, Point) = translation of A by the point vector
+  // Returns PolyhedralSurface to match the normal minkowskiSum3D output type
+  // Only for Solid and TriangulatedSurface; other types return empty result
+  // as their Minkowski sum with a point is not geometrically meaningful
+  if (gB.geometryTypeId() == TYPE_POINT) {
+    const auto &pointOperand = gB.as<Point>();
+    if (gA.geometryTypeId() == TYPE_SOLID) {
+      // For Solid, extract exterior shell and translate
+      auto polyhedralSurface =
+          std::make_unique<PolyhedralSurface>(gA.as<Solid>().exteriorShell());
+      translate(*polyhedralSurface, pointOperand.x(), pointOperand.y(),
+                pointOperand.z());
+      return polyhedralSurface;
+    }
+    if (gA.geometryTypeId() == TYPE_TRIANGULATEDSURFACE) {
+      // For TriangulatedSurface, convert to Polyhedron_3 then to
+      // PolyhedralSurface and translate
+      auto poly = gA.as<TriangulatedSurface>().toPolyhedron_3<Polyhedron_3>();
+      if (poly && !poly->is_empty()) {
+        auto polyhedralSurface = std::make_unique<PolyhedralSurface>(*poly);
+        translate(*polyhedralSurface, pointOperand.x(), pointOperand.y(),
+                  pointOperand.z());
+        return polyhedralSurface;
+      }
+      return emptyResult();
+    }
+    // For other geometry types (Point, Polygon, etc.), Minkowski sum with
+    // a point is not meaningful - return empty result
+    return emptyResult();
+  }
+
+  // Special case: Minkowski(Point, B) = translation of B by the point vector
+  // Returns PolyhedralSurface to match the normal minkowskiSum3D output type
+  // Only for Solid and TriangulatedSurface; other types return empty result
+  if (gA.geometryTypeId() == TYPE_POINT) {
+    const auto &pointOperand = gA.as<Point>();
+    if (gB.geometryTypeId() == TYPE_SOLID) {
+      // For Solid, extract exterior shell and translate
+      auto polyhedralSurface =
+          std::make_unique<PolyhedralSurface>(gB.as<Solid>().exteriorShell());
+      translate(*polyhedralSurface, pointOperand.x(), pointOperand.y(),
+                pointOperand.z());
+      return polyhedralSurface;
+    }
+    if (gB.geometryTypeId() == TYPE_TRIANGULATEDSURFACE) {
+      // For TriangulatedSurface, convert to Polyhedron_3 then to
+      // PolyhedralSurface and translate
+      auto poly = gB.as<TriangulatedSurface>().toPolyhedron_3<Polyhedron_3>();
+      if (poly && !poly->is_empty()) {
+        auto polyhedralSurface = std::make_unique<PolyhedralSurface>(*poly);
+        translate(*polyhedralSurface, pointOperand.x(), pointOperand.y(),
+                  pointOperand.z());
+        return polyhedralSurface;
+      }
+      return emptyResult();
+    }
+    // For other geometry types, return empty result
     return emptyResult();
   }
 
