@@ -14,6 +14,7 @@
 #include "SFCGAL/algorithm/split3D.h"
 #include "SFCGAL/io/wkt.h"
 #include "SFCGAL/primitive3d/Cube.h"
+#include "SFCGAL/version.h"
 
 using namespace SFCGAL;
 
@@ -78,8 +79,17 @@ BOOST_AUTO_TEST_CASE(testSplit_UShape)
 
   for (unsigned int i = 0; i < nrSplit; ++i) {
     std::string componentData(SFCGAL_TEST_DIRECTORY);
-    componentData +=
-        "/data/split3D/ushapeComponent" + std::to_string(i) + ".wkt";
+
+#if SFCGAL_CGAL_VERSION_MAJOR >= 6 and SFCGAL_CGAL_VERSION_MINOR >= 1
+    const std::string cgal_version = "61";
+#elif SFCGAL_CGAL_VERSION_MAJOR >= 6 and SFCGAL_CGAL_VERSION_MINOR == 0
+    const std::string cgal_version = "60";
+#else
+    const std::string cgal_version = "57";
+#endif
+
+    componentData += "/data/split3D/ushapeComponent" + std::to_string(i) +
+                     "_cgal" + cgal_version + ".wkt";
     std::ifstream ifs(componentData.c_str());
     BOOST_REQUIRE(ifs.good());
 
