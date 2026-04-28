@@ -149,4 +149,20 @@ BOOST_AUTO_TEST_CASE(testInvalidTypes)
   }
 }
 
+BOOST_AUTO_TEST_CASE(testEmptyGeometry)
+{
+  std::vector<std::string> wkt;
+  wkt.emplace_back("POLYGON EMPTY");
+  wkt.emplace_back("MULTIPOLYGON EMPTY");
+  wkt.emplace_back("GEOMETRYCOLLECTION EMPTY");
+
+  for (auto &it : wkt) {
+    std::unique_ptr<Geometry> const  g(io::readWkt(it));
+    std::unique_ptr<MultiLineString> result(
+        algorithm::approximateMedialAxis(*g));
+    BOOST_CHECK_EQUAL(result->numGeometries(), 0U);
+    BOOST_CHECK(result->isEmpty());
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
