@@ -27,6 +27,7 @@ namespace SFCGAL::io::OBJ {
 
 /**
  * @brief Parsed OBJ data structure
+
  */
 struct ObjData {
   std::vector<Point>               vertices; ///< Vertex positions
@@ -61,6 +62,10 @@ parseObjData(std::istream &inOBJ) -> ObjData
 
     if (type == "v") {
       // Vertex: v x y z [w]
+      if (obj_data.vertices.size() >= SFCGAL_MAX_OBJ_VERTICES) {
+        BOOST_THROW_EXCEPTION(
+            Exception("OBJ file exceeds maximum vertex count"));
+      }
       double x = 0.0;
       double y = 0.0;
       double z = 0.0;
@@ -71,6 +76,9 @@ parseObjData(std::istream &inOBJ) -> ObjData
       obj_data.vertices.emplace_back(x, y, z);
     } else if (type == "f") {
       // Face: f v1 v2 v3 ...
+      if (obj_data.faces.size() >= SFCGAL_MAX_OBJ_FACES) {
+        BOOST_THROW_EXCEPTION(Exception("OBJ file exceeds maximum face count"));
+      }
       std::vector<size_t> face;
       std::string         vertex_data;
       while (iss >> vertex_data) {
@@ -100,6 +108,9 @@ parseObjData(std::istream &inOBJ) -> ObjData
       obj_data.faces.push_back(face);
     } else if (type == "l") {
       // Line: l v1 v2 ...
+      if (obj_data.lines.size() >= SFCGAL_MAX_OBJ_LINES) {
+        BOOST_THROW_EXCEPTION(Exception("OBJ file exceeds maximum line count"));
+      }
       std::vector<size_t> line_indices;
       size_t              vertex_index;
       while (iss >> vertex_index) {
@@ -115,6 +126,10 @@ parseObjData(std::istream &inOBJ) -> ObjData
       obj_data.lines.push_back(line_indices);
     } else if (type == "p") {
       // Point: p v1
+      if (obj_data.points.size() >= SFCGAL_MAX_OBJ_POINTS) {
+        BOOST_THROW_EXCEPTION(
+            Exception("OBJ file exceeds maximum point count"));
+      }
       size_t vertex_index;
       if (iss >> vertex_index) {
         if (vertex_index == 0) {

@@ -6,6 +6,7 @@
 #ifndef SFCGAL_IO_WKTREADER_H_
 #define SFCGAL_IO_WKTREADER_H_
 
+#include <memory>
 #include <sstream>
 
 #include "SFCGAL/config.h"
@@ -48,8 +49,7 @@ public:
   /**
    * read a geometry from a string
    *
-   * @warning returns new instance
-   * @return unique pointer to newly created Geometry object
+   * @return unique_ptr to newly created Geometry object
    */
   auto
   readGeometry() -> std::unique_ptr<Geometry>;
@@ -232,6 +232,10 @@ private:
    * actually reading Measured ?
    */
   bool _isMeasured;
+  /**
+   * Current recursion depth for nested geometry collections
+   */
+  int _recursionDepth = 0;
 
   /**
    * returns default parse error message

@@ -18,6 +18,7 @@
 #include "SFCGAL/Solid.h"
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/TriangulatedSurface.h"
+#include "SFCGAL/detail/io/WktReader.h"
 #include "SFCGAL/io/wkt.h"
 
 #include <boost/test/unit_test.hpp>
@@ -267,6 +268,16 @@ BOOST_AUTO_TEST_CASE(wktExtraCharacters)
     threw = true;
   }
   BOOST_CHECK(threw);
+}
+
+BOOST_AUTO_TEST_CASE(recursionTest)
+{
+  std::string wktString = "POINT(0 0)";
+  for (int i = 0; i <= SFCGAL_MAX_RECURSION_DEPTH; ++i) {
+    wktString.insert(0, "GEOMETRYCOLLECTION(");
+    wktString += ")";
+  }
+  BOOST_CHECK_THROW(readWkt(wktString), WktParseException);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

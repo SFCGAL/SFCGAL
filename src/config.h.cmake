@@ -28,6 +28,40 @@
 #include "SFCGAL/export.h"
 
 /**
+ * Maximum recursion depth for processing nested geometry collections
+ */
+#define SFCGAL_MAX_RECURSION_DEPTH @SFCGAL_MAX_RECURSION_DEPTH@
+/**
+ * Maximum number of GMP limbs allowed during deserialization
+ */
+#define SFCGAL_MAX_GMP_LIMBS @SFCGAL_MAX_GMP_LIMBS@
+/**
+ * Maximum total number of coordinates in WKB to prevent memory exhaustion
+ */
+#define SFCGAL_MAX_WKB_TOTAL_COORDINATES @SFCGAL_MAX_WKB_TOTAL_COORDINATES@
+/**
+ * Maximum total number of geometry elements in WKB to prevent memory exhaustion
+ */
+#define SFCGAL_MAX_WKB_TOTAL_ELEMENTS @SFCGAL_MAX_WKB_TOTAL_ELEMENTS@
+/**
+ * Maximum number of vertices allowed in OBJ file
+ */
+#define SFCGAL_MAX_OBJ_VERTICES @SFCGAL_MAX_OBJ_VERTICES@
+/**
+ * Maximum number of faces allowed in OBJ file
+ */
+#define SFCGAL_MAX_OBJ_FACES @SFCGAL_MAX_OBJ_FACES@
+/**
+ * Maximum number of lines allowed in OBJ file
+ */
+#define SFCGAL_MAX_OBJ_LINES @SFCGAL_MAX_OBJ_LINES@
+/**
+ * Maximum number of points allowed in OBJ file
+ */
+#define SFCGAL_MAX_OBJ_POINTS @SFCGAL_MAX_OBJ_POINTS@
+
+
+/**
  * indicates if OpenSceneGraph dependency is activated
  */
 #cmakedefine SFCGAL_WITH_OSG

@@ -175,4 +175,17 @@ BOOST_AUTO_TEST_CASE(SolidWKB)
   BOOST_CHECK_EQUAL(g->asText(0), g2->asText(0));
 }
 
+BOOST_AUTO_TEST_CASE(emptyTriangleWkbTest)
+{
+  Triangle triangle; // empty
+  auto     wkbHexString = triangle.asWkb(boost::endian::order::native, true);
+  // An empty triangle in WKB is represented as a Polygon with 0 rings
+  // WKB Polygon type is 3. Native order could be 01 (little) or 00 (big).
+  // Header (5 bytes) + NumRings (4 bytes) = 9 bytes = 18 hex chars.
+  // 01 03000000 00000000 or 00 00000003 00000000
+  static constexpr size_t expectedHexLength = 18;
+  BOOST_CHECK(wkbHexString.size() == expectedHexLength);
+  BOOST_CHECK(wkbHexString.substr(wkbHexString.size() - 8) == "00000000");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

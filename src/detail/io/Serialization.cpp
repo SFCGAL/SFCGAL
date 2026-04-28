@@ -143,7 +143,14 @@ load(boost::archive::binary_iarchive &ar, CGAL::Gmpz &z,
   uint32_t rsize = 0;
   mpz_t   &mpz   = z.mpz();
   ar & size;
-  rsize         = size >= 0 ? size : -size;
+  rsize = size >= 0 ? size : -size;
+
+  // Validate size to prevent memory exhaustion attacks
+  if (rsize > SFCGAL_MAX_GMP_LIMBS) {
+    throw std::runtime_error(
+        "Serialization error: GMP number size exceeds maximum allowed");
+  }
+
   mpz->_mp_size = size;
   _mpz_realloc(mpz, rsize);
   uint32_t i = 0;
@@ -197,7 +204,14 @@ load(boost::archive::binary_iarchive &ar, mpz_class &z,
   uint32_t rsize = 0;
   mpz_ptr  mpz   = z.get_mpz_t();
   ar & size;
-  rsize         = size >= 0 ? size : -size;
+  rsize = size >= 0 ? size : -size;
+
+  // Validate size to prevent memory exhaustion attacks
+  if (rsize > SFCGAL_MAX_GMP_LIMBS) {
+    throw std::runtime_error(
+        "Serialization error: GMP number size exceeds maximum allowed");
+  }
+
   mpz->_mp_size = size;
   _mpz_realloc(mpz, rsize);
   uint32_t i = 0;

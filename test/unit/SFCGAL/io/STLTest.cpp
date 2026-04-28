@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
 #include "SFCGAL/io/STL.h"
+#include "SFCGAL/GeometryCollection.h"
+#include "SFCGAL/Point.h"
 #include "SFCGAL/io/wkt.h"
 #include <filesystem>
 #include <fstream>
@@ -246,6 +248,19 @@ BOOST_AUTO_TEST_CASE(test_non_stl_geometries)
 
     BOOST_CHECK_EQUAL(result, expected);
   }
+}
+
+BOOST_AUTO_TEST_CASE(recursionTest)
+{
+  std::unique_ptr<SFCGAL::Geometry> currentGeometry =
+      std::make_unique<SFCGAL::Point>(0, 0);
+  for (int i = 0; i <= SFCGAL_MAX_RECURSION_DEPTH; ++i) {
+    auto geometryCollection = std::make_unique<SFCGAL::GeometryCollection>();
+    geometryCollection->addGeometry(std::move(currentGeometry));
+    currentGeometry = std::move(geometryCollection);
+  }
+  BOOST_CHECK_THROW(SFCGAL::io::STL::saveToString(*currentGeometry),
+                    std::runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

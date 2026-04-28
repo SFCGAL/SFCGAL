@@ -46,6 +46,19 @@ WktReader::readSRID() -> srid_t
 auto
 WktReader::readGeometry() -> std::unique_ptr<Geometry>
 {
+  // Check recursion depth to prevent stack overflow
+  if (_recursionDepth >= SFCGAL_MAX_RECURSION_DEPTH) {
+    BOOST_THROW_EXCEPTION(
+        WktParseException("WktReader: maximum recursion depth exceeded"));
+  }
+
+  // RAII guard to ensure depth is decremented on exit
+  struct RecursionGuard {
+    int &depth;
+    RecursionGuard(int &depthRef) : depth(depthRef) { ++depth; }
+    ~RecursionGuard() { --depth; }
+  } guard(_recursionDepth);
+
   GeometryType const geometryType = readGeometryType();
   _is3D                           = _reader.imatch("Z");
   _isMeasured                     = _reader.imatch("M");
@@ -441,8 +454,10 @@ WktReader::readInnerGeometryCollection(GeometryCollection &collection)
     bool saved_isMeasured = _isMeasured;
 
     // read a full wkt geometry ex : POINT (2.0 6.0)
-    std::unique_ptr<Geometry> gg = readGeometry();
-    if (!gg->isEmpty()) {
+    auto gg = readGeometry();
+
+    // Check for null before dereferencing to prevent null pointer access
+    if (gg && !gg->isEmpty()) {
       collection.addGeometry(std::move(gg));
     }
 

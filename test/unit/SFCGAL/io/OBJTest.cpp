@@ -381,6 +381,45 @@ BOOST_AUTO_TEST_CASE(test_error_no_geometry)
   BOOST_CHECK_THROW(SFCGAL::io::OBJ::load(obj_content), SFCGAL::Exception);
 }
 
+BOOST_AUTO_TEST_CASE(vertexLimitTest)
+{
+  std::stringstream objStream;
+  for (size_t i = 0; i <= SFCGAL_MAX_OBJ_VERTICES; ++i) {
+    objStream << "v 0 0 0\n";
+  }
+  BOOST_CHECK_THROW(SFCGAL::io::OBJ::load(objStream), SFCGAL::Exception);
+}
+
+BOOST_AUTO_TEST_CASE(faceLimitTest)
+{
+  std::stringstream objStream;
+  objStream << "v 0 0 0\nv 1 0 0\nv 0 1 0\n";
+  for (size_t i = 0; i <= SFCGAL_MAX_OBJ_FACES; ++i) {
+    objStream << "f 1 2 3\n";
+  }
+  BOOST_CHECK_THROW(SFCGAL::io::OBJ::load(objStream), SFCGAL::Exception);
+}
+
+BOOST_AUTO_TEST_CASE(lineLimitTest)
+{
+  std::stringstream objStream;
+  objStream << "v 0 0 0\nv 1 0 0\n";
+  for (size_t i = 0; i <= SFCGAL_MAX_OBJ_LINES; ++i) {
+    objStream << "l 1 2\n";
+  }
+  BOOST_CHECK_THROW(SFCGAL::io::OBJ::load(objStream), SFCGAL::Exception);
+}
+
+BOOST_AUTO_TEST_CASE(pointLimitTest)
+{
+  std::stringstream objStream;
+  objStream << "v 0 0 0\n";
+  for (size_t i = 0; i <= SFCGAL_MAX_OBJ_POINTS; ++i) {
+    objStream << "p 1\n";
+  }
+  BOOST_CHECK_THROW(SFCGAL::io::OBJ::load(objStream), SFCGAL::Exception);
+}
+
 static std::unique_ptr<SFCGAL::Geometry>
 loadOBJFixture(const std::string &name)
 {

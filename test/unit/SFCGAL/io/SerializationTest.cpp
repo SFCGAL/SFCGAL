@@ -166,4 +166,40 @@ BOOST_AUTO_TEST_CASE(preparedGeometryTest)
               g3->asEWKT());
 }
 
+BOOST_AUTO_TEST_CASE(gmpzBinaryTest)
+{
+  CGAL::Gmpz         integerValue(123456);
+  std::ostringstream outputStream;
+  {
+    io::BinarySerializer serializer(outputStream);
+    serializer << integerValue;
+  }
+  std::istringstream inputStream(outputStream.str());
+  {
+    io::BinaryUnserializer unserializer(inputStream);
+    CGAL::Gmpz             resultValue;
+    unserializer >> resultValue;
+    BOOST_CHECK_EQUAL(integerValue, resultValue);
+  }
+}
+
+#ifdef CGAL_USE_GMPXX
+BOOST_AUTO_TEST_CASE(mpzClassBinaryTest)
+{
+  mpz_class          integerValue(123456);
+  std::ostringstream outputStream;
+  {
+    io::BinarySerializer serializer(outputStream);
+    serializer << integerValue;
+  }
+  std::istringstream inputStream(outputStream.str());
+  {
+    io::BinaryUnserializer unserializer(inputStream);
+    mpz_class              resultValue;
+    unserializer >> resultValue;
+    BOOST_CHECK_EQUAL(integerValue, resultValue);
+  }
+}
+#endif
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -53,6 +53,15 @@ option( SFCGAL_WITH_EIGEN "Compile with Eigen support for advanced simplificatio
 option( SFCGAL_VALGRIND "Compile with Valgrind support" OFF )
 option( SFCGAL_TSAN "Enable ThreadSanitizer (Debug only)" OFF)
 
+set( SFCGAL_MAX_RECURSION_DEPTH 32 CACHE STRING "Maximum recursion depth for processing nested geometry collections" )
+set( SFCGAL_MAX_GMP_LIMBS 1000000 CACHE STRING "Maximum number of GMP limbs allowed during deserialization" )
+set( SFCGAL_MAX_WKB_TOTAL_COORDINATES 10000000 CACHE STRING "Maximum total number of coordinates in WKB to prevent memory exhaustion" )
+set( SFCGAL_MAX_WKB_TOTAL_ELEMENTS 1000000 CACHE STRING "Maximum total number of geometry elements in WKB to prevent memory exhaustion" )
+set( SFCGAL_MAX_OBJ_VERTICES 10000000 CACHE STRING "Maximum number of vertices allowed in OBJ file" )
+set( SFCGAL_MAX_OBJ_FACES 10000000 CACHE STRING "Maximum number of faces allowed in OBJ file" )
+set( SFCGAL_MAX_OBJ_LINES 10000000 CACHE STRING "Maximum number of lines allowed in OBJ file" )
+set( SFCGAL_MAX_OBJ_POINTS 10000000 CACHE STRING "Maximum number of points allowed in OBJ file" )
+
 # Configure CCache if available
 if(NOT MSVC)
   option(USE_CCACHE "Use ccache" ON)
