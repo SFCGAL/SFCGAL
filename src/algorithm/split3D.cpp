@@ -1,7 +1,7 @@
 // Copyright (c) 2026-2026, SFCGAL team.
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
-#include "split3D.h"
+#include "SFCGAL/algorithm/split3D.h"
 
 #include "SFCGAL/Exception.h"
 #include "SFCGAL/Geometry.h"
