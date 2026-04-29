@@ -22,7 +22,7 @@ using namespace SFCGAL;
 // always after CGAL
 using namespace boost::unit_test;
 
-BOOST_AUTO_TEST_SUITE(SFCGAL_algorithm_Split)
+BOOST_AUTO_TEST_SUITE(SFCGAL_algorithm_Split3D)
 
 BOOST_AUTO_TEST_CASE(testSplit_Empty)
 {
