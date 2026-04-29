@@ -11,6 +11,7 @@
 #include "SFCGAL/Point.h"
 #include "SFCGAL/PolyhedralSurface.h"
 #include "SFCGAL/algorithm/covers.h"
+#include "SFCGAL/algorithm/isValid.h"
 #include "SFCGAL/algorithm/split3D.h"
 #include "SFCGAL/io/wkt.h"
 #include "SFCGAL/primitive3d/Cube.h"
@@ -45,6 +46,8 @@ BOOST_AUTO_TEST_CASE(testSplit_Cube)
   BOOST_CHECK_EQUAL(phsSplit->numGeometries(), nrSplit);
 
   for (unsigned int i = 0; i < nrSplit; ++i) {
+    BOOST_CHECK(SFCGAL::algorithm::isValid(phsSplit->geometryN(i)));
+
     std::string componentData(SFCGAL_TEST_DIRECTORY);
     componentData += "/data/split3D/cubeComponent" + std::to_string(i) + ".wkt";
     std::ifstream ifs(componentData.c_str());
@@ -78,6 +81,8 @@ BOOST_AUTO_TEST_CASE(testSplit_UShape)
   BOOST_CHECK_EQUAL(phsSplit->numGeometries(), nrSplit);
 
   for (unsigned int i = 0; i < nrSplit; ++i) {
+    BOOST_CHECK(SFCGAL::algorithm::isValid(phsSplit->geometryN(i)));
+
     std::string componentData(SFCGAL_TEST_DIRECTORY);
 
 #if SFCGAL_CGAL_VERSION_MAJOR >= 6 and SFCGAL_CGAL_VERSION_MINOR >= 1
@@ -121,6 +126,8 @@ BOOST_AUTO_TEST_CASE(testSplit_Tin)
   BOOST_CHECK_EQUAL(tinSplit->numGeometries(), nrSplit);
 
   for (unsigned int i = 0; i < nrSplit; ++i) {
+    BOOST_CHECK(SFCGAL::algorithm::isValid(tinSplit->geometryN(i)));
+
     std::string componentData(SFCGAL_TEST_DIRECTORY);
     componentData += "/data/split3D/tinComponent" + std::to_string(i) + ".wkt";
     std::ifstream ifs(componentData.c_str());
@@ -157,11 +164,16 @@ BOOST_AUTO_TEST_CASE(testSplit_Solid)
   BOOST_CHECK_EQUAL(geomSplitOpen->numGeometries(), nrSplit);
   BOOST_CHECK_EQUAL(geomSplitClose->numGeometries(), nrSplit);
   for (unsigned int i = 0; i < nrSplit; ++i) {
+    BOOST_CHECK(SFCGAL::algorithm::isValid(geomSplitOpen->geometryN(i)));
+    BOOST_CHECK(SFCGAL::algorithm::isValid(geomSplitClose->geometryN(i)));
+
     BOOST_CHECK(algorithm::covers3D(geomSplitOpen->geometryN(i),
                                     geomSplitClose->geometryN(i)));
   }
 
   for (unsigned int i = 0; i < nrSplit; ++i) {
+    BOOST_CHECK(SFCGAL::algorithm::isValid(geomSplitOpen->geometryN(i)));
+
     std::string componentData(SFCGAL_TEST_DIRECTORY);
     componentData +=
         "/data/split3D/houseSolidComponent" + std::to_string(i) + ".wkt";
