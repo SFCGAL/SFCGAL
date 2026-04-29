@@ -8,6 +8,7 @@
 #include "SFCGAL/PolyhedralSurface.h"
 #include "SFCGAL/Solid.h"
 #include "SFCGAL/TriangulatedSurface.h"
+#include "SFCGAL/algorithm/mergeCoplanarFaces.h"
 
 #include <CGAL/Polygon_mesh_processing/clip.h>
 #include <CGAL/Polygon_mesh_processing/connected_components.h>
@@ -89,7 +90,8 @@ split3D(const geomType &geometry, const CGAL::Plane_3<Kernel> &plane,
   for (const auto &resultMesh : meshResults) {
     std::vector<Mesh> parts;
     PMP::split_connected_components(*resultMesh, parts);
-    for (const auto &splitMesh : parts) {
+    for (auto &splitMesh : parts) {
+      mergeCoplanarFaces(splitMesh);
       if constexpr (std::is_same_v<geomType, Solid>) {
         result->addGeometry(Solid(splitMesh));
       } else {
