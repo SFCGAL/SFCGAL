@@ -36,11 +36,15 @@ namespace {
 
 // Numerical thresholds used throughout the sweep implementation.
 // Mirrors the named constants in Chamfer.cpp for consistency.
-constexpr double ZERO_SQ_LEN       = 1e-20; // squared-length below which a vector is zero
-constexpr double NEAR_ZERO_SQ_LEN  = 1e-12; // squared-length for degenerate checks
-constexpr double NEAR_PARALLEL_COS = 0.99;  // parallelism guard for helper axis
-constexpr double TOLERANCE_ALIGNMENT = 1e-6; // threshold for normal vector alignment
-constexpr double TOLERANCE_PERPENDICULAR = 1e-10; // threshold for fallback perpendicular vector
+constexpr double ZERO_SQ_LEN =
+    1e-20; // squared-length below which a vector is zero
+constexpr double NEAR_ZERO_SQ_LEN =
+    1e-12; // squared-length for degenerate checks
+constexpr double NEAR_PARALLEL_COS = 0.99; // parallelism guard for helper axis
+constexpr double TOLERANCE_ALIGNMENT =
+    1e-6; // threshold for normal vector alignment
+constexpr double TOLERANCE_PERPENDICULAR =
+    1e-10; // threshold for fallback perpendicular vector
 
 /**
  * @brief Extract 2D profile points from geometry
@@ -53,8 +57,9 @@ extract_profile_points(const Geometry &profile) -> std::vector<Kernel::Point_2>
 
   if (profile.geometryTypeId() == TYPE_LINESTRING) {
     const auto &linestring = profile.as<LineString>();
-    size_t num_points = linestring.numPoints();
-    if (num_points > 1 && linestring.pointN(0) == linestring.pointN(num_points - 1)) {
+    size_t      num_points = linestring.numPoints();
+    if (num_points > 1 &&
+        linestring.pointN(0) == linestring.pointN(num_points - 1)) {
       num_points--;
     }
     for (size_t i = 0; i < num_points; ++i) {
@@ -62,8 +67,8 @@ extract_profile_points(const Geometry &profile) -> std::vector<Kernel::Point_2>
       points.emplace_back(point.x(), point.y());
     }
   } else if (profile.geometryTypeId() == TYPE_POLYGON) {
-    const auto &polygon = profile.as<Polygon>();
-    const auto &ring    = polygon.exteriorRing();
+    const auto &polygon    = profile.as<Polygon>();
+    const auto &ring       = polygon.exteriorRing();
     size_t      num_points = ring.numPoints();
     if (num_points > 0) {
       num_points--;
@@ -73,7 +78,8 @@ extract_profile_points(const Geometry &profile) -> std::vector<Kernel::Point_2>
       points.emplace_back(point.x(), point.y());
     }
   } else {
-    throw std::invalid_argument("Profile cannot be of this Geometry Type. Must be LineString or Polygon.");
+    throw std::invalid_argument("Profile cannot be of this Geometry Type. Must "
+                                "be LineString or Polygon.");
   }
 
   if (points.size() < 2) {
@@ -146,9 +152,11 @@ propagate_frame_rmf(const Frame &prev_frame, const Kernel::Point_3 &prev_point,
   // R_1(n) = n - 2(n.chord_vec/|chord_vec|^2)chord_vec
   const Kernel::FT       reflection_factor_1 = Kernel::FT(2) / chord_len_sq;
   const Kernel::Vector_3 reflected_normal =
-      prev_frame.normal - reflection_factor_1 * (chord_vec * prev_frame.normal) * chord_vec;
+      prev_frame.normal -
+      reflection_factor_1 * (chord_vec * prev_frame.normal) * chord_vec;
   const Kernel::Vector_3 reflected_tangent =
-      prev_frame.tangent - reflection_factor_1 * (chord_vec * prev_frame.tangent) * chord_vec;
+      prev_frame.tangent -
+      reflection_factor_1 * (chord_vec * prev_frame.tangent) * chord_vec;
 
   // Second reflection to align with new tangent
   // Reflection plane normal is bisector of (reflected_tangent, new_tangent)
@@ -161,7 +169,9 @@ propagate_frame_rmf(const Frame &prev_frame, const Kernel::Point_3 &prev_point,
   } else {
     // Formula 11 again (R_2)
     const Kernel::FT reflection_factor_2 = Kernel::FT(2) / tangent_diff_sq;
-    frame.normal        = reflected_normal - reflection_factor_2 * (tangent_diff * reflected_normal) * tangent_diff;
+    frame.normal = reflected_normal - reflection_factor_2 *
+                                          (tangent_diff * reflected_normal) *
+                                          tangent_diff;
   }
 
   frame.normal   = normalizeVector(frame.normal);
@@ -261,12 +271,12 @@ compute_rmf_frames(const std::vector<Kernel::Point_3> &points, bool closed)
   return frames;
 }
 
-
 /**
  * @brief Compute bisector plane at a corner (miter join)
  */
 auto
-compute_bisector_plane(const Kernel::Point_3 &prev_point, const Kernel::Point_3 &curr_point,
+compute_bisector_plane(const Kernel::Point_3 &prev_point,
+                       const Kernel::Point_3 &curr_point,
                        const Kernel::Point_3 &next_point) -> Kernel::Plane_3
 {
   const Kernel::Vector_3 vec_in   = normalizeVector(curr_point - prev_point);
@@ -293,10 +303,12 @@ project_onto_bisector_plane(const Kernel::Point_3 &ray_origin,
 {
   const Kernel::Vector_3 ray_dir = ray_target - ray_origin;
 
-  const Kernel::FT numerator = -(plane.a() * ray_origin.x() + plane.b() * ray_origin.y() +
-                                 plane.c() * ray_origin.z() + plane.d());
-  const Kernel::FT denominator =
-      plane.a() * ray_dir.x() + plane.b() * ray_dir.y() + plane.c() * ray_dir.z();
+  const Kernel::FT numerator =
+      -(plane.a() * ray_origin.x() + plane.b() * ray_origin.y() +
+        plane.c() * ray_origin.z() + plane.d());
+  const Kernel::FT denominator = plane.a() * ray_dir.x() +
+                                 plane.b() * ray_dir.y() +
+                                 plane.c() * ray_dir.z();
 
   if (CGAL::abs(denominator) < Kernel::FT(NEAR_ZERO_SQ_LEN)) {
     return ray_target; // Ray parallel to plane — keep original position
@@ -355,7 +367,8 @@ transform_profile_point(const Kernel::Point_2 &profile_pt,
 {
   const double           profile_x = CGAL::to_double(profile_pt.x()) - anchor_x;
   const double           profile_y = CGAL::to_double(profile_pt.y()) - anchor_y;
-  const Kernel::Vector_3 offset    = profile_x * frame.normal + profile_y * frame.binormal;
+  const Kernel::Vector_3 offset =
+      profile_x * frame.normal + profile_y * frame.binormal;
   return path_pt + offset;
 }
 
@@ -478,10 +491,29 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
   std::vector<Surface_mesh_3::Vertex_index> first_start_ring;
 
   // Process each segment
+  Frame prev_frame;
+  bool  has_prev_frame = false;
   for (size_t seg_idx = 0; seg_idx < path_points.size() - 1; ++seg_idx) {
     // Constant frame for this segment
-    const Kernel::Vector_3 axis          = path_points[seg_idx + 1] - path_points[seg_idx];
-    const Frame            segment_frame = compute_segment_frame(axis, options.reference_normal);
+    const Kernel::Vector_3 axis =
+        path_points[seg_idx + 1] - path_points[seg_idx];
+    Frame segment_frame;
+
+    if (!has_prev_frame) {
+      // Initial frame (respecte ta référence utilisateur)
+      if (options.reference_normal.has_value()) {
+        segment_frame = compute_segment_frame(axis, options.reference_normal);
+      } else {
+        segment_frame = compute_initial_frame(axis);
+      }
+      has_prev_frame = true;
+    } else {
+      // RMF transport (clé anti-twist)
+      segment_frame = propagate_frame_rmf(prev_frame, path_points[seg_idx],
+                                          path_points[seg_idx + 1], axis);
+    }
+
+    prev_frame = segment_frame;
 
     // --- Start Ring ---
     std::vector<Surface_mesh_3::Vertex_index> start_ring;
@@ -493,23 +525,46 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
 
       if (closed && !bisector_planes.empty()) {
         // For closed path: the first ring must lie on the closing bisector
-        // (miter join between the last segment and the first segment).
-        // Project natural last-segment positions at path[n-2] through natural
-        // last-segment positions at path[0] onto the closing bisector plane.
+        // (miter join between the closing edge and the first segment).
+        //
+        // Project natural closing-edge positions at path[n-2] through natural
+        // closing-edge positions at path[0] onto the closing bisector plane.
+        //
+        // The closing-edge frame is obtained by RMF propagation from the last
+        // propagated frame to preserve twist continuity across the loop.
+        //
         // This follows the same segment-direction ray convention used at
         // every other interior corner.
-        Kernel::Vector_3 last_axis =
+
+        // Closing edge tangent
+        const Kernel::Vector_3 closing_axis =
             path_points[0] - path_points[path_points.size() - 2];
-        Frame           last_frame = compute_segment_frame(last_axis, options.reference_normal);
+        Frame last_frame;
+
+        if (has_prev_frame) {
+          // Propagate RMF onto the actual closing edge
+          last_frame = propagate_frame_rmf(prev_frame,
+                                           path_points[path_points.size() - 2],
+                                           path_points[0], closing_axis);
+        } else {
+          // Fallback (very short path)
+          if (options.reference_normal.has_value()) {
+            last_frame =
+                compute_segment_frame(closing_axis, options.reference_normal);
+          } else {
+            last_frame = compute_initial_frame(closing_axis);
+          }
+        }
+
         const Kernel::Plane_3 &closing_bisector = bisector_planes.back();
 
         for (const auto &profile_pt : profile_points) {
           Kernel::Point_3 p_prev = transform_profile_point(
               profile_pt, path_points[path_points.size() - 2], last_frame,
               options.anchor_x, options.anchor_y);
-          Kernel::Point_3 p_curr = transform_profile_point(
-              profile_pt, path_points[0], last_frame, options.anchor_x,
-              options.anchor_y);
+          Kernel::Point_3 p_curr =
+              transform_profile_point(profile_pt, path_points[0], last_frame,
+                                      options.anchor_x, options.anchor_y);
           start_profile.push_back(
               project_onto_bisector_plane(p_prev, p_curr, closing_bisector));
         }
@@ -593,8 +648,9 @@ sweep_discrete(const std::vector<Kernel::Point_3> &path_points,
 
   if (!closed && (options.start_cap == SweepOptions::EndCapStyle::FLAT ||
                   options.end_cap == SweepOptions::EndCapStyle::FLAT)) {
-    const bool add_start = (options.start_cap == SweepOptions::EndCapStyle::FLAT);
-    const bool add_end   = (options.end_cap == SweepOptions::EndCapStyle::FLAT);
+    const bool add_start =
+        (options.start_cap == SweepOptions::EndCapStyle::FLAT);
+    const bool add_end = (options.end_cap == SweepOptions::EndCapStyle::FLAT);
     add_flat_caps(mesh, cap_rings, add_start, add_end);
   }
 
@@ -697,10 +753,11 @@ sweep(const LineString &path, const Geometry &profile,
 
   // Automatically repair self-intersections (essential for valid solids from
   // sharp miters).
-  namespace PMP = CGAL::Polygon_mesh_processing;
+  namespace PMP              = CGAL::Polygon_mesh_processing;
   Surface_mesh_3 repair_mesh = result->toSurfaceMesh();
   if (PMP::does_self_intersect(repair_mesh)) {
-    if (!PMP::experimental::autorefine_and_remove_self_intersections(repair_mesh)) {
+    if (!PMP::experimental::autorefine_and_remove_self_intersections(
+            repair_mesh)) {
       SFCGAL_WARNING("Sweep: could not fully repair self-intersections");
     }
     result = std::make_unique<PolyhedralSurface>(repair_mesh);
