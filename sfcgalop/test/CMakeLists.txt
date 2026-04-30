@@ -6,6 +6,16 @@ add_executable(test_sfcgalop
     ../text_ui.cpp
     ../constructors.cpp
     ../operations/operations.cpp
+    ../operations/operations_registry.cpp
+    ../operations/operations_analysis.cpp
+    ../operations/operations_collections.cpp
+    ../operations/operations_construction.cpp
+    ../operations/operations_constructors.cpp
+    ../operations/operations_conversions.cpp
+    ../operations/operations_metrics.cpp
+    ../operations/operations_predicates.cpp
+    ../operations/operations_set.cpp
+    ../operations/operations_transformations.cpp
 )
 
 target_include_directories(test_sfcgalop PRIVATE
