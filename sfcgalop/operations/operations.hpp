@@ -6,6 +6,7 @@
 
 #include "../io.hpp"
 #include <SFCGAL/Geometry.h>
+#include <map>
 #include <memory>
 #include <optional>
 #include <string>
@@ -43,5 +44,40 @@ operation_requires_second_geometry(const std::string &operation_name) -> bool;
 using Operations::execute_operation;
 using Operations::print_available_operations;
 using Operations::print_operation_help;
+
+/**
+ * @brief Structure defining a geometry operation for sfcgalop CLI
+ *
+ * Contains all metadata and implementation details for a single geometric
+ * operation that can be executed via the command line interface.
+ */
+struct Operation {
+  std::string name; ///< Operation name (e.g., "area", "intersection")
+  std::string
+      category; ///< Category for grouping (e.g., "Metrics", "Set Operations")
+  std::string description; ///< Short description for operation list
+  bool        requires_b;  ///< Whether operation requires a second geometry
+  std::string param_help;  ///< Detailed help text with parameters and examples
+  std::string input;       ///< Input specification (A, A,B, A,params)
+  std::string output; ///< Output type (G=Geometry, D=Double, B=Boolean, T=Text)
+  /// Function implementing the operation
+  std::function<std::optional<OperationResult>(
+      const std::string &, const SFCGAL::Geometry *, const SFCGAL::Geometry *)>
+      func;
+};
+
+auto
+parse_params(const std::string &str) -> std::map<std::string, double>;
+
+auto
+parse_boolean_param(const std::map<std::string, double> &params,
+                    const std::string &key, const std::string &param_str,
+                    bool default_val = false) -> bool;
+
+auto
+parse_double(const std::string &str, double default_val = 0.0) -> double;
+
+auto
+trim(const std::string &str) -> std::string;
 
 #endif // SFCGALOP_OPERATIONS_HPP
