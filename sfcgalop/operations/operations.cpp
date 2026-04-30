@@ -37,6 +37,7 @@
 #include "SFCGAL/algorithm/isValid.h"
 #include "SFCGAL/algorithm/length.h"
 #include "SFCGAL/algorithm/lineSubstring.h"
+#include "SFCGAL/algorithm/mergeCoplanarFaces.h"
 #include "SFCGAL/algorithm/minkowskiSum.h"
 #include "SFCGAL/algorithm/minkowskiSum3D.h"
 #include "SFCGAL/algorithm/normal.h"
@@ -1505,6 +1506,25 @@ const std::vector<Operation> operations = {
        const SFCGAL::Point plane_pt(ptx, pty, ptz);
        const SFCGAL::Kernel::Vector_3 plane_normal(nx, ny, nz);
        auto result = SFCGAL::algorithm::split3D(*geom_a, plane_pt, plane_normal, closeGeometries);
+       return result;
+     }},
+
+    {"merge_coplanar_faces", "Transformations", "Merge adjacent coplanar faces", false,
+     "Merge adjacent coplanar faces within an angular and distance tolerance\n\n"
+     "Input A: A PolyhedralSurface, a Solid or a TIN geometry\n\n"
+     "Parameters:\n"
+     "  eps_angle=VALUE: angular tolerance in degrees (optional, default: 0.5)\n"
+     "  eps_dist=VALUE: distance to plane tolerance (optional, default: 1e-8)\n\n"
+     "Example:\n "
+     "  sfcgalop -a \"SOLID(...)\" merge_coplanar_faces",
+     "A, params", "G",
+     [](const std::string &args, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       auto   params = parse_params(args);
+       double eps_angle = params.count("eps_angle") != 0 ? params["eps_angle"] : 0.5;
+       double eps_dist = params.count("eps_dist") != 0 ? params["eps_dist"] : 1e-8;
+
+       auto result = SFCGAL::algorithm::mergeCoplanarFaces(*geom_a, SFCGAL::Kernel::FT(eps_angle), SFCGAL::Kernel::FT(eps_dist));
        return result;
      }},
 
