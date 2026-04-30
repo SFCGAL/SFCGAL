@@ -1479,7 +1479,7 @@ const std::vector<Operation> operations = {
 
     {"split_3d", "Transformations", "Split geometry with a plane", false,
      "Split the given geometry with a plane defined by a point and a normal vector\n\n"
-     "Input A: A PolyhedralSurface, aSolid or a TIN geometry\n\n"
+     "Input A: A PolyhedralSurface, a Solid or a TIN geometry\n\n"
      "Parameters:\n"
      "  ptx=X: X-coordinate of a point belonging to the splitting plane\n"
      "  pty=Y: Y-coordinate of a point belonging to the splitting plane\n"
@@ -1489,7 +1489,7 @@ const std::vector<Operation> operations = {
      "  nz=Z: Z-coordinate of the normal vector of the splitting plane\n"
      "  close_geometries=BOOL: If true, ensures resulting geometries are closed\n\n"
      "Example:\n "
-     "  sfcgalop -a \"SOLID(...)\" split \"ptx=1,pty=0,ptz=0,nx=1,ny=1,nz=0,close_geometries=true\"",
+     "  sfcgalop -a \"SOLID(...)\" split_3d \"ptx=1,pty=0,ptz=0,nx=1,ny=1,nz=0,close_geometries=true\"",
      "A, params", "G",
      [](const std::string &args, const SFCGAL::Geometry *geom_a,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
