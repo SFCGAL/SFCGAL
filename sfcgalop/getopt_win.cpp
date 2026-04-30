@@ -20,7 +20,7 @@ char *optarg = nullptr; // Pointer to option argument
 
 // Internal state
 namespace {
-int  nextchar = 0;     // Position within current argument
+int nextchar = 0; // Position within current argument
 } // namespace
 
 int

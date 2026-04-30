@@ -499,8 +499,9 @@ extract_weights_param(const std::string &param_str)
 }
 // NOLINTEND(readability-function-cognitive-complexity)
 
-auto parseStopPredicate(const std::map<std::string, double> &params)
--> std::optional<SFCGAL::algorithm::SimplificationStopPredicate>
+auto
+parseStopPredicate(const std::map<std::string, double> &params)
+    -> std::optional<SFCGAL::algorithm::SimplificationStopPredicate>
 {
   if (params.count("count") != 0) {
     double count_value = params.at("count");
@@ -520,9 +521,10 @@ auto parseStopPredicate(const std::map<std::string, double> &params)
   return SFCGAL::algorithm::SimplificationStopPredicate::edgeCountRatio(ratio);
 }
 
-auto parseSimplificationStrategy(const std::string &args,
-				 const std::map<std::string, double> &params)
--> std::optional<SFCGAL::algorithm::SimplificationStrategy>
+auto
+parseSimplificationStrategy(const std::string                   &args,
+                            const std::map<std::string, double> &params)
+    -> std::optional<SFCGAL::algorithm::SimplificationStrategy>
 {
   using Strategy = SFCGAL::algorithm::SimplificationStrategy;
 
@@ -954,7 +956,8 @@ const std::vector<Operation> operations = {
      "angle.\n"
      "The roof height is determined by the slope angle and the geometry.\n\n"
      "Parameters:\n"
-     "  slope_angle=VALUE: Slope angle for non-gable edges in degrees (default: "
+     "  slope_angle=VALUE: Slope angle for non-gable edges in degrees "
+     "(default: "
      "45)\n"
      "  height=VALUE: Maximum clipping height (optional, default: 0 = no "
      "clipping)\n\n"
@@ -1478,7 +1481,8 @@ const std::vector<Operation> operations = {
      }},
 
     {"split_3d", "Transformations", "Split geometry with a plane", false,
-     "Split the given geometry with a plane defined by a point and a normal vector\n\n"
+     "Split the given geometry with a plane defined by a point and a normal "
+     "vector\n\n"
      "Input A: A PolyhedralSurface, aSolid or a TIN geometry\n\n"
      "Parameters:\n"
      "  ptx=X: X-coordinate of a point belonging to the splitting plane\n"
@@ -1487,24 +1491,27 @@ const std::vector<Operation> operations = {
      "  nx=X: X-coordinate of the normal vector of the splitting plane\n"
      "  ny=Y: Y-coordinate of the normal vector of the splitting plane\n"
      "  nz=Z: Z-coordinate of the normal vector of the splitting plane\n"
-     "  close_geometries=BOOL: If true, ensures resulting geometries are closed\n\n"
+     "  close_geometries=BOOL: If true, ensures resulting geometries are "
+     "closed\n\n"
      "Example:\n "
-     "  sfcgalop -a \"SOLID(...)\" split \"ptx=1,pty=0,ptz=0,nx=1,ny=1,nz=0,close_geometries=true\"",
+     "  sfcgalop -a \"SOLID(...)\" split "
+     "\"ptx=1,pty=0,ptz=0,nx=1,ny=1,nz=0,close_geometries=true\"",
      "A, params", "G",
      [](const std::string &args, const SFCGAL::Geometry *geom_a,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
        auto   params = parse_params(args);
-       double ptx     = params["ptx"];
-       double pty     = params["pty"];
-       double ptz     = params["ptz"];
+       double ptx    = params["ptx"];
+       double pty    = params["pty"];
+       double ptz    = params["ptz"];
        double nx     = params["nx"];
        double ny     = params["ny"];
        double nz     = params["nz"];
-       bool closeGeometries =
+       bool   closeGeometries =
            parse_boolean_param(params, "close_geometries", args, false);
-       const SFCGAL::Point plane_pt(ptx, pty, ptz);
+       const SFCGAL::Point            plane_pt(ptx, pty, ptz);
        const SFCGAL::Kernel::Vector_3 plane_normal(nx, ny, nz);
-       auto result = SFCGAL::algorithm::split3D(*geom_a, plane_pt, plane_normal, closeGeometries);
+       auto result = SFCGAL::algorithm::split3D(*geom_a, plane_pt, plane_normal,
+                                                closeGeometries);
        return result;
      }},
 
@@ -1904,17 +1911,17 @@ const std::vector<Operation> operations = {
 
        auto stopPredicate = parseStopPredicate(params);
        if (!stopPredicate) {
-	   return std::nullopt;
+         return std::nullopt;
        }
 
        auto strategy = parseSimplificationStrategy(args, params);
        if (!strategy) {
-	   return std::nullopt;
+         return std::nullopt;
        }
 
        try {
-         return SFCGAL::algorithm::surfaceSimplification(*geom_a, *stopPredicate,
-                                                         *strategy);
+         return SFCGAL::algorithm::surfaceSimplification(
+             *geom_a, *stopPredicate, *strategy);
        } catch (const std::invalid_argument &e) {
          // Invalid parameters (ratio out of range, etc.)
          return std::nullopt;

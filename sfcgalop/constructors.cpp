@@ -23,8 +23,8 @@ auto
 make_sphere(double x, double y, double z, double radius,
             unsigned int num_subdivisions) -> std::unique_ptr<SFCGAL::Geometry>
 {
-  SFCGAL::Kernel::Point_3  center(x, y, z);
-  SFCGAL::Sphere sphere(radius, center, num_subdivisions);
+  SFCGAL::Kernel::Point_3 center(x, y, z);
+  SFCGAL::Sphere          sphere(radius, center, num_subdivisions);
 
   auto polyhedral_surface = sphere.generatePolyhedralSurface();
   return std::make_unique<SFCGAL::PolyhedralSurface>(

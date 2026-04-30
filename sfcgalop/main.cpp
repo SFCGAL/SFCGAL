@@ -96,9 +96,9 @@ print_help()
       {"-a, --geom-a=ARG", "Source for geometry A (WKT, WKB, file, stdin)"});
   options_table.add_row(
       {"-b, --geom-b=ARG", "Source for geometry B (WKT, WKB, file, stdin)"});
-  options_table.add_row(
-      {"-f, --format=ARG", "Output format: wkt, wkb, txt/ewkt, obj, "
-                           "geojson/json, stl, vtk (default: wkt)"});
+  options_table.add_row({"-f, --format=ARG",
+                         "Output format: wkt, wkb, txt/ewkt, obj, "
+                         "geojson/json, stl, vtk (default: wkt)"});
   options_table.add_row(
       {"-p, --precision=N", "Decimal precision for output (default: 6)"});
   options_table.add_row({""});
