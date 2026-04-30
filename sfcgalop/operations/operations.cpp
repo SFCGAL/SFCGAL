@@ -564,218 +564,148 @@ parseSimplificationStrategy(const std::string                   &args,
 // NOLINTNEXTLINE(cert-err58-cpp)
 const std::vector<Operation> operations = {
     /**
-     * Metrics
+     * Analysis
      */
-    {"area", "Metrics", "Calculate the 2D area of a geometry", false,
-     "No parameters required.\n\nExample:\n  sfcgalop -a \"POLYGON((0 0,3 0,3 "
-     "4,0 4,0 0))\" area",
-     "A", "D",
-     [](const std::string &, const SFCGAL::Geometry *geom,
-        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       return SFCGAL::algorithm::area(*geom);
-     }},
-
-    {"area_3d", "Metrics", "Calculate the 3D surface area of a geometry", false,
-     "No parameters required.\n\nExample:\n  sfcgalop -a \"POLYGON Z((0 0 0,3 "
-     "0 0,3 4 2,0 4 2,0 0 0))\" area_3d",
-     "A", "D",
+    {"normal", "Analysis", "Compute surface normal vector for polygon/triangle",
+     false, "", "A", "G",
      [](const std::string &, const SFCGAL::Geometry *geom_a,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       return SFCGAL::algorithm::area3D(*geom_a);
-     }},
+       if (geom_a->geometryTypeId() == SFCGAL::TYPE_POLYGON ||
+           geom_a->geometryTypeId() == SFCGAL::TYPE_TRIANGLE) {
+         // Compute normal using first 3 points of polygon
+         const auto &polygon =
+             (geom_a->geometryTypeId() == SFCGAL::TYPE_POLYGON)
+                 ? geom_a->as<SFCGAL::Polygon>()
+                 : SFCGAL::Polygon(geom_a->as<SFCGAL::Triangle>());
 
-    {"distance", "Metrics",
-     "Calculate the 2D minimum distance between two geometries", true,
-     "No parameters required.\nRequires two geometries.\n\nExample:\n  "
-     "sfcgalop -a \"POINT(0 0)\" -b \"POINT(3 4)\" distance",
-     "A, B", "D",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
-       if (!geom_b) {
-         return std::nullopt;
+         if (polygon.exteriorRing().numPoints() >= 3) {
+           const auto &point0 = polygon.exteriorRing().pointN(0);
+           const auto &point1 = polygon.exteriorRing().pointN(1);
+           const auto &point2 = polygon.exteriorRing().pointN(2);
+
+           // Calculate normal as cross product
+           double v1x = CGAL::to_double(point1.x() - point0.x());
+           double v1y = CGAL::to_double(point1.y() - point0.y());
+           double v1z =
+               point1.is3D() ? CGAL::to_double(point1.z() - point0.z()) : 0;
+
+           double v2x = CGAL::to_double(point2.x() - point0.x());
+           double v2y = CGAL::to_double(point2.y() - point0.y());
+           double v2z =
+               point2.is3D() ? CGAL::to_double(point2.z() - point0.z()) : 0;
+
+           double nx = (v1y * v2z) - (v1z * v2y);
+           double ny = (v1z * v2x) - (v1x * v2z);
+           double nz = (v1x * v2y) - (v1y * v2x);
+
+           return std::make_unique<SFCGAL::Point>(nx, ny, nz);
+         }
        }
-       return SFCGAL::algorithm::distance(*geom_a, *geom_b);
+       return std::nullopt;
      }},
 
-    {"distance_3d", "Metrics",
-     "Calculate the 3D minimum distance between two geometries", true,
-     "No parameters required.\nRequires two geometries.\n\nExample:\n  "
-     "sfcgalop -a \"POINT Z(0 0 0)\" -b \"POINT Z(3 4 5)\" distance_3d",
-     "A, B", "D",
+    {"orientation", "Analysis",
+     "Determine polygon ring orientation (clockwise/counter-clockwise)", false,
+     "", "A", "D",
      [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
-       if (!geom_b) {
-         return std::nullopt;
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       if (geom_a->geometryTypeId() == SFCGAL::TYPE_POLYGON) {
+         const auto &polygon = geom_a->as<SFCGAL::Polygon>();
+         // Check if polygon exterior ring is counter-clockwise
+         bool ccw = SFCGAL::algorithm::isCounterClockWiseOriented(
+             polygon.exteriorRing());
+         return static_cast<double>(ccw ? 1 : -1);
        }
-       return SFCGAL::algorithm::distance3D(*geom_a, *geom_b);
+       return std::nullopt;
      }},
 
-    {"length", "Metrics", "Calculate the 2D length of linear geometries", false,
-     "No parameters required.\n\nExample:\n  sfcgalop -a \"LINESTRING(0 0,3 "
-     "4,6 0)\" length",
-     "A", "D",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
+    {"partition", "Analysis", "Partition polygon into simpler pieces", false,
+     "Parameters:\n  method=0|1|2|3 (default: 0)\n\nMethods:\n  0 = "
+     "y_monotone: Creates y-monotone polygons\n  1 = approx_convex: "
+     "Approximate convex partition\n  2 = greene_approx_convex: Greene's "
+     "approximation algorithm\n  3 = optimal_convex: Optimal convex "
+     "partition\n\nExample:\n  sfcgalop -a \"POLYGON((0 0,5 5,10 0,5 -2,0 "
+     "0))\" partition \"method=1\"",
+     "A, params", "G",
+     [](const std::string &args, const SFCGAL::Geometry *geom_a,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       return SFCGAL::algorithm::length(*geom_a);
+       auto params = parse_params(args);
+       int  method =
+           static_cast<int>(params.count("method") ? params["method"] : 0);
+
+       SFCGAL::algorithm::PartitionAlgorithm alg;
+       switch (method) {
+       case 1:
+         alg = SFCGAL::algorithm::approx_convex;
+         break;
+       case 2:
+         alg = SFCGAL::algorithm::greene_approx_convex;
+         break;
+       case 3:
+         alg = SFCGAL::algorithm::optimal_convex;
+         break;
+       default:
+         alg = SFCGAL::algorithm::y_monotone;
+       }
+
+       return SFCGAL::algorithm::partition_2(*geom_a, alg);
      }},
 
-    {"length_3d", "Metrics", "Calculate the 3D length of linear geometries",
-     false,
-     "No parameters required.\n\nExample:\n  sfcgalop -a \"LINESTRING Z(0 0 "
-     "0,3 4 2,6 0 1)\" length_3d",
-     "A", "D",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
+    {"visibility", "Analysis",
+     "Compute visibility polygon from a point in polygon", false,
+     "Parameters:\n  x=X_COORD: X coordinate of viewpoint\n  y=Y_COORD: Y "
+     "coordinate of viewpoint\n\nExample:\n  sfcgalop -a \"POLYGON((0 0,10 "
+     "0,10 10,0 10,0 0))\" visibility \"x=5,y=5\"",
+     "A, params", "G",
+     [](const std::string &args, const SFCGAL::Geometry *geom_a,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       return SFCGAL::algorithm::length3D(*geom_a);
-     }},
-
-    {"volume", "Metrics", "Calculate the 3D volume of a solid geometry", false,
-     "No parameters required.\nOnly works with solid geometries (SOLID, "
-     "POLYHEDRALSURFACE).\n\nExample:\n  sfcgalop -a \"SOLID(...)\" volume",
-     "A", "D",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       return CGAL::to_double(SFCGAL::algorithm::volume(*geom_a));
+       if (geom_a->geometryTypeId() == SFCGAL::TYPE_POLYGON) {
+         const auto   &polygon = geom_a->as<SFCGAL::Polygon>();
+         auto          params  = parse_params(args);
+         SFCGAL::Point point(params["x"], params["y"]);
+         return SFCGAL::algorithm::visibility(polygon, point);
+       }
+       return std::nullopt;
      }},
 
     /**
-     * Predicates
+     * Collection operations
      */
-    {"covers", "Predicates", "Test if geometry A completely covers geometry B",
-     true, "", "A, B", "B",
+    {"collect", "Collections", "Combine two geometries into a collection", true,
+     "", "A, B", "G",
      [](const std::string &, const SFCGAL::Geometry *geom_a,
         const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
        if (!geom_b) {
          return std::nullopt;
        }
-       return SFCGAL::algorithm::covers(*geom_a, *geom_b);
+       auto collection = std::make_unique<SFCGAL::GeometryCollection>();
+       collection->addGeometry(*geom_a);
+       collection->addGeometry(*geom_b);
+       return collection;
      }},
 
-    {"intersects", "Predicates", "Test if two geometries intersect in 2D", true,
-     "", "A, B", "B",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
-       if (!geom_b) {
-         return std::nullopt;
-       }
-       return SFCGAL::algorithm::intersects(*geom_a, *geom_b);
-     }},
-
-    {"intersects_3d", "Predicates", "Test if two geometries intersect in 3D",
-     true, "", "A, B", "B",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
-       if (!geom_b) {
-         return std::nullopt;
-       }
-       return SFCGAL::algorithm::intersects3D(*geom_a, *geom_b);
-     }},
-
-    {"is_3d", "Predicates", "Test if geometry has Z coordinates", false, "",
-     "A", "B",
+    {"collection_extract", "Collections",
+     "Extract polygons from geometry collection", false, "", "A", "G",
      [](const std::string &, const SFCGAL::Geometry *geom_a,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       return geom_a->is3D();
+       auto copy = geom_a->clone();
+       return SFCGAL::algorithm::collectionExtractPolygons(std::move(copy));
      }},
 
-    {"is_closed", "Predicates", "Test if linear geometry forms a closed ring",
-     false, "", "A", "B",
+    {"collection_homogenize", "Collections",
+     "Convert collection to appropriate multi-type", false, "", "A", "G",
      [](const std::string &, const SFCGAL::Geometry *geom_a,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       return static_cast<bool>(SFCGAL::algorithm::isClosed(*geom_a));
+       auto copy = geom_a->clone();
+       return SFCGAL::algorithm::collectionHomogenize(std::move(copy));
      }},
 
-    {"is_empty", "Predicates", "Test if geometry contains no points", false, "",
-     "A", "B",
+    {"collection_to_multi", "Collections",
+     "Convert collection to multi-geometry type", false, "", "A", "G",
      [](const std::string &, const SFCGAL::Geometry *geom_a,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       return geom_a->isEmpty();
-     }},
-
-    {"is_measured", "Predicates",
-     "Test if geometry has measure (M) coordinates", false, "", "A", "B",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       return geom_a->isMeasured();
-     }},
-
-    {"is_simple", "Predicates", "Test if geometry has no self-intersections",
-     false, "", "A", "B",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       return static_cast<bool>(SFCGAL::algorithm::isSimple(*geom_a));
-     }},
-
-    {"is_valid", "Predicates", "Test if geometry is topologically valid", false,
-     "", "A", "B",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       return static_cast<bool>(SFCGAL::algorithm::isValid(*geom_a));
-     }},
-
-    /**
-     * Set operations
-     */
-    {"difference", "Set Operations", "Compute geometry A minus geometry B",
-     true, "", "A, B", "G",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
-       if (!geom_b) {
-         return std::nullopt;
-       }
-       return SFCGAL::algorithm::difference(*geom_a, *geom_b);
-     }},
-
-    {"difference_3d", "Set Operations",
-     "Compute 3D geometry A minus geometry B", true, "", "A, B", "G",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
-       if (!geom_b) {
-         return std::nullopt;
-       }
-       return SFCGAL::algorithm::difference3D(*geom_a, *geom_b);
-     }},
-
-    {"intersection", "Set Operations",
-     "Compute the geometric intersection of two geometries", true, "", "A, B",
-     "G",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
-       if (!geom_b) {
-         return std::nullopt;
-       }
-       return SFCGAL::algorithm::intersection(*geom_a, *geom_b);
-     }},
-
-    {"intersection_3d", "Set Operations",
-     "Compute the 3D geometric intersection of two geometries", true, "",
-     "A, B", "G",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
-       if (!geom_b) {
-         return std::nullopt;
-       }
-       return SFCGAL::algorithm::intersection3D(*geom_a, *geom_b);
-     }},
-
-    {"union", "Set Operations", "Compute the geometric union of two geometries",
-     true, "", "A, B", "G",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
-       if (!geom_b) {
-         return std::nullopt;
-       }
-       return SFCGAL::algorithm::union_(*geom_a, *geom_b);
-     }},
-
-    {"union_3d", "Set Operations",
-     "Compute the 3D geometric union of two geometries", true, "", "A, B", "G",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
-       if (!geom_b) {
-         return std::nullopt;
-       }
-       return SFCGAL::algorithm::union3D(*geom_a, *geom_b);
+       auto copy = geom_a->clone();
+       return SFCGAL::algorithm::collectionToMulti(std::move(copy));
      }},
 
 /**
@@ -1325,6 +1255,406 @@ const std::vector<Operation> operations = {
      }},
 
     /**
+     * Constructors
+     */
+    {"insert_points_within_tolerance", "Construction",
+     "Insert points from geometry B into geometry A within tolerance", true,
+     "Parameters:\n  tolerance=VALUE: Maximum distance for point insertion "
+     "(default: 1e-9)\n\nExample:\n  sfcgalop -a \"POLYGON((0 0,10 0,10 10,0 "
+     "10,0 0))\" -b \"MULTILINESTRING((5 0,5 10),(0 5,10 5))\" "
+     "insert_points_within_tolerance \"tolerance=0.01\"",
+     "A, B, params", "G",
+     [](const std::string &args, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
+       if (!geom_b) {
+         return std::nullopt;
+       }
+       auto   params = parse_params(args);
+       double tolerance =
+           params.count("tolerance") ? params["tolerance"] : 1e-9;
+       return SFCGAL::algorithm::insertPointsWithinTolerance(*geom_a, *geom_b,
+                                                             tolerance);
+     }},
+
+    {"make_box", "Constructors", "Create a 3D box primitive", false,
+     "Parameters:\n  x_extent=VALUE: Length in X direction (default: 1.0)\n  "
+     "y_extent=VALUE: Length in Y direction (default: 1.0)\n  z_extent=VALUE: "
+     "Length in Z direction (default: 1.0)\n\nExample:\n  sfcgalop make_box "
+     "\"x_extent=2,y_extent=3,z_extent=1\"",
+     "params", "G",
+     [](const std::string &args, const SFCGAL::Geometry *,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       auto   params   = parse_params(args);
+       double x_extent = params.count("x_extent") ? params["x_extent"] : 1.0;
+       double y_extent = params.count("y_extent") ? params["y_extent"] : 1.0;
+       double z_extent = params.count("z_extent") ? params["z_extent"] : 1.0;
+       return Constructors::make_box(x_extent, y_extent, z_extent);
+     }},
+
+    {"make_cone", "Constructors",
+     "Create a 3D cone primitive (supports truncated cones)", false,
+     "Parameters:\n  base_x=VALUE: X coordinate of base center (default: "
+     "0.0)\n  base_y=VALUE: Y coordinate of base center (default: 0.0)\n  "
+     "base_z=VALUE: Z coordinate of base center (default: 0.0)\n  "
+     "axis_x=VALUE: X component of cone axis (default: 0.0)\n  axis_y=VALUE: Y "
+     "component of cone axis (default: 0.0)\n  axis_z=VALUE: Z component of "
+     "cone axis (default: 1.0)\n  bottom_radius=VALUE: Cone bottom radius "
+     "(default: "
+     "1.0)\n  top_radius=VALUE: Cone top radius - 0.0 for regular cone "
+     "(default: 0.0)\n  "
+     "height=VALUE: Cone height (default: 1.0)\n  num_radial=N: Number "
+     "of radial divisions (default: 32)\n\nExamples:\n  sfcgalop make_cone "
+     "\"bottom_radius=2,height=4,num_radial=24\"\n  sfcgalop make_cone "
+     "\"bottom_radius=3,top_radius=1,height=5\" # Truncated cone",
+     "params", "G",
+     [](const std::string &args, const SFCGAL::Geometry *,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       auto   params = parse_params(args);
+       double base_x = params.count("base_x") ? params["base_x"] : 0.0;
+       double base_y = params.count("base_y") ? params["base_y"] : 0.0;
+       double base_z = params.count("base_z") ? params["base_z"] : 0.0;
+       double axis_x = params.count("axis_x") ? params["axis_x"] : 0.0;
+       double axis_y = params.count("axis_y") ? params["axis_y"] : 0.0;
+       double axis_z = params.count("axis_z") ? params["axis_z"] : 1.0;
+       double bottom_radius =
+           params.count("bottom_radius") ? params["bottom_radius"] : 1.0;
+       double top_radius =
+           params.count("top_radius") ? params["top_radius"] : 0.0;
+       double height     = params.count("height") ? params["height"] : 1.0;
+       auto   num_radial = static_cast<unsigned int>(
+           params.count("num_radial") ? params["num_radial"] : 32);
+       return Constructors::make_cone(base_x, base_y, base_z, axis_x, axis_y,
+                                      axis_z, bottom_radius, top_radius, height,
+                                      num_radial);
+     }},
+
+    {"make_cube", "Constructors", "Create a 3D cube primitive", false,
+     "Parameters:\n  size=VALUE: Edge length of the cube (default: "
+     "1.0)\n\nExample:\n  sfcgalop make_cube \"size=2.0\"",
+     "params", "G",
+     [](const std::string &args, const SFCGAL::Geometry *,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       auto   params = parse_params(args);
+       double size   = params.count("size") ? params["size"] : 1.0;
+       return Constructors::make_cube(size);
+     }},
+
+    {"make_cylinder", "Constructors", "Create a 3D cylinder primitive", false,
+     "Parameters:\n  base_x=VALUE: X coordinate of base center (default: "
+     "0.0)\n  base_y=VALUE: Y coordinate of base center (default: 0.0)\n  "
+     "base_z=VALUE: Z coordinate of base center (default: 0.0)\n  "
+     "axis_x=VALUE: X component of cylinder axis (default: 0.0)\n  "
+     "axis_y=VALUE: Y component of cylinder axis (default: 0.0)\n  "
+     "axis_z=VALUE: Z component of cylinder axis (default: 1.0)\n  "
+     "radius=VALUE: Cylinder radius (default: 1.0)\n  height=VALUE: Cylinder "
+     "height (default: 1.0)\n  num_radial=N: Number of radial divisions "
+     "(default: 32)\n\nExample:\n  sfcgalop make_cylinder "
+     "\"radius=1.5,height=3,num_radial=16\"",
+     "params", "G",
+     [](const std::string &args, const SFCGAL::Geometry *,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       auto   params     = parse_params(args);
+       double base_x     = params.count("base_x") ? params["base_x"] : 0.0;
+       double base_y     = params.count("base_y") ? params["base_y"] : 0.0;
+       double base_z     = params.count("base_z") ? params["base_z"] : 0.0;
+       double axis_x     = params.count("axis_x") ? params["axis_x"] : 0.0;
+       double axis_y     = params.count("axis_y") ? params["axis_y"] : 0.0;
+       double axis_z     = params.count("axis_z") ? params["axis_z"] : 1.0;
+       double radius     = params.count("radius") ? params["radius"] : 1.0;
+       double height     = params.count("height") ? params["height"] : 1.0;
+       auto   num_radial = static_cast<unsigned int>(
+           params.count("num_radial") ? params["num_radial"] : 32);
+       return Constructors::make_cylinder(base_x, base_y, base_z, axis_x,
+                                          axis_y, axis_z, radius, height,
+                                          num_radial);
+     }},
+
+    {"make_sphere", "Constructors",
+     "Create a 3D sphere primitive using icosahedron subdivision", false,
+     "Parameters:\n  x=X_COORD: X coordinate of center (default: 0.0)\n  "
+     "y=Y_COORD: Y coordinate of center (default: 0.0)\n  z=Z_COORD: Z "
+     "coordinate of center (default: 0.0)\n  radius=VALUE: Sphere radius "
+     "(default: 1.0)\n  num_subdivisions=N: Number of icosahedron subdivisions "
+     "(default: 2)\n\n"
+     "Example:\n  sfcgalop make_sphere "
+     "\"x=0,y=0,z=0,radius=2.5,num_subdivisions=3\"",
+     "params", "G",
+     [](const std::string &args, const SFCGAL::Geometry *,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       auto   params = parse_params(args);
+       double x      = params.count("x") ? params["x"] : 0.0;
+       double y      = params.count("y") ? params["y"] : 0.0;
+       double z      = params.count("z") ? params["z"] : 0.0;
+       double radius = params.count("radius") ? params["radius"] : 1.0;
+
+       unsigned int num_subdivisions = 2; // default
+       if (params.count("num_subdivisions")) {
+         num_subdivisions =
+             static_cast<unsigned int>(params["num_subdivisions"]);
+       }
+
+       return Constructors::make_sphere(x, y, z, radius, num_subdivisions);
+     }},
+
+    {"make_torus", "Constructors", "Create a 3D torus primitive", false,
+     "Parameters:\n  center_x=VALUE: X coordinate of center (default: 0.0)\n  "
+     "center_y=VALUE: Y coordinate of center (default: 0.0)\n  center_z=VALUE: "
+     "Z coordinate of center (default: 0.0)\n  axis_x=VALUE: X component of "
+     "torus axis (default: 0.0)\n  axis_y=VALUE: Y component of torus axis "
+     "(default: 0.0)\n  axis_z=VALUE: Z component of torus axis (default: "
+     "1.0)\n  major_radius=VALUE: Major radius of torus (default: 2.0)\n  "
+     "minor_radius=VALUE: Minor radius of torus (default: 0.5)\n  num_major=N: "
+     "Number of major divisions (default: 32)\n  num_minor=N: Number of minor "
+     "divisions (default: 16)\n\nExample:\n  sfcgalop make_torus "
+     "\"major_radius=3,minor_radius=1,num_major=24,num_minor=12\"",
+     "params", "G",
+     [](const std::string &args, const SFCGAL::Geometry *,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       auto   params   = parse_params(args);
+       double center_x = params.count("center_x") ? params["center_x"] : 0.0;
+       double center_y = params.count("center_y") ? params["center_y"] : 0.0;
+       double center_z = params.count("center_z") ? params["center_z"] : 0.0;
+       double axis_x   = params.count("axis_x") ? params["axis_x"] : 0.0;
+       double axis_y   = params.count("axis_y") ? params["axis_y"] : 0.0;
+       double axis_z   = params.count("axis_z") ? params["axis_z"] : 1.0;
+       double major_radius =
+           params.count("major_radius") ? params["major_radius"] : 2.0;
+       double minor_radius =
+           params.count("minor_radius") ? params["minor_radius"] : 0.5;
+       auto num_major = static_cast<unsigned int>(
+           params.count("num_major") ? params["num_major"] : 32);
+       auto num_minor = static_cast<unsigned int>(
+           params.count("num_minor") ? params["num_minor"] : 16);
+       return Constructors::make_torus(center_x, center_y, center_z, axis_x,
+                                       axis_y, axis_z, major_radius,
+                                       minor_radius, num_major, num_minor);
+     }},
+
+    {"to_solid", "Conversions", "Convert a PolyhedralSurface to a Solid", false,
+     "", "A", "",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       // Clone the input geometry to pass ownership to make_solid
+       auto geom_copy = geom_a->clone();
+       return Constructors::make_solid(std::move(geom_copy));
+     }},
+
+    /**
+     * Metrics
+     */
+    {"area", "Metrics", "Calculate the 2D area of a geometry", false,
+     "No parameters required.\n\nExample:\n  sfcgalop -a \"POLYGON((0 0,3 0,3 "
+     "4,0 4,0 0))\" area",
+     "A", "D",
+     [](const std::string &, const SFCGAL::Geometry *geom,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       return SFCGAL::algorithm::area(*geom);
+     }},
+
+    {"area_3d", "Metrics", "Calculate the 3D surface area of a geometry", false,
+     "No parameters required.\n\nExample:\n  sfcgalop -a \"POLYGON Z((0 0 0,3 "
+     "0 0,3 4 2,0 4 2,0 0 0))\" area_3d",
+     "A", "D",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       return SFCGAL::algorithm::area3D(*geom_a);
+     }},
+
+    {"distance", "Metrics",
+     "Calculate the 2D minimum distance between two geometries", true,
+     "No parameters required.\nRequires two geometries.\n\nExample:\n  "
+     "sfcgalop -a \"POINT(0 0)\" -b \"POINT(3 4)\" distance",
+     "A, B", "D",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
+       if (!geom_b) {
+         return std::nullopt;
+       }
+       return SFCGAL::algorithm::distance(*geom_a, *geom_b);
+     }},
+
+    {"distance_3d", "Metrics",
+     "Calculate the 3D minimum distance between two geometries", true,
+     "No parameters required.\nRequires two geometries.\n\nExample:\n  "
+     "sfcgalop -a \"POINT Z(0 0 0)\" -b \"POINT Z(3 4 5)\" distance_3d",
+     "A, B", "D",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
+       if (!geom_b) {
+         return std::nullopt;
+       }
+       return SFCGAL::algorithm::distance3D(*geom_a, *geom_b);
+     }},
+
+    {"length", "Metrics", "Calculate the 2D length of linear geometries", false,
+     "No parameters required.\n\nExample:\n  sfcgalop -a \"LINESTRING(0 0,3 "
+     "4,6 0)\" length",
+     "A", "D",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       return SFCGAL::algorithm::length(*geom_a);
+     }},
+
+    {"length_3d", "Metrics", "Calculate the 3D length of linear geometries",
+     false,
+     "No parameters required.\n\nExample:\n  sfcgalop -a \"LINESTRING Z(0 0 "
+     "0,3 4 2,6 0 1)\" length_3d",
+     "A", "D",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       return SFCGAL::algorithm::length3D(*geom_a);
+     }},
+
+    {"volume", "Metrics", "Calculate the 3D volume of a solid geometry", false,
+     "No parameters required.\nOnly works with solid geometries (SOLID, "
+     "POLYHEDRALSURFACE).\n\nExample:\n  sfcgalop -a \"SOLID(...)\" volume",
+     "A", "D",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       return CGAL::to_double(SFCGAL::algorithm::volume(*geom_a));
+     }},
+
+    /**
+     * Predicates
+     */
+    {"covers", "Predicates", "Test if geometry A completely covers geometry B",
+     true, "", "A, B", "B",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
+       if (!geom_b) {
+         return std::nullopt;
+       }
+       return SFCGAL::algorithm::covers(*geom_a, *geom_b);
+     }},
+
+    {"intersects", "Predicates", "Test if two geometries intersect in 2D", true,
+     "", "A, B", "B",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
+       if (!geom_b) {
+         return std::nullopt;
+       }
+       return SFCGAL::algorithm::intersects(*geom_a, *geom_b);
+     }},
+
+    {"intersects_3d", "Predicates", "Test if two geometries intersect in 3D",
+     true, "", "A, B", "B",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
+       if (!geom_b) {
+         return std::nullopt;
+       }
+       return SFCGAL::algorithm::intersects3D(*geom_a, *geom_b);
+     }},
+
+    {"is_3d", "Predicates", "Test if geometry has Z coordinates", false, "",
+     "A", "B",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       return geom_a->is3D();
+     }},
+
+    {"is_closed", "Predicates", "Test if linear geometry forms a closed ring",
+     false, "", "A", "B",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       return static_cast<bool>(SFCGAL::algorithm::isClosed(*geom_a));
+     }},
+
+    {"is_empty", "Predicates", "Test if geometry contains no points", false, "",
+     "A", "B",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       return geom_a->isEmpty();
+     }},
+
+    {"is_measured", "Predicates",
+     "Test if geometry has measure (M) coordinates", false, "", "A", "B",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       return geom_a->isMeasured();
+     }},
+
+    {"is_simple", "Predicates", "Test if geometry has no self-intersections",
+     false, "", "A", "B",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       return static_cast<bool>(SFCGAL::algorithm::isSimple(*geom_a));
+     }},
+
+    {"is_valid", "Predicates", "Test if geometry is topologically valid", false,
+     "", "A", "B",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+       return static_cast<bool>(SFCGAL::algorithm::isValid(*geom_a));
+     }},
+
+    /**
+     * Set operations
+     */
+    {"difference", "Set Operations", "Compute geometry A minus geometry B",
+     true, "", "A, B", "G",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
+       if (!geom_b) {
+         return std::nullopt;
+       }
+       return SFCGAL::algorithm::difference(*geom_a, *geom_b);
+     }},
+
+    {"difference_3d", "Set Operations",
+     "Compute 3D geometry A minus geometry B", true, "", "A, B", "G",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
+       if (!geom_b) {
+         return std::nullopt;
+       }
+       return SFCGAL::algorithm::difference3D(*geom_a, *geom_b);
+     }},
+
+    {"intersection", "Set Operations",
+     "Compute the geometric intersection of two geometries", true, "", "A, B",
+     "G",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
+       if (!geom_b) {
+         return std::nullopt;
+       }
+       return SFCGAL::algorithm::intersection(*geom_a, *geom_b);
+     }},
+
+    {"intersection_3d", "Set Operations",
+     "Compute the 3D geometric intersection of two geometries", true, "",
+     "A, B", "G",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
+       if (!geom_b) {
+         return std::nullopt;
+       }
+       return SFCGAL::algorithm::intersection3D(*geom_a, *geom_b);
+     }},
+
+    {"union", "Set Operations", "Compute the geometric union of two geometries",
+     true, "", "A, B", "G",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
+       if (!geom_b) {
+         return std::nullopt;
+       }
+       return SFCGAL::algorithm::union_(*geom_a, *geom_b);
+     }},
+
+    {"union_3d", "Set Operations",
+     "Compute the 3D geometric union of two geometries", true, "", "A, B", "G",
+     [](const std::string &, const SFCGAL::Geometry *geom_a,
+        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
+       if (!geom_b) {
+         return std::nullopt;
+       }
+       return SFCGAL::algorithm::union3D(*geom_a, *geom_b);
+     }},
+
+    /**
      * Transformations
      */
     {"force_2d", "Transformations",
@@ -1604,7 +1934,7 @@ const std::vector<Operation> operations = {
          // Other standard exceptions
          return std::nullopt;
        }
-     }}
+     }},
 
     {"translate", "Transformations", "Translate geometry by specified offset",
      false,
@@ -1621,336 +1951,6 @@ const std::vector<Operation> operations = {
        auto   result = geom_a->clone();
        SFCGAL::algorithm::translate(*result, dx, dy, dz);
        return result;
-     }},
-
-    /**
-     * Collection operations
-     */
-    {"collect", "Collections", "Combine two geometries into a collection", true,
-     "", "A, B", "G",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
-       if (!geom_b) {
-         return std::nullopt;
-       }
-       auto collection = std::make_unique<SFCGAL::GeometryCollection>();
-       collection->addGeometry(*geom_a);
-       collection->addGeometry(*geom_b);
-       return collection;
-     }},
-
-    {"collection_extract", "Collections",
-     "Extract polygons from geometry collection", false, "", "A", "G",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       auto copy = geom_a->clone();
-       return SFCGAL::algorithm::collectionExtractPolygons(std::move(copy));
-     }},
-
-    {"collection_homogenize", "Collections",
-     "Convert collection to appropriate multi-type", false, "", "A", "G",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       auto copy = geom_a->clone();
-       return SFCGAL::algorithm::collectionHomogenize(std::move(copy));
-     }},
-
-    {"collection_to_multi", "Collections",
-     "Convert collection to multi-geometry type", false, "", "A", "G",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       auto copy = geom_a->clone();
-       return SFCGAL::algorithm::collectionToMulti(std::move(copy));
-     }},
-
-    /**
-     * Analysis
-     */
-    {"normal", "Analysis", "Compute surface normal vector for polygon/triangle",
-     false, "", "A", "G",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       if (geom_a->geometryTypeId() == SFCGAL::TYPE_POLYGON ||
-           geom_a->geometryTypeId() == SFCGAL::TYPE_TRIANGLE) {
-         // Compute normal using first 3 points of polygon
-         const auto &polygon =
-             (geom_a->geometryTypeId() == SFCGAL::TYPE_POLYGON)
-                 ? geom_a->as<SFCGAL::Polygon>()
-                 : SFCGAL::Polygon(geom_a->as<SFCGAL::Triangle>());
-
-         if (polygon.exteriorRing().numPoints() >= 3) {
-           const auto &point0 = polygon.exteriorRing().pointN(0);
-           const auto &point1 = polygon.exteriorRing().pointN(1);
-           const auto &point2 = polygon.exteriorRing().pointN(2);
-
-           // Calculate normal as cross product
-           double v1x = CGAL::to_double(point1.x() - point0.x());
-           double v1y = CGAL::to_double(point1.y() - point0.y());
-           double v1z =
-               point1.is3D() ? CGAL::to_double(point1.z() - point0.z()) : 0;
-
-           double v2x = CGAL::to_double(point2.x() - point0.x());
-           double v2y = CGAL::to_double(point2.y() - point0.y());
-           double v2z =
-               point2.is3D() ? CGAL::to_double(point2.z() - point0.z()) : 0;
-
-           double nx = (v1y * v2z) - (v1z * v2y);
-           double ny = (v1z * v2x) - (v1x * v2z);
-           double nz = (v1x * v2y) - (v1y * v2x);
-
-           return std::make_unique<SFCGAL::Point>(nx, ny, nz);
-         }
-       }
-       return std::nullopt;
-     }},
-
-    {"orientation", "Analysis",
-     "Determine polygon ring orientation (clockwise/counter-clockwise)", false,
-     "", "A", "D",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       if (geom_a->geometryTypeId() == SFCGAL::TYPE_POLYGON) {
-         const auto &polygon = geom_a->as<SFCGAL::Polygon>();
-         // Check if polygon exterior ring is counter-clockwise
-         bool ccw = SFCGAL::algorithm::isCounterClockWiseOriented(
-             polygon.exteriorRing());
-         return static_cast<double>(ccw ? 1 : -1);
-       }
-       return std::nullopt;
-     }},
-
-    {"partition", "Analysis", "Partition polygon into simpler pieces", false,
-     "Parameters:\n  method=0|1|2|3 (default: 0)\n\nMethods:\n  0 = "
-     "y_monotone: Creates y-monotone polygons\n  1 = approx_convex: "
-     "Approximate convex partition\n  2 = greene_approx_convex: Greene's "
-     "approximation algorithm\n  3 = optimal_convex: Optimal convex "
-     "partition\n\nExample:\n  sfcgalop -a \"POLYGON((0 0,5 5,10 0,5 -2,0 "
-     "0))\" partition \"method=1\"",
-     "A, params", "G",
-     [](const std::string &args, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       auto params = parse_params(args);
-       int  method =
-           static_cast<int>(params.count("method") ? params["method"] : 0);
-
-       SFCGAL::algorithm::PartitionAlgorithm alg;
-       switch (method) {
-       case 1:
-         alg = SFCGAL::algorithm::approx_convex;
-         break;
-       case 2:
-         alg = SFCGAL::algorithm::greene_approx_convex;
-         break;
-       case 3:
-         alg = SFCGAL::algorithm::optimal_convex;
-         break;
-       default:
-         alg = SFCGAL::algorithm::y_monotone;
-       }
-
-       return SFCGAL::algorithm::partition_2(*geom_a, alg);
-     }},
-
-    {"visibility", "Analysis",
-     "Compute visibility polygon from a point in polygon", false,
-     "Parameters:\n  x=X_COORD: X coordinate of viewpoint\n  y=Y_COORD: Y "
-     "coordinate of viewpoint\n\nExample:\n  sfcgalop -a \"POLYGON((0 0,10 "
-     "0,10 10,0 10,0 0))\" visibility \"x=5,y=5\"",
-     "A, params", "G",
-     [](const std::string &args, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       if (geom_a->geometryTypeId() == SFCGAL::TYPE_POLYGON) {
-         const auto   &polygon = geom_a->as<SFCGAL::Polygon>();
-         auto          params  = parse_params(args);
-         SFCGAL::Point point(params["x"], params["y"]);
-         return SFCGAL::algorithm::visibility(polygon, point);
-       }
-       return std::nullopt;
-     }},
-
-    /**
-     * Constructors
-     */
-    {"insert_points_within_tolerance", "Construction",
-     "Insert points from geometry B into geometry A within tolerance", true,
-     "Parameters:\n  tolerance=VALUE: Maximum distance for point insertion "
-     "(default: 1e-9)\n\nExample:\n  sfcgalop -a \"POLYGON((0 0,10 0,10 10,0 "
-     "10,0 0))\" -b \"MULTILINESTRING((5 0,5 10),(0 5,10 5))\" "
-     "insert_points_within_tolerance \"tolerance=0.01\"",
-     "A, B, params", "G",
-     [](const std::string &args, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *geom_b) -> std::optional<OperationResult> {
-       if (!geom_b) {
-         return std::nullopt;
-       }
-       auto   params = parse_params(args);
-       double tolerance =
-           params.count("tolerance") ? params["tolerance"] : 1e-9;
-       return SFCGAL::algorithm::insertPointsWithinTolerance(*geom_a, *geom_b,
-                                                             tolerance);
-     }},
-
-    {"make_box", "Constructors", "Create a 3D box primitive", false,
-     "Parameters:\n  x_extent=VALUE: Length in X direction (default: 1.0)\n  "
-     "y_extent=VALUE: Length in Y direction (default: 1.0)\n  z_extent=VALUE: "
-     "Length in Z direction (default: 1.0)\n\nExample:\n  sfcgalop make_box "
-     "\"x_extent=2,y_extent=3,z_extent=1\"",
-     "params", "G",
-     [](const std::string &args, const SFCGAL::Geometry *,
-        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       auto   params   = parse_params(args);
-       double x_extent = params.count("x_extent") ? params["x_extent"] : 1.0;
-       double y_extent = params.count("y_extent") ? params["y_extent"] : 1.0;
-       double z_extent = params.count("z_extent") ? params["z_extent"] : 1.0;
-       return Constructors::make_box(x_extent, y_extent, z_extent);
-     }},
-
-    {"make_cone", "Constructors",
-     "Create a 3D cone primitive (supports truncated cones)", false,
-     "Parameters:\n  base_x=VALUE: X coordinate of base center (default: "
-     "0.0)\n  base_y=VALUE: Y coordinate of base center (default: 0.0)\n  "
-     "base_z=VALUE: Z coordinate of base center (default: 0.0)\n  "
-     "axis_x=VALUE: X component of cone axis (default: 0.0)\n  axis_y=VALUE: Y "
-     "component of cone axis (default: 0.0)\n  axis_z=VALUE: Z component of "
-     "cone axis (default: 1.0)\n  bottom_radius=VALUE: Cone bottom radius "
-     "(default: "
-     "1.0)\n  top_radius=VALUE: Cone top radius - 0.0 for regular cone "
-     "(default: 0.0)\n  "
-     "height=VALUE: Cone height (default: 1.0)\n  num_radial=N: Number "
-     "of radial divisions (default: 32)\n\nExamples:\n  sfcgalop make_cone "
-     "\"bottom_radius=2,height=4,num_radial=24\"\n  sfcgalop make_cone "
-     "\"bottom_radius=3,top_radius=1,height=5\" # Truncated cone",
-     "params", "G",
-     [](const std::string &args, const SFCGAL::Geometry *,
-        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       auto   params = parse_params(args);
-       double base_x = params.count("base_x") ? params["base_x"] : 0.0;
-       double base_y = params.count("base_y") ? params["base_y"] : 0.0;
-       double base_z = params.count("base_z") ? params["base_z"] : 0.0;
-       double axis_x = params.count("axis_x") ? params["axis_x"] : 0.0;
-       double axis_y = params.count("axis_y") ? params["axis_y"] : 0.0;
-       double axis_z = params.count("axis_z") ? params["axis_z"] : 1.0;
-       double bottom_radius =
-           params.count("bottom_radius") ? params["bottom_radius"] : 1.0;
-       double top_radius =
-           params.count("top_radius") ? params["top_radius"] : 0.0;
-       double height     = params.count("height") ? params["height"] : 1.0;
-       auto   num_radial = static_cast<unsigned int>(
-           params.count("num_radial") ? params["num_radial"] : 32);
-       return Constructors::make_cone(base_x, base_y, base_z, axis_x, axis_y,
-                                      axis_z, bottom_radius, top_radius, height,
-                                      num_radial);
-     }},
-
-    {"make_cube", "Constructors", "Create a 3D cube primitive", false,
-     "Parameters:\n  size=VALUE: Edge length of the cube (default: "
-     "1.0)\n\nExample:\n  sfcgalop make_cube \"size=2.0\"",
-     "params", "G",
-     [](const std::string &args, const SFCGAL::Geometry *,
-        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       auto   params = parse_params(args);
-       double size   = params.count("size") ? params["size"] : 1.0;
-       return Constructors::make_cube(size);
-     }},
-
-    {"make_cylinder", "Constructors", "Create a 3D cylinder primitive", false,
-     "Parameters:\n  base_x=VALUE: X coordinate of base center (default: "
-     "0.0)\n  base_y=VALUE: Y coordinate of base center (default: 0.0)\n  "
-     "base_z=VALUE: Z coordinate of base center (default: 0.0)\n  "
-     "axis_x=VALUE: X component of cylinder axis (default: 0.0)\n  "
-     "axis_y=VALUE: Y component of cylinder axis (default: 0.0)\n  "
-     "axis_z=VALUE: Z component of cylinder axis (default: 1.0)\n  "
-     "radius=VALUE: Cylinder radius (default: 1.0)\n  height=VALUE: Cylinder "
-     "height (default: 1.0)\n  num_radial=N: Number of radial divisions "
-     "(default: 32)\n\nExample:\n  sfcgalop make_cylinder "
-     "\"radius=1.5,height=3,num_radial=16\"",
-     "params", "G",
-     [](const std::string &args, const SFCGAL::Geometry *,
-        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       auto   params     = parse_params(args);
-       double base_x     = params.count("base_x") ? params["base_x"] : 0.0;
-       double base_y     = params.count("base_y") ? params["base_y"] : 0.0;
-       double base_z     = params.count("base_z") ? params["base_z"] : 0.0;
-       double axis_x     = params.count("axis_x") ? params["axis_x"] : 0.0;
-       double axis_y     = params.count("axis_y") ? params["axis_y"] : 0.0;
-       double axis_z     = params.count("axis_z") ? params["axis_z"] : 1.0;
-       double radius     = params.count("radius") ? params["radius"] : 1.0;
-       double height     = params.count("height") ? params["height"] : 1.0;
-       auto   num_radial = static_cast<unsigned int>(
-           params.count("num_radial") ? params["num_radial"] : 32);
-       return Constructors::make_cylinder(base_x, base_y, base_z, axis_x,
-                                          axis_y, axis_z, radius, height,
-                                          num_radial);
-     }},
-
-    {"make_sphere", "Constructors",
-     "Create a 3D sphere primitive using icosahedron subdivision", false,
-     "Parameters:\n  x=X_COORD: X coordinate of center (default: 0.0)\n  "
-     "y=Y_COORD: Y coordinate of center (default: 0.0)\n  z=Z_COORD: Z "
-     "coordinate of center (default: 0.0)\n  radius=VALUE: Sphere radius "
-     "(default: 1.0)\n  num_subdivisions=N: Number of icosahedron subdivisions "
-     "(default: 2)\n\n"
-     "Example:\n  sfcgalop make_sphere "
-     "\"x=0,y=0,z=0,radius=2.5,num_subdivisions=3\"",
-     "params", "G",
-     [](const std::string &args, const SFCGAL::Geometry *,
-        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       auto   params = parse_params(args);
-       double x      = params.count("x") ? params["x"] : 0.0;
-       double y      = params.count("y") ? params["y"] : 0.0;
-       double z      = params.count("z") ? params["z"] : 0.0;
-       double radius = params.count("radius") ? params["radius"] : 1.0;
-
-       unsigned int num_subdivisions = 2; // default
-       if (params.count("num_subdivisions")) {
-         num_subdivisions =
-             static_cast<unsigned int>(params["num_subdivisions"]);
-       }
-
-       return Constructors::make_sphere(x, y, z, radius, num_subdivisions);
-     }},
-
-    {"make_torus", "Constructors", "Create a 3D torus primitive", false,
-     "Parameters:\n  center_x=VALUE: X coordinate of center (default: 0.0)\n  "
-     "center_y=VALUE: Y coordinate of center (default: 0.0)\n  center_z=VALUE: "
-     "Z coordinate of center (default: 0.0)\n  axis_x=VALUE: X component of "
-     "torus axis (default: 0.0)\n  axis_y=VALUE: Y component of torus axis "
-     "(default: 0.0)\n  axis_z=VALUE: Z component of torus axis (default: "
-     "1.0)\n  major_radius=VALUE: Major radius of torus (default: 2.0)\n  "
-     "minor_radius=VALUE: Minor radius of torus (default: 0.5)\n  num_major=N: "
-     "Number of major divisions (default: 32)\n  num_minor=N: Number of minor "
-     "divisions (default: 16)\n\nExample:\n  sfcgalop make_torus "
-     "\"major_radius=3,minor_radius=1,num_major=24,num_minor=12\"",
-     "params", "G",
-     [](const std::string &args, const SFCGAL::Geometry *,
-        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       auto   params   = parse_params(args);
-       double center_x = params.count("center_x") ? params["center_x"] : 0.0;
-       double center_y = params.count("center_y") ? params["center_y"] : 0.0;
-       double center_z = params.count("center_z") ? params["center_z"] : 0.0;
-       double axis_x   = params.count("axis_x") ? params["axis_x"] : 0.0;
-       double axis_y   = params.count("axis_y") ? params["axis_y"] : 0.0;
-       double axis_z   = params.count("axis_z") ? params["axis_z"] : 1.0;
-       double major_radius =
-           params.count("major_radius") ? params["major_radius"] : 2.0;
-       double minor_radius =
-           params.count("minor_radius") ? params["minor_radius"] : 0.5;
-       auto num_major = static_cast<unsigned int>(
-           params.count("num_major") ? params["num_major"] : 32);
-       auto num_minor = static_cast<unsigned int>(
-           params.count("num_minor") ? params["num_minor"] : 16);
-       return Constructors::make_torus(center_x, center_y, center_z, axis_x,
-                                       axis_y, axis_z, major_radius,
-                                       minor_radius, num_major, num_minor);
-     }},
-
-    {"to_solid", "Conversions", "Convert a PolyhedralSurface to a Solid", false,
-     "", "A", "",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
-        const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       // Clone the input geometry to pass ownership to make_solid
-       auto geom_copy = geom_a->clone();
-       return Constructors::make_solid(std::move(geom_copy));
      }}};
 
 } // namespace
