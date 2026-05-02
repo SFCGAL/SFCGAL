@@ -6,6 +6,7 @@
 #include "SFCGAL/PolyhedralSurface.h"
 #include "SFCGAL/Exception.h"
 #include "SFCGAL/GeometryVisitor.h"
+#include "SFCGAL/algorithm/meshToPolyhedralSurface.h"
 
 #include <CGAL/Cartesian_converter.h>
 
@@ -49,19 +50,27 @@ PolyhedralSurface::PolyhedralSurface(const PolyhedralSurface &other)
   }
 }
 
-PolyhedralSurface::PolyhedralSurface(const Mesh &sm)
+PolyhedralSurface::PolyhedralSurface(const Mesh &sm, bool simplifyTriangulation)
 {
+  using VertexIndex = Mesh::Vertex_index;
 
-  using vertexDescriptor = Mesh::Vertex_index;
-  for (auto face : sm.faces()) {
-    auto new_face = std::make_unique<LineString>();
-    for (vertexDescriptor const vertexDesc :
-         vertices_around_face(sm.halfedge(face), sm)) {
-      new_face->addPoint(Point(sm.point(vertexDesc)));
+  if (!simplifyTriangulation) {
+    // Directly convert all faces to patches
+    for (auto face : sm.faces()) {
+      auto new_face = std::make_unique<LineString>();
+      for (VertexIndex const vertexDesc :
+           vertices_around_face(sm.halfedge(face), sm)) {
+        new_face->addPoint(Point(sm.point(vertexDesc)));
+      }
+
+      new_face->addPoint(new_face->startPoint().clone());
+      _polygons.push_back(std::make_unique<Polygon>(std::move(new_face)));
     }
-
-    new_face->addPoint(new_face->startPoint().clone());
-    _polygons.push_back(std::make_unique<Polygon>(std::move(new_face)));
+  } else {
+    // Simplify triangulation and then convert faces to patches
+    std::unique_ptr<PolyhedralSurface> phs =
+        algorithm::meshToPolyhedralSurface(sm);
+    swap(*phs);
   }
 }
 

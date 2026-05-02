@@ -87,8 +87,14 @@ public:
   /**
    * Constructor from a CGAL::Surface_mesh
    * @param sm The surface mesh to convert
+   * @param simplifyTriangulation If set to true, the conversion reconstructs
+   *        patches by merging adjacent triangles (i.e. removes the
+   *        triangulation). Boundaries, including holes, are kept.
+   *
+   *        If set to false, the output surface is fully triangulated.
+   *
    */
-  PolyhedralSurface(const Mesh &sm);
+  PolyhedralSurface(const Mesh &sm, bool simplifyTriangulation = true);
 
   /**
    * Constructor from an inexact CGAL::Surface_mesh
