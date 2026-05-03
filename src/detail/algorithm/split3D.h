@@ -1,8 +1,8 @@
 // Copyright (c) 2026-2026, SFCGAL team.
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
-#ifndef SFCGAL_ALGORITHM_DETAIL_SPLIT_3D_H_
-#define SFCGAL_ALGORITHM_DETAIL_SPLIT_3D_H_
+#ifndef SFCGAL_DETAIL_ALGORITHM_SPLIT_3D_H_
+#define SFCGAL_DETAIL_ALGORITHM_SPLIT_3D_H_
 
 #include <memory>
 
@@ -31,4 +31,4 @@ split3D(const geomType &geometry, const CGAL::Plane_3<Kernel> &plane,
 
 } // namespace SFCGAL::algorithm::detail
 
-#endif // SFCGAL_ALGORITHM_DETAIL_SPLIT_3D_H_
+#endif // SFCGAL_DETAIL_ALGORITHM_SPLIT_3D_H_
