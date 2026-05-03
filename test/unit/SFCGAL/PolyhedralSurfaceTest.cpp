@@ -6,6 +6,8 @@
 
 #include "SFCGAL/Polygon.h"
 #include "SFCGAL/PolyhedralSurface.h"
+#include "SFCGAL/algorithm/covers.h"
+#include "SFCGAL/algorithm/isValid.h"
 #include "SFCGAL/io/wkt.h"
 #include "SFCGAL/primitive3d/Cube.h"
 
@@ -216,5 +218,87 @@ BOOST_AUTO_TEST_CASE(getNumEdges_cube)
   auto         polyhedral_surface = cube.generatePolyhedralSurface();
   BOOST_CHECK_EQUAL(polyhedral_surface.numEdges(), 18);
 }
+
+// NOLINTBEGIN(readability-function-cognitive-complexity)
+BOOST_AUTO_TEST_CASE(fromSurfaceMesh)
+{
+  struct dataTest {
+    std::string wkt;
+    std::size_t nrPatches;
+    std::size_t nrHoles;
+  };
+
+  std::vector<dataTest> data = {
+      // cube
+      {"POLYHEDRALSURFACE Z (((0 0 0,0 10 0,10 10 0,10 0 0,0 0 0)),((0 0 10,10 "
+       "0 10,10 10 10,0 10 10,0 0 10)),((0 0 0,0 0 10,0 10 10,0 10 0,0 0 "
+       "0)),((10 0 0,10 10 0,10 10 10,10 0 10,10 0 0)),((0 0 0,10 0 0,10 0 "
+       "10,0 0 10,0 0 0)),((0 10 0,0 10 10,10 10 10,10 10 0,0 10 0)))",
+       6, 0},
+      {"POLYHEDRALSURFACE Z (((0 0 0,0 10 0,10 10 0,10 0 0,0 0 0)),((0 0 10,10 "
+       "0 10,10 10 10,0 10 10,0 0 10)),((0 0 0,0 0 10,0 10 10,0 10 0,0 0 "
+       "0)),((10 0 0,10 10 0,10 10 10,10 0 10,10 0 0),(10 3 3,10 3 7,10 7 7,10 "
+       "7 3,10 3 3)),((0 0 0,10 0 0,10 0 10,0 0 10,0 0 0)),((0 10 0,0 10 10,10 "
+       "10 10,10 10 0,0 10 0)))",
+       6, 1},
+      {"POLYHEDRALSURFACE Z (((0 0 0,10 0 0,10 10 0,0 10 0,0 0 0)),((0 0 10,0 "
+       "10 10,10 10 10,10 0 10,0 0 10)),((0 0 0,0 0 10,10 0 10,10 0 0,0 0 "
+       "0)),((0 10 0,10 10 0,10 10 10,0 10 10,0 10 0)),((0 0 0,0 10 0,0 10 "
+       "10,0 0 10,0 0 0),(0 2 2,0 2 4,0 4 4,0 4 2,0 2 2),(0 6 2,0 6 4,0 8 4,0 "
+       "8 2,0 6 2),(0 4 6,0 4 8,0 6 8,0 6 6,0 4 6)),((10 0 0,10 0 10,10 10 "
+       "10,10 10 0,10 0 0),(10 2 2,10 5 2,10 5 5,10 2 5,10 2 2),(10 6 6,10 8 "
+       "6,10 8 8,10 6 8,10 6 6)))",
+       6, 5},
+      // 1 path
+      {"POLYHEDRALSURFACE Z (((10 0 0,10 10 0,10 10 10,10 0 10,10 0 0)))", 1,
+       0},
+      {"POLYHEDRALSURFACE Z (((10 0 0,10 10 0,10 10 10,10 0 10,10 0 0),(10 3 "
+       "3,10 3 7,10 7 7,10 7 3,10 3 3)))",
+       1, 1},
+      {"POLYHEDRALSURFACE Z (((10 0 0,10 10 0,10 10 10,10 0 10,10 0 0),(10 3 "
+       "3,10 3 7,10 7 7,10 7 3,10 3 3),(10 1 1,10 1 2,10 2 2,10 2 1,10 1 1)))",
+       1, 2},
+      // 2 patches
+      {"POLYHEDRALSURFACE Z (((0 0 0,0 10 0,10 10 0,10 0 0,0 0 0)),((0 0 0,0 0 "
+       "10,0 10 10,0 10 0,0 0 0)))",
+       2, 0}};
+
+  auto computeNrHoles = [](const PolyhedralSurface &phs) -> std::size_t {
+    std::size_t nrHoles = 0;
+    for (const auto &patch : phs) {
+      nrHoles += patch.numInteriorRings();
+    }
+    return nrHoles;
+  };
+
+  for (const auto &test : data) {
+    std::unique_ptr<Geometry> geom(io::readWkt(test.wkt));
+    BOOST_CHECK(!geom->isEmpty());
+    PolyhedralSurface phs = geom->as<PolyhedralSurface>();
+    BOOST_CHECK(!phs.isEmpty());
+    BOOST_CHECK(SFCGAL::algorithm::isValid(phs));
+    BOOST_CHECK_EQUAL(phs.numPatches(), test.nrPatches);
+    BOOST_CHECK_EQUAL(computeNrHoles(phs), test.nrHoles);
+
+    Surface_mesh_3 mesh = phs.toSurfaceMesh();
+
+    // preserve patches
+    PolyhedralSurface newPhs(mesh);
+    BOOST_CHECK(!newPhs.isEmpty());
+    BOOST_CHECK(SFCGAL::algorithm::isValid(newPhs));
+    BOOST_CHECK_EQUAL(newPhs.numPatches(), test.nrPatches);
+    BOOST_CHECK_EQUAL(computeNrHoles(newPhs), test.nrHoles);
+    BOOST_CHECK(SFCGAL::algorithm::covers3D(phs, newPhs));
+
+    // do not preserve patches
+    PolyhedralSurface newPhsWithoutHoles(mesh, false);
+    BOOST_CHECK(!newPhsWithoutHoles.isEmpty());
+    BOOST_CHECK(SFCGAL::algorithm::isValid(newPhsWithoutHoles));
+    BOOST_CHECK(newPhsWithoutHoles.numPatches() > test.nrPatches);
+    BOOST_CHECK_EQUAL(computeNrHoles(newPhsWithoutHoles), 0);
+    BOOST_CHECK(SFCGAL::algorithm::covers3D(phs, newPhsWithoutHoles));
+  }
+}
+// NOLINTEND(readability-function-cognitive-complexity)
 
 BOOST_AUTO_TEST_SUITE_END()
