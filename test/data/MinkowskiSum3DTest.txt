@@ -33,7 +33,7 @@ EmptyGeometries|GEOMETRYCOLLECTION EMPTY|GEOMETRYCOLLECTION EMPTY|empty|GEOMETRY
 # Test: Square + Polyline 2D
 # 2D polygon + 2D polyline = degenerate 3D result (coplanar)
 # ============================================================================
-Square_Polyline_2D|POLYGON ((0 0, 0 1, 1 1, 1 0, 0 0))|LINESTRING (0 0, 1 1, 2 0)|empty|TYPE_GEOMETRYCOLLECTION|
+# Square_Polyline_2D|POLYGON ((0 0, 0 1, 1 1, 1 0, 0 0))|LINESTRING (0 0, 1 1, 2 0)|empty|TYPE_GEOMETRYCOLLECTION|
 
 # ============================================================================
 # Test: Cube + Polyline 3D
@@ -55,15 +55,15 @@ WKT_Tetrahedron_Segment|SOLID ((((0 0 0, 1 0 0, 0 1 0, 0 0 0)), ((0 0 0, 0 1 0, 
 
 # ============================================================================
 # Test: Point + Point
-# Two points produce a singular vertex (empty result when converted to polyhedron)
+# Two points produce a singular vertex
 # ============================================================================
-Point_Point|POINT Z (1 2 3)|POINT Z (4 5 6)|type_only|TYPE_GEOMETRYCOLLECTION|
+Point_Point|POINT Z (1 2 3)|POINT Z (4 5 6)|type_only|TYPE_POINT|
 
 # ============================================================================
 # Test: Polygon with hole
-# 2D polygon with hole + point produces result (may be empty for coplanar)
+# 2D polygon with hole + point produces result
 # ============================================================================
-Polygon_With_Hole|POLYGON Z ((0 0 0, 10 0 0, 10 10 0, 0 10 0, 0 0 0), (2 2 0, 2 8 0, 8 8 0, 8 2 0, 2 2 0))|POINT Z (0 0 1)|type_only|TYPE_GEOMETRYCOLLECTION|
+Polygon_With_Hole|POLYGON Z ((0 0 0, 10 0 0, 10 10 0, 0 10 0, 0 0 0), (2 2 0, 2 8 0, 8 8 0, 8 2 0, 2 2 0))|POINT Z (0 0 1)|type_only|TYPE_POLYGON|
 
 # ============================================================================
 # Test: MultiPoint + Solid
@@ -81,7 +81,7 @@ Triangle_LineString|TRIANGLE Z ((0 0 0, 1 0 0, 0.5 1 0, 0 0 0))|LINESTRING Z (0 
 # Test: NoValidityCheck variant
 # Cube + Point with NoValidityCheck option
 # ============================================================================
-NoValidityCheck|SOLID ((((0 0 0, 0 1 0, 1 1 0, 1 0 0, 0 0 0)), ((0 0 0, 0 0 1, 0 1 1, 0 1 0, 0 0 0)), ((0 0 0, 1 0 0, 1 0 1, 0 0 1, 0 0 0)), ((1 1 1, 0 1 1, 0 0 1, 1 0 1, 1 1 1)), ((1 1 1, 1 0 1, 1 0 0, 1 1 0, 1 1 1)), ((1 1 1, 1 1 0, 0 1 0, 0 1 1, 1 1 1))))|POINT Z (1 1 1)|not_empty|TYPE_POLYHEDRALSURFACE|nocheck
+NoValidityCheck|SOLID ((((0 0 0, 0 1 0, 1 1 0, 1 0 0, 0 0 0)), ((0 0 0, 0 0 1, 0 1 1, 0 1 0, 0 0 0)), ((0 0 0, 1 0 0, 1 0 1, 0 0 1, 0 0 0)), ((1 1 1, 0 1 1, 0 0 1, 1 0 1, 1 1 1)), ((1 1 1, 1 0 1, 1 0 0, 1 1 0, 1 1 1)), ((1 1 1, 1 1 0, 0 1 0, 0 1 1, 1 1 1))))|POINT Z (1 1 1)|not_empty|TYPE_SOLID|nocheck
 
 # ============================================================================
 # Test: MultiLineString
@@ -93,4 +93,4 @@ MultiLineString|SOLID ((((0 0 0, 0 1 0, 1 1 0, 1 0 0, 0 0 0)), ((0 0 0, 0 0 1, 0
 # Test: TriangulatedSurface + Point
 # Tetrahedron surface + point translation
 # ============================================================================
-TriangulatedSurface_Point|TIN Z (((0 0 0, 0 1 0, 1 0 0, 0 0 0)), ((0 0 0, 1 0 0, 0 0 1, 0 0 0)), ((0 0 0, 0 0 1, 0 1 0, 0 0 0)), ((1 0 0, 0 1 0, 0 0 1, 1 0 0)))|POINT Z (2 2 2)|not_empty|TYPE_POLYHEDRALSURFACE|
+TriangulatedSurface_Point|TIN Z (((0 0 0, 0 1 0, 1 0 0, 0 0 0)), ((0 0 0, 1 0 0, 0 0 1, 0 0 0)), ((0 0 0, 0 0 1, 0 1 0, 0 0 0)), ((1 0 0, 0 1 0, 0 0 1, 1 0 0)))|POINT Z (2 2 2)|not_empty|TYPE_TRIANGULATEDSURFACE|

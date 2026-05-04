@@ -197,6 +197,10 @@ BOOST_AUTO_TEST_CASE(testFileMinkowskiSum3DTest)
           expectedType = TYPE_TRIANGULATEDSURFACE;
         } else if (expectedResult == "TYPE_GEOMETRYCOLLECTION") {
           expectedType = TYPE_GEOMETRYCOLLECTION;
+        } else if (expectedResult == "TYPE_POINT") {
+          expectedType = TYPE_POINT;
+        } else if (expectedResult == "TYPE_POLYGON") {
+          expectedType = TYPE_POLYGON;
         }
 
         BOOST_CHECK_MESSAGE(result->geometryTypeId() == expectedType,
@@ -214,6 +218,10 @@ BOOST_AUTO_TEST_CASE(testFileMinkowskiSum3DTest)
           expectedType = TYPE_TRIANGULATEDSURFACE;
         } else if (expectedResult == "TYPE_GEOMETRYCOLLECTION") {
           expectedType = TYPE_GEOMETRYCOLLECTION;
+        } else if (expectedResult == "TYPE_POINT") {
+          expectedType = TYPE_POINT;
+        } else if (expectedResult == "TYPE_POLYGON") {
+          expectedType = TYPE_POLYGON;
         }
 
         BOOST_CHECK_MESSAGE(result->geometryTypeId() == expectedType,
