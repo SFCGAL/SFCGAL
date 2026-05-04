@@ -8,12 +8,16 @@
 #include "SFCGAL/Solid.h"
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/TriangulatedSurface.h"
+#include "SFCGAL/config.h"
+#include "SFCGAL/detail/io/RecursionGuard.h"
 #include <fstream>
 #include <functional>
 #include <sstream>
 #include <vector>
 
 namespace SFCGAL::io::STL {
+
+using SFCGAL::detail::io::RecursionGuard;
 
 // Utility function to normalize "-0" strings to "0" for consistent output
 auto
@@ -36,16 +40,25 @@ auto
 save(const Geometry &geom, std::ostream &out) -> void
 {
   std::vector<Triangle> all_triangles;
+  int                   recursionDepth = 0;
 
   std::function<void(const Geometry &)> process_geometry =
-      [&](const Geometry &geom) {
-        switch (geom.geometryTypeId()) {
+      [&](const Geometry &geometry) {
+        // Guard against stack overflow from deeply nested geometry
+        if (recursionDepth >= SFCGAL_MAX_RECURSION_DEPTH) {
+          throw std::runtime_error(
+              "STL export: maximum recursion depth exceeded");
+        }
+
+        RecursionGuard guard(recursionDepth);
+
+        switch (geometry.geometryTypeId()) {
         case TYPE_TRIANGLE: {
-          all_triangles.push_back(geom.as<Triangle>());
+          all_triangles.push_back(geometry.as<Triangle>());
           break;
         }
         case TYPE_POLYGON: {
-          const auto         &poly = geom.as<Polygon>();
+          const auto         &poly = geometry.as<Polygon>();
           TriangulatedSurface tin;
           triangulate::triangulatePolygon3D(poly, tin);
           for (size_t i = 0; i < tin.numPatches(); ++i) {
@@ -54,21 +67,21 @@ save(const Geometry &geom, std::ostream &out) -> void
           break;
         }
         case TYPE_TRIANGULATEDSURFACE: {
-          const auto &tin = geom.as<TriangulatedSurface>();
+          const auto &tin = geometry.as<TriangulatedSurface>();
           for (size_t i = 0; i < tin.numPatches(); ++i) {
             all_triangles.push_back(tin.patchN(i));
           }
           break;
         }
         case TYPE_POLYHEDRALSURFACE: {
-          const auto &phs = geom.as<PolyhedralSurface>();
+          const auto &phs = geometry.as<PolyhedralSurface>();
           for (size_t i = 0; i < phs.numPatches(); ++i) {
             process_geometry(phs.patchN(i));
           }
           break;
         }
         case TYPE_SOLID: {
-          const auto &solid = geom.as<Solid>();
+          const auto &solid = geometry.as<Solid>();
           if (!solid.isEmpty()) {
             process_geometry(solid.exteriorShell());
           }
@@ -77,9 +90,9 @@ save(const Geometry &geom, std::ostream &out) -> void
         case TYPE_MULTIPOLYGON:
         case TYPE_MULTISOLID:
         case TYPE_GEOMETRYCOLLECTION: {
-          const auto &geomcoll = geom.as<GeometryCollection>();
-          for (size_t i = 0; i < geomcoll.numGeometries(); ++i) {
-            process_geometry(geomcoll.geometryN(i));
+          const auto &collection = geometry.as<GeometryCollection>();
+          for (size_t i = 0; i < collection.numGeometries(); ++i) {
+            process_geometry(collection.geometryN(i));
           }
           break;
         }
