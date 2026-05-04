@@ -19,9 +19,12 @@
 #include "SFCGAL/Solid.h"
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/TriangulatedSurface.h"
+#include "SFCGAL/config.h"
 #include "SFCGAL/detail/io/Serialization.h"
 #include "SFCGAL/io/ewkt.h"
 #include "SFCGAL/io/wkt.h"
+
+#include <sstream>
 
 #include <boost/test/unit_test.hpp>
 using namespace boost::unit_test;
@@ -165,5 +168,61 @@ BOOST_AUTO_TEST_CASE(preparedGeometryTest)
   BOOST_CHECK(io::readBinaryPrepared(io::writeBinaryPrepared(*g3))->asEWKT() ==
               g3->asEWKT());
 }
+
+BOOST_AUTO_TEST_CASE(test_gmp_limbs_limit)
+{
+  std::ostringstream oss;
+  {
+    boost::archive::binary_oarchive oa(oss);
+    int32_t                         malicious_size = 2000000;
+    oa << malicious_size;
+  }
+
+  std::string        data = oss.str();
+  std::istringstream iss(data);
+  try {
+    boost::archive::binary_iarchive ia(iss);
+    CGAL::Gmpz                      z;
+    ia >> z;
+    BOOST_ERROR("Should have thrown");
+  } catch (const SFCGAL::Exception &e) {
+    BOOST_CHECK(std::string(e.what()).find("exceeds maximum allowed") !=
+                std::string::npos);
+  } catch (const boost::archive::archive_exception &e) {
+    BOOST_CHECK(e.code ==
+                boost::archive::archive_exception::input_stream_error);
+  } catch (const std::exception &e) {
+    BOOST_ERROR(std::string("Wrong exception: ") + e.what());
+  }
+}
+
+#ifdef CGAL_USE_GMPXX
+BOOST_AUTO_TEST_CASE(test_mpz_class_limit)
+{
+  std::ostringstream oss;
+  {
+    boost::archive::binary_oarchive oa(oss);
+    int32_t                         malicious_size = 2000000;
+    oa << malicious_size;
+  }
+
+  std::string        data = oss.str();
+  std::istringstream iss(data);
+  try {
+    boost::archive::binary_iarchive ia(iss);
+    mpz_class                       z;
+    ia >> z;
+    BOOST_ERROR("Should have thrown");
+  } catch (const SFCGAL::Exception &e) {
+    BOOST_CHECK(std::string(e.what()).find("exceeds maximum allowed") !=
+                std::string::npos);
+  } catch (const boost::archive::archive_exception &e) {
+    BOOST_CHECK(e.code ==
+                boost::archive::archive_exception::input_stream_error);
+  } catch (const std::exception &e) {
+    BOOST_ERROR(std::string("Wrong exception: ") + e.what());
+  }
+}
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()

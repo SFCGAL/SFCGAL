@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
 #include "SFCGAL/detail/io/Serialization.h"
+#include "SFCGAL/Exception.h"
+#include "SFCGAL/config.h"
 
 #include "SFCGAL/GeometryCollection.h"
 #include "SFCGAL/LineString.h"
@@ -143,20 +145,30 @@ load(boost::archive::binary_iarchive &ar, CGAL::Gmpz &z,
   uint32_t rsize = 0;
   mpz_t   &mpz   = z.mpz();
   ar & size;
-  rsize         = size >= 0 ? size : -size;
+  rsize = size >= 0 ? size : -size;
+
+  // Limit GMP limb allocation to avoid excessive memory use
+  if (rsize > SFCGAL_MAX_GMP_LIMBS) {
+    BOOST_THROW_EXCEPTION(SFCGAL::Exception(
+        "Serialization error: GMP number size exceeds maximum allowed"));
+  }
+
   mpz->_mp_size = size;
   _mpz_realloc(mpz, rsize);
   uint32_t i = 0;
-
-  for (i = 0; i < rsize; ++i) {
+  for (; i < rsize; i++) {
     ar & mpz->_mp_d[i];
+  }
+  for (; i < static_cast<uint32_t>(mpz->_mp_alloc); i++) {
+    mpz->_mp_d[i] = 0;
   }
 }
 
 #ifdef CGAL_USE_GMPXX
-void
+
+auto
 save(boost::archive::text_oarchive &ar, const mpz_class &z,
-     const unsigned int /*version*/)
+     const unsigned int /*version*/) -> void
 {
   std::ostringstream ostr;
   ostr << z;
@@ -164,13 +176,12 @@ save(boost::archive::text_oarchive &ar, const mpz_class &z,
   ar << str;
 }
 
-// specialization for binary archives
-void
+auto
 save(boost::archive::binary_oarchive &ar, const mpz_class &z,
-     const unsigned int /* version*/)
+     const unsigned int /*version*/) -> void
 {
-  mpz_srcptr    mpz  = z.get_mpz_t();
-  int32_t const size = mpz->_mp_size;
+  mpz_srcptr const mpz  = z.get_mpz_t();
+  int32_t const    size = mpz->_mp_size;
   ar & size;
   uint32_t const rsize = size >= 0 ? size : -size;
 
@@ -179,9 +190,9 @@ save(boost::archive::binary_oarchive &ar, const mpz_class &z,
   }
 }
 
-void
+auto
 load(boost::archive::text_iarchive &ar, mpz_class &z,
-     const unsigned int /*version*/)
+     const unsigned int /*version*/) -> void
 {
   std::string line;
   ar >> line;
@@ -189,15 +200,22 @@ load(boost::archive::text_iarchive &ar, mpz_class &z,
   istr >> z;
 }
 
-void
+auto
 load(boost::archive::binary_iarchive &ar, mpz_class &z,
-     const unsigned int /*version*/)
+     const unsigned int /*unused*/) -> void
 {
   int32_t  size  = 0;
   uint32_t rsize = 0;
   mpz_ptr  mpz   = z.get_mpz_t();
   ar & size;
-  rsize         = size >= 0 ? size : -size;
+  rsize = size >= 0 ? size : -size;
+
+  // Limit GMP limb allocation to avoid excessive memory use
+  if (rsize > SFCGAL_MAX_GMP_LIMBS) {
+    BOOST_THROW_EXCEPTION(SFCGAL::Exception(
+        "Serialization error: GMP number size exceeds maximum allowed"));
+  }
+
   mpz->_mp_size = size;
   _mpz_realloc(mpz, rsize);
   uint32_t i = 0;
@@ -206,6 +224,7 @@ load(boost::archive::binary_iarchive &ar, mpz_class &z,
     ar & mpz->_mp_d[i];
   }
 }
+
 #endif
 
 } // namespace boost::serialization
