@@ -53,6 +53,16 @@ option( SFCGAL_WITH_EIGEN "Compile with Eigen support for advanced simplificatio
 option( SFCGAL_VALGRIND "Compile with Valgrind support" OFF )
 option( SFCGAL_TSAN "Enable ThreadSanitizer (Debug only)" OFF)
 
+#-- OOM/DoS Limits
+set(SFCGAL_MAX_GMP_LIMBS 1000000 CACHE STRING "Maximum number of GMP limbs")
+set(SFCGAL_MAX_RECURSION_DEPTH 32 CACHE STRING "Maximum recursion depth for parsers")
+set(SFCGAL_MAX_TOTAL_COORDINATES 10000000 CACHE STRING "Maximum total coordinates in IO")
+set(SFCGAL_MAX_TOTAL_ELEMENTS 1000000 CACHE STRING "Maximum total elements in IO")
+set(SFCGAL_MAX_OBJ_VERTICES 1000000 CACHE STRING "Maximum vertices for OBJ parser")
+set(SFCGAL_MAX_OBJ_FACES 10000000 CACHE STRING "Maximum faces for OBJ parser")
+set(SFCGAL_MAX_OBJ_LINES 10000000 CACHE STRING "Maximum lines for OBJ parser")
+set(SFCGAL_MAX_OBJ_POINTS 10000000 CACHE STRING "Maximum points for OBJ parser")
+
 # Configure CCache if available
 if(NOT MSVC)
   option(USE_CCACHE "Use ccache" ON)
