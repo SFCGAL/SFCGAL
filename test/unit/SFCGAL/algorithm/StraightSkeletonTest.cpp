@@ -19,6 +19,7 @@
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/TriangulatedSurface.h"
 #include "SFCGAL/algorithm/covers.h"
+#include "SFCGAL/algorithm/isValid.h"
 #include "SFCGAL/algorithm/length.h"
 #include "SFCGAL/algorithm/roofGeneration.h"
 #include "SFCGAL/algorithm/straightSkeleton.h"
@@ -306,6 +307,7 @@ BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeleton)
       io::readWkt("POLYGON (( 0 0, 5 0, 5 5, 4 5, 4 4, 0 4, 0 0 ))"));
   std::unique_ptr<PolyhedralSurface> out(
       algorithm::extrudeStraightSkeleton(*geom, 2.0));
+  BOOST_CHECK(SFCGAL::algorithm::isValid(*out));
   std::string const expectedWKT(
       "POLYHEDRALSURFACE Z (((4.00 5.00 0.00,5.00 5.00 0.00,4.00 4.00 "
       "0.00,4.00 5.00 0.00)),((0.00 4.00 0.00,4.00 4.00 0.00,0.00 0.00 "
@@ -335,6 +337,7 @@ BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonPolygonWithHole)
                   "2 2, 2 1, 1 1))"));
   std::unique_ptr<PolyhedralSurface> out(
       algorithm::extrudeStraightSkeleton(*g, 2.0));
+  BOOST_CHECK(SFCGAL::algorithm::isValid(*out));
   std::string const expectedWKT(
       "POLYHEDRALSURFACE Z (((4.00 5.00 0.00,5.00 5.00 0.00,4.00 4.00 "
       "0.00,4.00 "
@@ -387,6 +390,7 @@ BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonGenerateBuilding)
                   "2 2, 2 1, 1 1))"));
   std::unique_ptr<Geometry> out(
       algorithm::extrudeStraightSkeleton(*geom, 9.0, 2.0));
+  BOOST_CHECK(SFCGAL::algorithm::isValid(*out));
   std::string const expectedWKT(
       "POLYHEDRALSURFACE Z (((0.00 0.00 0.00,0.00 4.00 0.00,4.00 4.00 "
       "0.00,4.00 5.00 0.00,5.00 5.00 0.00,5.00 0.00 0.00,0.00 0.00 0.00),(1.00 "
