@@ -22,6 +22,7 @@
 #include "SFCGAL/TriangulatedSurface.h"
 
 #include "SFCGAL/Exception.h"
+#include "SFCGAL/detail/io/RecursionGuard.h"
 
 namespace SFCGAL::detail::io {
 
@@ -46,6 +47,15 @@ WktReader::readSRID() -> srid_t
 auto
 WktReader::readGeometry() -> std::unique_ptr<Geometry>
 {
+  // Guard against stack overflow from deeply nested geometry collections
+  if (_recursionDepth >= SFCGAL_MAX_RECURSION_DEPTH) {
+    BOOST_THROW_EXCEPTION(
+        WktParseException("WktReader: maximum recursion depth exceeded"));
+  }
+
+  // Ensure depth counter is decremented even on exception
+  RecursionGuard guard(_recursionDepth);
+
   GeometryType const geometryType = readGeometryType();
   _is3D                           = _reader.imatch("Z");
   _isMeasured                     = _reader.imatch("M");
@@ -219,6 +229,7 @@ WktReader::readInnerLineString(LineString &lineString)
 
     if (readPointCoordinate(*point)) {
       lineString.addPoint(std::move(point));
+      checkCoordinateCount(lineString.numPoints());
     } else {
       BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
     }
@@ -436,13 +447,15 @@ WktReader::readInnerGeometryCollection(GeometryCollection &collection)
   }
 
   while (!_reader.eof()) {
-    // Save current state to avoid transactional state leaks
+    // Save dimension flags to restore after reading child geometry
     bool saved_is3D       = _is3D;
     bool saved_isMeasured = _isMeasured;
 
     // read a full wkt geometry ex : POINT (2.0 6.0)
-    std::unique_ptr<Geometry> gg = readGeometry();
-    if (!gg->isEmpty()) {
+    auto gg = readGeometry();
+
+    // Check for null before dereferencing to prevent null pointer access
+    if (gg && !gg->isEmpty()) {
       collection.addGeometry(std::move(gg));
     }
 
@@ -873,6 +886,25 @@ WktReader::parseErrorMessage() -> std::string
   std::ostringstream errorStream;
   errorStream << "WKT parse error (" << _reader.context() << ")";
   return errorStream.str();
+}
+
+void
+WktReader::checkElementCount(size_t count, const char *elementType)
+{
+  if (count > SFCGAL_MAX_TOTAL_ELEMENTS) {
+    BOOST_THROW_EXCEPTION(
+        Exception(std::string("WktReader: element count exceeds limit for ") +
+                  elementType));
+  }
+}
+
+void
+WktReader::checkCoordinateCount(size_t count)
+{
+  if (count > SFCGAL_MAX_TOTAL_COORDINATES) {
+    BOOST_THROW_EXCEPTION(
+        Exception("WktReader: coordinate count exceeds limit"));
+  }
 }
 
 } // namespace SFCGAL::detail::io

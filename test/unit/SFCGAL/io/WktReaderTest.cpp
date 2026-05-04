@@ -19,6 +19,7 @@
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/TriangulatedSurface.h"
 #include "SFCGAL/io/wkt.h"
+#include <cstring>
 
 #include <boost/test/unit_test.hpp>
 using namespace boost::unit_test;
@@ -267,6 +268,11 @@ BOOST_AUTO_TEST_CASE(wktExtraCharacters)
     threw = true;
   }
   BOOST_CHECK(threw);
+}
+
+BOOST_AUTO_TEST_CASE(wktMalformedInput)
+{
+  BOOST_CHECK_THROW(readWkt("POINT(0 0"), WktParseException);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
