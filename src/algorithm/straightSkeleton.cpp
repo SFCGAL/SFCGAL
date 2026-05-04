@@ -529,16 +529,28 @@ approximateMedialAxis(const Geometry &geom, bool projectToEdges)
   extractPolygons(geom, polys);
 
   for (auto &poly : polys) {
-    Kernel::Vector_2                      trans;
-    Polygon_with_holes_2 const            polygon = preparePolygon(poly, trans);
-    SHARED_PTR<Straight_skeleton_2> const skeleton = straightSkeleton(polygon);
+    Kernel::Vector_2 trans;
+    try {
+      Polygon_with_holes_2 const polygon = preparePolygon(poly, trans);
+      SHARED_PTR<Straight_skeleton_2> const skeleton =
+          straightSkeleton(polygon);
 
-    if (skeleton == nullptr) {
-      BOOST_THROW_EXCEPTION(
-          Exception("CGAL failed to create straightSkeleton"));
+      if (skeleton == nullptr) {
+        BOOST_THROW_EXCEPTION(
+            Exception("CGAL failed to create straightSkeleton"));
+      }
+
+      straightSkeletonToMedialAxis(*skeleton, *mx, trans, projectToEdges);
+    } catch (const std::exception &e) {
+      std::string msg = e.what();
+      if (msg.find("not implemented") != std::string::npos) {
+        BOOST_THROW_EXCEPTION(NotImplementedException(
+            std::string("straightSkeleton error: ") + msg));
+      } else {
+        BOOST_THROW_EXCEPTION(
+            Exception(std::string("straightSkeleton error: ") + msg));
+      }
     }
-
-    straightSkeletonToMedialAxis(*skeleton, *mx, trans, projectToEdges);
   }
 
   propagateValidityFlag(*mx, true);
