@@ -13,11 +13,13 @@
 #include "SFCGAL/PolyhedralSurface.h"
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/TriangulatedSurface.h"
+#include "SFCGAL/config.h"
 #include "SFCGAL/io/wkt.h"
 #include <array>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 #include <boost/test/unit_test.hpp>
 using namespace boost::unit_test;
@@ -372,6 +374,27 @@ BOOST_AUTO_TEST_CASE(test_error_zero_vertex_index)
       "v 0 0 0\nf 0 1 2\n"; // OBJ indices start at 1, not 0
 
   BOOST_CHECK_THROW(SFCGAL::io::OBJ::load(obj_content), SFCGAL::Exception);
+}
+
+BOOST_AUTO_TEST_CASE(test_obj_face_too_many)
+{
+  std::ostringstream oss;
+  oss << "v 0 0 0\n";
+  int maxFaces = SFCGAL_MAX_OBJ_FACES;
+  for (int i = 0; i <= maxFaces; ++i) {
+    oss << "f 1\n";
+  }
+  BOOST_CHECK_THROW(SFCGAL::io::OBJ::load(oss.str()), SFCGAL::Exception);
+}
+
+BOOST_AUTO_TEST_CASE(test_obj_vertex_too_many)
+{
+  std::ostringstream oss;
+  int                maxVertices = SFCGAL_MAX_OBJ_VERTICES;
+  for (int i = 0; i <= maxVertices; ++i) {
+    oss << "v " << i << " 0 0\n";
+  }
+  BOOST_CHECK_THROW(SFCGAL::io::OBJ::load(oss.str()), SFCGAL::Exception);
 }
 
 BOOST_AUTO_TEST_CASE(test_error_no_geometry)

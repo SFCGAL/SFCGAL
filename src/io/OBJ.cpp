@@ -15,15 +15,20 @@
 #include "SFCGAL/Solid.h"
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/TriangulatedSurface.h"
+#include "SFCGAL/config.h"
+#include "SFCGAL/detail/io/RecursionGuard.h"
 #include "SFCGAL/numeric.h"
 #include <algorithm>
 #include <fstream>
 #include <functional>
 #include <limits>
+#include <map>
 #include <sstream>
 #include <vector>
 
 namespace SFCGAL::io::OBJ {
+
+using SFCGAL::detail::io::RecursionGuard;
 
 /**
  * @brief Parsed OBJ data structure
@@ -61,6 +66,10 @@ parseObjData(std::istream &inOBJ) -> ObjData
 
     if (type == "v") {
       // Vertex: v x y z [w]
+      if (obj_data.vertices.size() >= SFCGAL_MAX_OBJ_VERTICES) {
+        BOOST_THROW_EXCEPTION(
+            Exception("OBJ file exceeds maximum vertex count"));
+      }
       double x = 0.0;
       double y = 0.0;
       double z = 0.0;
@@ -71,6 +80,9 @@ parseObjData(std::istream &inOBJ) -> ObjData
       obj_data.vertices.emplace_back(x, y, z);
     } else if (type == "f") {
       // Face: f v1 v2 v3 ...
+      if (obj_data.faces.size() >= SFCGAL_MAX_OBJ_FACES) {
+        BOOST_THROW_EXCEPTION(Exception("OBJ file exceeds maximum face count"));
+      }
       std::vector<size_t> face;
       std::string         vertex_data;
       while (iss >> vertex_data) {
@@ -100,6 +112,9 @@ parseObjData(std::istream &inOBJ) -> ObjData
       obj_data.faces.push_back(face);
     } else if (type == "l") {
       // Line: l v1 v2 ...
+      if (obj_data.lines.size() >= SFCGAL_MAX_OBJ_LINES) {
+        BOOST_THROW_EXCEPTION(Exception("OBJ file exceeds maximum line count"));
+      }
       std::vector<size_t> line_indices;
       size_t              vertex_index;
       while (iss >> vertex_index) {
@@ -115,6 +130,10 @@ parseObjData(std::istream &inOBJ) -> ObjData
       obj_data.lines.push_back(line_indices);
     } else if (type == "p") {
       // Point: p v1
+      if (obj_data.points.size() >= SFCGAL_MAX_OBJ_POINTS) {
+        BOOST_THROW_EXCEPTION(
+            Exception("OBJ file exceeds maximum point count"));
+      }
       size_t vertex_index;
       if (iss >> vertex_index) {
         if (vertex_index == 0) {
@@ -248,27 +267,34 @@ save(const Geometry &geom, std::ostream &out)
 
   const auto epsilon_ft = SFCGAL::Kernel::FT(SFCGAL::EPSILON);
 
-  // Simple and deterministic point deduplication
+  // Map from point coordinates to output vertex index
+  std::map<Kernel::Point_3, size_t> point_to_idx;
   auto find_or_add_point = [&](const Point &point) -> size_t {
-    // Linear search with epsilon comparison
-    for (size_t i = 0; i < unique_points.size(); ++i) {
-      const auto &existing = unique_points[i];
-      if (almostEqual(point.x(), existing.x(), epsilon_ft) &&
-          almostEqual(point.y(), existing.y(), epsilon_ft) &&
-          almostEqual(point.is3D() ? point.z() : SFCGAL::Kernel::FT(0),
-                      existing.is3D() ? existing.z() : SFCGAL::Kernel::FT(0),
-                      epsilon_ft)) {
-        return i + 1; // 1-based indexing
-      }
+    Kernel::Point_3 point3 = point.toPoint_3();
+    auto            it     = point_to_idx.find(point3);
+    if (it != point_to_idx.end()) {
+      return it->second;
     }
 
     // Add new point
     unique_points.push_back(point);
-    return unique_points.size(); // 1-based indexing
+    size_t new_idx       = unique_points.size(); // 1-based indexing
+    point_to_idx[point3] = new_idx;
+    return new_idx;
   };
+
+  int recursionDepth = 0;
 
   std::function<void(const Geometry &)> process_geometry =
       [&](const Geometry &geom) {
+        // Guard against stack overflow from deeply nested geometry
+        if (recursionDepth >= SFCGAL_MAX_RECURSION_DEPTH) {
+          throw std::runtime_error(
+              "OBJ export: maximum recursion depth exceeded");
+        }
+
+        RecursionGuard guard(recursionDepth);
+
         switch (geom.geometryTypeId()) {
         case TYPE_POINT: {
           const auto &point = geom.as<Point>();
