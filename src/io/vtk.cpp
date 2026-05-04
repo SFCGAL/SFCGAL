@@ -16,12 +16,16 @@
 #include "SFCGAL/Solid.h"
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/TriangulatedSurface.h"
+#include "SFCGAL/config.h"
+#include "SFCGAL/detail/io/RecursionGuard.h"
 #include <fstream>
 #include <functional>
 #include <sstream>
 #include <vector>
 
 namespace SFCGAL::io::VTK {
+
+using SFCGAL::detail::io::RecursionGuard;
 
 // NOLINTBEGIN(readability-function-cognitive-complexity)
 void
@@ -30,9 +34,18 @@ save(const Geometry &geom, std::ostream &out)
   std::vector<Point>               all_points;
   std::vector<std::vector<size_t>> all_cells;
   std::vector<int>                 cell_types;
+  int                              recursionDepth = 0;
 
   std::function<void(const Geometry &)> process_geometry =
       [&](const Geometry &geometry) {
+        // Guard against stack overflow from deeply nested geometry
+        if (recursionDepth >= SFCGAL_MAX_RECURSION_DEPTH) {
+          throw std::runtime_error(
+              "VTK export: maximum recursion depth exceeded");
+        }
+
+        RecursionGuard guard(recursionDepth);
+
         switch (geometry.geometryTypeId()) {
         case TYPE_POINT: {
           const auto &point = geometry.as<Point>();
@@ -53,10 +66,10 @@ save(const Geometry &geom, std::ostream &out)
           break;
         }
         case TYPE_TRIANGLE: {
-          const auto         &tri = geometry.as<Triangle>();
+          const auto         &triangle = geometry.as<Triangle>();
           std::vector<size_t> face;
           for (int i = 0; i < 3; ++i) {
-            all_points.push_back(tri.vertex(i));
+            all_points.push_back(triangle.vertex(i));
             face.push_back(all_points.size() - 1);
           }
           all_cells.push_back(face);
@@ -64,10 +77,10 @@ save(const Geometry &geom, std::ostream &out)
           break;
         }
         case TYPE_POLYGON: {
-          const auto         &poly = geometry.as<Polygon>();
+          const auto         &polygon = geometry.as<Polygon>();
           std::vector<size_t> face;
-          for (size_t i = 0; i < poly.exteriorRing().numPoints() - 1; ++i) {
-            all_points.push_back(poly.exteriorRing().pointN(i));
+          for (size_t i = 0; i < polygon.exteriorRing().numPoints() - 1; ++i) {
+            all_points.push_back(polygon.exteriorRing().pointN(i));
             face.push_back(all_points.size() - 1);
           }
           all_cells.push_back(face);
@@ -75,16 +88,16 @@ save(const Geometry &geom, std::ostream &out)
           break;
         }
         case TYPE_TRIANGULATEDSURFACE: {
-          const auto &triangulatedsurface = geometry.as<TriangulatedSurface>();
-          for (size_t i = 0; i < triangulatedsurface.numPatches(); ++i) {
-            process_geometry(triangulatedsurface.patchN(i));
+          const auto &triangulatedSurface = geometry.as<TriangulatedSurface>();
+          for (size_t i = 0; i < triangulatedSurface.numPatches(); ++i) {
+            process_geometry(triangulatedSurface.patchN(i));
           }
           break;
         }
         case TYPE_POLYHEDRALSURFACE: {
-          const auto &polyhedralsurface = geometry.as<PolyhedralSurface>();
-          for (size_t i = 0; i < polyhedralsurface.numPatches(); ++i) {
-            process_geometry(polyhedralsurface.patchN(i));
+          const auto &polyhedralSurface = geometry.as<PolyhedralSurface>();
+          for (size_t i = 0; i < polyhedralSurface.numPatches(); ++i) {
+            process_geometry(polyhedralSurface.patchN(i));
           }
           break;
         }
@@ -100,9 +113,9 @@ save(const Geometry &geom, std::ostream &out)
         case TYPE_MULTIPOLYGON:
         case TYPE_MULTISOLID:
         case TYPE_GEOMETRYCOLLECTION: {
-          const auto &geometrycollection = geometry.as<GeometryCollection>();
-          for (size_t i = 0; i < geometrycollection.numGeometries(); ++i) {
-            process_geometry(geometrycollection.geometryN(i));
+          const auto &collection = geometry.as<GeometryCollection>();
+          for (size_t i = 0; i < collection.numGeometries(); ++i) {
+            process_geometry(collection.geometryN(i));
           }
           break;
         }
