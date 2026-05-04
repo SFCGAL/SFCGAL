@@ -92,9 +92,14 @@ EqualityStrictness::toString() const -> std::string
  */
 template <class G>
 auto
-compareAnySubPartOrdered(const G &geomA, const G &geomB, const double tolerance,
+compareAnySubPartOrdered(size_t numPartA, size_t numPartB, const G &geomA,
+                         const G &geomB, const double tolerance,
                          EqualityStrictness strictness) -> bool
 {
+  if (numPartA != numPartB) {
+    return false;
+  }
+
   auto iteB = geomB.begin();
   for (auto iteA = geomA.begin(); iteA != geomA.end(); ++iteA) {
     bool found = almostEqual((*iteA), (*iteB), tolerance, strictness);
@@ -121,11 +126,15 @@ compareAnySubPartOrdered(const G &geomA, const G &geomB, const double tolerance,
  */
 template <class G>
 auto
-compareAnySubPartNonOrdered(size_t numPart, const G &geomA, const G &geomB,
-                            const double       tolerance,
+compareAnySubPartNonOrdered(size_t numPartA, size_t numPartB, const G &geomA,
+                            const G &geomB, const double tolerance,
                             EqualityStrictness strictness) -> bool
 {
-  std::vector<bool> hasGoodMatch(numPart);
+  if (numPartA != numPartB) {
+    return false;
+  }
+
+  std::vector<bool> hasGoodMatch(numPartB, false);
   for (auto iteA = geomA.begin(); iteA != geomA.end(); ++iteA) {
     bool found = false;
     int  bIdx  = 0;
@@ -134,8 +143,10 @@ compareAnySubPartNonOrdered(size_t numPart, const G &geomA, const G &geomB,
         ++bIdx;
         continue;
       }
-      found              = almostEqual((*iteA), (*iteB), tolerance, strictness);
-      hasGoodMatch[bIdx] = found;
+      found = almostEqual((*iteA), (*iteB), tolerance, strictness);
+      if (found) {
+        hasGoodMatch[bIdx] = true;
+      }
       ++bIdx;
     }
     if (!found) {
@@ -175,23 +186,37 @@ compareSubPartOrdered(const Geometry &geomA, const Geometry &geomB,
     // geom type is not valid for this kind of check
     return false;
 
-  case TYPE_POLYGON:
-    return compareAnySubPartOrdered<Polygon>(
-        geomA.as<Polygon>(), geomB.as<Polygon>(), tolerance, strictness);
+  case TYPE_POLYGON: {
+    const auto &tempGA = geomA.as<Polygon>();
+    const auto &tempGB = geomB.as<Polygon>();
+    return compareAnySubPartOrdered<Polygon>(tempGA.numRings(),
+                                             tempGB.numRings(), tempGA, tempGB,
+                                             tolerance, strictness);
+  }
 
-  case TYPE_TRIANGULATEDSURFACE:
+  case TYPE_TRIANGULATEDSURFACE: {
+    const auto &tempGA = geomA.as<TriangulatedSurface>();
+    const auto &tempGB = geomB.as<TriangulatedSurface>();
     return compareAnySubPartOrdered<TriangulatedSurface>(
-        geomA.as<TriangulatedSurface>(), geomB.as<TriangulatedSurface>(),
-        tolerance, strictness);
-
-  case TYPE_POLYHEDRALSURFACE:
-    return compareAnySubPartOrdered<PolyhedralSurface>(
-        geomA.as<PolyhedralSurface>(), geomB.as<PolyhedralSurface>(), tolerance,
+        tempGA.numPatches(), tempGB.numPatches(), tempGA, tempGB, tolerance,
         strictness);
+  }
 
-  case TYPE_SOLID:
-    return compareAnySubPartOrdered<Solid>(geomA.as<Solid>(), geomB.as<Solid>(),
+  case TYPE_POLYHEDRALSURFACE: {
+    const auto &tempGA = geomA.as<PolyhedralSurface>();
+    const auto &tempGB = geomB.as<PolyhedralSurface>();
+    return compareAnySubPartOrdered<PolyhedralSurface>(
+        tempGA.numPatches(), tempGB.numPatches(), tempGA, tempGB, tolerance,
+        strictness);
+  }
+
+  case TYPE_SOLID: {
+    const auto &tempGA = geomA.as<Solid>();
+    const auto &tempGB = geomB.as<Solid>();
+    return compareAnySubPartOrdered<Solid>(tempGA.numShells(),
+                                           tempGB.numShells(), tempGA, tempGB,
                                            tolerance, strictness);
+  }
 
   default:
     BOOST_THROW_EXCEPTION(NotImplementedException(
@@ -231,28 +256,34 @@ compareSubPartNonOrdered(const Geometry &geomA, const Geometry &geomB,
 
   case TYPE_POLYGON: {
     const auto &tempGA = geomA.as<Polygon>();
-    return compareAnySubPartNonOrdered<Polygon>(
-        tempGA.numRings(), tempGA, geomB.as<Polygon>(), tolerance, strictness);
+    const auto &tempGB = geomB.as<Polygon>();
+    return compareAnySubPartNonOrdered<Polygon>(tempGA.numRings(),
+                                                tempGB.numRings(), tempGA,
+                                                tempGB, tolerance, strictness);
   }
 
   case TYPE_TRIANGULATEDSURFACE: {
     const auto &tempGA = geomA.as<TriangulatedSurface>();
+    const auto &tempGB = geomB.as<TriangulatedSurface>();
     return compareAnySubPartNonOrdered<TriangulatedSurface>(
-        tempGA.numPatches(), tempGA, geomB.as<TriangulatedSurface>(), tolerance,
+        tempGA.numPatches(), tempGB.numPatches(), tempGA, tempGB, tolerance,
         strictness);
   }
 
   case TYPE_POLYHEDRALSURFACE: {
     const auto &tempGA = geomA.as<PolyhedralSurface>();
+    const auto &tempGB = geomB.as<PolyhedralSurface>();
     return compareAnySubPartNonOrdered<PolyhedralSurface>(
-        tempGA.numPatches(), tempGA, geomB.as<PolyhedralSurface>(), tolerance,
+        tempGA.numPatches(), tempGB.numPatches(), tempGA, tempGB, tolerance,
         strictness);
   }
 
   case TYPE_SOLID: {
     const auto &tempGA = geomA.as<Solid>();
-    return compareAnySubPartNonOrdered<Solid>(
-        tempGA.numShells(), tempGA, geomB.as<Solid>(), tolerance, strictness);
+    const auto &tempGB = geomB.as<Solid>();
+    return compareAnySubPartNonOrdered<Solid>(tempGA.numShells(),
+                                              tempGB.numShells(), tempGA,
+                                              tempGB, tolerance, strictness);
   }
 
   default:
@@ -307,16 +338,22 @@ compareSubGeometryNonOrdered(const Geometry &geomA, const Geometry &geomB,
                              const double       tolerance,
                              EqualityStrictness strictness) -> bool
 {
-  std::vector<bool> hasGoodMatch(geomA.numGeometries());
+  if (geomA.numGeometries() != geomB.numGeometries()) {
+    return false;
+  }
+
+  std::vector<bool> hasGoodMatch(geomB.numGeometries(), false);
   for (size_t i = 0; i < geomA.numGeometries(); ++i) {
     bool found = false;
-    for (size_t j = 0; !found && j < geomA.numGeometries(); ++j) {
+    for (size_t j = 0; !found && j < geomB.numGeometries(); ++j) {
       if (hasGoodMatch[j]) { // already watched this geom
         continue;
       }
       found = almostEqual(geomA.geometryN(i), geomB.geometryN(j), tolerance,
                           strictness);
-      hasGoodMatch[j] = found;
+      if (found) {
+        hasGoodMatch[j] = true;
+      }
     }
     if (!found) {
       return false;
@@ -342,6 +379,9 @@ comparePointsOrdered(detail::GetPointsVisitor &getPointsA,
                      detail::GetPointsVisitor &getPointsB,
                      const double              tolerance) -> bool
 {
+  if (getPointsA.points.size() != getPointsB.points.size()) {
+    return false;
+  }
   for (size_t i = 0; i < getPointsA.points.size(); ++i) {
     const Point &pta = *getPointsA.points[i];
     const Point &ptb = *getPointsB.points[i];
@@ -371,9 +411,16 @@ comparePointsNonOrdered(detail::GetPointsVisitor &getPointsA,
                         detail::GetPointsVisitor &getPointsB,
                         const double              tolerance) -> bool
 {
+  if (getPointsA.points.empty()) {
+    return getPointsB.points.empty();
+  }
+  if (getPointsA.points.size() != getPointsB.points.size()) {
+    return false;
+  }
+
   bool isClosed = *(getPointsA.points[0]) ==
                   *(getPointsA.points[getPointsA.points.size() - 1]);
-  std::vector<bool> hasGoodMatch(getPointsA.points.size());
+  std::vector<bool> hasGoodMatch(getPointsA.points.size(), false);
   for (size_t i = 0;                                      //
        i < getPointsA.points.size() - (isClosed ? 1 : 0); //
        ++i) {
@@ -421,11 +468,19 @@ comparePointsNonOrdered(detail::GetPointsVisitor &getPointsA,
  * @return true if geomA and geomB are almost equal regard to strictness and
  * tolerance
  */
+// NOLINTBEGIN(readability-function-cognitive-complexity)
 auto
 comparePointsShifted(detail::GetPointsVisitor &getPointsA,
                      detail::GetPointsVisitor &getPointsB,
                      const double              tolerance) -> bool
 {
+  if (getPointsA.points.empty()) {
+    return getPointsB.points.empty();
+  }
+  if (getPointsA.points.size() != getPointsB.points.size()) {
+    return false;
+  }
+
   long startPos = -1;
   bool isClosed = *(getPointsA.points[0]) ==
                   *(getPointsA.points[getPointsA.points.size() - 1]);
@@ -472,6 +527,7 @@ comparePointsShifted(detail::GetPointsVisitor &getPointsA,
 
   return true;
 }
+// NOLINTEND(readability-function-cognitive-complexity)
 
 /**
  * @brief check if the geometry points respect strictness, tolerance and are
@@ -493,6 +549,9 @@ comparePointsInverted(detail::GetPointsVisitor &getPointsA,
                       detail::GetPointsVisitor &getPointsB,
                       const double              tolerance) -> bool
 {
+  if (getPointsA.points.size() != getPointsB.points.size()) {
+    return false;
+  }
   // first try with same order
   if (!comparePointsOrdered(getPointsA, getPointsB, tolerance)) {
     // second try with inverted order
@@ -557,10 +616,14 @@ almostEqual(const Geometry &geomA, const Geometry &geomB, double tolerance,
   }
 
   if (geomA.isEmpty()) {
-    return true;
+    return geomB.isEmpty();
   }
 
-  bool out;
+  if (geomB.isEmpty()) {
+    return false;
+  }
+
+  bool out = false;
   if (geomA.numGeometries() > 1) {
     if (strictness & EqualityStrictness::SubGeomOrdered) {
       out = compareSubGeometryOrdered(geomA, geomB, tolerance, strictness);
