@@ -9,6 +9,7 @@
 
 #include "SFCGAL/config.h"
 
+#include "SFCGAL/Exception.h"
 #include "SFCGAL/Geometry.h"
 #include "SFCGAL/GeometryCollection.h"
 #include "SFCGAL/LineString.h"
@@ -24,6 +25,7 @@
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/TriangulatedSurface.h"
 
+#include "SFCGAL/detail/io/RecursionGuard.h"
 #include "SFCGAL/detail/tools/InputStreamReader.h"
 
 #include <boost/endian/conversion.hpp> // don't use bit, since it requires c++20
@@ -58,6 +60,17 @@ public:
   auto
   readWkb() -> void
   {
+    // Guard against stack overflow from deeply nested geometry
+    // collections (e.g., GeometryCollection inside
+    // GeometryCollection recursively).
+    if (_recursionDepth >= SFCGAL_MAX_RECURSION_DEPTH) {
+      BOOST_THROW_EXCEPTION(
+          Exception("WkbReader: maximum recursion depth exceeded"));
+    }
+
+    // Ensure depth counter is decremented even on exception
+    RecursionGuard guard(_recursionDepth);
+
     // wkbOrder
     std::byte wkbOrder{read<std::byte>()};
     _swapEndian =
@@ -113,7 +126,7 @@ private:
   {
     const size_t sizeType = sizeof(T);
     union {
-      std::array<std::byte, sizeType> byteArray;
+      std::array<std::byte, sizeType> byteArray{};
       T                               d;
     };
 
@@ -160,6 +173,34 @@ private:
    * to SFCGAL one.
    *
    */
+  /**
+   * Validate that a numeric value is a valid GeometryType enum value.
+   * Valid values: 1-7 (basic types), 15-17 (surface types), 21 (NURBS), 25-26
+   * (solids)
+   */
+  static auto
+  isValidGeometryType(uint32_t value) -> bool
+  {
+    switch (value) {
+    case TYPE_POINT:
+    case TYPE_LINESTRING:
+    case TYPE_POLYGON:
+    case TYPE_MULTIPOINT:
+    case TYPE_MULTILINESTRING:
+    case TYPE_MULTIPOLYGON:
+    case TYPE_GEOMETRYCOLLECTION:
+    case TYPE_POLYHEDRALSURFACE:
+    case TYPE_TRIANGULATEDSURFACE:
+    case TYPE_TRIANGLE:
+    case TYPE_NURBSCURVE:
+    case TYPE_SOLID:
+    case TYPE_MULTISOLID:
+      return true;
+    default:
+      return false;
+    }
+  }
+
   auto
   readGeometryType() -> GeometryType
   {
@@ -171,12 +212,12 @@ private:
         _isEWKB = true;
       }
 
-      if ((geometryType & wkbZ) == wkbZ) {
-        _is3D = true;
-      }
-      if ((geometryType & wkbM) == wkbM) {
-        _isMeasured = true;
-      }
+      // Recompute dimension flags from the geometry type bits.
+      // EWKB encodes 3D (Z) and measured (M) flags separately per geometry,
+      // so sub-geometries in mixed-dimension collections can differ from
+      // their parent.
+      _is3D       = (geometryType & wkbZ) == wkbZ;
+      _isMeasured = (geometryType & wkbM) == wkbM;
       geometryType &= 0x0FFFFFFF;
     } else {
       if (geometryType >= COORDINATE_XYZM) {
@@ -191,8 +232,20 @@ private:
         _is3D       = true;
         _isMeasured = false;
         geometryType -= COORDINATE_XYZ;
+      } else {
+        // Geometry type < 1000 with no Z or M suffix: pure 2D.
+        // Dimension flags are reset so that a 2D sub-geometry in a
+        // mixed-dimension collection does not inherit parent flags.
+        _is3D       = false;
+        _isMeasured = false;
       }
     }
+
+    if (!isValidGeometryType(geometryType)) {
+      BOOST_THROW_EXCEPTION(Exception("WkbReader: invalid geometry type '" +
+                                      std::to_string(geometryType) + "'"));
+    }
+
     return static_cast<GeometryType>(geometryType);
   }
 
@@ -358,6 +411,43 @@ private:
    * flag if the _wkbData is an EWKB or simple WKB
    */
   bool _isEWKB = false;
+  /**
+   * Current recursion depth for nested geometry collections
+   */
+  int _recursionDepth = 0;
+
+  /**
+   * Check element count against limit (without accumulation).
+   * Validates that a single count doesn't exceed reasonable limits.
+   * @param count Number of elements declared
+   * @param elementType Description for error message
+   * @throws Exception if count exceeds limit
+   */
+  static void
+  checkElementCount(uint32_t count, const char *elementType)
+  {
+    if (count > SFCGAL_MAX_TOTAL_ELEMENTS) {
+      BOOST_THROW_EXCEPTION(
+          Exception(std::string("WkbReader: element count exceeds limit for ") +
+                    elementType));
+    }
+  }
+
+  /**
+   * Check coordinate count against limit (without accumulation).
+   * Validates that a single count doesn't exceed reasonable limits.
+   * @param count Number of coordinates declared
+   * @throws Exception if count exceeds limit
+   */
+  static void
+  checkCoordinateCount(uint32_t count)
+  {
+    if (count > SFCGAL_MAX_TOTAL_COORDINATES) {
+      BOOST_THROW_EXCEPTION(
+          Exception("WkbReader: coordinate count exceeds limit"));
+    }
+  }
+
   /**
    * The geometry from the WKB
    */

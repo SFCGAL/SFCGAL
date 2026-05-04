@@ -22,6 +22,7 @@
 #include "SFCGAL/Solid.h"
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/TriangulatedSurface.h"
+#include "SFCGAL/config.h"
 #include "SFCGAL/io/ewkt.h"
 #include "SFCGAL/io/wkb.h"
 #include "SFCGAL/io/wkt.h"
@@ -173,6 +174,34 @@ BOOST_AUTO_TEST_CASE(SolidWKB)
   auto                      wkbBinary = g->asWkb();
   std::unique_ptr<Geometry> g2(io::readWkb(wkbBinary));
   BOOST_CHECK_EQUAL(g->asText(0), g2->asText(0));
+}
+
+BOOST_AUTO_TEST_CASE(EmptyTriangleWKB)
+{
+  Triangle triangle;
+  BOOST_REQUIRE(triangle.isEmpty());
+  std::string wkb = triangle.asWkb();
+  auto        g2  = io::readWkb(wkb);
+  BOOST_CHECK(g2->isEmpty());
+  BOOST_CHECK(g2->geometryTypeId() == TYPE_TRIANGLE);
+}
+
+BOOST_AUTO_TEST_CASE(test_wkb_element_limit)
+{
+  std::string wkb = std::string("\x01\x03\x00\x00\x00\xFF\xFF\xFF\xFF", 9);
+  BOOST_CHECK_THROW(io::readWkb(wkb), Exception);
+}
+
+BOOST_AUTO_TEST_CASE(test_wkb_coordinate_limit)
+{
+  std::string wkb = std::string("\x01\x02\x00\x00\x00\xFF\xFF\xFF\xFF", 9);
+  BOOST_CHECK_THROW(io::readWkb(wkb), Exception);
+}
+
+BOOST_AUTO_TEST_CASE(test_wkb_invalid_type)
+{
+  std::string wkb = "\x01\xFF\xFF\xFF\xFF";
+  BOOST_CHECK_THROW(io::readWkb(wkb), Exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

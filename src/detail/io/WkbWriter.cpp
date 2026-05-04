@@ -233,7 +233,10 @@ WkbWriter::writeInner(const Triangle &geometry, boost::endian::order wkbOrder)
   // WkbType
   writeGeometryType(geometry, wkbOrder);
 
-  if (!geometry.isEmpty()) {
+  if (geometry.isEmpty()) {
+    // An empty geometry writes 0 rings
+    toByte(static_cast<uint32_t>(0), wkbOrder);
+  } else {
     // One Ring
     toByte(static_cast<uint32_t>(1), wkbOrder);
     // 4 points
