@@ -29,7 +29,7 @@ lint:clang-format:
 lint:doxygen-warnings:
   stage: lint
   image:
-    name: fedora:43
+    name: fedora:44
   before_script:
     - dnf -y makecache && dnf install --setopt=install_weak_deps=False -y doxygen git
   script:
