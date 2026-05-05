@@ -49,8 +49,16 @@ debian_gcc_auto:
   rules:
     # on default branch
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - "**/*.{c,h,cpp,hpp}"
+        - "ci/**/*"
+        - ".gitlab/**/*"
       when: always
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - "**/*.{c,h,cpp,hpp}"
+        - "ci/**/*"
+        - ".gitlab/**/*"
       when: always
   parallel:
     matrix:
