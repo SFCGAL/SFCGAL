@@ -31,9 +31,13 @@ sonar:get-binaries:
     - unzip -oj build-wrapper-linux-x86.zip -d ./build-wrapper
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - "**/*.{c,h,cpp,hpp}"
       when: always
     # on default branch
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - "**/*.{c,h,cpp,hpp}"
       when: always
 
 sonar:build-test:
@@ -89,10 +93,14 @@ sonar:build-test:
       -Dsonar.coverageReportPaths=reports/coverage/coverage_sonarqube.xml
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - "**/*.{c,h,cpp,hpp}"
       when: always
       allow_failure: true
     # on default branch
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - "**/*.{c,h,cpp,hpp}"
       when: always
       allow_failure: true
   artifacts:
