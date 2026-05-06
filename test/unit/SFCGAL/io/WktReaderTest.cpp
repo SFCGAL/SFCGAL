@@ -12,6 +12,7 @@
 #include "SFCGAL/MultiPoint.h"
 #include "SFCGAL/MultiPolygon.h"
 #include "SFCGAL/MultiSolid.h"
+#include "SFCGAL/NURBSCurve.h"
 #include "SFCGAL/Point.h"
 #include "SFCGAL/Polygon.h"
 #include "SFCGAL/PolyhedralSurface.h"
@@ -273,6 +274,82 @@ BOOST_AUTO_TEST_CASE(wktExtraCharacters)
 BOOST_AUTO_TEST_CASE(wktMalformedInput)
 {
   BOOST_CHECK_THROW(readWkt("POINT(0 0"), WktParseException);
+}
+
+//-- WKT XYZM coordinates
+
+BOOST_AUTO_TEST_CASE(pointXYZM_explicit)
+{
+  std::unique_ptr<Geometry> g(readWkt("POINT ZM (4.0 5.0 6.0 7.0)"));
+  BOOST_CHECK(g->is<Point>());
+  BOOST_CHECK(!g->isEmpty());
+
+  BOOST_CHECK(g->is3D());
+  BOOST_CHECK(g->isMeasured());
+
+  BOOST_CHECK_EQUAL(g->as<Point>().x(), 4.0);
+  BOOST_CHECK_EQUAL(g->as<Point>().y(), 5.0);
+  BOOST_CHECK_EQUAL(g->as<Point>().z(), 6.0);
+  BOOST_CHECK_EQUAL(g->as<Point>().m(), 7.0);
+}
+
+//-- WKT NURBSCURVE
+
+BOOST_AUTO_TEST_CASE(nurbsCurve_basic)
+{
+  std::unique_ptr<Geometry> g(readWkt("NURBSCURVE Z (1, (0 0 0, 1 1 1))"));
+  BOOST_CHECK(g->is<NURBSCurve>());
+  BOOST_CHECK(!g->isEmpty());
+}
+
+BOOST_AUTO_TEST_CASE(nurbsCurve_empty)
+{
+  std::unique_ptr<Geometry> g(readWkt("NURBSCURVE EMPTY"));
+  BOOST_CHECK(g->is<NURBSCurve>());
+  BOOST_CHECK(g->isEmpty());
+}
+
+//-- WKT SOLID
+
+BOOST_AUTO_TEST_CASE(solid_basic)
+{
+  std::unique_ptr<Geometry> g(readWkt(
+      "SOLID ((((0 0 0, 1 0 0, 1 1 0, 0 1 0, 0 0 0)), ((0 0 0, 0 0 1, 1 0 1, "
+      "1 0 0, 0 0 0)), ((0 0 0, 0 1 0, 0 1 1, 0 0 1, 0 0 0)), ((1 1 1, 1 0 1, "
+      "0 0 1, 0 1 1, 1 1 1)), ((1 1 1, 0 1 1, 0 1 0, 1 1 0, 1 1 1)), ((1 1 1, "
+      "1 1 0, 1 0 0, 1 0 1, 1 1 1))))"));
+  BOOST_CHECK(g->is<Solid>());
+  BOOST_CHECK(!g->isEmpty());
+}
+
+BOOST_AUTO_TEST_CASE(solid_empty)
+{
+  std::unique_ptr<Geometry> g(readWkt("SOLID EMPTY"));
+  BOOST_CHECK(g->is<Solid>());
+  BOOST_CHECK(g->isEmpty());
+}
+
+//-- WKT MULTISOLID
+
+BOOST_AUTO_TEST_CASE(multiSolid_empty)
+{
+  std::unique_ptr<Geometry> g(readWkt("MULTISOLID EMPTY"));
+  BOOST_CHECK(g->is<MultiSolid>());
+  BOOST_CHECK(g->isEmpty());
+}
+
+//-- WKT POLYHEDRALSURFACE
+
+BOOST_AUTO_TEST_CASE(polyhedralSurface_empty)
+{
+  std::unique_ptr<Geometry> g(readWkt("POLYHEDRALSURFACE EMPTY"));
+  BOOST_CHECK(g->is<PolyhedralSurface>());
+  BOOST_CHECK(g->isEmpty());
+}
+
+BOOST_AUTO_TEST_CASE(wktUnknownType)
+{
+  BOOST_CHECK_THROW(readWkt("SOMETHING_UNKNOWN (1 2)"), WktParseException);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
