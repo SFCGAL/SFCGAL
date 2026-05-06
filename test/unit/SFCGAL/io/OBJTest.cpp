@@ -11,6 +11,7 @@
 #include "SFCGAL/Point.h"
 #include "SFCGAL/Polygon.h"
 #include "SFCGAL/PolyhedralSurface.h"
+#include "SFCGAL/Solid.h"
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/TriangulatedSurface.h"
 #include "SFCGAL/config.h"
@@ -206,6 +207,28 @@ BOOST_AUTO_TEST_CASE(test_complex_geometry)
   std::string expected =
       "v 1 1 0\nv 0 0 0\nv 1 0 0\nv 0 1 0\np 1\nl 2 1\nf 2 3 1 4\n";
   BOOST_CHECK_EQUAL(result, expected);
+}
+
+// Test empty Solid export
+BOOST_AUTO_TEST_CASE(test_save_empty_solid)
+{
+  SFCGAL::Solid emptySolid;
+  std::string   result = SFCGAL::io::OBJ::saveToString(emptySolid);
+  BOOST_CHECK_EQUAL(result, "");
+}
+
+// Test saveToBuffer with buffer too small
+BOOST_AUTO_TEST_CASE(test_save_to_buffer_too_small)
+{
+  std::string                       wkt = "POINT (1 2 3)";
+  std::unique_ptr<SFCGAL::Geometry> geom(SFCGAL::io::readWkt(wkt));
+
+  size_t              size = 3;
+  std::array<char, 3> buffer;
+  SFCGAL::io::OBJ::saveToBuffer(*geom, buffer.data(), &size);
+  // size should be updated to the required size
+  BOOST_CHECK_GT(size, 3U);
+  BOOST_CHECK_EQUAL(size, std::string("v 1 2 3\np 1\n").size());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -468,6 +491,37 @@ BOOST_AUTO_TEST_CASE(test_obj_roundtrip_stability)
     std::cout << "The OBJ IO process is stable for " << file << '.' << '\n';
   }
   fs::remove_all(temp_dir);
+}
+
+// Test loadFromFile with non-existent file
+BOOST_AUTO_TEST_CASE(test_load_from_file_missing)
+{
+  BOOST_CHECK_THROW(SFCGAL::io::OBJ::loadFromFile("/nonexistent/file.obj"),
+                    SFCGAL::Exception);
+}
+
+// Test max lines count exceeded
+BOOST_AUTO_TEST_CASE(test_obj_line_too_many)
+{
+  std::ostringstream oss;
+  oss << "v 0 0 0\n";
+  int maxLines = SFCGAL_MAX_OBJ_LINES;
+  for (int i = 0; i <= maxLines; ++i) {
+    oss << "l 1\n";
+  }
+  BOOST_CHECK_THROW(SFCGAL::io::OBJ::load(oss.str()), SFCGAL::Exception);
+}
+
+// Test max points count exceeded
+BOOST_AUTO_TEST_CASE(test_obj_point_too_many)
+{
+  std::ostringstream oss;
+  int                maxPoints = SFCGAL_MAX_OBJ_POINTS;
+  for (int i = 0; i <= maxPoints; ++i) {
+    oss << "v " << i << " 0 0\n";
+    oss << "p " << (i + 1) << "\n";
+  }
+  BOOST_CHECK_THROW(SFCGAL::io::OBJ::load(oss.str()), SFCGAL::Exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
