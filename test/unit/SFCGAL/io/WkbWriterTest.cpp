@@ -204,4 +204,26 @@ BOOST_AUTO_TEST_CASE(test_wkb_invalid_type)
   BOOST_CHECK_THROW(io::readWkb(wkb), Exception);
 }
 
+// Test WKB with M coordinate
+BOOST_AUTO_TEST_CASE(test_writeWkbMeasured)
+{
+  auto point = Point(1.0, 2.0, 3.0);
+  point.setM(4.0);
+  std::string               wkb = point.asWkb();
+  std::unique_ptr<Geometry> g2(io::readWkb(wkb));
+  BOOST_CHECK(g2->isMeasured());
+  BOOST_CHECK_EQUAL(g2->as<Point>().m(), 4.0);
+}
+
+// Test WKB with EWKB ZM (covers writeGeometryType EWKB + Z + M branch)
+BOOST_AUTO_TEST_CASE(test_writeWkbEwkbZM)
+{
+  auto point = Point(1.0, 2.0, 3.0);
+  point.setM(4.0);
+  std::string wkb = point.asWkb(boost::endian::order::native, true);
+  std::unique_ptr<Geometry> g2(io::readWkb(wkb, true));
+  BOOST_CHECK(g2->is3D());
+  BOOST_CHECK(g2->isMeasured());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
