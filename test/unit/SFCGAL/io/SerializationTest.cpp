@@ -197,6 +197,58 @@ BOOST_AUTO_TEST_CASE(test_gmp_limbs_limit)
 }
 
 #ifdef CGAL_USE_GMPXX
+
+BOOST_AUTO_TEST_CASE(test_mpz_class_text)
+{
+  mpz_class z1(42);
+
+  std::ostringstream            ostr;
+  boost::archive::text_oarchive oa(ostr);
+  oa << z1;
+
+  std::string                   data = ostr.str();
+  std::istringstream            iss(data);
+  boost::archive::text_iarchive ia(iss);
+  mpz_class                     z2;
+  ia >> z2;
+
+  BOOST_CHECK_EQUAL(z1, z2);
+}
+
+BOOST_AUTO_TEST_CASE(test_mpz_class_negative)
+{
+  mpz_class z1(-12345);
+
+  std::ostringstream            ostr;
+  boost::archive::text_oarchive oa(ostr);
+  oa << z1;
+
+  std::string                   data = ostr.str();
+  std::istringstream            iss(data);
+  boost::archive::text_iarchive ia(iss);
+  mpz_class                     z2;
+  ia >> z2;
+
+  BOOST_CHECK_EQUAL(z1, z2);
+}
+
+BOOST_AUTO_TEST_CASE(test_mpz_class_binary)
+{
+  mpz_class z1(999999);
+
+  std::ostringstream              ostr;
+  boost::archive::binary_oarchive oa(ostr);
+  oa << z1;
+
+  std::string                     data = ostr.str();
+  std::istringstream              iss(data);
+  boost::archive::binary_iarchive ia(iss);
+  mpz_class                       z2;
+  ia >> z2;
+
+  BOOST_CHECK_EQUAL(z1, z2);
+}
+
 BOOST_AUTO_TEST_CASE(test_mpz_class_limit)
 {
   std::ostringstream oss;
@@ -224,5 +276,39 @@ BOOST_AUTO_TEST_CASE(test_mpz_class_limit)
   }
 }
 #endif
+
+BOOST_AUTO_TEST_CASE(test_gmpz_text)
+{
+  CGAL::Gmpz z1(123);
+
+  std::ostringstream            ostr;
+  boost::archive::text_oarchive oa(ostr);
+  oa << z1;
+
+  std::string                   data = ostr.str();
+  std::istringstream            iss(data);
+  boost::archive::text_iarchive ia(iss);
+  CGAL::Gmpz                    z2;
+  ia >> z2;
+
+  BOOST_CHECK_EQUAL(z1, z2);
+}
+
+BOOST_AUTO_TEST_CASE(test_gmpz_negative_binary)
+{
+  CGAL::Gmpz z1(-42);
+
+  std::ostringstream              ostr;
+  boost::archive::binary_oarchive oa(ostr);
+  oa << z1;
+
+  std::string                     data = ostr.str();
+  std::istringstream              iss(data);
+  boost::archive::binary_iarchive ia(iss);
+  CGAL::Gmpz                      z2;
+  ia >> z2;
+
+  BOOST_CHECK_EQUAL(z1, z2);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
