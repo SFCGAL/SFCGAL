@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
 #include "SFCGAL/io/STL.h"
+#include "SFCGAL/Solid.h"
 #include "SFCGAL/io/wkt.h"
 #include <filesystem>
 #include <fstream>
@@ -246,6 +247,17 @@ BOOST_AUTO_TEST_CASE(test_non_stl_geometries)
 
     BOOST_CHECK_EQUAL(result, expected);
   }
+}
+
+// Test empty Solid
+BOOST_AUTO_TEST_CASE(test_save_empty_solid)
+{
+  SFCGAL::Solid emptySolid;
+  std::string   result = SFCGAL::io::STL::saveToString(emptySolid);
+
+  std::string expected = "solid SFCGAL_export\n"
+                         "endsolid SFCGAL_export\n";
+  BOOST_CHECK_EQUAL(result, expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
