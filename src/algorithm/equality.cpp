@@ -418,8 +418,9 @@ comparePointsNonOrdered(detail::GetPointsVisitor &getPointsA,
     return false;
   }
 
-  bool isClosed = *(getPointsA.points[0]) ==
-                  *(getPointsA.points[getPointsA.points.size() - 1]);
+  bool isClosed = getPointsA.points.size() > 1 &&
+                  *(getPointsA.points[0]) ==
+                      *(getPointsA.points[getPointsA.points.size() - 1]);
   std::vector<bool> hasGoodMatch(getPointsA.points.size(), false);
   for (size_t i = 0;                                      //
        i < getPointsA.points.size() - (isClosed ? 1 : 0); //
@@ -482,8 +483,9 @@ comparePointsShifted(detail::GetPointsVisitor &getPointsA,
   }
 
   long startPos = -1;
-  bool isClosed = *(getPointsA.points[0]) ==
-                  *(getPointsA.points[getPointsA.points.size() - 1]);
+  bool isClosed = getPointsA.points.size() > 1 &&
+                  *(getPointsA.points[0]) ==
+                      *(getPointsA.points[getPointsA.points.size() - 1]);
 
   for (size_t i = 0;                                      //
        i < getPointsA.points.size() - (isClosed ? 1 : 0); //
@@ -610,8 +612,8 @@ auto
 almostEqual(const Geometry &geomA, const Geometry &geomB, double tolerance,
             EqualityStrictness strictness) -> bool
 {
-  if (geomA.geometryTypeId() != geomB.geometryTypeId() &&
-      geomA.numGeometries() == geomB.numGeometries()) {
+  if (geomA.geometryTypeId() != geomB.geometryTypeId() ||
+      geomA.numGeometries() != geomB.numGeometries()) {
     return false;
   }
 
