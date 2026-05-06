@@ -1057,4 +1057,50 @@ BOOST_AUTO_TEST_CASE(testGenerateSkillionRoofDifferentEdge)
   BOOST_CHECK(out->is3D());
 }
 
+// Test for outputDistanceInM with MultiPolygon
+BOOST_AUTO_TEST_CASE(testMultiPolygonDistanceInM)
+{
+  std::unique_ptr<Geometry> const g(
+      io::readWkt("MULTIPOLYGON (((0 0, 2 0, 2 2, 0 2, 0 0)), "
+                  "((3 0, 5 0, 5 2, 3 2, 3 0)))"));
+  std::unique_ptr<Geometry> out(
+      algorithm::straightSkeleton(*g, true, false, true));
+  BOOST_CHECK(!out->isEmpty());
+  BOOST_CHECK(out->isMeasured());
+}
+
+// Test for extrudeStraightSkeleton with height <= 0 (infinite extrusion)
+BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonZeroHeight)
+{
+  std::unique_ptr<Geometry> const geom(
+      io::readWkt("POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0))"));
+  std::unique_ptr<PolyhedralSurface> out(
+      algorithm::extrudeStraightSkeleton(*geom, 0.0));
+  BOOST_CHECK(!out->isEmpty());
+  BOOST_CHECK(out->is3D());
+}
+
+// Test for extrudeStraightSkeleton with custom weights and height <= 0
+BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonWeightsZeroHeight)
+{
+  std::unique_ptr<Geometry> const geom(
+      io::readWkt("POLYGON ((0 0, 4 0, 4 2, 0 2, 0 0))"));
+  std::vector<std::vector<Kernel::FT>> weights = {
+      {Kernel::FT(1.0), Kernel::FT(0.0), Kernel::FT(1.0), Kernel::FT(0.0)}};
+  std::unique_ptr<PolyhedralSurface> out(
+      algorithm::extrudeStraightSkeleton(*geom, 0.0, weights));
+  BOOST_CHECK(!out->isEmpty());
+  BOOST_CHECK(out->is3D());
+}
+
+// Test straightSkeleton(Geometry) dispatch with Triangle type
+BOOST_AUTO_TEST_CASE(testStraightSkeletonTriangleDispatch)
+{
+  std::unique_ptr<Geometry> g(io::readWkt("TRIANGLE ((0 0, 2 0, 1 2, 0 0))"));
+  std::unique_ptr<MultiLineString> result(
+      algorithm::straightSkeleton(*g, true, false, false));
+  BOOST_CHECK(!result->isEmpty());
+  BOOST_CHECK_GT(result->numGeometries(), 0U);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
