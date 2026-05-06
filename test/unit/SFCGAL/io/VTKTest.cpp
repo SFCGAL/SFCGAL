@@ -4,7 +4,9 @@
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
 #include "SFCGAL/io/vtk.h"
+#include "SFCGAL/Solid.h"
 #include "SFCGAL/io/wkt.h"
+#include <array>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -234,6 +236,34 @@ BOOST_AUTO_TEST_CASE(test_complex_geometry)
                          "7\n";
 
   BOOST_CHECK_EQUAL(result, expected);
+}
+
+// Test empty Solid export
+BOOST_AUTO_TEST_CASE(test_save_empty_solid)
+{
+  SFCGAL::Solid emptySolid;
+  std::string   result = SFCGAL::io::VTK::saveToString(emptySolid);
+
+  std::string expected = "# vtk DataFile Version 2.0\n"
+                         "SFCGAL Geometry\n"
+                         "ASCII\n"
+                         "DATASET UNSTRUCTURED_GRID\n"
+                         "POINTS 0 float\n"
+                         "CELLS 0 0\n"
+                         "CELL_TYPES 0\n";
+  BOOST_CHECK_EQUAL(result, expected);
+}
+
+// Test saveToBuffer with buffer too small
+BOOST_AUTO_TEST_CASE(test_save_to_buffer_too_small)
+{
+  std::string                       wkt = "POINT (1 2 3)";
+  std::unique_ptr<SFCGAL::Geometry> geom(SFCGAL::io::readWkt(wkt));
+
+  size_t              size = 3;
+  std::array<char, 3> buffer;
+  SFCGAL::io::VTK::saveToBuffer(*geom, buffer.data(), &size);
+  BOOST_CHECK_GT(size, 3U);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
