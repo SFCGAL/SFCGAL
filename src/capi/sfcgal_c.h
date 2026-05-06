@@ -2443,7 +2443,7 @@ sfcgal_geometry_buffer3d(const sfcgal_geometry_t *geom, double radius,
  *--------------------------------------------------------------------------------------*/
 
 /**
- * Rotates a geometry around the origin (0,0,0) by a given angle
+ * Rotates a geometry in 2D around the origin (0,0) by a given angle
  * @param geom The geometry to rotate
  * @param angle Rotation angle in radians
  * @return The rotated geometry
@@ -2453,7 +2453,7 @@ SFCGAL_API sfcgal_geometry_t *
 sfcgal_geometry_rotate(const sfcgal_geometry_t *geom, double angle);
 
 /**
- * Rotates a geometry around a specified point by a given angle
+ * Rotates a geometry in 2D around a specified point by a given angle
  * @param geom The geometry to rotate
  * @param angle Rotation angle in radians
  * @param cx X-coordinate of the center point
@@ -2466,7 +2466,8 @@ sfcgal_geometry_rotate_2d(const sfcgal_geometry_t *geom, double angle,
                           double cx, double cy);
 
 /**
- * Rotates a 3D geometry around a specified axis by a given angle
+ * Rotates a geometry in 3D around a specified axis and origin (0, 0, 0)
+ * by a given angle
  * @param geom The geometry to rotate
  * @param angle Rotation angle in radians
  * @param ax X-coordinate of the axis vector
@@ -2480,8 +2481,8 @@ sfcgal_geometry_rotate_3d(const sfcgal_geometry_t *geom, double angle,
                           double ax, double ay, double az);
 
 /**
- * Rotates a 3D geometry around a specified axis and center point by a given
- * angle
+ * Rotates a geometry in 3D around a specified axis and center point
+ * by a given angle
  * @param geom The geometry to rotate
  * @param angle Rotation angle in radians
  * @param ax X-coordinate of the axis vector
@@ -2500,7 +2501,8 @@ sfcgal_geometry_rotate_3d_around_center(const sfcgal_geometry_t *geom,
                                         double cz);
 
 /**
- * Rotates a geometry around the X axis by a given angle
+ * Rotates a geometry in 3D around the X axis and origin (0, 0, 0)
+ * by a given angle
  * @param geom The geometry to rotate
  * @param angle Rotation angle in radians
  * @return The rotated geometry
@@ -2510,7 +2512,8 @@ SFCGAL_API sfcgal_geometry_t *
 sfcgal_geometry_rotate_x(const sfcgal_geometry_t *geom, double angle);
 
 /**
- * Rotates a geometry around the Y axis by a given angle
+ * Rotates a geometry around the Y axis and origin (0, 0, 0)
+ * by a given angle
  * @param geom The geometry to rotate
  * @param angle Rotation angle in radians
  * @return The rotated geometry
@@ -2520,7 +2523,8 @@ SFCGAL_API sfcgal_geometry_t *
 sfcgal_geometry_rotate_y(const sfcgal_geometry_t *geom, double angle);
 
 /**
- * Rotates a geometry around the Z axis by a given angle
+ * Rotates a geometry around the Z axis and origin (0, 0, 0)
+ * by a given angle
  * @param geom The geometry to rotate
  * @param angle Rotation angle in radians
  * @return The rotated geometry
