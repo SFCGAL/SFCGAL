@@ -94,3 +94,27 @@ MultiLineString|SOLID ((((0 0 0, 0 1 0, 1 1 0, 1 0 0, 0 0 0)), ((0 0 0, 0 0 1, 0
 # Tetrahedron surface + point translation
 # ============================================================================
 TriangulatedSurface_Point|TIN Z (((0 0 0, 0 1 0, 1 0 0, 0 0 0)), ((0 0 0, 1 0 0, 0 0 1, 0 0 0)), ((0 0 0, 0 0 1, 0 1 0, 0 0 0)), ((1 0 0, 0 1 0, 0 0 1, 1 0 0)))|POINT Z (2 2 2)|not_empty|TYPE_TRIANGULATEDSURFACE|
+
+# ============================================================================
+# Test: NURBS Curve + Solid
+# NURBS curve swept along solid should produce non-empty result
+# ============================================================================
+NURBSCurve_Solid|NURBSCURVE Z (1, (0 0 0, 1 0 1))|SOLID ((((0 0 0, 1 0 0, 1 1 0, 0 1 0, 0 0 0)), ((0 0 0, 0 0 1, 1 0 1, 1 0 0, 0 0 0)), ((0 0 0, 0 1 0, 0 1 1, 0 0 1, 0 0 0)), ((1 1 1, 1 0 1, 0 0 1, 0 1 1, 1 1 1)), ((1 1 1, 0 1 1, 0 1 0, 1 1 0, 1 1 1)), ((1 1 1, 1 1 0, 1 0 0, 1 0 1, 1 1 1))))|not_empty|TYPE_POLYHEDRALSURFACE|
+
+# ============================================================================
+# Test: Two LineStrings (both dimension < 2)
+# Minkowski sum of two 1D geometries is empty in 3D (no Gaussian map)
+# ============================================================================
+TwoLineStrings|LINESTRING Z (0 0 0, 1 0 0)|LINESTRING Z (2 0 0, 3 0 0)|empty|TYPE_GEOMETRYCOLLECTION|
+
+# ============================================================================
+# Test: Empty TIN + Point
+# Empty triangulated surface should produce empty result
+# ============================================================================
+EmptyTIN|TIN EMPTY|POINT Z (0 0 0)|empty|TYPE_GEOMETRYCOLLECTION|
+
+# ============================================================================
+# Test: Solid with interior shell + Point
+# Solid with void translated by point
+# ============================================================================
+SolidInteriorShell|SOLID Z ((((0 0 0, 0 10 0, 10 10 0, 10 0 0, 0 0 0)),((0 0 0, 0 0 10, 0 10 10, 0 10 0, 0 0 0)),((0 0 0, 10 0 0, 10 0 10, 0 0 10, 0 0 0)),((10 10 10, 0 10 10, 0 0 10, 10 0 10, 10 10 10)),((10 10 10, 10 0 10, 10 0 0, 10 10 0, 10 10 10)),((10 10 10, 10 10 0, 0 10 0, 0 10 10, 10 10 10))),(((2 2 2, 8 2 2, 8 8 2, 2 8 2, 2 2 2)),((2 2 2, 2 2 8, 8 2 8, 8 2 2, 2 2 2)),((2 2 2, 2 8 2, 2 8 8, 2 2 8, 2 2 2)),((8 8 8, 2 8 8, 2 2 8, 8 2 8, 8 8 8)),((8 8 8, 8 2 8, 8 2 2, 8 8 2, 8 8 8)),((8 8 8, 8 8 2, 2 8 2, 2 8 8, 8 8 8))))|POINT Z (1 1 1)|not_empty|TYPE_SOLID|nocheck
