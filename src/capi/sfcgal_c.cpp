@@ -195,16 +195,17 @@ static sfcgal_error_handler_t __sfcgal_error_handler   = printf;
 
   #define SFCGAL_GEOMETRY_FUNCTION_UNARY_CONSTRUCTION(name, sfcgal_function)   \
     extern "C" sfcgal_geometry_t *sfcgal_geometry_##name(                      \
-        const sfcgal_geometry_t *ga)                                           \
+        const sfcgal_geometry_t *geom)                                         \
     {                                                                          \
       std::unique_ptr<SFCGAL::Geometry> result;                                \
       try {                                                                    \
-        result = sfcgal_function(*static_cast<const SFCGAL::Geometry *>(ga));  \
+        result =                                                               \
+            sfcgal_function(*static_cast<const SFCGAL::Geometry *>(geom));     \
       } catch (std::exception & e) {                                           \
         SFCGAL_WARNING("During " #name "(A) :");                               \
         SFCGAL_WARNING(                                                        \
             "  with A: %s",                                                    \
-            static_cast<const SFCGAL::Geometry *>(ga)->asText().c_str());      \
+            static_cast<const SFCGAL::Geometry *>(geom)->asText().c_str());    \
         SFCGAL_ERROR("%s", e.what());                                          \
         return 0;                                                              \
       }                                                                        \
