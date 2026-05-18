@@ -3,7 +3,7 @@
 // Copyright (c) 2024-2025, SFCGAL team.
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
-#include "SFCGAL/algorithm/tesselate.h"
+#include "SFCGAL/algorithm/tessellate.h"
 #include "SFCGAL/GeometryCollection.h"
 #include "SFCGAL/Solid.h"
 #include "SFCGAL/TriangulatedSurface.h"
@@ -16,7 +16,7 @@ namespace SFCGAL::algorithm {
  * @param g Geometry to tessellate
  * @return Tessellated geometry */
 auto
-tesselate(const Geometry &g, NoValidityCheck /*unused*/)
+tessellate(const Geometry &g, NoValidityCheck /*unused*/)
     -> std::unique_ptr<Geometry>
 {
   switch (g.geometryTypeId()) {
@@ -42,7 +42,7 @@ tesselate(const Geometry &g, NoValidityCheck /*unused*/)
       const PolyhedralSurface &shellN = g.as<Solid>().shellN(i);
 
       if (!shellN.isEmpty()) {
-        ret->addGeometry(tesselate(shellN));
+        ret->addGeometry(tessellate(shellN));
       }
     }
 
@@ -56,7 +56,7 @@ tesselate(const Geometry &g, NoValidityCheck /*unused*/)
     auto ret = std::make_unique<GeometryCollection>();
 
     for (size_t i = 0; i < g.numGeometries(); ++i) {
-      ret->addGeometry(tesselate(g.geometryN(i)));
+      ret->addGeometry(tessellate(g.geometryN(i)));
     }
 
     return ret;
@@ -73,11 +73,11 @@ tesselate(const Geometry &g, NoValidityCheck /*unused*/)
  * @param g Geometry to tessellate
  * @return Tessellated geometry */
 auto
-tesselate(const Geometry &g) -> std::unique_ptr<Geometry>
+tessellate(const Geometry &g) -> std::unique_ptr<Geometry>
 {
   SFCGAL_ASSERT_GEOMETRY_VALIDITY(g);
 
-  return tesselate(g, NoValidityCheck());
+  return tessellate(g, NoValidityCheck());
 }
 
 } // namespace SFCGAL::algorithm

@@ -168,8 +168,8 @@ sfcgalop -a "SOLID((((0 0 0, 0 1 0, 1 1 0, 1 0 0, 0 0 0)),
 - `centroid` - Compute the geometric centroid of a geometry
 - `straightskeleton` - Compute the straight skeleton of a polygon
 - `extrude` - Extrude a 2D geometry to create a 3D solid
-- `tesselate` - Tesselate a geometry into triangular faces
-- `triangulate` - Triangulate a geometry (alias for tesselate)
+- `tessellate` - Tessellate a geometry into triangular faces
+- `triangulate` - Triangulate a geometry (alias for tessellate)
 - `offset` - Create an offset polygon at specified distance
 - `buffer3d` - Create a 3D buffer around points and lines
 - `minkowskisum` - Compute Minkowski sum of two geometries

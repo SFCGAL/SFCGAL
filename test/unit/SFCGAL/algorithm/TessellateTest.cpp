@@ -17,7 +17,7 @@
 #include "SFCGAL/Solid.h"
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/TriangulatedSurface.h"
-#include "SFCGAL/algorithm/tesselate.h"
+#include "SFCGAL/algorithm/tessellate.h"
 #include "SFCGAL/io/wkt.h"
 
 #include "SFCGAL/detail/tools/Registry.h"
@@ -27,7 +27,7 @@ using namespace SFCGAL;
 // always after CGAL
 using namespace boost::unit_test;
 
-BOOST_AUTO_TEST_SUITE(SFCGAL_algorithm_TesselateTest)
+BOOST_AUTO_TEST_SUITE(SFCGAL_algorithm_TessellateTest)
 
 BOOST_AUTO_TEST_CASE(testEmpty)
 {
@@ -37,8 +37,8 @@ BOOST_AUTO_TEST_CASE(testEmpty)
 
   for (const auto &geometryType : geometryTypes) {
     std::unique_ptr<Geometry> g(registry.newGeometryByTypeName(geometryType));
-    BOOST_TEST_MESSAGE(boost::format("tesselate(%s)") % g->asText());
-    std::unique_ptr<Geometry> result = algorithm::tesselate(*g);
+    BOOST_TEST_MESSAGE(boost::format("tessellate(%s)") % g->asText());
+    std::unique_ptr<Geometry> result = algorithm::tessellate(*g);
     BOOST_CHECK(result->isEmpty());
   }
 }
@@ -51,26 +51,26 @@ BOOST_AUTO_TEST_CASE(testPoint)
 {
   std::string const               wkt = "POINT (3.0 4.0)";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
-  BOOST_CHECK_EQUAL(algorithm::tesselate(*g)->asText(1), wkt);
+  BOOST_CHECK_EQUAL(algorithm::tessellate(*g)->asText(1), wkt);
 }
 BOOST_AUTO_TEST_CASE(testLineString)
 {
   std::string const               wkt = "LINESTRING (0.0 0.0,1.0 1.0)";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
-  BOOST_CHECK_EQUAL(algorithm::tesselate(*g)->asText(1), wkt);
+  BOOST_CHECK_EQUAL(algorithm::tessellate(*g)->asText(1), wkt);
 }
 BOOST_AUTO_TEST_CASE(testMultiPoint)
 {
   std::string const               wkt = "MULTIPOINT ((3.0 4.0),(5.0 6.0))";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
-  BOOST_CHECK_EQUAL(algorithm::tesselate(*g)->asText(1), wkt);
+  BOOST_CHECK_EQUAL(algorithm::tessellate(*g)->asText(1), wkt);
 }
 BOOST_AUTO_TEST_CASE(testMultiLineString)
 {
   std::string const wkt =
       "MULTILINESTRING ((0.0 0.0,1.0 1.0),(1.0 1.0,2.0 2.0))";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
-  BOOST_CHECK_EQUAL(algorithm::tesselate(*g)->asText(1), wkt);
+  BOOST_CHECK_EQUAL(algorithm::tessellate(*g)->asText(1), wkt);
 }
 
 /*
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(testPolygon)
   std::string const wktOut = "TIN (((0.0 1.0,1.0 0.0,1.0 1.0,0.0 1.0)),((0.0 "
                              "1.0,0.0 0.0,1.0 0.0,0.0 1.0)))";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
-  std::unique_ptr<Geometry>       result(algorithm::tesselate(*g));
+  std::unique_ptr<Geometry>       result(algorithm::tessellate(*g));
   BOOST_CHECK_EQUAL(result->asText(1), wktOut);
 }
 BOOST_AUTO_TEST_CASE(testMultiPolygon)
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(testMultiPolygon)
       "1.0,0.0 0.0,1.0 0.0,0.0 1.0))),TIN (((2.0 1.0,3.0 0.0,3.0 1.0,2.0 "
       "1.0)),((2.0 1.0,2.0 0.0,3.0 0.0,2.0 1.0))))";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
-  std::unique_ptr<Geometry>       result(algorithm::tesselate(*g));
+  std::unique_ptr<Geometry>       result(algorithm::tessellate(*g));
   BOOST_CHECK_EQUAL(result->asText(1), wktOut);
 }
 
