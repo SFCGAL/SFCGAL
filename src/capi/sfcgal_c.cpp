@@ -1432,6 +1432,8 @@ SFCGAL_GEOMETRY_FUNCTION_UNARY_CONSTRUCTION(
     approximate_medial_axis, SFCGAL::algorithm::approximateMedialAxis)
 SFCGAL_GEOMETRY_FUNCTION_UNARY_CONSTRUCTION(tesselate,
                                             SFCGAL::algorithm::tessellate)
+SFCGAL_GEOMETRY_FUNCTION_UNARY_CONSTRUCTION(tessellate,
+                                            SFCGAL::algorithm::tessellate)
 
 SFCGAL_GEOMETRY_FUNCTION_UNARY_MEASURE(area, SFCGAL::algorithm::area)
 SFCGAL_GEOMETRY_FUNCTION_UNARY_MEASURE(area_3d, SFCGAL::algorithm::area3D)

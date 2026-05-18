@@ -1675,8 +1675,20 @@ sfcgal_geometry_orientation(const sfcgal_geometry_t *geom);
  * @return The tessellation of geom
  * @ingroup capi
  */
+SFCGAL_DEPRECATED("Use sfcgal_geometry_tessellate instead.")
 SFCGAL_API sfcgal_geometry_t *
 sfcgal_geometry_tesselate(const sfcgal_geometry_t *geom);
+
+/**
+ * Returns a tessellation of the given Geometry
+ * @param geom the input geometry
+ * @pre isValid(geom) == true
+ * @post isValid(return) == true
+ * @return The tessellation of geom
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_geometry_tessellate(const sfcgal_geometry_t *geom);
 
 /**
  * Returns a triangulation of the given Geometry
