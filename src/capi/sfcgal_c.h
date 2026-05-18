@@ -1668,11 +1668,11 @@ SFCGAL_API int
 sfcgal_geometry_orientation(const sfcgal_geometry_t *geom);
 
 /**
- * Returns a tesselation of the given Geometry
+ * Returns a tessellation of the given Geometry
  * @param geom the input geometry
  * @pre isValid(geom) == true
  * @post isValid(return) == true
- * @return The tesselation of geom
+ * @return The tessellation of geom
  * @ingroup capi
  */
 SFCGAL_API sfcgal_geometry_t *

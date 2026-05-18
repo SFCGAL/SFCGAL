@@ -11,7 +11,7 @@
 #include "SFCGAL/Solid.h"
 #include "SFCGAL/algorithm/area.h"
 #include "SFCGAL/algorithm/isValid.h"
-#include "SFCGAL/algorithm/tesselate.h"
+#include "SFCGAL/algorithm/tessellate.h"
 #include "SFCGAL/algorithm/translate.h"
 #include "SFCGAL/algorithm/volume.h"
 #include "SFCGAL/detail/tools/Registry.h"

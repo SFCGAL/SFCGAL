@@ -79,7 +79,7 @@
 #include "SFCGAL/algorithm/split3D.h"
 #include "SFCGAL/algorithm/straightSkeleton.h"
 #include "SFCGAL/algorithm/surfaceSimplification.h"
-#include "SFCGAL/algorithm/tesselate.h"
+#include "SFCGAL/algorithm/tessellate.h"
 #include "SFCGAL/algorithm/translate.h"
 #include "SFCGAL/algorithm/union.h"
 #include "SFCGAL/algorithm/visibility.h"
@@ -1430,7 +1430,7 @@ SFCGAL_GEOMETRY_FUNCTION_UNARY_CONSTRUCTION(straight_skeleton,
 SFCGAL_GEOMETRY_FUNCTION_UNARY_CONSTRUCTION(
     approximate_medial_axis, SFCGAL::algorithm::approximateMedialAxis)
 SFCGAL_GEOMETRY_FUNCTION_UNARY_CONSTRUCTION(tesselate,
-                                            SFCGAL::algorithm::tesselate)
+                                            SFCGAL::algorithm::tessellate)
 
 SFCGAL_GEOMETRY_FUNCTION_UNARY_MEASURE(area, SFCGAL::algorithm::area)
 SFCGAL_GEOMETRY_FUNCTION_UNARY_MEASURE(area_3d, SFCGAL::algorithm::area3D)

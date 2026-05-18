@@ -19,7 +19,7 @@
 
 #include "SFCGAL/algorithm/intersection.h"
 #include "SFCGAL/algorithm/isValid.h"
-#include "SFCGAL/algorithm/tesselate.h"
+#include "SFCGAL/algorithm/tessellate.h"
 #include "SFCGAL/algorithm/translate.h"
 
 #include <CGAL/Arr_segment_traits_2.h>

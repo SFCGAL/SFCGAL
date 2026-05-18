@@ -20,7 +20,7 @@
 #include "SFCGAL/algorithm/offset.h"
 #include "SFCGAL/algorithm/roofGeneration.h"
 #include "SFCGAL/algorithm/straightSkeleton.h"
-#include "SFCGAL/algorithm/tesselate.h"
+#include "SFCGAL/algorithm/tessellate.h"
 #include "SFCGAL/triangulate/triangulate2DZ.h"
 
 namespace Operations {
@@ -766,24 +766,24 @@ const std::vector<Operation> operations_construction = {
        return SFCGAL::algorithm::straightSkeleton(*geom_a, autoOrientation);
      }},
 
-    {"tesselate", "Construction", "Tesselate a geometry into triangular faces",
-     false,
+    {"tessellate", "Construction",
+     "Tessellate a geometry into triangular faces", false,
      "No parameters required.\n\nExample:\n  sfcgalop -a \"POLYGON((0 0,3 0,3 "
-     "3,0 3,0 0))\" tesselate",
+     "3,0 3,0 0))\" tessellate",
      "A", "G",
      [](const std::string &, const SFCGAL::Geometry *geom_a,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       return SFCGAL::algorithm::tesselate(*geom_a);
+       return SFCGAL::algorithm::tessellate(*geom_a);
      }},
 
     {"triangulate", "Construction",
-     "Triangulate a geometry (alias for tesselate)", false,
+     "Triangulate a geometry (alias for tessellate)", false,
      "No parameters required.\n\nExample:\n  sfcgalop -a \"POLYGON((0 0,3 0,3 "
      "3,0 3,0 0))\" triangulate",
      "A", "G",
      [](const std::string &, const SFCGAL::Geometry *geom_a,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       return SFCGAL::algorithm::tesselate(*geom_a);
+       return SFCGAL::algorithm::tessellate(*geom_a);
      }}};
 
 } // namespace Operations
