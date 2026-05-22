@@ -15,7 +15,7 @@ apt-get update -qq || exit 1
 apt-get install --yes \
 	ca-certificates cmake libboost-program-options-dev \
 	libboost-test-dev libboost-thread-dev nlohmann-json3-dev \
-	libboost-system-dev libboost-serialization-dev \
+	libboost-serialization-dev \
 	libmpfr-dev libgmp-dev libeigen3-dev \
 	xz-utils ||
 	exit 1
