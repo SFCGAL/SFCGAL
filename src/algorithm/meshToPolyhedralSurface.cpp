@@ -5,8 +5,14 @@
 #include "SFCGAL/Kernel.h"
 #include "SFCGAL/LineString.h"
 #include "SFCGAL/detail/algorithm/meshToPolyhedralSurface.h"
+#include "SFCGAL/version.h"
 
-#include <CGAL/Polygon_mesh_processing/border.h>
+#if (SFCGAL_CGAL_VERSION_MAJOR > 6) ||                                         \
+    (SFCGAL_CGAL_VERSION_MAJOR == 6 && SFCGAL_CGAL_VERSION_MINOR >= 2)
+  #include <CGAL/boost/graph/border.h>
+#else
+  #include <CGAL/Polygon_mesh_processing/border.h>
+#endif
 #include <CGAL/Polygon_mesh_processing/compute_normal.h>
 #include <CGAL/boost/graph/Face_filtered_graph.h>
 
@@ -52,7 +58,12 @@ meshToPolyhedralSurface(const Surface_mesh_3 &mesh, const Kernel::FT &epsAngle,
     // extract mesh cycles
     std::vector<HalfedgeIndex>                cyclesIdx;
     CGAL::Face_filtered_graph<Surface_mesh_3> filteredMesh(mesh, planarIdx);
+#if (SFCGAL_CGAL_VERSION_MAJOR > 6) ||                                         \
+    (SFCGAL_CGAL_VERSION_MAJOR == 6 && SFCGAL_CGAL_VERSION_MINOR >= 2)
+    CGAL::extract_boundary_cycles(filteredMesh, std::back_inserter(cyclesIdx));
+#else
     PMP::extract_boundary_cycles(filteredMesh, std::back_inserter(cyclesIdx));
+#endif
 
     // extract normal of current group
     Kernel::Vector_3 faceNormal =
