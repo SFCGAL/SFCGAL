@@ -3,7 +3,13 @@
 // Copyright (c) 2024-2026, SFCGAL team.
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
+#include "SFCGAL/version.h"
+
 #include <CGAL/intersections.h>
+#if (SFCGAL_CGAL_VERSION_MAJOR > 6) ||                                         \
+    (SFCGAL_CGAL_VERSION_MAJOR == 6 && SFCGAL_CGAL_VERSION_MINOR >= 2)
+  #include <CGAL/Polygon_mesh_processing/intersection_polylines.h>
+#endif
 
 #include <CGAL/Polygon_mesh_processing/clip.h>
 #include <CGAL/Polygon_mesh_processing/connected_components.h>
@@ -178,8 +184,14 @@ _intersection_solid_triangle(const MarkedPolyhedron         &polyhedron,
   CGAL::Side_of_triangle_mesh<MarkedPolyhedron, Kernel> const side_of_tm(polya);
 
   std::list<Polyline_3> polylines;
+#if (SFCGAL_CGAL_VERSION_MAJOR > 6) ||                                         \
+    (SFCGAL_CGAL_VERSION_MAJOR == 6 && SFCGAL_CGAL_VERSION_MINOR >= 2)
+  CGAL::Polygon_mesh_processing::intersection_polylines(
+      polya, polyb, std::back_inserter(polylines));
+#else
   CGAL::Polygon_mesh_processing::surface_intersection(
       polya, polyb, std::back_inserter(polylines));
+#endif
   if (polylines.empty()) {
     // no surface intersection
     // if one of the point of the triangle is inside the polyhedron,
