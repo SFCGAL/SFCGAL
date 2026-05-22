@@ -22,7 +22,7 @@
     - ctest -VV
   parallel:
     matrix:
-      - CGAL_VERSION: [$CGAL_5_VERSION, $CGAL_LATEST_VERSION]
+      - CGAL_VERSION: [$CGAL_5_VERSION, $CGAL_LATEST_VERSION, $CGAL_BETA_VERSION]
         OS_VERSION: ["stable", "testing"]
         EIGEN: ["OFF", "ON"]
 
