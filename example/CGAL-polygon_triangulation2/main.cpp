@@ -13,12 +13,17 @@
 #include <iostream>
 
 /**
- * face information (depth)
+ * @brief Face information (depth)
  */
 struct FaceInfo2 {
   FaceInfo2() = default;
-  int nesting_level;
+  int nesting_level;  ///< Nesting level of the face.
 
+  /**
+   * @brief Returns whether the face is inside the domain.
+   *
+   * @return true if the face is inside the domain, false otherwise.
+   */
   [[nodiscard]] auto
   in_domain() const -> bool
   {
