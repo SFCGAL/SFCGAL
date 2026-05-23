@@ -31,13 +31,21 @@
 using namespace boost::unit_test;
 using namespace SFCGAL;
 
+/**
+ * @brief Coordinate transformation rotating axes.
+ */
 class RotateCoordinate : public Transform {
 public:
+  /**
+   * @brief Transforms a point by rotating its coordinates.
+   *
+   * @param pt Point to transform.
+   */
   void
-  transform(Point &p) override
+  transform(Point &pt) override
   {
     BOOST_ASSERT(!p.isEmpty());
-    p = Point(p.is3D() ? p.z() : 0.0, p.x(), p.y());
+    pt = Point(pt.is3D() ? pt.z() : 0.0, pt.x(), pt.y());
   }
 };
 
