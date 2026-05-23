@@ -358,6 +358,16 @@ solidToNef(const Solid &solid) -> Nef_polyhedron_3
 }
 
 // Forward declaration for recursive geometry collection handling
+/**
+ * @brief Convert any SFCGAL::Geometry to Nef_polyhedron_3
+ *
+ * This is the main conversion function that dispatches to type-specific
+ * converters.
+ *
+ * @param g The geometry to convert
+ * @return Nef_polyhedron_3 representation of the geometry
+ * @throws GeometryInvalidityException for unsupported geometry types
+ */
 [[nodiscard]] auto
 geometryToNef(const Geometry &g) -> Nef_polyhedron_3;
 
@@ -385,16 +395,6 @@ geometryCollectionToNef(const GeometryCollection &collection)
                             });
 }
 
-/**
- * @brief Convert any SFCGAL::Geometry to Nef_polyhedron_3
- *
- * This is the main conversion function that dispatches to type-specific
- * converters.
- *
- * @param g The geometry to convert
- * @return Nef_polyhedron_3 representation of the geometry
- * @throws GeometryInvalidityException for unsupported geometry types
- */
 // NOLINTBEGIN(readability-function-cognitive-complexity)
 [[nodiscard]] auto
 geometryToNef(const Geometry &g) -> Nef_polyhedron_3
