@@ -16,36 +16,31 @@
  * face information (depth)
  */
 struct FaceInfo2 {
-  FaceInfo2() {}
+  FaceInfo2() = default;
   int nesting_level;
 
-  bool
-  in_domain()
+  [[nodiscard]] auto
+  in_domain() const -> bool
   {
     return nesting_level % 2 == 1;
   }
 };
 
-typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
-typedef CGAL::Triangulation_vertex_base_with_info_2<unsigned int, Kernel>
-    triangulation_vertex_base;
-typedef CGAL::Triangulation_face_base_with_info_2<FaceInfo2, Kernel>
-    triangulation_face_base;
-typedef CGAL::Constrained_triangulation_face_base_2<Kernel,
-                                                    triangulation_face_base>
-    constrained_triangulation_face_base;
-typedef CGAL::Triangulation_data_structure_2<
-    triangulation_vertex_base, constrained_triangulation_face_base>
-    triangulation_data_structure;
+using Kernel = CGAL::Exact_predicates_inexact_constructions_kernel;
+using triangulation_vertex_base = CGAL::Triangulation_vertex_base_with_info_2<unsigned int, Kernel>;
+using triangulation_face_base = CGAL::Triangulation_face_base_with_info_2<FaceInfo2, Kernel>;
+using constrained_triangulation_face_base = CGAL::Constrained_triangulation_face_base_2<Kernel,
+                                                    triangulation_face_base>;
+using triangulation_data_structure = CGAL::Triangulation_data_structure_2<
+    triangulation_vertex_base, constrained_triangulation_face_base>;
 
 // typedef CGAL::Exact_predicates_tag Itag;
-typedef CGAL::Constrained_Delaunay_triangulation_2<
-    Kernel, triangulation_data_structure, CGAL::Exact_predicates_tag>
-    CDT;
+using CDT = CGAL::Constrained_Delaunay_triangulation_2<
+    Kernel, triangulation_data_structure, CGAL::Exact_predicates_tag>;
 
-typedef CDT::Point              triangulation_point;
-typedef CGAL::Point_2<Kernel>   Point_2;
-typedef CGAL::Polygon_2<Kernel> Polygon_2;
+using triangulation_point = CDT::Point;
+using Point_2 = CGAL::Point_2<Kernel>;
+using Polygon_2 = CGAL::Polygon_2<Kernel>;
 
 void
 mark_domains(CDT &ct, CDT::Face_handle start, int index,
@@ -58,18 +53,20 @@ mark_domains(CDT &ct, CDT::Face_handle start, int index,
   queue.push_back(start);
 
   while (!queue.empty()) {
-    CDT::Face_handle fh = queue.front();
+    CDT::Face_handle faceHandle = queue.front();
     queue.pop_front();
-    if (fh->info().nesting_level == -1) {
-      fh->info().nesting_level = index;
+    if (faceHandle->info().nesting_level == -1) {
+      faceHandle->info().nesting_level = index;
       for (int i = 0; i < 3; i++) {
-        CDT::Edge        e(fh, i);
-        CDT::Face_handle n = fh->neighbor(i);
-        if (n->info().nesting_level == -1) {
-          if (ct.is_constrained(e))
-            border.push_back(e);
-          else
-            queue.push_back(n);
+        CDT::Edge        edge(faceHandle, i);
+        CDT::Face_handle neighbor = faceHandle->neighbor(i);
+        if (neighbor->info().nesting_level == -1) {
+          if (ct.is_constrained(edge)) {
+            border.push_back(edge);
+          }
+          else {
+            queue.push_back(neighbor);
+          }
         }
       }
     }
@@ -94,11 +91,11 @@ mark_domains(CDT &cdt)
   std::list<CDT::Edge> border;
   mark_domains(cdt, cdt.infinite_face(), index++, border);
   while (!border.empty()) {
-    CDT::Edge e = border.front();
+    CDT::Edge edge = border.front();
     border.pop_front();
-    CDT::Face_handle n = e.first->neighbor(e.second);
-    if (n->info().nesting_level == -1) {
-      mark_domains(cdt, n, e.first->info().nesting_level + 1, border);
+    CDT::Face_handle neighbor = edge.first->neighbor(edge.second);
+    if (neighbor->info().nesting_level == -1) {
+      mark_domains(cdt, neighbor, edge.first->info().nesting_level + 1, border);
     }
   }
 }
@@ -106,20 +103,21 @@ mark_domains(CDT &cdt)
 void
 insert_polygon(CDT &cdt, const Polygon_2 &polygon)
 {
-  if (polygon.is_empty())
+  if (polygon.is_empty()) {
     return;
+  }
   CDT::Vertex_handle v_prev =
       cdt.insert(*CGAL::cpp0x::prev(polygon.vertices_end()));
-  for (Polygon_2::Vertex_iterator vit = polygon.vertices_begin();
+  for (auto vit = polygon.vertices_begin();
        vit != polygon.vertices_end(); ++vit) {
-    CDT::Vertex_handle vh = cdt.insert(*vit);
-    cdt.insert_constraint(vh, v_prev);
-    v_prev = vh;
+    CDT::Vertex_handle vertexHandle = cdt.insert(*vit);
+    cdt.insert_constraint(vertexHandle, v_prev);
+    v_prev = vertexHandle;
   }
 }
 
-int
-main()
+auto
+main() -> int
 {
   // construct two non-intersecting nested polygons
   Polygon_2 polygon1;
@@ -165,18 +163,18 @@ main()
 
   std::ofstream ofs("polygon_triangulation2.obj");
   if (!ofs.good()) {
-    std::cout << "can't open file" << std::endl;
+    std::cout << "can't open file\n";
     return 1;
   }
 
   //-- print vertices
-  ofs << "# " << points.size() << " vertices" << std::endl;
-  for (size_t i = 0; i < points.size(); i++) {
-    ofs << "v " << points[i] << " 0.0" << std::endl;
+  ofs << "# " << points.size() << " vertices\n";
+  for (auto point : points) {
+    ofs << "v " << point << " 0.0\n";
   }
 
   //-- print faces
-  ofs << "# " << cdt.number_of_faces() << " faces" << std::endl;
+  ofs << "# " << cdt.number_of_faces() << " faces\n";
   // warning : Delaunay_triangulation_2::All_faces_iterator iterator over
   // infinite faces
   for (CDT::Finite_faces_iterator it = cdt.finite_faces_begin();
@@ -185,15 +183,15 @@ main()
     if (!it->info().in_domain()) {
       continue;
     }
-    size_t ia = it->vertex(0)->info();
-    size_t ib = it->vertex(1)->info();
-    size_t ic = it->vertex(2)->info();
+    size_t infoA = it->vertex(0)->info();
+    size_t infoB = it->vertex(1)->info();
+    size_t infoC = it->vertex(2)->info();
 
     assert(it->is_valid());
     // assert ( ia < cdt.number_of_vertices() || ib < tri.number_of_vertices()
     // || ic < tri.number_of_vertices() ) ;
 
-    ofs << "f " << (ia + 1) << " " << (ib + 1) << " " << (ic + 1) << std::endl;
+    ofs << "f " << (infoA + 1) << " " << (infoB + 1) << " " << (infoC + 1) << "\n";
   }
 
   return 0;
