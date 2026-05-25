@@ -10,6 +10,7 @@
 #include "operations_conversions.hpp"
 #include "operations_metrics.hpp"
 #include "operations_predicates.hpp"
+#include "operations_processing.hpp"
 #include "operations_set.hpp"
 #include "operations_transformations.hpp"
 
@@ -31,6 +32,7 @@ build_all_operations() -> std::vector<Operation>
   concat(Operations::operations_conversions);
   concat(Operations::operations_metrics);
   concat(Operations::operations_predicates);
+  concat(Operations::operations_processing);
   concat(Operations::operations_set);
   concat(Operations::operations_transformations);
 
