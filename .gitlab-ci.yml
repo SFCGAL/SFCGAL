@@ -48,6 +48,7 @@ include:
   - local: /.gitlab/pipeline/docker-windows.yml
   - local: /.gitlab/pipeline/documentation.yml
   - local: /.gitlab/pipeline/thread-safety.yml
+  - local: /.gitlab/pipeline/sanitizers.yml
 
 semgrep-sast:
   stage: lint
