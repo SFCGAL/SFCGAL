@@ -1851,10 +1851,9 @@ BOOST_AUTO_TEST_CASE(testSphereTest)
   BOOST_CHECK(sfcgal_primitive_is_almost_equals(sphere, sphere2, 0.0));
   BOOST_CHECK_CLOSE(sfcgal_primitive_parameter_double(sphere, "radius"),
                     sfcgal_primitive_parameter_double(sphere2, "radius"), 1e-6);
-  BOOST_CHECK_EQUAL(sfcgal_primitive_parameter_int(sphere, "num_vertical"),
-                    sfcgal_primitive_parameter_int(sphere2, "num_vertical"));
-  BOOST_CHECK_EQUAL(sfcgal_primitive_parameter_int(sphere, "num_horizontal"),
-                    sfcgal_primitive_parameter_int(sphere2, "num_horizontal"));
+  BOOST_CHECK_EQUAL(
+      sfcgal_primitive_parameter_int(sphere, "num_subdivisions"),
+      sfcgal_primitive_parameter_int(sphere2, "num_subdivisions"));
 
   double *center1 = sfcgal_primitive_parameter_point(sphere, "center");
   double *center2 = sfcgal_primitive_parameter_point(sphere2, "center");
