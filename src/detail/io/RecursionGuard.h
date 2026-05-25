@@ -1,4 +1,4 @@
-// Copyright (c) 2024-2025, SFCGAL team.
+// Copyright (c) 2025-2026, SFCGAL team.
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
 #ifndef SFCGAL_DETAIL_IO_RECURSIONGUARD_H_
