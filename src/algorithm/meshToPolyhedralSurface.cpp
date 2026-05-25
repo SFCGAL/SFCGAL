@@ -7,8 +7,7 @@
 #include "SFCGAL/detail/algorithm/meshToPolyhedralSurface.h"
 #include "SFCGAL/version.h"
 
-#if (SFCGAL_CGAL_VERSION_MAJOR > 6) ||                                         \
-    (SFCGAL_CGAL_VERSION_MAJOR == 6 && SFCGAL_CGAL_VERSION_MINOR >= 2)
+#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 2, 0)
   #include <CGAL/boost/graph/border.h>
 #else
   #include <CGAL/Polygon_mesh_processing/border.h>
@@ -58,8 +57,7 @@ meshToPolyhedralSurface(const Surface_mesh_3 &mesh, const Kernel::FT &epsAngle,
     // extract mesh cycles
     std::vector<HalfedgeIndex>                cyclesIdx;
     CGAL::Face_filtered_graph<Surface_mesh_3> filteredMesh(mesh, planarIdx);
-#if (SFCGAL_CGAL_VERSION_MAJOR > 6) ||                                         \
-    (SFCGAL_CGAL_VERSION_MAJOR == 6 && SFCGAL_CGAL_VERSION_MINOR >= 2)
+#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 2, 0)
     CGAL::extract_boundary_cycles(filteredMesh, std::back_inserter(cyclesIdx));
 #else
     PMP::extract_boundary_cycles(filteredMesh, std::back_inserter(cyclesIdx));
