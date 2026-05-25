@@ -6,8 +6,7 @@
 #include "SFCGAL/version.h"
 
 #include <CGAL/intersections.h>
-#if (SFCGAL_CGAL_VERSION_MAJOR > 6) ||                                         \
-    (SFCGAL_CGAL_VERSION_MAJOR == 6 && SFCGAL_CGAL_VERSION_MINOR >= 2)
+#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 2, 0)
   #include <CGAL/Polygon_mesh_processing/intersection_polylines.h>
 #endif
 
@@ -184,8 +183,7 @@ _intersection_solid_triangle(const MarkedPolyhedron         &polyhedron,
   CGAL::Side_of_triangle_mesh<MarkedPolyhedron, Kernel> const side_of_tm(polya);
 
   std::list<Polyline_3> polylines;
-#if (SFCGAL_CGAL_VERSION_MAJOR > 6) ||                                         \
-    (SFCGAL_CGAL_VERSION_MAJOR == 6 && SFCGAL_CGAL_VERSION_MINOR >= 2)
+#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 2, 0)
   CGAL::Polygon_mesh_processing::intersection_polylines(
       polya, polyb, std::back_inserter(polylines));
 #else
