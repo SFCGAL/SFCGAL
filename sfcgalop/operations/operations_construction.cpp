@@ -9,6 +9,7 @@
 #ifndef _MSC_VER
   #include "SFCGAL/algorithm/alphaShapes.h"
 #endif
+#include "SFCGAL/algorithm/Sweep.h"
 #include "SFCGAL/algorithm/alphaWrapping3D.h"
 #include "SFCGAL/algorithm/buffer3D.h"
 #include "SFCGAL/algorithm/centroid.h"
@@ -20,7 +21,6 @@
 #include "SFCGAL/algorithm/offset.h"
 #include "SFCGAL/algorithm/roofGeneration.h"
 #include "SFCGAL/algorithm/straightSkeleton.h"
-#include "SFCGAL/algorithm/sweep.h"
 #include "SFCGAL/algorithm/tessellate.h"
 #include "SFCGAL/triangulate/triangulate2DZ.h"
 

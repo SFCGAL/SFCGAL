@@ -1,7 +1,7 @@
 // Copyright (c) 2025-2026, SFCGAL Team.
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
-#include <SFCGAL/algorithm/sweep.h>
+#include <SFCGAL/algorithm/Sweep.h>
 
 #include <SFCGAL/GeometryCollection.h>
 #include <SFCGAL/GeometryVisitor.h>
