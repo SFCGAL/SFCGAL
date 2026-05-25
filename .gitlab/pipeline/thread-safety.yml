@@ -2,7 +2,7 @@ thread_safety:
   stage: plateform-build-test
   variables:
     TSAN_OPTIONS: "log_path=tsan"
-  image: fedora:42
+  image: fedora:44
   rules:
     # on default branch
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
