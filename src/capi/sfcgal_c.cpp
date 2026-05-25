@@ -44,6 +44,7 @@
 #ifndef _MSC_VER
   #include "SFCGAL/algorithm/alphaShapes.h"
 #endif
+#include "SFCGAL/algorithm/Chamfer.h"
 #include "SFCGAL/algorithm/alphaWrapping3D.h"
 #include "SFCGAL/algorithm/area.h"
 #include "SFCGAL/algorithm/buffer3D.h"
@@ -3816,4 +3817,42 @@ sfcgal_geometry_split_3d(const sfcgal_geometry_t *geom, double ptx, double pty,
   }
 
   return splitGeom.release();
+}
+
+extern "C" auto SFCGAL_API
+sfcgal_geometry_chamfer(const sfcgal_geometry_t *solid,
+                        const sfcgal_geometry_t *edge, double radius,
+                        double radius_y, double epsilon) -> sfcgal_geometry_t *
+{
+  SFCGAL::algorithm::ChamferOptions chamferOptions;
+  chamferOptions.type     = SFCGAL::algorithm::ChamferType::FLAT;
+  chamferOptions.radius   = radius;
+  chamferOptions.radius_y = radius_y;
+  chamferOptions.epsilon  = epsilon;
+
+  SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
+      return static_cast<SFCGAL::Geometry *>(
+                 SFCGAL::algorithm::chamfer(
+                     *down_const_cast<SFCGAL::Geometry>(solid),
+                     *down_const_cast<SFCGAL::Geometry>(edge), chamferOptions)
+                     .release());)
+}
+
+extern "C" auto SFCGAL_API
+sfcgal_geometry_fillet(const sfcgal_geometry_t *solid,
+                       const sfcgal_geometry_t *edge, double radius,
+                       int segments, double epsilon) -> sfcgal_geometry_t *
+{
+  SFCGAL::algorithm::ChamferOptions chamferOptions;
+  chamferOptions.type     = SFCGAL::algorithm::ChamferType::ROUND;
+  chamferOptions.radius   = radius;
+  chamferOptions.segments = segments;
+  chamferOptions.epsilon  = epsilon;
+
+  SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
+      return static_cast<SFCGAL::Geometry *>(
+                 SFCGAL::algorithm::chamfer(
+                     *down_const_cast<SFCGAL::Geometry>(solid),
+                     *down_const_cast<SFCGAL::Geometry>(edge), chamferOptions)
+                     .release());)
 }

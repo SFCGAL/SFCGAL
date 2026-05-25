@@ -3054,6 +3054,59 @@ sfcgal_geometry_split_3d(const sfcgal_geometry_t *geom, double ptx, double pty,
                          double ptz, double normalx, double normaly,
                          double normalz, bool close_geometries);
 
+/**
+ * Replace sharp edges of a solid with a flat bevelled face (chamfer).
+ *
+ * Each matched edge is cut back by @p radius along both adjacent faces.
+ * When @p radius_y differs from @p radius the bevel is asymmetric: one leg
+ * has length @p radius, the other @p radius_y.
+ *
+ * @param solid The input SFCGAL::Solid
+ * @param edge SFCGAL::LineString or SFCGAL::MultiLineString selecting the edges
+ * to chamfer.
+ * @param radius Leg length on the first face.
+ * @param radius_y Leg length on the second face. If negative, defaults to
+ * radius (symmetric chamfer).
+ * @param epsilon Tolerance (in coordinate units) used to locate @p edge
+ * endpoints on the solid mesh.
+ * @return Modified solid, or clone of input if no edges were chamfered
+ * @pre isValid(solid) == true
+ * @pre radius > 0
+ * @pre epsilon > 0
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_geometry_chamfer(const sfcgal_geometry_t *solid,
+                        const sfcgal_geometry_t *edge, double radius,
+                        double radius_y, double epsilon);
+
+/**
+ *
+ * Replace sharp edges of a solid with a smooth circular-arc fillet.
+ *
+ * Each matched edge is replaced by a cylindrical surface of the given
+ * @p radius, approximated by @p segments planar faces.
+ *
+ * @param solid The input SFCGAL::Solid
+ * @param edge SFCGAL::LineString or SFCGAL::MultiLineString selecting the edges
+ * to fillet.
+ * @param radius Fillet radius.
+ * @param segments Number of planar faces approximating the arc.
+ * Typical values: 4 (coarse), 8 (default), 16+ (smooth).
+ * @param epsilon Tolerance (in coordinate units) used to locate @p edge
+ * endpoints on the solid mesh.
+ * @return Modified solid, or clone of input if no edges were chamfered
+ * @pre isValid(solid) == true
+ * @pre radius > 0
+ * @pre segments >= 2
+ * @pre epsilon > 0
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_geometry_fillet(const sfcgal_geometry_t *solid,
+                       const sfcgal_geometry_t *edge, double radius,
+                       int segments, double epsilon);
+
 /*--------------------------------------------------------------------------------------*
  *
  * Error handling
