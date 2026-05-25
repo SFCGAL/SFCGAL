@@ -195,16 +195,6 @@ private:
 
   auto
   generateSpherePoints() const -> std::vector<Kernel::Point_3>;
-
-  // Function to get an orthogonal vector in the XY plane
-  static auto
-  get_orthogonal_vector(const Kernel::Vector_3 &vec) -> Kernel::Vector_3
-  {
-    if (vec.x() != 0 || vec.y() != 0) {
-      return {-vec.y(), vec.x(), 0};
-    }
-    return {0, -vec.z(), vec.y()};
-  }
 };
 
 } // namespace SFCGAL
