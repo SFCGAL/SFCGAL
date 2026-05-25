@@ -50,7 +50,7 @@ repairWithRule(const Multipolygon_with_holes_2     &mp,
   case SFCGAL::algorithm::PolygonRepairRule::EVEN_ODD_RULE:
     return applyRepairWithRule(mp, CGAL::Polygon_repair::Even_odd_rule());
 
-  #if SFCGAL_CGAL_VERSION_MAJOR == 6 && SFCGAL_CGAL_VERSION_MINOR >= 1
+  #if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 1, 0)
   case SFCGAL::algorithm::PolygonRepairRule::NON_ZERO_RULE:
     return applyRepairWithRule(mp, CGAL::Polygon_repair::Non_zero_rule());
 
