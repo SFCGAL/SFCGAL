@@ -87,7 +87,7 @@ runTest(const std::filesystem::path::string_type &filename)
     }
     std::string const obt = lbl + obtWkt;
     std::string const exp = lbl + outputWkt;
-    if ((SFCGAL_CGAL_VERSION_MAJOR == 5) && (SFCGAL_CGAL_VERSION_MINOR >= 2)) {
+    if (SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(5, 2, 0)) {
       BOOST_CHECK_EQUAL(exp, obt);
     }
   }
