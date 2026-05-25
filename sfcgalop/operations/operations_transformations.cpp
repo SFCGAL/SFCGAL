@@ -299,7 +299,7 @@ const std::vector<Operation> operations_transformations = {
        return result;
      }},
 
-    {"surfacesimplification", "Transformations",
+    {"surface_simplification", "Transformations",
      "Simplify a 3D surface mesh using edge collapse", false,
      "Parameters:\n"
      "  ratio=VALUE: Edge count ratio to keep (0.0 to 1.0, default: 0.5)\n"
@@ -313,9 +313,9 @@ const std::vector<Operation> operations_transformations = {
      "  lindstrom_turk: Uses Lindstrom-Turk cost/placement (requires Eigen)\n"
 #endif
      "\nExamples:\n"
-     "  sfcgalop -a mesh.obj surfacesimplification \"ratio=0.5\"\n"
-     "  sfcgalop -a mesh.obj surfacesimplification \"count=1000\"\n"
-     "  sfcgalop -a mesh.obj surfacesimplification "
+     "  sfcgalop -a mesh.obj surface_simplification \"ratio=0.5\"\n"
+     "  sfcgalop -a mesh.obj surface_simplification \"count=1000\"\n"
+     "  sfcgalop -a mesh.obj surface_simplification "
      "\"ratio=0.3,strategy=edge_length\"",
      "A, params", "G",
      [](const std::string &args, const SFCGAL::Geometry *geom_a,
