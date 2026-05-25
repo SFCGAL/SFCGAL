@@ -3020,6 +3020,31 @@ sfcgal_geometry_split_3d(const sfcgal_geometry_t *geom, double ptx, double pty,
                          double ptz, double normalx, double normaly,
                          double normalz, bool close_geometries);
 
+/**
+ * Chamfer operation types
+ * @ingroup capi
+ */
+typedef enum {
+  SFCGAL_CHAMFER_FLAT = 0, ///< Flat chamfer: single planar bevel
+  SFCGAL_CHAMFER_ROUND ///< Rounded fillet: circular-arc surface (approximated)
+} sfcgal_chamfer_type_t;
+
+/**
+ * Splits the given geometry with a plane defined by a point and a normal
+ * vector.
+ * @param solid The input geometry to split
+ * @param edge The input geometry to split
+ * @param chamfer_type The type of chamfer to compute (FLAT, ROUND)
+ * @return A GeometryCollection containing the split geometries, or an empty
+ * GeometryCollection if the plane does not intersect the geometry.
+ * @pre isValid(geom) == true
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_geometry_chamfer(const sfcgal_geometry_t *solid,
+                        const sfcgal_geometry_t *edge,
+                        sfcgal_chamfer_type_t    chamfer_type);
+
 /*--------------------------------------------------------------------------------------*
  *
  * Error handling

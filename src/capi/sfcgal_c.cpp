@@ -44,6 +44,7 @@
 #ifndef _MSC_VER
   #include "SFCGAL/algorithm/alphaShapes.h"
 #endif
+#include "SFCGAL/algorithm/Chamfer.h"
 #include "SFCGAL/algorithm/alphaWrapping3D.h"
 #include "SFCGAL/algorithm/area.h"
 #include "SFCGAL/algorithm/buffer3D.h"
@@ -3796,4 +3797,33 @@ sfcgal_geometry_split_3d(const sfcgal_geometry_t *geom, double ptx, double pty,
   }
 
   return splitGeom.release();
+}
+
+extern "C" auto SFCGAL_API
+sfcgal_geometry_chamfer(const sfcgal_geometry_t *solid,
+                        const sfcgal_geometry_t *edge,
+                        sfcgal_chamfer_type_t    chamfer_type)
+    -> sfcgal_geometry_t *
+{
+  SFCGAL::algorithm::ChamferOptions chamferOptions;
+  SFCGAL::algorithm::ChamferType    type;
+  switch (chamfer_type) {
+  case SFCGAL_CHAMFER_FLAT:
+    type = SFCGAL::algorithm::ChamferType::FLAT;
+    break;
+  case SFCGAL_CHAMFER_ROUND:
+    type = SFCGAL::algorithm::ChamferType::ROUND;
+    break;
+  default:
+    SFCGAL_ERROR("Invalid chamfer type");
+    return nullptr;
+  }
+
+  chamferOptions.type = type;
+  SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
+      return static_cast<SFCGAL::Geometry *>(
+                 SFCGAL::algorithm::chamfer(
+                     *down_const_cast<SFCGAL::Geometry>(solid),
+                     *down_const_cast<SFCGAL::Geometry>(edge), chamferOptions)
+                     .release());)
 }
