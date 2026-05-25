@@ -44,7 +44,7 @@ public:
   void
   transform(Point &pt) override
   {
-    BOOST_ASSERT(!p.isEmpty());
+    BOOST_ASSERT(!pt.isEmpty());
     pt = Point(pt.is3D() ? pt.z() : 0.0, pt.x(), pt.y());
   }
 };
