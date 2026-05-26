@@ -208,6 +208,29 @@ BOOST_AUTO_TEST_CASE(testTransform)
   std::getline(efsR, expectedWktRotated);
 
   BOOST_CHECK_EQUAL(polyhedral_surface_rotated.asText(1), expectedWktRotated);
+
+  // scale
+  std::unique_ptr<Cylinder> cylinderScaled = cylinder.clone();
+  BOOST_CHECK_CLOSE(cylinderScaled->volume(), 113.09733, 1e-5);
+  BOOST_CHECK_CLOSE(cylinderScaled->area3D(), 131.94689, 1e-5);
+  cylinderScaled->scale(Kernel::Vector_3(2, 2, 2));
+  BOOST_CHECK_CLOSE(cylinderScaled->volume(), 113.09733 * 8.0, 1e-5);
+  BOOST_CHECK_CLOSE(cylinderScaled->area3D(), 131.94689 * 4.0, 1e-5);
+  PolyhedralSurface polyhedral_surface_scaled =
+      cylinderScaled->generatePolyhedralSurface();
+
+  std::string expectedWktScaled(SFCGAL_TEST_DIRECTORY);
+  expectedWktScaled += "/data/cylinder_scaled_expected.wkt";
+  std::ifstream efsS(expectedWktScaled.c_str());
+  BOOST_REQUIRE(efsS.good());
+  std::getline(efsS, expectedWktScaled);
+
+  BOOST_CHECK_EQUAL(polyhedral_surface_scaled.asText(1), expectedWktScaled);
+
+  std::unique_ptr<Cylinder> cylinderScaled2 = cylinder.clone();
+  cylinderScaled2->scale(Kernel::Vector_3(2, 1, 3));
+  BOOST_CHECK_CLOSE(cylinderScaled2->volume(), 113.09733 * 6.0, 1e-5);
+  BOOST_CHECK_CLOSE(cylinderScaled2->area3D(), 452.83157, 1e-5);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

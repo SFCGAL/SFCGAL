@@ -286,6 +286,29 @@ BOOST_AUTO_TEST_CASE(testTransform)
   std::getline(efsR, expectedWktRotated);
 
   BOOST_CHECK_EQUAL(polyhedral_surface_rotated.asText(1), expectedWktRotated);
+
+  // scale
+  std::unique_ptr<Cone> coneScaled = cone.clone();
+  BOOST_CHECK_CLOSE(coneScaled->volume(), 48.74705, 1e-5);
+  BOOST_CHECK_CLOSE(coneScaled->area3D(), 84.59815, 1e-5);
+  coneScaled->scale(Kernel::Vector_3(2, 2, 2));
+  BOOST_CHECK_CLOSE(coneScaled->volume(), 48.74705 * 8.0, 1e-5);
+  BOOST_CHECK_CLOSE(coneScaled->area3D(), 84.59815 * 4.0, 1e-5);
+  PolyhedralSurface polyhedral_surface_scaled =
+      coneScaled->generatePolyhedralSurface();
+
+  std::string expectedWktScaled(SFCGAL_TEST_DIRECTORY);
+  expectedWktScaled += "/data/cone_scaled_expected.wkt";
+  std::ifstream efsS(expectedWktScaled.c_str());
+  BOOST_REQUIRE(efsS.good());
+  std::getline(efsS, expectedWktScaled);
+
+  BOOST_CHECK_EQUAL(polyhedral_surface_scaled.asText(1), expectedWktScaled);
+
+  std::unique_ptr<Cone> coneScaled2 = cone.clone();
+  coneScaled2->scale(Kernel::Vector_3(2, 1, 3));
+  BOOST_CHECK_CLOSE(coneScaled2->volume(), 48.74705 * 6.0, 1e-5);
+  BOOST_CHECK_CLOSE(coneScaled2->area3D(), 288.40878, 1e-5);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

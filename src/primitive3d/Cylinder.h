@@ -136,14 +136,14 @@ public:
   generatePolyhedralSurface() const -> PolyhedralSurface override;
 
   /**
-   * @brief Returns the primitive volume
+   * @brief Returns the primitive volume without scaling
    * @param withDiscretization Computes volume with discretization (true) or as
    * perfect primitive (false). Defaults to false.
-   * @return The cylinder volume
+   * @return The cylinder base volume
    * @note only perfect primitive version is available
    */
   [[nodiscard]] auto
-  volume(bool withDiscretization = false) const -> double override;
+  baseVolume(bool withDiscretization = false) const -> double override;
 
   /**
    * @brief Returns the primitive area

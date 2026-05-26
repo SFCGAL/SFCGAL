@@ -69,9 +69,9 @@ Cube::area3D(bool withDiscretization) const -> double
 }
 
 auto
-Cube::volume(bool withDiscretization) const -> double
+Cube::baseVolume(bool withDiscretization) const -> double
 {
-  return generateBox().volume(withDiscretization);
+  return generateBox().baseVolume(withDiscretization);
 }
 
 auto

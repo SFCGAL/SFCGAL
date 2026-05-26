@@ -153,6 +153,28 @@ BOOST_AUTO_TEST_CASE(testTransform)
       "18.5,79.6 59.2 18.5)),((83.7 58.1 18.5,82.2 60.7 18.5,82.2 60.7 "
       "21.5,83.7 58.1 21.5,83.7 58.1 18.5)),((81.1 56.6 18.5,81.1 56.6 "
       "21.5,79.6 59.2 21.5,79.6 59.2 18.5,81.1 56.6 18.5)))");
+
+  // scale
+  std::unique_ptr<Cube> cubeScaled = cube.clone();
+  BOOST_CHECK_EQUAL(cubeScaled->volume(), 27.0);
+  BOOST_CHECK_EQUAL(cubeScaled->area3D(), 54.0);
+  cubeScaled->scale(Kernel::Vector_3(2, 2, 2));
+  BOOST_CHECK_EQUAL(cubeScaled->volume(), 27.0 * 8.0);
+  BOOST_CHECK_EQUAL(cubeScaled->area3D(), 54.0 * 4.0);
+  PolyhedralSurface polyhedral_surface_scaled =
+      cubeScaled->generatePolyhedralSurface();
+
+  BOOST_CHECK_EQUAL(
+      polyhedral_surface_scaled.asText(0),
+      "POLYHEDRALSURFACE Z (((-3 -3 -3,-3 3 -3,3 3 -3,3 -3 -3,-3 -3 -3)),((-3 "
+      "-3 3,3 -3 3,3 3 3,-3 3 3,-3 -3 3)),((-3 -3 -3,3 -3 -3,3 -3 3,-3 -3 3,-3 "
+      "-3 -3)),((-3 3 -3,-3 3 3,3 3 3,3 3 -3,-3 3 -3)),((3 -3 -3,3 3 -3,3 3 "
+      "3,3 -3 3,3 -3 -3)),((-3 -3 -3,-3 -3 3,-3 3 3,-3 3 -3,-3 -3 -3)))");
+
+  std::unique_ptr<Cube> cubeScaled2 = cube.clone();
+  cubeScaled2->scale(Kernel::Vector_3(2, 1, 3));
+  BOOST_CHECK_EQUAL(cubeScaled2->volume(), 27.0 * 6.0);
+  BOOST_CHECK_EQUAL(cubeScaled2->area3D(), 198.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

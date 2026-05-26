@@ -3204,6 +3204,21 @@ sfcgal_primitive_rotate(const sfcgal_primitive_t *primitive, double angle,
       return rotatedPrimitive.release();)
 }
 
+extern "C" auto
+sfcgal_primitive_scale(const sfcgal_primitive_t *primitive, double sx,
+                       double sy, double sz, double cx, double cy, double cz)
+    -> sfcgal_primitive_t *
+{
+  SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
+      auto *primitiveCast =
+          reinterpret_cast<const SFCGAL::Primitive *>(primitive);
+      const SFCGAL::Kernel::Vector_3     scale(sx, sy, sz);
+      const SFCGAL::Kernel::Point_3      center(cx, cy, cz);
+      std::unique_ptr<SFCGAL::Primitive> scaledPrimitive =
+          primitiveCast->clone();
+      scaledPrimitive->scale(scale, center); return scaledPrimitive.release();)
+}
+
 /*--------------------------------------------------------------------------------------*
  *
  * NURBSCurve support

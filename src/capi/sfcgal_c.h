@@ -2982,6 +2982,22 @@ sfcgal_primitive_rotate(const sfcgal_primitive_t *primitive, double angle,
                         double ax, double ay, double az, double cx, double cy,
                         double cz);
 
+/**
+ * @brief Scales a primitive by the given factor
+ * @param primitive The primitive to scale
+ * @param sx scale factor for x dimension
+ * @param sy scale factor for y dimension
+ * @param sz scale factor for z dimension
+ * @param cx X-coordinate of the center point
+ * @param cy Y-coordinate of the center point
+ * @param cz Z-coordinate of the center point
+ * @return The rotated geometry
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_primitive_t *
+sfcgal_primitive_scale(const sfcgal_primitive_t *primitive, double sx,
+                       double sy, double sz, double cx, double cy, double cz);
+
 #if SFCGAL_CGAL_VERSION_MAJOR >= 6
 /**
  * Polygon repair rules

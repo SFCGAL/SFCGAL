@@ -7,6 +7,7 @@
 #include "SFCGAL/Point.h"
 #include "SFCGAL/Polygon.h"
 #include "SFCGAL/PolyhedralSurface.h"
+#include "SFCGAL/algorithm/area.h"
 #include "SFCGAL/detail/transform/AffineTransform3.h"
 #include "SFCGAL/primitive3d/Torus.h"
 
@@ -119,12 +120,39 @@ Torus::generatePolyhedralSurface() const -> PolyhedralSurface
 auto
 Torus::area3D(bool /*withDiscretization*/) const -> double
 {
-  return 4.0 * std::pow(CGAL_PI, 2) *
-         CGAL::to_double(mainRadius() * tubeRadius());
+  const double mainRadiusValue = CGAL::to_double(mainRadius());
+  const double tubeRadiusValue = CGAL::to_double(tubeRadius());
+
+  // Simple case: identity transform
+  if (m_transform == Kernel::Aff_transformation_3(CGAL::IDENTITY)) {
+    return 4.0 * std::pow(CGAL_PI, 2) * mainRadiusValue * tubeRadiusValue;
+  }
+
+  double baseArea = 0.0;
+  double scale    = 1.0;
+
+  const double scaleX = scaleFactor(0);
+  const double scaleY = scaleFactor(1);
+  const double scaleZ = scaleFactor(2);
+
+  // scale is not uniform - exact computation is not possible
+  // use a polyhedralsurface approximation
+  if (std::abs(scaleX - scaleY) > SFCGAL::EPSILON ||
+      std::abs(scaleY - scaleZ) > SFCGAL::EPSILON) {
+    PolyhedralSurface phs = generatePolyhedralSurface();
+    baseArea              = SFCGAL::algorithm::area3D(phs);
+    scale                 = 1.0;
+  } else {
+    // uniform scale - no approximation is needed
+    baseArea = 4.0 * std::pow(CGAL_PI, 2) * mainRadiusValue * tubeRadiusValue;
+    scale    = scaleX;
+  }
+
+  return baseArea * scale * scale;
 }
 
 auto
-Torus::volume(bool /*withDiscretization*/) const -> double
+Torus::baseVolume(bool /*withDiscretization*/) const -> double
 {
   return 2.0 * std::pow(CGAL_PI, 2) *
          CGAL::to_double(mainRadius() * tubeRadius() * tubeRadius());

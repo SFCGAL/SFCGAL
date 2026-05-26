@@ -2474,6 +2474,42 @@ BOOST_AUTO_TEST_CASE(testPrimitiveTransformTest)
     sfcgal_primitive_delete(cube);
     sfcgal_primitive_delete(cubeR);
   }
+
+  // scale
+  {
+    sfcgal_primitive_t *sphere = sfcgal_primitive_create(SFCGAL_TYPE_SPHERE);
+
+    sfcgal_primitive_t *sphereS =
+        sfcgal_primitive_scale(sphere, 3, 2, 1, 0, 0, 0);
+
+    BOOST_CHECK_CLOSE(sfcgal_primitive_parameter_double(sphere, "radius"),
+                      sfcgal_primitive_parameter_double(sphereS, "radius"),
+                      1e-6);
+    BOOST_CHECK_EQUAL(
+        sfcgal_primitive_parameter_int(sphere, "num_subdivisions"),
+        sfcgal_primitive_parameter_int(sphereS, "num_subdivisions"));
+
+    sfcgal_geometry_t *poly = sfcgal_primitive_as_polyhedral_surface(sphere);
+    char              *wktApi;
+    size_t             wktLen;
+    sfcgal_geometry_as_text_decim(poly, 0, &wktApi, &wktLen);
+    std::string strApi(wktApi, wktLen);
+    sfcgal_geometry_delete(poly);
+    sfcgal_free_buffer(wktApi);
+
+    sfcgal_geometry_t *polyS = sfcgal_primitive_as_polyhedral_surface(sphereS);
+    char              *wktApiS;
+    size_t             wktLenS;
+    sfcgal_geometry_as_text_decim(polyS, 0, &wktApiS, &wktLenS);
+    std::string strApi2(wktApiS, wktLenS);
+    sfcgal_geometry_delete(polyS);
+    sfcgal_free_buffer(wktApiS);
+
+    BOOST_CHECK_NE(strApi, strApi2);
+
+    sfcgal_primitive_delete(sphere);
+    sfcgal_primitive_delete(sphereS);
+  }
 }
 
 #if SFCGAL_CGAL_VERSION_MAJOR >= 6

@@ -132,6 +132,29 @@ BOOST_AUTO_TEST_CASE(testTransform)
   std::getline(efs, expectedWkt);
 
   BOOST_CHECK_EQUAL(polyhedral_surface.asText(1), expectedWkt);
+
+  // scale
+  std::unique_ptr<Sphere> sphereScaled = sphere.clone();
+  BOOST_CHECK_CLOSE(sphereScaled->volume(), 113.09733, 1e-5);
+  BOOST_CHECK_CLOSE(sphereScaled->area3D(), 113.09733, 1e-5);
+  sphereScaled->scale(Kernel::Vector_3(2, 2, 2));
+  BOOST_CHECK_CLOSE(sphereScaled->volume(), 113.09733 * 8.0, 1e-5);
+  BOOST_CHECK_CLOSE(sphereScaled->area3D(), 113.09733 * 4.0, 1e-5);
+  PolyhedralSurface polyhedral_surface_scaled =
+      sphereScaled->generatePolyhedralSurface();
+
+  std::string expectedWktScaled(SFCGAL_TEST_DIRECTORY);
+  expectedWktScaled += "/data/sphere_scaled_expected.wkt";
+  std::ifstream efsS(expectedWktScaled.c_str());
+  BOOST_REQUIRE(efsS.good());
+  std::getline(efsS, expectedWktScaled);
+
+  BOOST_CHECK_EQUAL(polyhedral_surface_scaled.asText(1), expectedWktScaled);
+
+  std::unique_ptr<Sphere> sphereScaled2 = sphere.clone();
+  sphereScaled2->scale(Kernel::Vector_3(2, 1, 3));
+  BOOST_CHECK_CLOSE(sphereScaled2->volume(), 113.09733 * 6.0, 1e-5);
+  BOOST_CHECK_CLOSE(sphereScaled2->area3D(), 440.74740, 1e-5);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

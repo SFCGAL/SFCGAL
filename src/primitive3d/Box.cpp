@@ -135,12 +135,23 @@ Box::generatePolyhedralSurface() const -> PolyhedralSurface
 auto
 Box::area3D(bool /*withDiscretization*/) const -> double
 {
-  return CGAL::to_double(2 * (xExtent() * yExtent() + yExtent() * zExtent() +
-                              zExtent() * xExtent()));
+  const double lx = CGAL::to_double(xExtent());
+  const double ly = CGAL::to_double(yExtent());
+  const double lz = CGAL::to_double(zExtent());
+
+  if (m_transform == Kernel::Aff_transformation_3(CGAL::IDENTITY)) {
+    return 2.0 * (lx * ly + ly * lz + lx * lz);
+  }
+
+  const double sx = scaleFactor(0);
+  const double sy = scaleFactor(1);
+  const double sz = scaleFactor(2);
+
+  return 2.0 * (lx * ly * sx * sy + ly * lz * sy * sz + lx * lz * sx * sz);
 }
 
 auto
-Box::volume(bool /*withDiscretization*/) const -> double
+Box::baseVolume(bool /*withDiscretization*/) const -> double
 {
   return CGAL::to_double(xExtent() * yExtent() * zExtent());
 }

@@ -157,6 +157,28 @@ BOOST_AUTO_TEST_CASE(testTransform)
       "17.5,79.3 59.6 17.5)),((83.9 57.7 17.5,81.9 61.1 17.5,81.9 61.1 "
       "22.5,83.9 57.7 22.5,83.9 57.7 17.5)),((81.3 56.2 17.5,81.3 56.2 "
       "22.5,79.3 59.6 22.5,79.3 59.6 17.5,81.3 56.2 17.5)))");
+
+  // scale
+  std::unique_ptr<Box> boxScaled = box.clone();
+  BOOST_CHECK_EQUAL(boxScaled->volume(), 60.0);
+  BOOST_CHECK_EQUAL(boxScaled->area3D(), 94.0);
+  boxScaled->scale(Kernel::Vector_3(2, 2, 2));
+  BOOST_CHECK_EQUAL(boxScaled->volume(), 60.0 * 8.0);
+  BOOST_CHECK_EQUAL(boxScaled->area3D(), 94.0 * 4.0);
+  PolyhedralSurface polyhedral_surface_scaled =
+      boxScaled->generatePolyhedralSurface();
+
+  BOOST_CHECK_EQUAL(
+      polyhedral_surface_scaled.asText(0),
+      "POLYHEDRALSURFACE Z (((-3 -4 -5,-3 4 -5,3 4 -5,3 -4 -5,-3 -4 -5)),((-3 "
+      "-4 5,3 -4 5,3 4 5,-3 4 5,-3 -4 5)),((-3 -4 -5,3 -4 -5,3 -4 5,-3 -4 5,-3 "
+      "-4 -5)),((-3 4 -5,-3 4 5,3 4 5,3 4 -5,-3 4 -5)),((3 -4 -5,3 4 -5,3 4 "
+      "5,3 -4 5,3 -4 -5)),((-3 -4 -5,-3 -4 5,-3 4 5,-3 4 -5,-3 -4 -5)))");
+
+  std::unique_ptr<Box> boxScaled2 = box.clone();
+  boxScaled2->scale(Kernel::Vector_3(2, 1, 3));
+  BOOST_CHECK_EQUAL(boxScaled2->volume(), 60.0 * 6.0);
+  BOOST_CHECK_EQUAL(boxScaled2->area3D(), 348.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

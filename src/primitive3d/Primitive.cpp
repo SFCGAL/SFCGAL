@@ -126,6 +126,56 @@ Primitive::rotate(const Kernel::FT &angle, const Kernel::Vector_3 &axis,
   invalidateCache();
 }
 
+void
+Primitive::scale(const Kernel::Vector_3 &factors, const Kernel::Point_3 &center)
+{
+  const Kernel::Vector_3 centerVector(center.x(), center.y(), center.z());
+  const Kernel::Aff_transformation_3 fromOrigin(CGAL::TRANSLATION,
+                                                -centerVector);
+  const Kernel::Aff_transformation_3 toOrigin(CGAL::TRANSLATION, centerVector);
+
+  Kernel::Aff_transformation_3 scaleTransform(factors.x(), 0, 0, 0, factors.y(),
+                                              0, 0, 0, factors.z());
+
+  m_transform = toOrigin * scaleTransform * fromOrigin * m_transform;
+  invalidateCache();
+}
+
+auto
+Primitive::volume(bool withDiscretization) const -> double
+{
+  double scaleFactor = 1.0;
+  if (m_transform != Kernel::Aff_transformation_3(CGAL::IDENTITY)) {
+    // compute determinant
+    const double m00 = CGAL::to_double(m_transform.cartesian(0, 0));
+    const double m01 = CGAL::to_double(m_transform.cartesian(0, 1));
+    const double m02 = CGAL::to_double(m_transform.cartesian(0, 2));
+    const double m10 = CGAL::to_double(m_transform.cartesian(1, 0));
+    const double m11 = CGAL::to_double(m_transform.cartesian(1, 1));
+    const double m12 = CGAL::to_double(m_transform.cartesian(1, 2));
+    const double m20 = CGAL::to_double(m_transform.cartesian(2, 0));
+    const double m21 = CGAL::to_double(m_transform.cartesian(2, 1));
+    const double m22 = CGAL::to_double(m_transform.cartesian(2, 2));
+
+    scaleFactor = (m00 * (m11 * m22 - m12 * m21)) -
+                  (m01 * (m10 * m22 - m12 * m20)) +
+                  (m02 * (m10 * m21 - m11 * m20));
+  }
+
+  return baseVolume(withDiscretization) * scaleFactor;
+}
+
+auto
+Primitive::scaleFactor(int columnIdx) const -> double
+{
+  return std::sqrt(CGAL::to_double(m_transform.cartesian(0, columnIdx) *
+                                       m_transform.cartesian(0, columnIdx) +
+                                   m_transform.cartesian(1, columnIdx) *
+                                       m_transform.cartesian(1, columnIdx) +
+                                   m_transform.cartesian(2, columnIdx) *
+                                       m_transform.cartesian(2, columnIdx)));
+}
+
 auto
 Primitive::almostEqual(const Primitive &other, double epsilon) const -> bool
 {

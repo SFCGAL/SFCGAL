@@ -315,7 +315,7 @@ Sphere::generateSpherePoints() const -> std::vector<Point_3>
 }
 
 auto
-Sphere::volume(bool /*withDiscretization*/) const -> double
+Sphere::baseVolume(bool /*withDiscretization*/) const -> double
 {
   return CGAL::to_double((4.0 / 3.0) * radius() * radius() * radius() *
                          CGAL_PI);
@@ -324,7 +324,37 @@ Sphere::volume(bool /*withDiscretization*/) const -> double
 auto
 Sphere::area3D(bool /*withDiscretization*/) const -> double
 {
-  return CGAL::to_double(4 * radius() * radius() * CGAL_PI);
+  const double radiusValue = CGAL::to_double(radius());
+
+  const double sx = scaleFactor(0);
+  const double sy = scaleFactor(1);
+  const double sz = scaleFactor(2);
+
+  // Uniform scaling -> exact sphere area
+  if (std::abs(sx - sy) < SFCGAL::EPSILON &&
+      std::abs(sx - sz) < SFCGAL::EPSILON) {
+    const double scaledRadius = radiusValue * sx;
+    return 4.0 * CGAL_PI * scaledRadius * scaledRadius;
+  }
+
+  // Non-uniform scaling -> ellipsoid approximation
+  const double semiAxisX = radiusValue * sx;
+  const double semiAxisY = radiusValue * sy;
+  const double semiAxisZ = radiusValue * sz;
+
+  // Knud Thomsen approximation
+  constexpr double knudThomsenExponent = 1.6075;
+
+  const double semiAxisXPow = std::pow(semiAxisX, knudThomsenExponent);
+  const double semiAxisYPow = std::pow(semiAxisY, knudThomsenExponent);
+
+  const double semiAxisZPow = std::pow(semiAxisZ, knudThomsenExponent);
+
+  return 4.0 * CGAL_PI *
+         std::pow((semiAxisXPow * semiAxisYPow + semiAxisXPow * semiAxisZPow +
+                   semiAxisYPow * semiAxisZPow) /
+                      3.0,
+                  1.0 / knudThomsenExponent);
 }
 
 } // namespace SFCGAL

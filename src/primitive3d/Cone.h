@@ -119,13 +119,22 @@ public:
   auto
   generatePolyhedralSurface() const -> PolyhedralSurface override;
 
-  /// @copydoc SFCGAL::Primitive::volume
+  /// @copydoc SFCGAL::Primitive::baseVolume
   [[nodiscard]] auto
-  volume(bool withDiscretization = false) const -> double override;
+  baseVolume(bool withDiscretization = false) const -> double override;
 
   /// @copydoc SFCGAL::Primitive::area3D
   [[nodiscard]] auto
   area3D(bool withDiscretization = false) const -> double override;
+
+  /**
+   * @brief Computes cone base area without scaling effect
+   * @param withDiscretization Computes area with discretization (true) or as
+   * perfect primitive (false). Defaults to false.
+   * @return base area
+   */
+  auto
+  baseArea3D(bool withDiscretization = false) const -> double;
 
 protected:
   /**

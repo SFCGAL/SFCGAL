@@ -7,6 +7,7 @@
 #include "SFCGAL/Point.h"
 #include "SFCGAL/Polygon.h"
 #include "SFCGAL/PolyhedralSurface.h"
+#include "SFCGAL/algorithm/area.h"
 #include "SFCGAL/detail/transform/AffineTransform3.h"
 #include "SFCGAL/primitive3d/Cone.h"
 #include "SFCGAL/primitive3d/Primitive.h"
@@ -154,7 +155,7 @@ Cone::generatePolyhedralSurface() const -> PolyhedralSurface
 }
 
 auto
-Cone::area3D(bool withDiscretization) const -> double
+Cone::baseArea3D(bool withDiscretization) const -> double
 {
   double diff_radius  = std::abs(CGAL::to_double(bottomRadius() - topRadius()));
   double slant_height = std::sqrt(std::pow(diff_radius, 2) +
@@ -178,7 +179,38 @@ Cone::area3D(bool withDiscretization) const -> double
 }
 
 auto
-Cone::volume(bool withDiscretization) const -> double
+Cone::area3D(bool withDiscretization) const -> double
+{
+  // Simple case: identity transform
+  if (m_transform == Kernel::Aff_transformation_3(CGAL::IDENTITY)) {
+    return baseArea3D(withDiscretization);
+  }
+
+  double baseArea = 0.0;
+  double scale    = 1.0;
+
+  const double scaleX = scaleFactor(0);
+  const double scaleY = scaleFactor(1);
+  const double scaleZ = scaleFactor(2);
+
+  // scale is not uniform - exact computation is not possible
+  // use a polyhedralsurface approximation
+  if (std::abs(scaleX - scaleY) > SFCGAL::EPSILON ||
+      std::abs(scaleY - scaleZ) > SFCGAL::EPSILON) {
+    PolyhedralSurface phs = generatePolyhedralSurface();
+    baseArea              = SFCGAL::algorithm::area3D(phs);
+    scale                 = 1.0;
+  } else {
+    // uniform scale - no approximation is needed
+    baseArea = baseArea3D(withDiscretization);
+    scale    = scaleX;
+  }
+
+  return baseArea * scale * scale;
+}
+
+auto
+Cone::baseVolume(bool withDiscretization) const -> double
 {
   if (withDiscretization) {
     double bottom_surface = std::pow(CGAL::to_double(bottomRadius()), 2) *

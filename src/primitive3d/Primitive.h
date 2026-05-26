@@ -166,13 +166,31 @@ public:
          const Kernel::Point_3 &center = Kernel::Point_3(0, 0, 0));
 
   /**
+   * Scales the primitive by the given factor.
+   *
+   * @param factors The scale factors.
+   * @param center The scale center.
+   */
+  void
+  scale(const Kernel::Vector_3 &factors,
+        const Kernel::Point_3  &center = Kernel::Point_3(0, 0, 0));
+
+  /**
    * @brief Returns the primitive volume
    * @param withDiscretization Computes area with discretization (true) or as
    * perfect primitive (false). Defaults to false.
    * @return The cone volume
    */
-  [[nodiscard]] virtual auto
-  volume(bool withDiscretization = false) const -> double = 0;
+  [[nodiscard]] auto
+  volume(bool withDiscretization = false) const -> double;
+
+  /**
+   * @brief Returns the sphere volume without scaling
+   * @param withDiscretization Computes volume with discretization (true) or as
+   * perfect primitive (false). Defaults to false.
+   * @return The sphere volume
+   */
+  auto virtual baseVolume(bool withDiscretization = false) const -> double = 0;
 
   /**
    * @brief Returns the primitive area
@@ -246,6 +264,17 @@ protected:
   virtual void
   validateAndSetParameter(const std::string        &name,
                           const PrimitiveParameter &parameter);
+
+  /**
+   *@brief Returns the scale factor for a given column of the affine transform
+   *matrix.
+   *
+   * @param columnIdx Column index of the transform matrix (0 = X, 1 = Y, 2 =
+   *Z).
+   * @return The scale factor along the corresponding axis.
+   */
+  auto
+  scaleFactor(int columnIdx) const -> double;
 
   /**
    * Holds parameter value according to their name

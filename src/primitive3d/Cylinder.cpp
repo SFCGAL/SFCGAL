@@ -5,6 +5,7 @@
 #include <CGAL/number_utils.h>
 #include <utility>
 
+#include "SFCGAL/algorithm/area.h"
 #include "SFCGAL/numeric.h"
 #include "SFCGAL/primitive3d/Cylinder.h"
 
@@ -161,7 +162,7 @@ Cylinder::generatePolyhedralSurface() const -> PolyhedralSurface
 }
 
 auto
-Cylinder::volume(bool /*withDiscretization*/) const -> double
+Cylinder::baseVolume(bool /*withDiscretization*/) const -> double
 {
   return CGAL::to_double(radius() * radius() * height() * CGAL_PI);
 }
@@ -169,8 +170,37 @@ Cylinder::volume(bool /*withDiscretization*/) const -> double
 auto
 Cylinder::area3D(bool /*withDiscretization*/) const -> double
 {
-  return CGAL::to_double(2 * radius() * radius() * CGAL_PI +
-                         2 * radius() * height() * CGAL_PI);
+  const double radiusValue = CGAL::to_double(radius());
+  const double heightValue = CGAL::to_double(height());
+
+  // Simple case: identity transform
+  if (m_transform == Kernel::Aff_transformation_3(CGAL::IDENTITY)) {
+    return (2.0 * CGAL_PI * radiusValue * radiusValue) +
+           (2.0 * CGAL_PI * radiusValue * heightValue);
+  }
+
+  double baseArea = 0.0;
+  double scale    = 1.0;
+
+  const double scaleX = scaleFactor(0);
+  const double scaleY = scaleFactor(1);
+  const double scaleZ = scaleFactor(2);
+
+  // scale is not uniform - exact computation is not possible
+  // use a polyhedralsurface approximation
+  if (std::abs(scaleX - scaleY) > SFCGAL::EPSILON ||
+      std::abs(scaleY - scaleZ) > SFCGAL::EPSILON) {
+    PolyhedralSurface phs = generatePolyhedralSurface();
+    baseArea              = SFCGAL::algorithm::area3D(phs);
+    scale                 = 1.0;
+  } else {
+    // uniform scale - no approximation is needed
+    baseArea = (2.0 * CGAL_PI * radiusValue * radiusValue) +
+               (2.0 * CGAL_PI * radiusValue * heightValue);
+    scale = scaleX;
+  }
+
+  return baseArea * scale * scale;
 }
 
 } // namespace SFCGAL
