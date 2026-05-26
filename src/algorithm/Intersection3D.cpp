@@ -13,6 +13,7 @@
 #include <CGAL/Polygon_mesh_processing/clip.h>
 #include <CGAL/Polygon_mesh_processing/connected_components.h>
 #include <CGAL/Polygon_mesh_processing/corefinement.h>
+#include <CGAL/exceptions.h>
 
 #include "SFCGAL/algorithm/intersection.h"
 #include "SFCGAL/algorithm/intersects.h"
@@ -200,43 +201,52 @@ _intersection_solid_triangle(const MarkedPolyhedron         &polyhedron,
     return;
   }
 
-  CGAL::Polygon_mesh_processing::clip(
-      polyb, polya, CGAL::parameters::use_compact_clipper(true));
-
+  // Always preserve polylines — they represent the geometrically correct
+  // surface-surface intersection computed before clipping. Clip may fail
+  // due to coplanarity, but polylines are still valid.
   bool hasSurface = false;
 
-  std::vector<MarkedPolyhedron> ccs;
-  CGAL::Polygon_mesh_processing::split_connected_components(polyb, ccs);
+  try {
+    CGAL::Polygon_mesh_processing::clip(
+        polyb, polya, CGAL::parameters::use_compact_clipper(true));
 
-  for (const MarkedPolyhedron &mp : ccs) {
-    // check if all vertices are on polya
-    bool all_on = true;
-    for (auto v : vertices(mp)) {
-      if (side_of_tm(v->point()) != CGAL::ON_BOUNDARY) {
-        all_on = false;
-        break;
+    std::vector<MarkedPolyhedron> ccs;
+    CGAL::Polygon_mesh_processing::split_connected_components(polyb, ccs);
+
+    for (const MarkedPolyhedron &mp : ccs) {
+      // check if all vertices are on polya
+      bool all_on = true;
+      for (auto v : vertices(mp)) {
+        if (side_of_tm(v->point()) != CGAL::ON_BOUNDARY) {
+          all_on = false;
+          break;
+        }
+      }
+      if (all_on) {
+        output.addPrimitive(mp);
+      } else {
+        hasSurface = true;
+        output.addPrimitive(mp, FLAG_IS_PLANAR);
       }
     }
-    if (all_on) {
-      output.addPrimitive(mp);
-    } else {
-      hasSurface = true;
-      output.addPrimitive(mp, FLAG_IS_PLANAR);
-    }
+  } catch (const CGAL::Assertion_exception & /*unused*/) {
+    // clip() failed (coplanar triangle with polyhedron faces).
+    // The polylines computed above are still valid — output them below.
   }
 
-  if (hasSurface) {
-    return;
-  }
-
-  for (auto &polyline : polylines) {
-    if (polyline.size() == 1) {
-      // it's a point
-      output.addPrimitive(polyline[0]);
-    } else {
-      for (size_t k = 1; k < polyline.size(); ++k) {
-        CGAL::Segment_3<Kernel> const seg(polyline[k - 1], polyline[k]);
-        output.addPrimitive(seg);
+  // If clip produced interior patches, the polylines are edges of those
+  // patches and don't need to be output separately. Otherwise (clip failed
+  // or produced only boundary patches), output the polylines.
+  if (!hasSurface) {
+    for (auto &polyline : polylines) {
+      if (polyline.size() == 1) {
+        // it's a point
+        output.addPrimitive(polyline[0]);
+      } else {
+        for (size_t k = 1; k < polyline.size(); ++k) {
+          CGAL::Segment_3<Kernel> const seg(polyline[k - 1], polyline[k]);
+          output.addPrimitive(seg);
+        }
       }
     }
   }
@@ -268,12 +278,21 @@ _intersection_solid_solid(const MarkedPolyhedron &polyhedron_a,
   {
     MarkedPolyhedron polya = polyhedron_a;
     MarkedPolyhedron polyb = polyhedron_b;
-    if (CGAL::Polygon_mesh_processing::corefine_and_compute_intersection(
-            polya, polyb, polya)) {
-      if (std::next(vertices(polya).first) != vertices(polya).second) {
-        output.addPrimitive(polya);
+    // NOLINTBEGIN(bugprone-empty-catch)
+    try {
+      if (CGAL::Polygon_mesh_processing::corefine_and_compute_intersection(
+              polya, polyb, polya)) {
+        if (std::next(vertices(polya).first) != vertices(polya).second) {
+          output.addPrimitive(polya);
+        }
       }
+    } catch (const CGAL::Assertion_exception & /*unused*/) {
+      // corefine_and_compute_intersection failed due to degenerate input
+      // (zero-area faces, collinear projections, coplanar facets).
+      // The surface intersection computed in step 1 is still valid;
+      // volume intersection is skipped.
     }
+    // NOLINTEND(bugprone-empty-catch)
   }
 }
 
