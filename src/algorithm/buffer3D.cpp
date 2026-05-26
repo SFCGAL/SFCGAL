@@ -139,15 +139,37 @@ Buffer3D::computeCylSphereBuffer() const -> std::unique_ptr<PolyhedralSurface>
     Kernel::Vector_3 axis(_inputPoints[i + 1].x() - _inputPoints[i].x(),
                           _inputPoints[i + 1].y() - _inputPoints[i].y(),
                           _inputPoints[i + 1].z() - _inputPoints[i].z());
-    Kernel::FT      height = CGAL::sqrt(CGAL::to_double(axis.squared_length()));
-    Kernel::Point_3 base(_inputPoints[i].x(), _inputPoints[i].y(),
-                         _inputPoints[i].z());
-    Cylinder        cyl(_radius, height, _segments);
+    Kernel::FT height = CGAL::sqrt(CGAL::to_double(axis.squared_length()));
+    Cylinder   cyl(_radius, height, _segments);
+
+    // apply rotation
+    const double axis_length =
+        CGAL::sqrt(CGAL::to_double(axis.squared_length()));
+    // If axis is non-zero and not aligned with +Z, apply rotation
+    if (axis_length > SFCGAL::EPSILON) {
+      const double nx = CGAL::to_double(axis.x()) / axis_length;
+      const double ny = CGAL::to_double(axis.y()) / axis_length;
+      const double nz = CGAL::to_double(axis.z()) / axis_length;
+
+      // Check if axis is not already aligned with +Z (0, 0, 1)
+      if (std::abs(nx) > SFCGAL::EPSILON || std::abs(ny) > SFCGAL::EPSILON ||
+          std::abs(nz - 1.0) > SFCGAL::EPSILON) {
+        // Compute rotation axis: cross product of +Z with desired axis
+        // +Z = (0, 0, 1), so cross product is (ny, -nx, 0)
+        const SFCGAL::Kernel::Vector_3 rotation_axis(ny, -nx, 0);
+
+        // Compute rotation angle using dot product: +Z · normalized_axis = nz
+        const double angle = std::acos(std::clamp(nz, -1.0, 1.0));
+
+        if (std::abs(angle) > SFCGAL::EPSILON) {
+          cyl.rotate(angle, rotation_axis);
+        }
+      }
+    }
 
     // apply translation
     cyl.translate(Kernel::Vector_3(_inputPoints[i].x(), _inputPoints[i].y(),
                                    _inputPoints[i].z()));
-
     CGAL::Polyhedron_3<Kernel> cyl_poly = cyl.generatePolyhedron();
     Nef_polyhedron             cyl_nef(cyl_poly);
 

@@ -2963,6 +2963,25 @@ SFCGAL_API sfcgal_primitive_t *
 sfcgal_primitive_translate(const sfcgal_primitive_t *primitive, double dx,
                            double dy, double dz);
 
+/**
+ * @brief Rotates a primitive around a specified axis and center point
+ * by a given angle
+ * @param primitive The primitive to rotate
+ * @param angle Rotation angle in radians
+ * @param ax X-coordinate of the axis vector
+ * @param ay Y-coordinate of the axis vector
+ * @param az Z-coordinate of the axis vector
+ * @param cx X-coordinate of the center point
+ * @param cy Y-coordinate of the center point
+ * @param cz Z-coordinate of the center point
+ * @return The rotated geometry
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_primitive_t *
+sfcgal_primitive_rotate(const sfcgal_primitive_t *primitive, double angle,
+                        double ax, double ay, double az, double cx, double cy,
+                        double cz);
+
 #if SFCGAL_CGAL_VERSION_MAJOR >= 6
 /**
  * Polygon repair rules

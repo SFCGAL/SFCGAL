@@ -61,8 +61,6 @@ make_cylinder(double base_x, double base_y, double base_z, double axis_x,
 {
   SFCGAL::Cylinder cylinder(radius, height, num_radial);
 
-  auto polyhedral_surface = cylinder.generatePolyhedralSurface();
-
   // Normalize the axis vector
   double axis_length =
       std::sqrt((axis_x * axis_x) + (axis_y * axis_y) + (axis_z * axis_z));
@@ -84,7 +82,7 @@ make_cylinder(double base_x, double base_y, double base_z, double axis_x,
       double angle = std::acos(std::clamp(nz, -1.0, 1.0));
 
       if (std::abs(angle) > SFCGAL::EPSILON) {
-        SFCGAL::algorithm::rotate(polyhedral_surface, angle, rotation_axis);
+        cylinder.rotate(angle, rotation_axis);
       }
     }
   }
@@ -93,9 +91,10 @@ make_cylinder(double base_x, double base_y, double base_z, double axis_x,
   if (std::abs(base_x) > SFCGAL::EPSILON ||
       std::abs(base_y) > SFCGAL::EPSILON ||
       std::abs(base_z) > SFCGAL::EPSILON) {
-    SFCGAL::algorithm::translate(polyhedral_surface, base_x, base_y, base_z);
+    cylinder.translate(SFCGAL::Kernel::Vector_3(base_x, base_y, base_z));
   }
 
+  auto polyhedral_surface = cylinder.generatePolyhedralSurface();
   return std::make_unique<SFCGAL::PolyhedralSurface>(
       std::move(polyhedral_surface));
 }
@@ -111,7 +110,6 @@ make_cone(double base_x, double base_y, double base_z, double axis_x,
   // position/orientation.
 
   SFCGAL::Cone cone(bottom_radius, top_radius, height, num_radial);
-  auto         polyhedral_surface = cone.generatePolyhedralSurface();
 
   // Normalize the axis vector
   double axis_length =
@@ -134,7 +132,7 @@ make_cone(double base_x, double base_y, double base_z, double axis_x,
       double angle = std::acos(std::clamp(nz, -1.0, 1.0));
 
       if (std::abs(angle) > SFCGAL::EPSILON) {
-        SFCGAL::algorithm::rotate(polyhedral_surface, angle, rotation_axis);
+        cone.rotate(angle, rotation_axis);
       }
     }
   }
@@ -143,9 +141,10 @@ make_cone(double base_x, double base_y, double base_z, double axis_x,
   if (std::abs(base_x) > SFCGAL::EPSILON ||
       std::abs(base_y) > SFCGAL::EPSILON ||
       std::abs(base_z) > SFCGAL::EPSILON) {
-    SFCGAL::algorithm::translate(polyhedral_surface, base_x, base_y, base_z);
+    cone.translate(SFCGAL::Kernel::Vector_3(base_x, base_y, base_z));
   }
 
+  auto polyhedral_surface = cone.generatePolyhedralSurface();
   return std::make_unique<SFCGAL::PolyhedralSurface>(
       std::move(polyhedral_surface));
 }
@@ -161,7 +160,6 @@ make_torus(double center_x, double center_y, double center_z, double axis_x,
   // We need to apply transformations for custom position/orientation.
 
   SFCGAL::Torus torus(major_radius, minor_radius, num_major, num_minor);
-  auto          polyhedral_surface = torus.generatePolyhedralSurface();
 
   // Normalize the axis vector
   double axis_length =
@@ -184,7 +182,7 @@ make_torus(double center_x, double center_y, double center_z, double axis_x,
       double angle = std::acos(std::clamp(nz, -1.0, 1.0));
 
       if (std::abs(angle) > SFCGAL::EPSILON) {
-        SFCGAL::algorithm::rotate(polyhedral_surface, angle, rotation_axis);
+        torus.rotate(angle, rotation_axis);
       }
     }
   }
@@ -193,10 +191,10 @@ make_torus(double center_x, double center_y, double center_z, double axis_x,
   if (std::abs(center_x) > SFCGAL::EPSILON ||
       std::abs(center_y) > SFCGAL::EPSILON ||
       std::abs(center_z) > SFCGAL::EPSILON) {
-    SFCGAL::algorithm::translate(polyhedral_surface, center_x, center_y,
-                                 center_z);
+    torus.translate(SFCGAL::Kernel::Vector_3(center_x, center_y, center_z));
   }
 
+  auto polyhedral_surface = torus.generatePolyhedralSurface();
   return std::make_unique<SFCGAL::PolyhedralSurface>(
       std::move(polyhedral_surface));
 }

@@ -96,6 +96,36 @@ Primitive::translate(const Kernel::Vector_3 &vector)
   invalidateCache();
 }
 
+void
+Primitive::rotate(const Kernel::FT &angle, const Kernel::Vector_3 &axis,
+                  const Kernel::Point_3 &center)
+{
+  const Kernel::Vector_3 centerVector(center.x(), center.y(), center.z());
+
+  const Kernel::Aff_transformation_3 fromOrigin(CGAL::TRANSLATION,
+                                                -centerVector);
+  const Kernel::Aff_transformation_3 toOrigin(CGAL::TRANSLATION, centerVector);
+
+  const double cosA = std::cos(CGAL::to_double(angle));
+  const double sinA = std::sin(CGAL::to_double(angle));
+  const double tanA = 1.0 - cosA;
+
+  const double len = std::sqrt(CGAL::to_double(axis.squared_length()));
+  const double ux  = CGAL::to_double(axis.x()) / len;
+  const double uy  = CGAL::to_double(axis.y()) / len;
+  const double uz  = CGAL::to_double(axis.z()) / len;
+
+  const Kernel::Aff_transformation_3 Rotation(
+      (tanA * ux * ux) + cosA, (tanA * ux * uy) - (sinA * uz),
+      (tanA * ux * uz) + (sinA * uy), (tanA * ux * uy) + (sinA * uz),
+      (tanA * uy * uy) + cosA, (tanA * uy * uz) - (sinA * ux),
+      (tanA * ux * uz) - (sinA * uy), (tanA * uy * uz) + (sinA * ux),
+      (tanA * uz * uz) + cosA);
+
+  m_transform = toOrigin * Rotation * fromOrigin * m_transform;
+  invalidateCache();
+}
+
 auto
 Primitive::almostEqual(const Primitive &other, double epsilon) const -> bool
 {

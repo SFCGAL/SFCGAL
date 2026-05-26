@@ -3187,6 +3187,23 @@ sfcgal_primitive_translate(const sfcgal_primitive_t *primitive, double dx,
       return translatedPrimitive.release();)
 }
 
+extern "C" auto
+sfcgal_primitive_rotate(const sfcgal_primitive_t *primitive, double angle,
+                        double ax, double ay, double az, double cx, double cy,
+                        double cz) -> sfcgal_primitive_t *
+{
+  SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
+      auto *primitiveCast =
+          reinterpret_cast<const SFCGAL::Primitive *>(primitive);
+      const SFCGAL::Kernel::Vector_3 axis(ax, ay, az);
+      const SFCGAL::Kernel::Point_3  center(cx, cy, cz);
+
+      std::unique_ptr<SFCGAL::Primitive> rotatedPrimitive =
+          primitiveCast->clone();
+      rotatedPrimitive->rotate(angle, axis, center);
+      return rotatedPrimitive.release();)
+}
+
 /*--------------------------------------------------------------------------------------*
  *
  * NURBSCurve support

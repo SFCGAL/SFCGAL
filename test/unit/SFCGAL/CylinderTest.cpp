@@ -194,6 +194,20 @@ BOOST_AUTO_TEST_CASE(testTransform)
   std::getline(efs, expectedWkt);
 
   BOOST_CHECK_EQUAL(polyhedral_surface.asText(1), expectedWkt);
+
+  // rotation
+  std::unique_ptr<Cylinder> cylinderRotated = cylinderTranslated2->clone();
+  cylinderRotated->rotate(45 * M_PI / 180., Kernel::Vector_3(0, 1, 0));
+  PolyhedralSurface polyhedral_surface_rotated =
+      cylinderRotated->generatePolyhedralSurface();
+
+  std::string expectedWktRotated(SFCGAL_TEST_DIRECTORY);
+  expectedWktRotated += "/data/cylinder_rotated_expected.wkt";
+  std::ifstream efsR(expectedWktRotated.c_str());
+  BOOST_REQUIRE(efsR.good());
+  std::getline(efsR, expectedWktRotated);
+
+  BOOST_CHECK_EQUAL(polyhedral_surface_rotated.asText(1), expectedWktRotated);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

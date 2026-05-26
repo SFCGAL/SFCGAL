@@ -154,6 +154,18 @@ public:
   translate(const Kernel::Vector_3 &vector);
 
   /**
+   * Rotates the primitive around a specified axis and center point
+   * by a given angle
+   *
+   * @param angle Rotation angle in radians
+   * @param axis The rotation axis.
+   * @param center The rotation center
+   */
+  void
+  rotate(const Kernel::FT &angle, const Kernel::Vector_3 &axis,
+         const Kernel::Point_3 &center = Kernel::Point_3(0, 0, 0));
+
+  /**
    * @brief Returns the primitive volume
    * @param withDiscretization Computes area with discretization (true) or as
    * perfect primitive (false). Defaults to false.
