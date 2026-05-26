@@ -7,3 +7,33 @@
 
 #include <boost/test/unit_test.hpp>
 using namespace boost::unit_test;
+
+#include <CGAL/assertions.h>
+
+// CGAL's default msg_assert_fail prints to stderr before calling the behaviour
+// handler. In tests, this creates noise even when we catch the resulting
+// exceptions. Install a silent handler so assertions are still thrown (via
+// set_error_behaviour in sfcgal_init) but never go to stderr.
+static void
+silentCGALHandler(const char * /*expr*/, const char * /*file*/,
+                  const char * /*func*/, int /*line*/, const char * /*msg*/)
+{
+}
+
+/**
+ * @brief RAII initializer that silences CGAL assertion stderr output.
+ *
+ * CGAL's default handler prints to stderr before calling the behaviour
+ * handler (which is set to THROW_EXCEPTION by sfcgal_init). In tests,
+ * this creates noise even when the resulting exception is caught.
+ * This struct installs a silent handler during static initialization.
+ */
+struct CGALSilentInitializer {
+  CGALSilentInitializer()
+  {
+    CGAL::set_error_handler(silentCGALHandler);
+    CGAL::set_warning_handler(silentCGALHandler);
+  }
+};
+
+static CGALSilentInitializer cgalSilentInitializer; // NOLINT(cert-err58-cpp)
