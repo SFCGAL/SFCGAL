@@ -67,14 +67,20 @@ const std::vector<Operation> operations_constructors = {
      }},
 
     {"make_cube", "Constructors", "Create a 3D cube primitive", false,
-     "Parameters:\n  size=VALUE: Edge length of the cube (default: "
+     "Parameters:\n  base_x=VALUE: X coordinate of base center (default: "
+     "0.0)\n  base_y=VALUE: Y coordinate of base center (default: 0.0)\n  "
+     "base_z=VALUE: Z coordinate of base center (default: 0.0)\n  "
+     "size=VALUE: Edge length of the cube (default: "
      "1.0)\n\nExample:\n  sfcgalop make_cube \"size=2.0\"",
      "params", "G",
      [](const std::string &args, const SFCGAL::Geometry *,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
        auto   params = parse_params(args);
+       double base_x = params.count("base_x") ? params["base_x"] : 0.0;
+       double base_y = params.count("base_y") ? params["base_y"] : 0.0;
+       double base_z = params.count("base_z") ? params["base_z"] : 0.0;
        double size   = params.count("size") ? params["size"] : 1.0;
-       return Constructors::make_cube(size);
+       return Constructors::make_cube(base_x, base_y, base_z, size);
      }},
 
     {"make_cylinder", "Constructors", "Create a 3D cylinder primitive", false,

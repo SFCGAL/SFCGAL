@@ -41,11 +41,15 @@ make_box(double base_x = 0.0, double base_y = 0.0, double base_z = 0.0,
 
 /**
  * @brief Create a cube primitive (equal extents in all directions)
+ * @param base_x X coordinate of base center (default: 0.0)
+ * @param base_y Y coordinate of base center (default: 0.0)
+ * @param base_z Z coordinate of base center (default: 0.0)
  * @param size Edge length of the cube (default: 1.0)
  * @return Unique pointer to PolyhedralSurface representing the cube
  */
 auto
-make_cube(double size = 1.0) -> std::unique_ptr<SFCGAL::Geometry>;
+make_cube(double base_x, double base_y, double base_z, double size = 1.0)
+    -> std::unique_ptr<SFCGAL::Geometry>;
 
 /**
  * @brief Create a cylinder primitive

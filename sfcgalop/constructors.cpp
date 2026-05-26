@@ -56,9 +56,10 @@ make_box(double base_x, double base_y, double base_z, double x_extent,
 }
 
 auto
-make_cube(double size) -> std::unique_ptr<SFCGAL::Geometry>
+make_cube(double base_x, double base_y, double base_z, double size)
+    -> std::unique_ptr<SFCGAL::Geometry>
 {
-  return make_box(0, 0, 0, size, size, size);
+  return make_box(base_x, base_y, base_z, size, size, size);
 }
 
 auto
