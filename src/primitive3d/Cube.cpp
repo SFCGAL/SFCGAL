@@ -5,12 +5,7 @@
 
 namespace SFCGAL {
 
-Cube::Cube(const Kernel::FT &size) : m_box(Box(size, size, size))
-{
-  // m_parameters["size"] is not necessary because the information is stored in
-  // m_box However, it is needed to be compatible with Primitive loginc
-  m_parameters["size"] = m_box.xExtent();
-}
+Cube::Cube(const Kernel::FT &size) { m_parameters["size"] = size; }
 
 auto
 Cube::primitiveType() const -> std::string
@@ -22,6 +17,13 @@ auto
 Cube::primitiveTypeId() const -> PrimitiveType
 {
   return PrimitiveType::TYPE_CUBE;
+}
+
+void
+Cube::invalidateCache()
+{
+  Primitive::invalidateCache();
+  m_box.reset();
 }
 
 void
@@ -43,37 +45,32 @@ Cube::validateParameters(
   }
 }
 
-void
-Cube::onValidatedAndSetParameter(const std::string        &name,
-                                 const PrimitiveParameter &parameter)
+auto
+Cube::generateBox() const -> Box
 {
-  (void)parameter; // unused
-
-  if (name == "size") {
-    const Kernel::FT &value = size();
-
-    m_box.setXExtent(value);
-    m_box.setYExtent(value);
-    m_box.setZExtent(value);
+  if (!m_box) {
+    m_box.emplace(size(), size(), size());
   }
+
+  return *m_box;
 }
 
 auto
 Cube::generatePolyhedralSurface() const -> PolyhedralSurface
 {
-  return m_box.generatePolyhedralSurface();
+  return generateBox().generatePolyhedralSurface();
 }
 
 auto
 Cube::area3D(bool withDiscretization) const -> double
 {
-  return m_box.area3D(withDiscretization);
+  return generateBox().area3D(withDiscretization);
 }
 
 auto
 Cube::volume(bool withDiscretization) const -> double
 {
-  return m_box.volume(withDiscretization);
+  return generateBox().volume(withDiscretization);
 }
 
 auto
@@ -87,9 +84,7 @@ Cube::toString() const -> std::string
 {
   std::ostringstream stringStream;
   stringStream << "[Primitive type: " << primitiveType() << ", size: " << size()
-               << ", box: ";
-  stringStream << m_box;
-  stringStream << "]";
+               << "]";
 
   return stringStream.str();
 }

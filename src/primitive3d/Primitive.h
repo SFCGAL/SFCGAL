@@ -217,17 +217,6 @@ protected:
                           const PrimitiveParameter &parameter);
 
   /**
-   * @brief Callback to propagate paramater change after a parameter has been
-   * validated and set.
-   * @param name parameter name to propagate
-   * @param parameter value
-   * @throws SFCGAL::Exception if propagation failed
-   */
-  virtual void
-  onValidatedAndSetParameter(const std::string        &name,
-                             const PrimitiveParameter &parameter);
-
-  /**
    * Holds parameter value according to their name
    */
   std::unordered_map<std::string, PrimitiveParameter> m_parameters;

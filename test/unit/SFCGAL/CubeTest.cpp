@@ -88,11 +88,6 @@ BOOST_AUTO_TEST_CASE(testCopy)
   cube2.operator=(cube);
   auto polyhedral_surface2 = cube2.generatePolyhedralSurface();
   BOOST_CHECK_EQUAL(polyhedral_surface2.asText(1), expectedWkt);
-
-  Cube cube3;
-  ((Primitive *)&cube3)->operator=(cube);
-  auto polyhedral_surface3 = cube3.generatePolyhedralSurface();
-  BOOST_CHECK_NE(polyhedral_surface3.asText(1), expectedWkt);
 }
 
 BOOST_AUTO_TEST_CASE(testGetSetSize)

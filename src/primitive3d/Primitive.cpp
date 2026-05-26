@@ -50,19 +50,7 @@ Primitive::validateAndSetParameter(const std::string        &name,
   // assign parameter
   m_parameters.at(name) = parameter;
 
-  // call propagation callback
-  onValidatedAndSetParameter(name, parameter);
-
   invalidateCache();
-}
-
-void
-Primitive::onValidatedAndSetParameter(const std::string        &name,
-                                      const PrimitiveParameter &parameter)
-{
-  (void)name;
-  (void)parameter;
-  // nope: does nothing by default
 }
 
 auto

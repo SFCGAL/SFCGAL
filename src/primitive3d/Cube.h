@@ -91,6 +91,11 @@ public:
 
 protected:
   /**
+   * @brief Invalidates the cached geometries
+   */
+  void
+  invalidateCache() override;
+  /**
    * @brief Verifies that all parameters are valid. For instance, it raises an
    * error if an extent is negative.
    * @param tempParameters a temp map of parameter with new values
@@ -101,15 +106,13 @@ protected:
   validateParameters(std::unordered_map<std::string, PrimitiveParameter> const
                          &tempParameters) const override;
 
-  /// @copydoc SFCGAL::Primitive::onValidatedAndSetParameter
-  void
-  onValidatedAndSetParameter(const std::string        &name,
-                             const PrimitiveParameter &parameter) override;
-
 private:
   // prefer composition over inheritance to avoid inheriting x/y/zExtents
   // methods that could allow to modify the cube into NOT a cube.
-  Box m_box;
+  mutable std::optional<Box> m_box;
+
+  auto
+  generateBox() const -> Box;
 };
 
 } // namespace SFCGAL
