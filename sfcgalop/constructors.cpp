@@ -26,14 +26,13 @@ make_sphere(double x, double y, double z, double radius,
 {
   SFCGAL::Sphere sphere(radius, num_subdivisions);
 
-  auto polyhedral_surface = sphere.generatePolyhedralSurface();
-
   // Apply translation to position the center at (x, y, z)
   if (std::abs(x) > SFCGAL::EPSILON || std::abs(y) > SFCGAL::EPSILON ||
       std::abs(z) > SFCGAL::EPSILON) {
-    SFCGAL::algorithm::translate(polyhedral_surface, x, y, z);
+    sphere.translate(SFCGAL::Kernel::Vector_3(x, y, z));
   }
 
+  auto polyhedral_surface = sphere.generatePolyhedralSurface();
   return std::make_unique<SFCGAL::PolyhedralSurface>(
       std::move(polyhedral_surface));
 }

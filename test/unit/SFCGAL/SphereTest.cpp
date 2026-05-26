@@ -12,6 +12,8 @@
 
 using namespace SFCGAL;
 
+#include "../../test_config.h"
+
 BOOST_AUTO_TEST_SUITE(SphereTests)
 
 BOOST_AUTO_TEST_CASE(testDefaultConstructor)
@@ -105,6 +107,31 @@ BOOST_AUTO_TEST_CASE(testClone)
   std::unique_ptr<Sphere> sphereCloned = sphere.clone();
 
   BOOST_CHECK_EQUAL(sphere, *sphereCloned);
+}
+
+BOOST_AUTO_TEST_CASE(testTransform)
+{
+  Sphere                  sphere(3.0, 1);
+  std::unique_ptr<Sphere> sphereTranslated = sphere.clone();
+  BOOST_CHECK_EQUAL(sphere, *sphereTranslated);
+
+  sphereTranslated->translate(Kernel::Vector_3(0.001, 0, 0));
+  BOOST_CHECK_NE(sphere, *sphereTranslated);
+  BOOST_CHECK(sphere.almostEqual(*sphereTranslated, 0.001));
+  BOOST_CHECK(!sphere.almostEqual(*sphereTranslated, 0.0001));
+
+  std::unique_ptr<Sphere> sphereTranslated2 = sphere.clone();
+  sphereTranslated2->translate(Kernel::Vector_3(100, 10, 20));
+  PolyhedralSurface polyhedral_surface =
+      sphereTranslated2->generatePolyhedralSurface();
+
+  std::string expectedWkt(SFCGAL_TEST_DIRECTORY);
+  expectedWkt += "/data/sphere_translated_expected.wkt";
+  std::ifstream efs(expectedWkt.c_str());
+  BOOST_REQUIRE(efs.good());
+  std::getline(efs, expectedWkt);
+
+  BOOST_CHECK_EQUAL(polyhedral_surface.asText(1), expectedWkt);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

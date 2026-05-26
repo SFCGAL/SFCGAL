@@ -88,6 +88,14 @@ Primitive::transformation() const -> Kernel::Aff_transformation_3
   return m_transform;
 }
 
+void
+Primitive::translate(const Kernel::Vector_3 &vector)
+{
+  Kernel::Aff_transformation_3 translation(CGAL::TRANSLATION, vector);
+  m_transform = translation * m_transform;
+  invalidateCache();
+}
+
 auto
 Primitive::almostEqual(const Primitive &other, double epsilon) const -> bool
 {

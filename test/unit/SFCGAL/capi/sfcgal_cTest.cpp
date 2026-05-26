@@ -2404,6 +2404,46 @@ BOOST_AUTO_TEST_CASE(testConeTest)
   sfcgal_primitive_delete(cone);
 }
 
+BOOST_AUTO_TEST_CASE(testPrimitiveTransformTest)
+{
+  sfcgal_set_error_handlers(printf, on_error);
+
+  // translation
+  {
+    sfcgal_primitive_t *sphere = sfcgal_primitive_create(SFCGAL_TYPE_SPHERE);
+
+    sfcgal_primitive_t *sphereT = sfcgal_primitive_translate(sphere, 1, 0, 1);
+
+    BOOST_CHECK_CLOSE(sfcgal_primitive_parameter_double(sphere, "radius"),
+                      sfcgal_primitive_parameter_double(sphereT, "radius"),
+                      1e-6);
+    BOOST_CHECK_EQUAL(
+        sfcgal_primitive_parameter_int(sphere, "num_subdivisions"),
+        sfcgal_primitive_parameter_int(sphereT, "num_subdivisions"));
+
+    sfcgal_geometry_t *poly = sfcgal_primitive_as_polyhedral_surface(sphere);
+    char              *wktApi;
+    size_t             wktLen;
+    sfcgal_geometry_as_text_decim(poly, 0, &wktApi, &wktLen);
+    std::string strApi(wktApi, wktLen);
+    sfcgal_geometry_delete(poly);
+    sfcgal_free_buffer(wktApi);
+
+    sfcgal_geometry_t *polyT = sfcgal_primitive_as_polyhedral_surface(sphereT);
+    char              *wktApiT;
+    size_t             wktLenT;
+    sfcgal_geometry_as_text_decim(polyT, 0, &wktApiT, &wktLenT);
+    std::string strApi2(wktApiT, wktLenT);
+    sfcgal_geometry_delete(polyT);
+    sfcgal_free_buffer(wktApiT);
+
+    BOOST_CHECK_NE(strApi, strApi2);
+
+    sfcgal_primitive_delete(sphere);
+    sfcgal_primitive_delete(sphereT);
+  }
+}
+
 #if SFCGAL_CGAL_VERSION_MAJOR >= 6
 BOOST_AUTO_TEST_CASE(testPolygonRepairTest)
 {

@@ -109,4 +109,33 @@ BOOST_AUTO_TEST_CASE(testClone)
                                   cubeCloned->generatePolyhedralSurface()));
 }
 
+BOOST_AUTO_TEST_CASE(testTransform)
+{
+  Cube                  cube(3.0);
+  std::unique_ptr<Cube> cubeTranslated = cube.clone();
+  BOOST_CHECK_EQUAL(cube, *cubeTranslated);
+
+  cubeTranslated->translate(Kernel::Vector_3(0.001, 0, 0));
+  BOOST_CHECK_NE(cube, *cubeTranslated);
+  BOOST_CHECK(cube.almostEqual(*cubeTranslated, 0.001));
+  BOOST_CHECK(!cube.almostEqual(*cubeTranslated, 0.0001));
+
+  // translation
+  std::unique_ptr<Cube> cubeTranslated2 = cube.clone();
+  cubeTranslated2->translate(Kernel::Vector_3(100, 10, 20));
+  PolyhedralSurface polyhedral_surface =
+      cubeTranslated2->generatePolyhedralSurface();
+
+  BOOST_CHECK_EQUAL(
+      polyhedral_surface.asText(1),
+      "POLYHEDRALSURFACE Z (((98.5 8.5 18.5,98.5 11.5 18.5,101.5 11.5 "
+      "18.5,101.5 8.5 18.5,98.5 8.5 18.5)),((98.5 8.5 21.5,101.5 8.5 "
+      "21.5,101.5 11.5 21.5,98.5 11.5 21.5,98.5 8.5 21.5)),((98.5 8.5 "
+      "18.5,101.5 8.5 18.5,101.5 8.5 21.5,98.5 8.5 21.5,98.5 8.5 18.5)),((98.5 "
+      "11.5 18.5,98.5 11.5 21.5,101.5 11.5 21.5,101.5 11.5 18.5,98.5 11.5 "
+      "18.5)),((101.5 8.5 18.5,101.5 11.5 18.5,101.5 11.5 21.5,101.5 8.5 "
+      "21.5,101.5 8.5 18.5)),((98.5 8.5 18.5,98.5 8.5 21.5,98.5 11.5 21.5,98.5 "
+      "11.5 18.5,98.5 8.5 18.5)))");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

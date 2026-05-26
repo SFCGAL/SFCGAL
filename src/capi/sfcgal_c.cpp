@@ -3173,6 +3173,20 @@ sfcgal_primitive_transformation(const sfcgal_primitive_t *primitive) -> double *
       } return data;)
 }
 
+extern "C" auto
+sfcgal_primitive_translate(const sfcgal_primitive_t *primitive, double dx,
+                           double dy, double dz) -> sfcgal_primitive_t *
+{
+  SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
+      auto *primitiveCast =
+          reinterpret_cast<const SFCGAL::Primitive *>(primitive);
+      const SFCGAL::Kernel::Vector_3     translationVector(dx, dy, dz);
+      std::unique_ptr<SFCGAL::Primitive> translatedPrimitive =
+          primitiveCast->clone();
+      translatedPrimitive->translate(translationVector);
+      return translatedPrimitive.release();)
+}
+
 /*--------------------------------------------------------------------------------------*
  *
  * NURBSCurve support

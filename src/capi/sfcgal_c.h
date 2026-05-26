@@ -2950,6 +2950,19 @@ sfcgal_primitive_as_polyhedral_surface(const sfcgal_primitive_t *primitive);
 SFCGAL_API double *
 sfcgal_primitive_transformation(const sfcgal_primitive_t *primitive);
 
+/**
+ * @brief Translates a primitive by a 3D vector
+ * @param primitive the primitive to translate
+ * @param dx x component of the translation vector
+ * @param dy y component of the translation vector
+ * @param dz z component of the translation vector
+ * @return The translated primitive
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_primitive_t *
+sfcgal_primitive_translate(const sfcgal_primitive_t *primitive, double dx,
+                           double dy, double dz);
+
 #if SFCGAL_CGAL_VERSION_MAJOR >= 6
 /**
  * Polygon repair rules

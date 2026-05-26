@@ -146,6 +146,14 @@ public:
   transformation() const -> Kernel::Aff_transformation_3;
 
   /**
+   * Translates the primitive by the given vector.
+   *
+   * @param vector The translation vector.
+   */
+  void
+  translate(const Kernel::Vector_3 &vector);
+
+  /**
    * @brief Returns the primitive volume
    * @param withDiscretization Computes area with discretization (true) or as
    * perfect primitive (false). Defaults to false.

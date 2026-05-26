@@ -10,6 +10,8 @@
 
 using namespace SFCGAL;
 
+#include "../../test_config.h"
+
 BOOST_AUTO_TEST_SUITE(ConeTests)
 
 BOOST_AUTO_TEST_CASE(testDefaultConstructor)
@@ -243,6 +245,33 @@ BOOST_AUTO_TEST_CASE(testClone)
   BOOST_CHECK_EQUAL(cone, *coneCloned);
   BOOST_CHECK(algorithm::covers3D(cone.generatePolyhedralSurface(),
                                   coneCloned->generatePolyhedralSurface()));
+}
+
+BOOST_AUTO_TEST_CASE(testTransform)
+{
+  Cone                  cone(3.0, 0.1, 5.0);
+  std::unique_ptr<Cone> coneTranslated = cone.clone();
+  BOOST_CHECK_EQUAL(cone, *coneTranslated);
+
+  coneTranslated->translate(Kernel::Vector_3(0.001, 0, 0));
+  BOOST_CHECK_NE(cone, *coneTranslated);
+  BOOST_CHECK(cone.almostEqual(*coneTranslated, 0.001));
+  BOOST_CHECK(!cone.almostEqual(*coneTranslated, 0.0001));
+
+  // translation
+  std::unique_ptr<Cone> coneTranslated2 = cone.clone();
+  coneTranslated2->translate(Kernel::Vector_3(100, 10, 20));
+  PolyhedralSurface polyhedral_surface_translated =
+      coneTranslated2->generatePolyhedralSurface();
+
+  std::string expectedWktTranslated(SFCGAL_TEST_DIRECTORY);
+  expectedWktTranslated += "/data/cone_translated_expected.wkt";
+  std::ifstream efsT(expectedWktTranslated.c_str());
+  BOOST_REQUIRE(efsT.good());
+  std::getline(efsT, expectedWktTranslated);
+
+  BOOST_CHECK_EQUAL(polyhedral_surface_translated.asText(1),
+                    expectedWktTranslated);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

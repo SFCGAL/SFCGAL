@@ -11,6 +11,8 @@
 
 using namespace SFCGAL;
 
+#include "../../test_config.h"
+
 BOOST_AUTO_TEST_SUITE(TorusTests)
 
 BOOST_AUTO_TEST_CASE(testDefaultConstructor)
@@ -135,6 +137,32 @@ BOOST_AUTO_TEST_CASE(testClone)
   BOOST_CHECK_EQUAL(torus, *torusCloned);
   BOOST_CHECK(algorithm::covers3D(torus.generatePolyhedralSurface(),
                                   torusCloned->generatePolyhedralSurface()));
+}
+
+BOOST_AUTO_TEST_CASE(testTransform)
+{
+  Torus                  torus(3.0, 1.2, 6, 8);
+  std::unique_ptr<Torus> torusTranslated = torus.clone();
+  BOOST_CHECK_EQUAL(torus, *torusTranslated);
+
+  torusTranslated->translate(Kernel::Vector_3(0.001, 0, 0));
+  BOOST_CHECK_NE(torus, *torusTranslated);
+  BOOST_CHECK(torus.almostEqual(*torusTranslated, 0.001));
+  BOOST_CHECK(!torus.almostEqual(*torusTranslated, 0.0001));
+
+  // translation
+  std::unique_ptr<Torus> torusTranslated2 = torus.clone();
+  torusTranslated2->translate(Kernel::Vector_3(100, 10, 20));
+  PolyhedralSurface polyhedral_surface =
+      torusTranslated2->generatePolyhedralSurface();
+
+  std::string expectedWkt(SFCGAL_TEST_DIRECTORY);
+  expectedWkt += "/data/torus_translated_expected.wkt";
+  std::ifstream efs(expectedWkt.c_str());
+  BOOST_REQUIRE(efs.good());
+  std::getline(efs, expectedWkt);
+
+  BOOST_CHECK_EQUAL(polyhedral_surface.asText(1), expectedWkt);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

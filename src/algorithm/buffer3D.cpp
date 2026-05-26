@@ -61,12 +61,12 @@ Buffer3D::compute(BufferType type) const -> std::unique_ptr<PolyhedralSurface>
 auto
 Buffer3D::computePointBuffer() const -> std::unique_ptr<PolyhedralSurface>
 {
-  Kernel::Point_3 center(_inputPoints[0].x(), _inputPoints[0].y(),
-                         _inputPoints[0].z());
   // Convert segments to subdivision level for icosahedron
   unsigned int subdivision_level =
       std::max(1U, static_cast<unsigned int>(_segments / 16));
   Sphere sphere(_radius, subdivision_level);
+  sphere.translate(Kernel::Vector_3(_inputPoints[0].x(), _inputPoints[0].y(),
+                                    _inputPoints[0].z()));
   return std::make_unique<PolyhedralSurface>(
       sphere.generatePolyhedralSurface());
 }
@@ -80,7 +80,6 @@ Buffer3D::computeRoundBuffer() const -> std::unique_ptr<PolyhedralSurface>
   using Nef_polyhedron = CGAL::Nef_polyhedron_3<Kernel>;
 
   // Create sphere
-  Point_3 center(0, 0, 0);
   // Convert segments to subdivision level for icosahedron
   unsigned int subdivision_level =
       std::max(1U, static_cast<unsigned int>(_segments / 16));
@@ -122,12 +121,11 @@ Buffer3D::computeCylSphereBuffer() const -> std::unique_ptr<PolyhedralSurface>
 
   // Add a sphere at the first point of the line
   if (!_inputPoints.empty()) {
-    Kernel::Point_3 start_sphere_center(
-        _inputPoints[0].x(), _inputPoints[0].y(), _inputPoints[0].z());
-
     unsigned int subdivision_level =
         std::max(1U, static_cast<unsigned int>(_segments / 16));
-    Sphere                     start_sphere(_radius, subdivision_level);
+    Sphere start_sphere(_radius, subdivision_level);
+    start_sphere.translate(SFCGAL::Kernel::Vector_3(
+        _inputPoints[0].x(), _inputPoints[0].y(), _inputPoints[0].z()));
     CGAL::Polyhedron_3<Kernel> start_sphere_poly =
         start_sphere.generatePolyhedron();
     Nef_polyhedron start_sphere_nef(start_sphere_poly);
@@ -145,6 +143,11 @@ Buffer3D::computeCylSphereBuffer() const -> std::unique_ptr<PolyhedralSurface>
     Kernel::Point_3 base(_inputPoints[i].x(), _inputPoints[i].y(),
                          _inputPoints[i].z());
     Cylinder        cyl(_radius, height, _segments);
+
+    // apply translation
+    cyl.translate(Kernel::Vector_3(_inputPoints[i].x(), _inputPoints[i].y(),
+                                   _inputPoints[i].z()));
+
     CGAL::Polyhedron_3<Kernel> cyl_poly = cyl.generatePolyhedron();
     Nef_polyhedron             cyl_nef(cyl_poly);
 
@@ -152,9 +155,9 @@ Buffer3D::computeCylSphereBuffer() const -> std::unique_ptr<PolyhedralSurface>
 
     // Add a sphere at the junctions (rounded corners)
     if (i < _inputPoints.size() - 1) {
-      Kernel::Point_3 sphereCenter(_inputPoints[i + 1].x(),
-                                   _inputPoints[i + 1].y(),
-                                   _inputPoints[i + 1].z());
+      Kernel::Vector_3 sphereCenter(_inputPoints[i + 1].x(),
+                                    _inputPoints[i + 1].y(),
+                                    _inputPoints[i + 1].z());
       if (i < _inputPoints.size() - 2) {
         // For intermediate points, use the bisector of the two adjacent
         // segments
@@ -168,7 +171,8 @@ Buffer3D::computeCylSphereBuffer() const -> std::unique_ptr<PolyhedralSurface>
 
       unsigned int subdivision_level =
           std::max(1U, static_cast<unsigned int>(_segments / 16));
-      Sphere                     sphere(_radius, subdivision_level);
+      Sphere sphere(_radius, subdivision_level);
+      sphere.translate(sphereCenter);
       CGAL::Polyhedron_3<Kernel> sphere_poly = sphere.generatePolyhedron();
       Nef_polyhedron             sphere_nef(sphere_poly);
       result = result.join(sphere_nef);

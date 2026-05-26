@@ -170,4 +170,30 @@ BOOST_AUTO_TEST_CASE(testClone)
                                   cylinderCloned->generatePolyhedralSurface()));
 }
 
+BOOST_AUTO_TEST_CASE(testTransform)
+{
+  Cylinder                  cylinder(3.0, 4.0, 12);
+  std::unique_ptr<Cylinder> cylinderTranslated = cylinder.clone();
+  BOOST_CHECK_EQUAL(cylinder, *cylinderTranslated);
+
+  cylinderTranslated->translate(Kernel::Vector_3(0.001, 0, 0));
+  BOOST_CHECK_NE(cylinder, *cylinderTranslated);
+  BOOST_CHECK(cylinder.almostEqual(*cylinderTranslated, 0.001));
+  BOOST_CHECK(!cylinder.almostEqual(*cylinderTranslated, 0.0001));
+
+  // translation
+  std::unique_ptr<Cylinder> cylinderTranslated2 = cylinder.clone();
+  cylinderTranslated2->translate(Kernel::Vector_3(100, 10, 20));
+  PolyhedralSurface polyhedral_surface =
+      cylinderTranslated2->generatePolyhedralSurface();
+
+  std::string expectedWkt(SFCGAL_TEST_DIRECTORY);
+  expectedWkt += "/data/cylinder_translated_expected.wkt";
+  std::ifstream efs(expectedWkt.c_str());
+  BOOST_REQUIRE(efs.good());
+  std::getline(efs, expectedWkt);
+
+  BOOST_CHECK_EQUAL(polyhedral_surface.asText(1), expectedWkt);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
