@@ -2975,24 +2975,6 @@ from_json(const nlohmann::json &jsonObject, PrimitiveParameterDesc &desc)
       desc.value = value.get<unsigned int>();
     } else if (desc.type == "double") {
       desc.value = value.get<double>();
-    } else if (desc.type == "point3") {
-      std::vector<double> vect;
-      vect = value.get<std::vector<double>>();
-      Kernel::Point_3 point(
-          vect[0], vect[1], //
-          (vect.size() > 2 ? vect[2]
-                           : std::numeric_limits<double>::quiet_NaN()), //
-          (vect.size() > 3 ? vect[3]
-                           : std::numeric_limits<double>::quiet_NaN()));
-      desc.value = point;
-    } else if (desc.type == "vector3") {
-      std::vector<double> vect;
-      vect = value.get<std::vector<double>>();
-      Kernel::Vector_3 point(vect[0], vect[1], //
-                             (vect.size() > 2
-                                  ? vect[2]
-                                  : std::numeric_limits<double>::quiet_NaN()));
-      desc.value = point;
     } else {
       throw nlohmann::json::type_error::create(
           306, (boost::format("Unknown type '%1%'.") % desc.type).str(),
@@ -3010,10 +2992,6 @@ to_json(nlohmann::json &jsonObject, const PrimitiveParameterDesc &desc)
     jsonObject["type"] = "double";
   } else if (std::holds_alternative<unsigned int>(desc.value)) {
     jsonObject["type"] = "int";
-  } else if (std::holds_alternative<SFCGAL::Kernel::Point_3>(desc.value)) {
-    jsonObject["type"] = "point3";
-  } else if (std::holds_alternative<SFCGAL::Kernel::Vector_3>(desc.value)) {
-    jsonObject["type"] = "vector3";
   } else {
     jsonObject["type"] = "unknown";
   }
@@ -3023,18 +3001,6 @@ to_json(nlohmann::json &jsonObject, const PrimitiveParameterDesc &desc)
         CGAL::to_double(std::get<SFCGAL::Kernel::FT>(desc.value));
   } else if (std::holds_alternative<unsigned int>(desc.value)) {
     jsonObject["value"] = std::get<unsigned int>(desc.value);
-  } else if (std::holds_alternative<SFCGAL::Kernel::Point_3>(desc.value)) {
-    SFCGAL::Kernel::Point_3 point =
-        std::get<SFCGAL::Kernel::Point_3>(desc.value);
-    jsonObject["value"] = std::vector<double>{CGAL::to_double(point.x()),
-                                              CGAL::to_double(point.y()),
-                                              CGAL::to_double(point.z())};
-  } else if (std::holds_alternative<SFCGAL::Kernel::Vector_3>(desc.value)) {
-    SFCGAL::Kernel::Vector_3 point =
-        std::get<SFCGAL::Kernel::Vector_3>(desc.value);
-    jsonObject["value"] = std::vector<double>{CGAL::to_double(point.x()),
-                                              CGAL::to_double(point.y()),
-                                              CGAL::to_double(point.z())};
   }
 }
 
@@ -3180,89 +3146,6 @@ sfcgal_primitive_set_parameter_int(sfcgal_primitive_t *primitive,
       primitiveCast->setParameter(std::string(name), parameter);)
 }
 
-/// @{
-/// @privatesection
-
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-template <class T>
-auto
-primitive_parameter_array(const sfcgal_primitive_t *primitive, const char *name,
-                          const char *parameter_type) -> double *
-{
-  double *returnArray = nullptr;
-
-  SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
-      const auto *primitiveCast =
-          reinterpret_cast<const SFCGAL::Primitive *>(primitive);
-      SFCGAL::PrimitiveParameter parameter =
-          primitiveCast->parameter(std::string(name));
-
-      std::cout << "primitive_parameter_array name:" << name << " ==> "
-                << *primitiveCast << "\n";
-
-      const T *array = std::get_if<T>(&parameter); //
-      if (array != nullptr) {
-        returnArray =
-            static_cast<double *>(sfcgal_alloc_handler(3 * sizeof(double)));
-        returnArray[0] = CGAL::to_double(array->x());
-        returnArray[1] = CGAL::to_double(array->y());
-        returnArray[2] = CGAL::to_double(array->z());
-      } else {
-        SFCGAL_ERROR("Parameter %s is not a %s", name, parameter_type);
-      } //
-      return returnArray; //
-  );
-}
-
-#endif // ifndef DOXYGEN_SHOULD_SKIP_THIS
-/// @} end of private section
-/// @publicsection
-
-template <class T>
-auto
-primitive_set_parameter_array(sfcgal_primitive_t *primitive, const char *name,
-                              const double *array) -> void
-{
-  SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
-      auto *primitiveCast = reinterpret_cast<SFCGAL::Primitive *>(primitive);
-      primitiveCast->setParameter(std::string(name),
-                                  T(array[0], array[1], array[2]));)
-}
-
-extern "C" auto
-sfcgal_primitive_parameter_point(const sfcgal_primitive_t *primitive,
-                                 const char               *name) -> double *
-{
-  return primitive_parameter_array<SFCGAL::Kernel::Point_3>(primitive, name,
-                                                            "point");
-}
-
-extern "C" auto
-sfcgal_primitive_set_parameter_point(sfcgal_primitive_t *primitive,
-                                     const char *name, const double *point)
-    -> void
-{
-  primitive_set_parameter_array<SFCGAL::Kernel::Point_3>(primitive, name,
-                                                         point);
-}
-
-extern "C" auto
-sfcgal_primitive_parameter_vector(const sfcgal_primitive_t *primitive,
-                                  const char               *name) -> double *
-{
-  return primitive_parameter_array<SFCGAL::Kernel::Vector_3>(primitive, name,
-                                                             "vector");
-}
-
-extern "C" auto
-sfcgal_primitive_set_parameter_vector(sfcgal_primitive_t *primitive,
-                                      const char *name, const double *vector)
-    -> void
-{
-  primitive_set_parameter_array<SFCGAL::Kernel::Vector_3>(primitive, name,
-                                                          vector);
-}
-
 extern "C" auto
 sfcgal_primitive_as_polyhedral_surface(const sfcgal_primitive_t *primitive)
     -> sfcgal_geometry_t *
@@ -3272,6 +3155,22 @@ sfcgal_primitive_as_polyhedral_surface(const sfcgal_primitive_t *primitive)
           reinterpret_cast<const SFCGAL::Primitive *>(primitive);
       return new SFCGAL::PolyhedralSurface(
           primitiveCast->generatePolyhedralSurface());)
+}
+
+extern "C" auto
+sfcgal_primitive_transformation(const sfcgal_primitive_t *primitive) -> double *
+{
+  SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
+      auto *primitiveCast =
+          reinterpret_cast<const SFCGAL::Primitive *>(primitive);
+      const SFCGAL::Kernel::Aff_transformation_3 transformation =
+          primitiveCast->transformation();
+      auto *data = (double *)sfcgal_alloc_handler(16 * sizeof(double));
+      for (int col = 0; col < 4; ++col) {
+        for (int row = 0; row < 4; ++row) {
+          data[(col * 4) + row] = CGAL::to_double(transformation.hm(row, col));
+        }
+      } return data;)
 }
 
 /*--------------------------------------------------------------------------------------*

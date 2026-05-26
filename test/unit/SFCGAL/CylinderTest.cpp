@@ -23,32 +23,22 @@ BOOST_AUTO_TEST_CASE(testDefaultConstructor)
   BOOST_CHECK_CLOSE(cyl.radius(), 1.0, 1e-6);
   BOOST_CHECK_CLOSE(cyl.height(), 1.0, 1e-6);
   BOOST_CHECK_EQUAL(cyl.numRadial(), 32);
-  BOOST_CHECK_EQUAL(cyl.baseCenter(), Point_3(0, 0, 0));
-  BOOST_CHECK_EQUAL(cyl.axis(), Vector_3(0, 0, 1));
 }
 
 BOOST_AUTO_TEST_CASE(testCustomConstructor)
 {
-  Point_3  base(1, 2, 3);
-  Vector_3 axis(0, 1, 0);
-  Cylinder cyl(base, axis, 2.0, 5.0, 16);
+  Cylinder cyl(2.0, 5.0, 16);
   BOOST_CHECK_CLOSE(cyl.radius(), 2.0, 1e-6);
   BOOST_CHECK_CLOSE(cyl.height(), 5.0, 1e-6);
   BOOST_CHECK_EQUAL(cyl.numRadial(), 16);
-  BOOST_CHECK_EQUAL(cyl.baseCenter(), base);
-  BOOST_CHECK_EQUAL(cyl.axis(), axis);
 }
 
 BOOST_AUTO_TEST_CASE(testCopy)
 {
-  Point_3  base(1, 2, 3);
-  Vector_3 axis(0, 1, 0);
-  Cylinder cyl(base, axis, 2.0, 5.0, 16);
+  Cylinder cyl(2.0, 5.0, 16);
   BOOST_CHECK_CLOSE(cyl.radius(), 2.0, 1e-6);
   BOOST_CHECK_CLOSE(cyl.height(), 5.0, 1e-6);
   BOOST_CHECK_EQUAL(cyl.numRadial(), 16);
-  BOOST_CHECK_EQUAL(cyl.baseCenter(), base);
-  BOOST_CHECK_EQUAL(cyl.axis(), axis);
 
   std::string expectedWkt(SFCGAL_TEST_DIRECTORY);
   expectedWkt += "/data/cylinder_expected_cpp1.wkt";
@@ -86,14 +76,10 @@ BOOST_AUTO_TEST_CASE(testSetters)
   cyl.setRadius(3.0);
   cyl.setHeight(4.0);
   cyl.setNumRadial(24);
-  cyl.setBaseCenter(Point_3(1, 1, 1));
-  cyl.setAxis(Vector_3(1, 1, 1));
 
   BOOST_CHECK_CLOSE(cyl.radius(), 3.0, 1e-6);
   BOOST_CHECK_CLOSE(cyl.height(), 4.0, 1e-6);
   BOOST_CHECK_EQUAL(cyl.numRadial(), 24);
-  BOOST_CHECK_EQUAL(cyl.baseCenter(), Point_3(1, 1, 1));
-  BOOST_CHECK_EQUAL(cyl.axis(), Vector_3(1, 1, 1));
 
   // radius and height cannot be negative
   BOOST_CHECK_THROW(cyl.setHeight(-1.2), Exception);
@@ -102,7 +88,7 @@ BOOST_AUTO_TEST_CASE(testSetters)
 
 BOOST_AUTO_TEST_CASE(testGenerateSurfaceMesh)
 {
-  Cylinder cyl(Point_3(0, 0, 0), Vector_3(0, 0, 1), 1.0, 2.0, 4);
+  Cylinder cyl(1.0, 2.0, 4);
   auto     mesh = cyl.generateSurfaceMesh();
 
   BOOST_CHECK_EQUAL(mesh.number_of_vertices(), cyl.numRadial() * 2 + 2);
@@ -112,7 +98,7 @@ BOOST_AUTO_TEST_CASE(testGenerateSurfaceMesh)
 
 BOOST_AUTO_TEST_CASE(testVolume)
 {
-  Cylinder cyl(Point_3(0, 0, 0), Vector_3(0, 0, 1), 2.0, 5.0, 32);
+  Cylinder cyl(2.0, 5.0, 32);
   double   volume          = cyl.volume();
   double   expected_volume = M_PI * 2.0 * 2.0 * 5.0;
   BOOST_CHECK_CLOSE(volume, expected_volume, 0.01);
@@ -120,7 +106,7 @@ BOOST_AUTO_TEST_CASE(testVolume)
 
 BOOST_AUTO_TEST_CASE(testSurfaceArea)
 {
-  Cylinder cyl(Point_3(0, 0, 0), Vector_3(0, 0, 1), 2.0, 5.0, 32);
+  Cylinder cyl(2.0, 5.0, 32);
   double   area          = cyl.area3D();
   double   expected_area = 2 * M_PI * 2.0 * 2.0 + 2 * M_PI * 2.0 * 5.0;
   BOOST_CHECK_CLOSE(area, expected_area, 0.01);
@@ -128,13 +114,11 @@ BOOST_AUTO_TEST_CASE(testSurfaceArea)
 
 BOOST_AUTO_TEST_CASE(testTiltedCylinder)
 {
-  Point_3  base(1, 1, 1);
-  Vector_3 axis(1, 1, 1);
-  Cylinder cyl(base, axis, 1.0, std::sqrt(3.0), 16);
+  Cylinder cyl(1.0, 3.0, 16);
   auto     mesh = cyl.generateSurfaceMesh();
 
   // Check that the top center is where we expect it to be
-  Point_3 expected_top(2, 2, 2);
+  Point_3 expected_top(1, 0, 3);
   bool    found_top = false;
   for (auto v : mesh.vertices()) {
     if (CGAL::squared_distance(mesh.point(v), expected_top) < 1e-10) {
@@ -158,7 +142,7 @@ BOOST_AUTO_TEST_CASE(testTiltedCylinder)
 
 BOOST_AUTO_TEST_CASE(testPolyhedron)
 {
-  Cylinder cyl(Point_3(0, 0, 0), Vector_3(0, 0, 1), 1.0, 2.0, 8);
+  Cylinder cyl(1.0, 2.0, 8);
   auto     polyhedron = cyl.generatePolyhedron();
 
   BOOST_CHECK_EQUAL(polyhedron.size_of_vertices(), cyl.numRadial() * 2 + 2);
@@ -178,9 +162,7 @@ BOOST_AUTO_TEST_CASE(testPolyhedron)
 
 BOOST_AUTO_TEST_CASE(testClone)
 {
-  Point_3                   base(1, 2, 3);
-  Vector_3                  axis(0, 1, 0);
-  Cylinder                  cylinder(base, axis, 2.0, 5.0, 16);
+  Cylinder                  cylinder(2.0, 5.0, 16);
   std::unique_ptr<Cylinder> cylinderCloned = cylinder.clone();
 
   BOOST_CHECK_EQUAL(cylinder, *cylinderCloned);

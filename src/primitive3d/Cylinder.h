@@ -20,6 +20,9 @@ namespace SFCGAL {
  * @class Cylinder
  * @brief Represents a cylinder in 3D space
  *
+ * The cylinder is aligned along the Z axis with its base centered at the
+ * origin and its top cap located at z = height.
+ *
  * This class provides methods to generate a polyhedron and a surface mesh
  * representation of a cylinder. It uses SFCGAL's Kernel for exact computations.
  */
@@ -27,15 +30,11 @@ class SFCGAL_API Cylinder : public PrimitiveImpl<Cylinder, Primitive> {
 public:
   /**
    * @brief Constructs a Cylinder object
-   * @param base_center The center point of the base of the cylinder
-   * @param axis The axis of the cylinder
    * @param radius The radius of the cylinder
    * @param height The height of the cylinder
    * @param num_radial The number of radial divisions
    */
-  Cylinder(const Point_3    &base_center = Point_3(0, 0, 0),
-           const Vector_3   &axis        = Vector_3(0, 0, 1),
-           const Kernel::FT &radius = 1.0, const Kernel::FT &height = 1.0,
+  Cylinder(const Kernel::FT &radius = 1.0, const Kernel::FT &height = 1.0,
            unsigned int num_radial = 32);
 
   /**
@@ -65,20 +64,6 @@ public:
   ~Cylinder() override = default;
 
   /**
-   * @brief Sets the base center of the cylinder
-   * @param base_center The new base center point
-   */
-  void
-  setBaseCenter(const Point_3 &base_center);
-
-  /**
-   * @brief Sets the axis of the cylinder
-   * @param axis The new axis vector
-   */
-  void
-  setAxis(const Vector_3 &axis);
-
-  /**
    * @brief Sets the radius of the cylinder
    * @param radius The new radius
    */
@@ -98,26 +83,6 @@ public:
    */
   void
   setNumRadial(unsigned int num);
-
-  /**
-   * @brief Gets the base center of the cylinder
-   * @return The base center point
-   */
-  [[nodiscard]] auto
-  baseCenter() const -> const Point_3 &
-  {
-    return std::get<Point_3>(m_parameters.at("base_center"));
-  }
-
-  /**
-   * @brief Gets the axis of the cylinder
-   * @return The axis vector
-   */
-  [[nodiscard]] auto
-  axis() const -> const Vector_3 &
-  {
-    return std::get<Vector_3>(m_parameters.at("axis"));
-  }
 
   /**
    * @brief Gets the radius of the cylinder
@@ -211,14 +176,6 @@ protected:
 private:
   mutable std::optional<Polyhedron_3>   m_polyhedron;
   mutable std::optional<Surface_mesh_3> m_surface_mesh;
-
-  /**
-   * @brief Normalizes a vector
-   * @param vector The vector to normalize
-   * @return The normalized vector
-   */
-  static auto
-  normalize(const Vector_3 &vector) -> Vector_3;
 };
 
 } // namespace SFCGAL

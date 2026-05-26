@@ -7,12 +7,15 @@
 #include "SFCGAL/PolyhedralSurface.h"
 #include "SFCGAL/primitive3d/Primitive.h"
 
+#include <CGAL/Polygon_mesh_processing/transform.h>
 #include <CGAL/Polyhedron_incremental_builder_3.h>
 #include <CGAL/Vector_3.h>
 #include <cmath>
 #include <map>
 #include <stdexcept>
 #include <utility>
+
+namespace PMP = CGAL::Polygon_mesh_processing;
 
 namespace SFCGAL {
 
@@ -28,9 +31,8 @@ namespace SFCGAL {
 template <class HDS>
 class Sphere_builder : public CGAL::Modifier_base<HDS> {
 public:
-  Sphere_builder(double radius, unsigned int num_subdivisions, Point_3 center)
-      : radius(radius), num_subdivisions(num_subdivisions),
-        center(std::move(center))
+  Sphere_builder(double radius, unsigned int num_subdivisions)
+      : radius(radius), num_subdivisions(num_subdivisions)
   {
   }
 
@@ -82,12 +84,7 @@ public:
         vec = vec / length;
       }
 
-      // Apply radius scaling
-      vec = vec * radius;
-
-      // Translate to center
-      vertex = Point_3(center.x() + vec.x(), center.y() + vec.y(),
-                       center.z() + vec.z());
+      vertex = Point_3(radius * vec.x(), radius * vec.y(), radius * vec.z());
     }
 
     B.begin_surface(vertices.size(), faces.size());
@@ -125,7 +122,6 @@ public:
 private:
   double       radius;
   unsigned int num_subdivisions;
-  Point_3      center;
 
   void
   subdivideIcosahedron(std::vector<Point_3>            &vertices,
@@ -185,12 +181,10 @@ private:
 // ----------------------------------------------------------------------------------
 /// @publicsection
 
-Sphere::Sphere(const Kernel::FT &radius, const Kernel::Point_3 &center,
-               unsigned int num_subdivisions)
+Sphere::Sphere(const Kernel::FT &radius, unsigned int num_subdivisions)
 {
   m_parameters["radius"]           = Kernel::FT(radius);
   m_parameters["num_subdivisions"] = num_subdivisions;
-  m_parameters["center"]           = center;
 
   Sphere::validateParameters(m_parameters);
 }
@@ -240,10 +234,16 @@ Sphere::validateParameters(
 auto
 Sphere::generateSpherePolyhedron() const -> Polyhedron_3
 {
-  Polyhedron_3                             P;
+  Polyhedron_3 P;
+
   Sphere_builder<Polyhedron_3::HalfedgeDS> builder(CGAL::to_double(radius()),
-                                                   numSubdivisions(), center());
+                                                   numSubdivisions());
   P.delegate(builder);
+
+  // handle affine transformation
+  if (m_transform != Kernel::Aff_transformation_3(CGAL::IDENTITY)) {
+    PMP::transform(m_transform, P);
+  }
   return P;
 }
 
@@ -288,6 +288,7 @@ Sphere::generatePolyhedralSurface() const -> PolyhedralSurface
       throw std::runtime_error("Generated sphere polyhedron is not closed");
     }
 
+    // generatePolyhedron already handles the affine transformation
     m_polyhedral_surface = PolyhedralSurface(polyhedron);
 
     return *m_polyhedral_surface;

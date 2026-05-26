@@ -2928,67 +2928,6 @@ sfcgal_primitive_set_parameter_int(sfcgal_primitive_t *primitive,
                                    const char *name, unsigned int parameter);
 
 /**
- * @brief Retrieves the value of a primitive parameter as a 3D point: an array
- * of three doubles (x, y, z).
- * @param primitive Pointer to the primitive.
- * @param name Name of the parameter to retrieve.
- * @return A newly allocated array of three doubles representing the 3D point on
- * success, or a nullptr if the operation failed.
- * @pre The parameter identified by @p name must exist and be of type 3D point.
- * @post The returned array must be deallocated by calling
- * sfcgal_free_buffer()
- * @ingroup capi
- */
-SFCGAL_API double *
-sfcgal_primitive_parameter_point(const sfcgal_primitive_t *primitive,
-                                 const char               *name);
-
-/**
- * @brief Sets the value of a primitive parameter as a 3D point: an array of
- * three doubles (x, y, z).
- * @param primitive Pointer to the primitive.
- * @param name Name of the parameter to set.
- * @param point Array of three doubles representing the new 3D point.
- * @pre The parameter identified by @p name must exist and accept values of type
- * 3D point.
- * @ingroup capi
- */
-SFCGAL_API void
-sfcgal_primitive_set_parameter_point(sfcgal_primitive_t *primitive,
-                                     const char *name, const double *point);
-
-/**
- * @brief Retrieves the value of a primitive parameter as a 3D vector: an array
- * of three doubles (x, y, z).
- * @param primitive Pointer to the primitive.
- * @param name Name of the parameter to retrieve.
- * @return A newly allocated array of three doubles representing the 3D vector
- * on success, or a nullptr if the operation failed.
- * @pre The parameter identified by @p name must exist and be of type 3D vector.
- * @post The returned array must be deallocated by calling
- * sfcgal_free_buffer()
- * @return Primitive parameter as a 3D vector
- * @ingroup capi
- */
-SFCGAL_API double *
-sfcgal_primitive_parameter_vector(const sfcgal_primitive_t *primitive,
-                                  const char               *name);
-
-/**
- * @brief Sets the value of a primitive parameter as a 3D vector: an array of
- * three doubles (x, y, z).
- * @param primitive Pointer to the primitive.
- * @param name Name of the parameter to set.
- * @param vector Array of three doubles representing the new 3D vector.
- * @pre The parameter identified by @p name must exist and accept values of type
- * 3D vector.
- * @ingroup capi
- */
-SFCGAL_API void
-sfcgal_primitive_set_parameter_vector(sfcgal_primitive_t *primitive,
-                                      const char *name, const double *vector);
-
-/**
  * @brief Generates a polyhedral surface representation of the primitive
  * @param primitive Pointer to the primitive.
  * @post The returned geometry must be deallocated by the caller with
@@ -2998,6 +2937,18 @@ sfcgal_primitive_set_parameter_vector(sfcgal_primitive_t *primitive,
  */
 SFCGAL_API sfcgal_geometry_t *
 sfcgal_primitive_as_polyhedral_surface(const sfcgal_primitive_t *primitive);
+
+/**
+ * @brief Retrieves the primitive's current transformation matrix as an array.
+ * @param primitive Pointer to the primitive.
+ * @return A newly allocated array of doubles representing the current affine
+ * transformation on success, or nullptr on failure.
+ * @post The returned array must be deallocated using sfcgal_free_buffer().
+ * @note The matrix is stored in column-major order (column by column).
+ * @ingroup capi
+ */
+SFCGAL_API double *
+sfcgal_primitive_transformation(const sfcgal_primitive_t *primitive);
 
 #if SFCGAL_CGAL_VERSION_MAJOR >= 6
 /**

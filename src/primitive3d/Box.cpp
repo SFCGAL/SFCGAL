@@ -7,6 +7,7 @@
 #include "SFCGAL/Point.h"
 #include "SFCGAL/Polygon.h"
 #include "SFCGAL/PolyhedralSurface.h"
+#include "SFCGAL/detail/transform/AffineTransform3.h"
 #include "SFCGAL/primitive3d/Box.h"
 
 namespace SFCGAL {
@@ -122,7 +123,12 @@ Box::generatePolyhedralSurface() const -> PolyhedralSurface
   m_polyhedral_surface->addPatch(
       LineString({points[0], points[4], points[6], points[2], points[0]}));
 
-  // create polyhedral surface
+  // handle affine transformation
+  if (m_transform != Kernel::Aff_transformation_3(CGAL::IDENTITY)) {
+    SFCGAL::transform::AffineTransform3 visitor(m_transform);
+    m_polyhedral_surface->accept(visitor);
+  }
+
   return *m_polyhedral_surface;
 }
 

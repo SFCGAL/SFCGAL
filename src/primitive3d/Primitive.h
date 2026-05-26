@@ -32,12 +32,9 @@ enum class PrimitiveType : std::int8_t {
  *
  * A primitive parameter can be one of the following types:
  * - SFCGAL::Kernel::FT : a scalar floating-point value
- * - SFCGAL::Kernel::Point_3 : a 3D point
- * - SFCGAL::Kernel::Vector_3 : a 3D vector
  * - unsigned int : an integer value
  */
-using PrimitiveParameter =
-    std::variant<Kernel::FT, Kernel::Point_3, Kernel::Vector_3, unsigned int>;
+using PrimitiveParameter = std::variant<Kernel::FT, unsigned int>;
 
 /**
  * @brief Abstract base class for primitive object (Cube, Cylinder, Cone, etc.)
@@ -135,6 +132,20 @@ public:
   parameters() const -> std::unordered_map<std::string, PrimitiveParameter>;
 
   /**
+   * @brief Sets the primitive affine transformation
+   * @param transform The new affine transformation
+   */
+  void
+  setTransformation(const Kernel::Aff_transformation_3 &transform);
+
+  /**
+   * @brief Retrieves the primitive affine transformation
+   * @return the primitive affine transformation
+   */
+  [[nodiscard]] auto
+  transformation() const -> Kernel::Aff_transformation_3;
+
+  /**
    * @brief Returns the primitive volume
    * @param withDiscretization Computes area with discretization (true) or as
    * perfect primitive (false). Defaults to false.
@@ -226,6 +237,11 @@ protected:
    * generatePolyhedralSurface()
    */
   mutable std::optional<PolyhedralSurface> m_polyhedral_surface;
+
+  /**
+   * Holds primitive affine transformation
+   */
+  Kernel::Aff_transformation_3 m_transform = CGAL::IDENTITY;
 
 private:
   [[nodiscard]] virtual auto

@@ -50,6 +50,7 @@ Cube::generateBox() const -> Box
 {
   if (!m_box) {
     m_box.emplace(size(), size(), size());
+    m_box->setTransformation(m_transform);
   }
 
   return *m_box;

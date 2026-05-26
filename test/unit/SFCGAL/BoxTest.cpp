@@ -101,6 +101,16 @@ BOOST_AUTO_TEST_CASE(testClone)
   BOOST_CHECK_EQUAL(box, *boxCloned);
   BOOST_CHECK(algorithm::covers3D(box.generatePolyhedralSurface(),
                                   boxCloned->generatePolyhedralSurface()));
+
+  BOOST_CHECK_EQUAL(box.transformation(),
+                    Kernel::Aff_transformation_3(CGAL::IDENTITY));
+  Kernel::Aff_transformation_3 translation(CGAL::TRANSLATION,
+                                           SFCGAL::Kernel::Vector_3(3, 2, 1));
+  box.setTransformation(translation);
+  BOOST_CHECK_EQUAL(box.transformation(), translation);
+  std::unique_ptr<Box> box2 = box.clone();
+  BOOST_CHECK_EQUAL(box, *box2);
+  BOOST_CHECK_EQUAL(box.transformation(), box2->transformation());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

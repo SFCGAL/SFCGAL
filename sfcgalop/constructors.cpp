@@ -24,10 +24,16 @@ auto
 make_sphere(double x, double y, double z, double radius,
             unsigned int num_subdivisions) -> std::unique_ptr<SFCGAL::Geometry>
 {
-  SFCGAL::Kernel::Point_3 center(x, y, z);
-  SFCGAL::Sphere          sphere(radius, center, num_subdivisions);
+  SFCGAL::Sphere sphere(radius, num_subdivisions);
 
   auto polyhedral_surface = sphere.generatePolyhedralSurface();
+
+  // Apply translation to position the center at (x, y, z)
+  if (std::abs(x) > SFCGAL::EPSILON || std::abs(y) > SFCGAL::EPSILON ||
+      std::abs(z) > SFCGAL::EPSILON) {
+    SFCGAL::algorithm::translate(polyhedral_surface, x, y, z);
+  }
+
   return std::make_unique<SFCGAL::PolyhedralSurface>(
       std::move(polyhedral_surface));
 }
@@ -54,12 +60,43 @@ make_cylinder(double base_x, double base_y, double base_z, double axis_x,
               double axis_y, double axis_z, double radius, double height,
               unsigned int num_radial) -> std::unique_ptr<SFCGAL::Geometry>
 {
-  SFCGAL::Kernel::Point_3  base_center(base_x, base_y, base_z);
-  SFCGAL::Kernel::Vector_3 axis(axis_x, axis_y, axis_z);
-
-  SFCGAL::Cylinder cylinder(base_center, axis, radius, height, num_radial);
+  SFCGAL::Cylinder cylinder(radius, height, num_radial);
 
   auto polyhedral_surface = cylinder.generatePolyhedralSurface();
+
+  // Normalize the axis vector
+  double axis_length =
+      std::sqrt((axis_x * axis_x) + (axis_y * axis_y) + (axis_z * axis_z));
+
+  // If axis is non-zero and not aligned with +Z, apply rotation
+  if (axis_length > SFCGAL::EPSILON) {
+    double nx = axis_x / axis_length;
+    double ny = axis_y / axis_length;
+    double nz = axis_z / axis_length;
+
+    // Check if axis is not already aligned with +Z (0, 0, 1)
+    if (std::abs(nx) > SFCGAL::EPSILON || std::abs(ny) > SFCGAL::EPSILON ||
+        std::abs(nz - 1.0) > SFCGAL::EPSILON) {
+      // Compute rotation axis: cross product of +Z with desired axis
+      // +Z = (0, 0, 1), so cross product is (ny, -nx, 0) (normalized later)
+      SFCGAL::Kernel::Vector_3 rotation_axis(ny, -nx, 0);
+
+      // Compute rotation angle using dot product: +Z · normalized_axis = nz
+      double angle = std::acos(std::clamp(nz, -1.0, 1.0));
+
+      if (std::abs(angle) > SFCGAL::EPSILON) {
+        SFCGAL::algorithm::rotate(polyhedral_surface, angle, rotation_axis);
+      }
+    }
+  }
+
+  // Apply translation to position the base at (base_x, base_y, base_z)
+  if (std::abs(base_x) > SFCGAL::EPSILON ||
+      std::abs(base_y) > SFCGAL::EPSILON ||
+      std::abs(base_z) > SFCGAL::EPSILON) {
+    SFCGAL::algorithm::translate(polyhedral_surface, base_x, base_y, base_z);
+  }
+
   return std::make_unique<SFCGAL::PolyhedralSurface>(
       std::move(polyhedral_surface));
 }

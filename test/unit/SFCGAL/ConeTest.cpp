@@ -51,11 +51,6 @@ BOOST_AUTO_TEST_CASE(testSetters)
   BOOST_CHECK_THROW(cone.setParameter(std::string("foo"), 12.3), Exception);
   BOOST_CHECK_THROW(static_cast<void>(cone.parameter("foo")), Exception);
 
-  // bottom_radius is not a point
-  BOOST_CHECK_THROW(
-      cone.setParameter(std::string("bottom_radius"), Point_3(1, 1, 1)),
-      Exception);
-
   // height, bottom and top radius cannot be negartive
   BOOST_CHECK_THROW(cone.setParameter(std::string("height"), -2.3), Exception);
   BOOST_CHECK_THROW(cone.setParameter(std::string("bottom_radius"), -20.38),

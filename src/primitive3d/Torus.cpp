@@ -7,6 +7,7 @@
 #include "SFCGAL/Point.h"
 #include "SFCGAL/Polygon.h"
 #include "SFCGAL/PolyhedralSurface.h"
+#include "SFCGAL/detail/transform/AffineTransform3.h"
 #include "SFCGAL/primitive3d/Torus.h"
 
 namespace SFCGAL {
@@ -104,6 +105,12 @@ Torus::generatePolyhedralSurface() const -> PolyhedralSurface
       m_polyhedral_surface->addPatch(
           LineString({points[0], points[1], points[3], points[2], points[0]}));
     }
+  }
+
+  // handle affine transformation
+  if (m_transform != Kernel::Aff_transformation_3(CGAL::IDENTITY)) {
+    SFCGAL::transform::AffineTransform3 visitor(m_transform);
+    m_polyhedral_surface->accept(visitor);
   }
 
   return *m_polyhedral_surface;

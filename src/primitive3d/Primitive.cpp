@@ -75,12 +75,23 @@ Primitive::parameters() const
   return m_parameters;
 }
 
+void
+Primitive::setTransformation(const Kernel::Aff_transformation_3 &transform)
+{
+  m_transform = transform;
+  invalidateCache();
+}
+
+auto
+Primitive::transformation() const -> Kernel::Aff_transformation_3
+{
+  return m_transform;
+}
+
 auto
 Primitive::almostEqual(const Primitive &other, double epsilon) const -> bool
 {
-  using FT       = Kernel::FT;
-  using Point_3  = Kernel::Point_3;
-  using Vector_3 = Kernel::Vector_3;
+  using FT = Kernel::FT;
 
   if (primitiveTypeId() != other.primitiveTypeId()) {
     return false;
@@ -88,6 +99,15 @@ Primitive::almostEqual(const Primitive &other, double epsilon) const -> bool
 
   if (epsilon <= 0.0) {
     return (*this) == other;
+  }
+
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      if (CGAL::abs(m_transform.m(i, j) - other.m_transform.m(i, j)) >
+          epsilon) {
+        return false;
+      }
+    }
   }
 
   for (const auto &[key, value] : other.parameters()) {
@@ -106,11 +126,6 @@ Primitive::almostEqual(const Primitive &other, double epsilon) const -> bool
           if constexpr (std::is_same_v<T, FT> ||
                         std::is_same_v<T, unsigned int>) {
             return SFCGAL::almostEqual(value1, value2, epsilon);
-          } else if constexpr (std::is_same_v<T, Point_3> ||
-                               std::is_same_v<T, Vector_3>) {
-            return SFCGAL::almostEqual(value1.x(), value2.x(), epsilon) &&
-                   SFCGAL::almostEqual(value1.y(), value2.y(), epsilon) &&
-                   SFCGAL::almostEqual(value1.z(), value2.z(), epsilon);
           } else {
             return value1 == value2; // fallback
           }
@@ -134,9 +149,7 @@ Primitive::invalidateCache()
 auto
 Primitive::toString() const -> std::string
 {
-  using FT       = Kernel::FT;
-  using Point_3  = Kernel::Point_3;
-  using Vector_3 = Kernel::Vector_3;
+  using FT = Kernel::FT;
 
   std::ostringstream stringStream;
   stringStream << "[Primitive type: " << primitiveType() << ", parameters: [";
@@ -150,9 +163,6 @@ Primitive::toString() const -> std::string
           if constexpr (std::is_same_v<T, FT> ||
                         std::is_same_v<T, unsigned int>) {
             stringStream << value;
-          } else if constexpr (std::is_same_v<T, Point_3> ||
-                               std::is_same_v<T, Vector_3>) {
-            stringStream << "{" << value << "}";
           } else {
             stringStream << "{ unknown alternative }";
           }
@@ -172,6 +182,7 @@ auto
 operator==(const Primitive &prim1, const Primitive &prim2) -> bool
 {
   return prim1.primitiveTypeId() == prim2.primitiveTypeId() &&
+         prim1.transformation() == prim2.transformation() &&
          prim1.parameters() == prim2.parameters();
 }
 

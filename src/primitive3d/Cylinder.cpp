@@ -2,22 +2,24 @@
 // Copyright (c) 2024-2026, SFCGAL team.
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
+#include <CGAL/number_utils.h>
 #include <utility>
 
 #include "SFCGAL/numeric.h"
 #include "SFCGAL/primitive3d/Cylinder.h"
 
+#include <CGAL/Polygon_mesh_processing/transform.h>
+
+namespace PMP = CGAL::Polygon_mesh_processing;
+
 namespace SFCGAL {
 
-Cylinder::Cylinder(const Point_3 &base_center, const Vector_3 &axis,
-                   const Kernel::FT &radius, const Kernel::FT &height,
+Cylinder::Cylinder(const Kernel::FT &radius, const Kernel::FT &height,
                    unsigned int num_radial)
 {
-  m_parameters["base_center"] = base_center;
-  m_parameters["axis"]        = axis;
-  m_parameters["radius"]      = radius;
-  m_parameters["height"]      = height;
-  m_parameters["num_radial"]  = num_radial;
+  m_parameters["radius"]     = radius;
+  m_parameters["height"]     = height;
+  m_parameters["num_radial"] = num_radial;
 
   Cylinder::validateParameters(m_parameters);
 }
@@ -32,18 +34,6 @@ auto
 Cylinder::primitiveTypeId() const -> PrimitiveType
 {
   return PrimitiveType::TYPE_CYLINDER;
-}
-
-void
-Cylinder::setBaseCenter(const Point_3 &base_center)
-{
-  validateAndSetParameter("base_center", base_center);
-}
-
-void
-Cylinder::setAxis(const Vector_3 &axis)
-{
-  validateAndSetParameter("axis", axis);
 }
 
 void
@@ -96,16 +86,6 @@ Cylinder::invalidateCache()
 }
 
 auto
-Cylinder::normalize(const Vector_3 &vector) -> Vector_3
-{
-  double length = std::sqrt(CGAL::to_double(vector.squared_length()));
-  if (length < EPSILON) {
-    return vector;
-  }
-  return vector / length;
-}
-
-auto
 Cylinder::generatePolyhedron() const -> Polyhedron_3
 {
   if (m_polyhedron) {
@@ -128,33 +108,17 @@ Cylinder::generateSurfaceMesh() const -> Surface_mesh_3
 
   Surface_mesh_3 mesh;
 
-  Vector_3 normalized_axis = normalize(axis());
-
-  // Find a perpendicular vector
-  Vector_3 perpendicular;
-  if (CGAL::abs(normalized_axis.z()) < 0.9) {
-    // If axis is not too close to Z, use Z cross axis
-    perpendicular =
-        normalize(CGAL::cross_product(normalized_axis, Vector_3(0, 0, 1)));
-  } else {
-    // If axis is close to Z, use Y cross axis
-    perpendicular =
-        normalize(CGAL::cross_product(normalized_axis, Vector_3(0, 1, 0)));
-  }
-  Vector_3 perpendicular2 =
-      normalize(CGAL::cross_product(normalized_axis, perpendicular));
-
   std::vector<Surface_mesh_3::Vertex_index> base_vertices;
   std::vector<Surface_mesh_3::Vertex_index> top_vertices;
 
   // Create vertices for the base and top
   for (unsigned int i = 0; i < numRadial(); ++i) {
-    double   angle  = 2.0 * M_PI * i / numRadial();
-    Vector_3 offset = radius() * (std::cos(angle) * perpendicular +
-                                  std::sin(angle) * perpendicular2);
-    base_vertices.push_back(mesh.add_vertex(baseCenter() + offset));
-    top_vertices.push_back(
-        mesh.add_vertex(baseCenter() + offset + height() * normalized_axis));
+    const double angle = 2.0 * M_PI * i / numRadial();
+    const double x     = CGAL::to_double(radius()) * std::cos(angle);
+    const double y     = CGAL::to_double(radius()) * std::sin(angle);
+
+    base_vertices.push_back(mesh.add_vertex(Point_3(x, y, 0)));
+    top_vertices.push_back(mesh.add_vertex(Point_3(x, y, height())));
   }
 
   // Add side faces
@@ -165,15 +129,21 @@ Cylinder::generateSurfaceMesh() const -> Surface_mesh_3
   }
 
   // Add base and top faces
-  Surface_mesh_3::Vertex_index base_center = mesh.add_vertex(baseCenter());
-  Surface_mesh_3::Vertex_index top_center =
-      mesh.add_vertex(baseCenter() + height() * normalized_axis);
+  Surface_mesh_3::Vertex_index origin = mesh.add_vertex(Point_3(0, 0, 0));
+  Surface_mesh_3::Vertex_index top_origin =
+      mesh.add_vertex(Point_3(0, 0, height()));
 
   for (unsigned int i = 0; i < numRadial(); ++i) {
     unsigned int next = (i + 1) % numRadial();
-    mesh.add_face(base_center, base_vertices[next], base_vertices[i]);
-    mesh.add_face(top_center, top_vertices[i], top_vertices[next]);
+    mesh.add_face(origin, base_vertices[next], base_vertices[i]);
+    mesh.add_face(top_origin, top_vertices[i], top_vertices[next]);
   }
+
+  // handle affine transformation
+  if (m_transform != Kernel::Aff_transformation_3(CGAL::IDENTITY)) {
+    PMP::transform(m_transform, mesh);
+  }
+
   m_surface_mesh = mesh;
   return mesh;
 }
@@ -185,6 +155,7 @@ Cylinder::generatePolyhedralSurface() const -> PolyhedralSurface
     return *m_polyhedral_surface;
   }
 
+  // generateSurfaceMesh already handles the affine transformation
   m_polyhedral_surface = PolyhedralSurface(generateSurfaceMesh());
   return *m_polyhedral_surface;
 }

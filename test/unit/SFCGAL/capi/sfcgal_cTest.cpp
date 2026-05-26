@@ -1796,7 +1796,7 @@ BOOST_AUTO_TEST_CASE(testSphereTest)
   sfcgal_primitive_parameters(sphere, &params, &paramsLen);
   std::string paramsStr(params, paramsLen);
   std::string expectedStr(
-      R"([{"name":"center","type":"point3"},{"name":"num_subdivisions","type":"int"},{"name":"radius","type":"double"}])");
+      R"([{"name":"num_subdivisions","type":"int"},{"name":"radius","type":"double"}])");
   BOOST_CHECK(compare_json(paramsStr, expectedStr));
   sfcgal_free_buffer(params);
 
@@ -1814,33 +1814,10 @@ BOOST_AUTO_TEST_CASE(testSphereTest)
   BOOST_CHECK(hasError);
   hasError = false;
 
-  // center is a point not a double
-  sfcgal_primitive_set_parameter_double(sphere, "center", 1.2);
-  BOOST_CHECK(hasError);
-  hasError = false;
-
   // radius cannot be negative
   sfcgal_primitive_set_parameter_double(sphere, "radius", -2.2);
   BOOST_CHECK(hasError);
   hasError = false;
-
-  // center parameter
-  double *center = sfcgal_primitive_parameter_point(sphere, "center");
-  BOOST_CHECK(center != nullptr);
-  BOOST_CHECK_CLOSE(center[0], 0.0, 1e-6);
-  BOOST_CHECK_CLOSE(center[1], 0.0, 1e-6);
-  BOOST_CHECK_CLOSE(center[2], 0.0, 1e-6);
-  sfcgal_free_buffer(center);
-
-  std::array<double, 3> expectedCenter{1.0, 2.0, 3.0};
-  sfcgal_primitive_set_parameter_point(sphere, "center", expectedCenter.data());
-
-  double *newCenter = sfcgal_primitive_parameter_point(sphere, "center");
-  BOOST_CHECK(newCenter != nullptr);
-  BOOST_CHECK_CLOSE(newCenter[0], expectedCenter[0], 1e-6);
-  BOOST_CHECK_CLOSE(newCenter[1], expectedCenter[1], 1e-6);
-  BOOST_CHECK_CLOSE(newCenter[2], expectedCenter[2], 1e-6);
-  sfcgal_free_buffer(newCenter);
 
   // num subdivisions parameter
   unsigned int numSubdivisions =
@@ -1861,16 +1838,6 @@ BOOST_AUTO_TEST_CASE(testSphereTest)
   BOOST_CHECK_EQUAL(
       sfcgal_primitive_parameter_int(sphere, "num_subdivisions"),
       sfcgal_primitive_parameter_int(sphere2, "num_subdivisions"));
-
-  double *center1 = sfcgal_primitive_parameter_point(sphere, "center");
-  double *center2 = sfcgal_primitive_parameter_point(sphere2, "center");
-  BOOST_CHECK(center1 != nullptr);
-  BOOST_CHECK(center2 != nullptr);
-  BOOST_CHECK_CLOSE(center1[0], center2[0], 1e-6);
-  BOOST_CHECK_CLOSE(center1[1], center2[1], 1e-6);
-  BOOST_CHECK_CLOSE(center1[2], center2[2], 1e-6);
-  sfcgal_free_buffer(center1);
-  sfcgal_free_buffer(center2);
 
   sfcgal_primitive_delete(sphere2);
 
@@ -1910,45 +1877,6 @@ BOOST_AUTO_TEST_CASE(testCylinderTest)
   sfcgal_primitive_type_t type = sfcgal_primitive_type_id(cylinder);
   BOOST_CHECK_EQUAL(type, SFCGAL_TYPE_CYLINDER);
 
-  // base_center parameter
-  double *baseCenter =
-      sfcgal_primitive_parameter_point(cylinder, "base_center");
-  BOOST_CHECK(baseCenter != nullptr);
-  BOOST_CHECK_CLOSE(baseCenter[0], 0.0, 1e-6);
-  BOOST_CHECK_CLOSE(baseCenter[1], 0.0, 1e-6);
-  BOOST_CHECK_CLOSE(baseCenter[2], 0.0, 1e-6);
-  sfcgal_free_buffer(baseCenter);
-
-  std::array<double, 3> expectedBaseCenter{1.0, 2.0, 3.0};
-  sfcgal_primitive_set_parameter_point(cylinder, "base_center",
-                                       expectedBaseCenter.data());
-
-  double *newBaseCenter =
-      sfcgal_primitive_parameter_point(cylinder, "base_center");
-  BOOST_CHECK(newBaseCenter != nullptr);
-  BOOST_CHECK_CLOSE(newBaseCenter[0], expectedBaseCenter[0], 1e-6);
-  BOOST_CHECK_CLOSE(newBaseCenter[1], expectedBaseCenter[1], 1e-6);
-  BOOST_CHECK_CLOSE(newBaseCenter[2], expectedBaseCenter[2], 1e-6);
-  sfcgal_free_buffer(newBaseCenter);
-
-  // axis parameter
-  double *axis = sfcgal_primitive_parameter_vector(cylinder, "axis");
-  BOOST_CHECK(axis != nullptr);
-  BOOST_CHECK_CLOSE(axis[0], 0.0, 1e-6);
-  BOOST_CHECK_CLOSE(axis[1], 0.0, 1e-6);
-  BOOST_CHECK_CLOSE(axis[2], 1.0, 1e-6);
-  sfcgal_free_buffer(axis);
-
-  std::array<double, 3> expectedAxis{1.1, 2.1, 3.1};
-  sfcgal_primitive_set_parameter_vector(cylinder, "axis", expectedAxis.data());
-
-  double *newAxis = sfcgal_primitive_parameter_vector(cylinder, "axis");
-  BOOST_CHECK(newAxis != nullptr);
-  BOOST_CHECK_CLOSE(newAxis[0], expectedAxis[0], 1e-6);
-  BOOST_CHECK_CLOSE(newAxis[1], expectedAxis[1], 1e-6);
-  BOOST_CHECK_CLOSE(newAxis[2], expectedAxis[2], 1e-6);
-  sfcgal_free_buffer(newAxis);
-
   // radius parameter
   double radius = sfcgal_primitive_parameter_double(cylinder, "radius");
   BOOST_CHECK_CLOSE(radius, 1.0, 1e-6);
@@ -1960,11 +1888,6 @@ BOOST_AUTO_TEST_CASE(testCylinderTest)
 
   // there is no parameter called min_radius
   sfcgal_primitive_set_parameter_double(cylinder, "min_radius", 24.2);
-  BOOST_CHECK(hasError);
-  hasError = false;
-
-  // base_center is a point not a double
-  sfcgal_primitive_set_parameter_double(cylinder, "base_center", 1.2);
   BOOST_CHECK(hasError);
   hasError = false;
 
@@ -2004,26 +1927,6 @@ BOOST_AUTO_TEST_CASE(testCylinderTest)
                     sfcgal_primitive_parameter_int(cylinder2, "num_radial"));
   BOOST_CHECK_EQUAL(sfcgal_primitive_parameter_int(cylinder, "num_radial"),
                     sfcgal_primitive_parameter_int(cylinder2, "num_radial"));
-
-  double *center1 = sfcgal_primitive_parameter_point(cylinder, "base_center");
-  double *center2 = sfcgal_primitive_parameter_point(cylinder2, "base_center");
-  BOOST_CHECK(center1 != nullptr);
-  BOOST_CHECK(center2 != nullptr);
-  BOOST_CHECK_CLOSE(center1[0], center2[0], 1e-6);
-  BOOST_CHECK_CLOSE(center1[1], center2[1], 1e-6);
-  BOOST_CHECK_CLOSE(center1[2], center2[2], 1e-6);
-  sfcgal_free_buffer(center1);
-  sfcgal_free_buffer(center2);
-
-  double *axis1 = sfcgal_primitive_parameter_vector(cylinder, "axis");
-  double *axis2 = sfcgal_primitive_parameter_vector(cylinder2, "axis");
-  BOOST_CHECK(axis1 != nullptr);
-  BOOST_CHECK(axis2 != nullptr);
-  BOOST_CHECK_CLOSE(axis1[0], axis2[0], 1e-6);
-  BOOST_CHECK_CLOSE(axis1[1], axis2[1], 1e-6);
-  BOOST_CHECK_CLOSE(axis1[2], axis2[2], 1e-6);
-  sfcgal_free_buffer(axis1);
-  sfcgal_free_buffer(axis2);
 
   BOOST_CHECK(sfcgal_primitive_is_almost_equals(cylinder, cylinder2, 0.0));
   sfcgal_primitive_delete(cylinder2);
@@ -2066,7 +1969,7 @@ BOOST_AUTO_TEST_CASE(testCylinderTest)
   sfcgal_primitive_parameters(cylinder, &params, &paramsLen);
   std::string paramsStr(params, paramsLen);
   std::string expectedStr(
-      R"([{"name":"num_radial","type":"int"},{"name":"height","type":"double"},{"name":"radius","type":"double"},{"name":"axis","type":"vector3"},{"name":"base_center","type":"point3"}])");
+      R"([{"name":"num_radial","type":"int"},{"name":"height","type":"double"},{"name":"radius","type":"double"}])");
   BOOST_CHECK(compare_json(paramsStr, expectedStr));
   sfcgal_free_buffer(params);
 
@@ -2081,13 +1984,6 @@ BOOST_AUTO_TEST_CASE(testCylinderTest)
 
   sfcgal_free_buffer(param);
 
-  sfcgal_primitive_parameter(cylinder, "axis", &param, &paramLen);
-  paramStr = std::string(param, paramLen);
-  expectedParamStr =
-      std::string(R"({"name":"axis","type":"vector3","value":[1.1,2.1,3.1]})");
-  BOOST_CHECK(compare_json(paramStr, expectedParamStr));
-  sfcgal_free_buffer(param);
-
   // checks set parameter value generic
   sfcgal_primitive_set_parameter(
       cylinder, "num_radial",
@@ -2095,17 +1991,6 @@ BOOST_AUTO_TEST_CASE(testCylinderTest)
   unsigned int numRadial0 =
       sfcgal_primitive_parameter_int(cylinder, "num_radial");
   BOOST_CHECK_EQUAL(numRadial0, 250);
-
-  sfcgal_primitive_set_parameter(
-      cylinder, "axis",
-      R"({"name":"axis","type":"vector3","value":[2.0,3.0,4.0]})");
-  newAxis = sfcgal_primitive_parameter_vector(cylinder, "axis");
-  BOOST_CHECK(newAxis != nullptr);
-  BOOST_CHECK(!hasError);
-  BOOST_CHECK_CLOSE(newAxis[0], 2.0, 1e-6);
-  BOOST_CHECK_CLOSE(newAxis[1], 3.0, 1e-6);
-  BOOST_CHECK_CLOSE(newAxis[2], 4.0, 1e-6);
-  sfcgal_free_buffer(newAxis);
 
   sfcgal_primitive_delete(cylinder);
 }
