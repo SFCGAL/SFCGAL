@@ -26,13 +26,17 @@ make_sphere(double x = 0.0, double y = 0.0, double z = 0.0, double radius = 1.0,
 
 /**
  * @brief Create a box/cube primitive
+ * @param base_x X coordinate of base center (default: 0.0)
+ * @param base_y Y coordinate of base center (default: 0.0)
+ * @param base_z Z coordinate of base center (default: 0.0)
  * @param x_extent Length in X direction (default: 1.0)
  * @param y_extent Length in Y direction (default: 1.0)
  * @param z_extent Length in Z direction (default: 1.0)
  * @return Unique pointer to PolyhedralSurface representing the box
  */
 auto
-make_box(double x_extent = 1.0, double y_extent = 1.0, double z_extent = 1.0)
+make_box(double base_x = 0.0, double base_y = 0.0, double base_z = 0.0,
+         double x_extent = 1.0, double y_extent = 1.0, double z_extent = 1.0)
     -> std::unique_ptr<SFCGAL::Geometry>;
 
 /**

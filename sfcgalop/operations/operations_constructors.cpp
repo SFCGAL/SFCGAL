@@ -8,7 +8,10 @@ namespace Operations {
 
 const std::vector<Operation> operations_constructors = {
     {"make_box", "Constructors", "Create a 3D box primitive", false,
-     "Parameters:\n  x_extent=VALUE: Length in X direction (default: 1.0)\n  "
+     "Parameters:\n  base_x=VALUE: X coordinate of base center (default: "
+     "0.0)\n  base_y=VALUE: Y coordinate of base center (default: 0.0)\n  "
+     "base_z=VALUE: Z coordinate of base center (default: 0.0)\n  "
+     "x_extent=VALUE: Length in X direction (default: 1.0)\n  "
      "y_extent=VALUE: Length in Y direction (default: 1.0)\n  z_extent=VALUE: "
      "Length in Z direction (default: 1.0)\n\nExample:\n  sfcgalop make_box "
      "\"x_extent=2,y_extent=3,z_extent=1\"",
@@ -16,10 +19,14 @@ const std::vector<Operation> operations_constructors = {
      [](const std::string &args, const SFCGAL::Geometry *,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
        auto   params   = parse_params(args);
+       double base_x   = params.count("base_x") ? params["base_x"] : 0.0;
+       double base_y   = params.count("base_y") ? params["base_y"] : 0.0;
+       double base_z   = params.count("base_z") ? params["base_z"] : 0.0;
        double x_extent = params.count("x_extent") ? params["x_extent"] : 1.0;
        double y_extent = params.count("y_extent") ? params["y_extent"] : 1.0;
        double z_extent = params.count("z_extent") ? params["z_extent"] : 1.0;
-       return Constructors::make_box(x_extent, y_extent, z_extent);
+       return Constructors::make_box(base_x, base_y, base_z, x_extent, y_extent,
+                                     z_extent);
      }},
 
     {"make_cone", "Constructors",

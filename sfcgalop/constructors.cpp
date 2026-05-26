@@ -38,10 +38,17 @@ make_sphere(double x, double y, double z, double radius,
 }
 
 auto
-make_box(double x_extent, double y_extent, double z_extent)
-    -> std::unique_ptr<SFCGAL::Geometry>
+make_box(double base_x, double base_y, double base_z, double x_extent,
+         double y_extent, double z_extent) -> std::unique_ptr<SFCGAL::Geometry>
 {
   SFCGAL::Box box(x_extent, y_extent, z_extent);
+
+  // Apply translation to position the base at (base_x, base_y, base_z)
+  if (std::abs(base_x) > SFCGAL::EPSILON ||
+      std::abs(base_y) > SFCGAL::EPSILON ||
+      std::abs(base_z) > SFCGAL::EPSILON) {
+    box.translate(SFCGAL::Kernel::Vector_3(base_x, base_y, base_z));
+  }
 
   auto polyhedral_surface = box.generatePolyhedralSurface();
   return std::make_unique<SFCGAL::PolyhedralSurface>(
@@ -51,7 +58,7 @@ make_box(double x_extent, double y_extent, double z_extent)
 auto
 make_cube(double size) -> std::unique_ptr<SFCGAL::Geometry>
 {
-  return make_box(size, size, size);
+  return make_box(0, 0, 0, size, size, size);
 }
 
 auto
