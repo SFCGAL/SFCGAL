@@ -399,11 +399,30 @@ create_cutter_for_edge(const Surface_mesh_3 &mesh, const LineString &edge,
   sweep_opts.frame_method = SweepOptions::FrameMethod::SEGMENT_ALIGNED;
   sweep_opts.closed_path  = isClosed(edge);
 
-  // For single-segment edges, use normal_1 as the sweep frame reference so the
-  // chamfer profile legs align with the solid's face surfaces.
-  // For multi-segment paths, skip: normal_1 may be parallel to some segment,
-  // causing a degenerate reference and frame flips at corners.
-  if (edge.numPoints() == 2) {
+  // // For single-segment edges, use normal_1 as the sweep frame reference so
+  // the
+  // // chamfer profile legs align with the solid's face surfaces.
+  // // For multi-segment paths, skip: normal_1 may be parallel to some segment,
+  // // causing a degenerate reference and frame flips at corners.
+  // if (edge.numPoints() == 2) {
+  //   sweep_opts.reference_normal = normal_1;
+  // }
+
+  // Check whether normal_1 is safe to use as reference for all segments
+  bool can_use_reference_normal = true;
+  for (size_t i = 0; i + 1 < edge.numPoints(); ++i) {
+    const Vector_3 seg_dir = SFCGAL::normalizeVector(
+        edge.pointN(i + 1).toPoint_3() - edge.pointN(i).toPoint_3());
+    const double parallel = std::abs(CGAL::to_double(seg_dir * normal_1));
+    if (parallel > 1.0 - 1e-6) {
+      can_use_reference_normal = false;
+      SFCGAL_WARNING("Chamfer: reference normal is parallel to segment " +
+                     std::to_string(i) + ", disabling reference normal");
+      break;
+    }
+  }
+
+  if (can_use_reference_normal) {
     sweep_opts.reference_normal = normal_1;
   }
 
