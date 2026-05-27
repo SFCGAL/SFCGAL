@@ -459,6 +459,31 @@ build_sweep_mesh(Surface_mesh_3                                  &mesh,
   return vertex_rings;
 }
 
+/**
+ * @brief Add triangulated flat caps.
+ *
+ * Caps are triangulated instead of using a single polygon face because
+ * transformed profile rings are not guaranteed to remain perfectly coplanar
+ * after RMF transport and numerical corrections.
+ */
+void
+add_cap_triangles(Surface_mesh_3                                  &mesh,
+                  const std::vector<Surface_mesh_3::Vertex_index> &ring,
+                  bool reverse_orientation)
+{
+  if (ring.size() < 3) {
+    return;
+  }
+
+  for (size_t i = 1; i < ring.size() - 1; ++i) {
+    if (reverse_orientation) {
+      mesh.add_face(ring[0], ring[i + 1], ring[i]);
+    } else {
+      mesh.add_face(ring[0], ring[i], ring[i + 1]);
+    }
+  }
+}
+
 void
 add_flat_caps(
     Surface_mesh_3                                               &mesh,
@@ -473,22 +498,11 @@ add_flat_caps(
   const auto &last_ring  = vertex_rings.back();
 
   if (add_start) {
-    // Try reversed first, fall back to direct order
-    std::vector<Surface_mesh_3::Vertex_index> cap_rev(first_ring.rbegin(),
-                                                      first_ring.rend());
-    auto                                      face_idx = mesh.add_face(cap_rev);
-    if (face_idx == Surface_mesh_3::null_face()) {
-      face_idx = mesh.add_face(first_ring);
-    }
+    add_cap_triangles(mesh, first_ring, true);
   }
 
   if (add_end) {
-    auto face_idx = mesh.add_face(last_ring);
-    if (face_idx == Surface_mesh_3::null_face()) {
-      std::vector<Surface_mesh_3::Vertex_index> cap_rev(last_ring.rbegin(),
-                                                        last_ring.rend());
-      face_idx = mesh.add_face(cap_rev);
-    }
+    add_cap_triangles(mesh, last_ring, false);
   }
 }
 
