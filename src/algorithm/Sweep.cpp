@@ -174,7 +174,12 @@ propagate_frame_rmf(const Frame &prev_frame, const Kernel::Point_3 &prev_point,
                                           tangent_diff;
   }
 
-  frame.normal   = normalizeVector(frame.normal);
+  frame.normal = normalizeVector(frame.normal);
+  // Prevent occasional 180° frame flips caused by numerical instability.
+  if (prev_frame.normal * frame.normal < Kernel::FT(0)) {
+    frame.normal = -frame.normal;
+  }
+
   frame.binormal = CGAL::cross_product(frame.tangent, frame.normal);
 
   return frame;
