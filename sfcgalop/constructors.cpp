@@ -8,6 +8,7 @@
 #include <SFCGAL/Solid.h>
 #include <SFCGAL/algorithm/rotate.h>
 #include <SFCGAL/algorithm/translate.h>
+#include <SFCGAL/numeric.h>
 #include <SFCGAL/primitive3d/Box.h>
 #include <SFCGAL/primitive3d/Cone.h>
 #include <SFCGAL/primitive3d/Cylinder.h>
@@ -81,15 +82,14 @@ make_cone(double base_x, double base_y, double base_z, double axis_x,
       std::sqrt((axis_x * axis_x) + (axis_y * axis_y) + (axis_z * axis_z));
 
   // If axis is non-zero and not aligned with +Z, apply rotation
-  constexpr double epsilon = 1e-10;
-  if (axis_length > epsilon) {
+  if (axis_length > SFCGAL::EPSILON) {
     double nx = axis_x / axis_length;
     double ny = axis_y / axis_length;
     double nz = axis_z / axis_length;
 
     // Check if axis is not already aligned with +Z (0, 0, 1)
-    if (std::abs(nx) > epsilon || std::abs(ny) > epsilon ||
-        std::abs(nz - 1.0) > epsilon) {
+    if (std::abs(nx) > SFCGAL::EPSILON || std::abs(ny) > SFCGAL::EPSILON ||
+        std::abs(nz - 1.0) > SFCGAL::EPSILON) {
       // Compute rotation axis: cross product of +Z with desired axis
       // +Z = (0, 0, 1), so cross product is (ny, -nx, 0) (normalized later)
       SFCGAL::Kernel::Vector_3 rotation_axis(ny, -nx, 0);
@@ -97,15 +97,16 @@ make_cone(double base_x, double base_y, double base_z, double axis_x,
       // Compute rotation angle using dot product: +Z · normalized_axis = nz
       double angle = std::acos(std::clamp(nz, -1.0, 1.0));
 
-      if (std::abs(angle) > epsilon) {
+      if (std::abs(angle) > SFCGAL::EPSILON) {
         SFCGAL::algorithm::rotate(polyhedral_surface, angle, rotation_axis);
       }
     }
   }
 
   // Apply translation to position the base at (base_x, base_y, base_z)
-  if (std::abs(base_x) > epsilon || std::abs(base_y) > epsilon ||
-      std::abs(base_z) > epsilon) {
+  if (std::abs(base_x) > SFCGAL::EPSILON ||
+      std::abs(base_y) > SFCGAL::EPSILON ||
+      std::abs(base_z) > SFCGAL::EPSILON) {
     SFCGAL::algorithm::translate(polyhedral_surface, base_x, base_y, base_z);
   }
 
@@ -131,15 +132,14 @@ make_torus(double center_x, double center_y, double center_z, double axis_x,
       std::sqrt((axis_x * axis_x) + (axis_y * axis_y) + (axis_z * axis_z));
 
   // If axis is non-zero and not aligned with +Z, apply rotation
-  constexpr double epsilon = 1e-10;
-  if (axis_length > epsilon) {
+  if (axis_length > SFCGAL::EPSILON) {
     double nx = axis_x / axis_length;
     double ny = axis_y / axis_length;
     double nz = axis_z / axis_length;
 
     // Check if axis is not already aligned with +Z (0, 0, 1)
-    if (std::abs(nx) > epsilon || std::abs(ny) > epsilon ||
-        std::abs(nz - 1.0) > epsilon) {
+    if (std::abs(nx) > SFCGAL::EPSILON || std::abs(ny) > SFCGAL::EPSILON ||
+        std::abs(nz - 1.0) > SFCGAL::EPSILON) {
       // Compute rotation axis: cross product of +Z with desired axis
       // +Z = (0, 0, 1), so cross product is (ny, -nx, 0)
       SFCGAL::Kernel::Vector_3 rotation_axis(ny, -nx, 0);
@@ -147,15 +147,16 @@ make_torus(double center_x, double center_y, double center_z, double axis_x,
       // Compute rotation angle using dot product: +Z · normalized_axis = nz
       double angle = std::acos(std::clamp(nz, -1.0, 1.0));
 
-      if (std::abs(angle) > epsilon) {
+      if (std::abs(angle) > SFCGAL::EPSILON) {
         SFCGAL::algorithm::rotate(polyhedral_surface, angle, rotation_axis);
       }
     }
   }
 
   // Apply translation to position the center at (center_x, center_y, center_z)
-  if (std::abs(center_x) > epsilon || std::abs(center_y) > epsilon ||
-      std::abs(center_z) > epsilon) {
+  if (std::abs(center_x) > SFCGAL::EPSILON ||
+      std::abs(center_y) > SFCGAL::EPSILON ||
+      std::abs(center_z) > SFCGAL::EPSILON) {
     SFCGAL::algorithm::translate(polyhedral_surface, center_x, center_y,
                                  center_z);
   }
