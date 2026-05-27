@@ -47,14 +47,14 @@ const std::string CUBE_WKT =
 // Concave edge: (1,1,z) (reflex corner → chamfer skipped automatically).
 const std::string L_SHAPE_WKT =
     "SOLID ((("
-    "(0 0 0, 0 2 0, 1 2 0, 1 1 0, 2 1 0, 2 0 0, 0 0 0))," // bottom
+    "(0 0 0, 0 2 0, 1 2 0, 1 1 0, 2 1 0, 2 0 0, 0 0 0)),"  // bottom
     "((0 0 1, 2 0 1, 2 1 1, 1 1 1, 1 2 1, 0 2 1, 0 0 1))," // top
-    "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"                // front (y=0)
-    "((2 0 0, 2 1 0, 2 1 1, 2 0 1, 2 0 0)),"                // right (x=2)
-    "((2 1 0, 1 1 0, 1 1 1, 2 1 1, 2 1 0)),"                // inner right (y=1)
-    "((1 1 0, 1 2 0, 1 2 1, 1 1 1, 1 1 0)),"                // inner top (x=1)
-    "((1 2 0, 0 2 0, 0 2 1, 1 2 1, 1 2 0)),"                // back (y=2)
-    "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"                 // left (x=0)
+    "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"               // front (y=0)
+    "((2 0 0, 2 1 0, 2 1 1, 2 0 1, 2 0 0)),"               // right (x=2)
+    "((2 1 0, 1 1 0, 1 1 1, 2 1 1, 2 1 0)),"               // inner right (y=1)
+    "((1 1 0, 1 2 0, 1 2 1, 1 1 1, 1 1 0)),"               // inner top (x=1)
+    "((1 2 0, 0 2 0, 0 2 1, 1 2 1, 1 2 0)),"               // back (y=2)
+    "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"                // left (x=0)
     "))";
 
 // Chevron prism: polygon (0,0)→(2,0)→(2,2)→(1,1.5)→(0,2), height=1.
@@ -62,13 +62,13 @@ const std::string L_SHAPE_WKT =
 // Concave vertical edge: (1,1.5,z) — chamfer skipped automatically.
 const std::string CHEVRON_WKT =
     "SOLID ((("
-    "(0 0 0, 0 2 0, 1 1.5 0, 2 2 0, 2 0 0, 0 0 0))," // bottom
+    "(0 0 0, 0 2 0, 1 1.5 0, 2 2 0, 2 0 0, 0 0 0)),"  // bottom
     "((0 0 1, 2 0 1, 2 2 1, 1 1.5 1, 0 2 1, 0 0 1))," // top
-    "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"            // front (y=0)
-    "((2 0 0, 2 2 0, 2 2 1, 2 0 1, 2 0 0)),"            // right (x=2)
-    "((2 2 0, 1 1.5 0, 1 1.5 1, 2 2 1, 2 2 0)),"        // notch right face
-    "((1 1.5 0, 0 2 0, 0 2 1, 1 1.5 1, 1 1.5 0)),"      // notch left face
-    "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"             // left (x=0)
+    "((0 0 0, 2 0 0, 2 0 1, 0 0 1, 0 0 0)),"          // front (y=0)
+    "((2 0 0, 2 2 0, 2 2 1, 2 0 1, 2 0 0)),"          // right (x=2)
+    "((2 2 0, 1 1.5 0, 1 1.5 1, 2 2 1, 2 2 0)),"      // notch right face
+    "((1 1.5 0, 0 2 0, 0 2 1, 1 1.5 1, 1 1.5 0)),"    // notch left face
+    "((0 2 0, 0 0 0, 0 0 1, 0 2 1, 0 2 0))"           // left (x=0)
     "))";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -113,7 +113,7 @@ make_prism(const std::vector<std::pair<double, double>> &pts, double h)
 
   // Side faces: (v_i, v_{i+1}) bottom to top
   for (int i = 0; i < n; ++i) {
-    const int j = (i + 1) % n;
+    const int  j = (i + 1) % n;
     LineString ring;
     ring.addPoint(Point(pts[i].first, pts[i].second, 0));
     ring.addPoint(Point(pts[j].first, pts[j].second, 0));
@@ -236,9 +236,9 @@ BOOST_AUTO_TEST_CASE(testChamfer_Cube_FourBottomEdges)
 {
   auto cube = io::readWkt(CUBE_WKT);
 
-  auto edges = io::readWkt(
-      "MULTILINESTRING Z("
-      "(0 0 0,1 0 0),(1 0 0,1 1 0),(1 1 0,0 1 0),(0 1 0,0 0 0))");
+  auto edges =
+      io::readWkt("MULTILINESTRING Z("
+                  "(0 0 0,1 0 0),(1 0 0,1 1 0),(1 1 0,0 1 0),(0 1 0,0 0 0))");
 
   algorithm::ChamferOptions opts;
   opts.type   = algorithm::ChamferType::FLAT;
@@ -261,13 +261,12 @@ BOOST_AUTO_TEST_CASE(testChamfer_Cube_FourBottomEdges)
  */
 BOOST_AUTO_TEST_CASE(testChamfer_Cube_ThreeEdgesAtCorner)
 {
-  auto edges = io::readWkt(
-      "MULTILINESTRING Z("
-      "(0 0 0,1 0 0),(0 0 0,0 1 0),(0 0 0,0 0 1))");
+  auto edges = io::readWkt("MULTILINESTRING Z("
+                           "(0 0 0,1 0 0),(0 0 0,0 1 0),(0 0 0,0 0 1))");
 
   // Flat
   {
-    auto cube = io::readWkt(CUBE_WKT);
+    auto                      cube = io::readWkt(CUBE_WKT);
     algorithm::ChamferOptions opts;
     opts.type   = algorithm::ChamferType::FLAT;
     opts.radius = 0.1;
@@ -281,7 +280,7 @@ BOOST_AUTO_TEST_CASE(testChamfer_Cube_ThreeEdgesAtCorner)
 
   // Round
   {
-    auto cube = io::readWkt(CUBE_WKT);
+    auto                      cube = io::readWkt(CUBE_WKT);
     algorithm::ChamferOptions opts;
     opts.type     = algorithm::ChamferType::ROUND;
     opts.radius   = 0.1;
@@ -301,7 +300,8 @@ BOOST_AUTO_TEST_CASE(testChamfer_Cube_ThreeEdgesAtCorner)
 // The chamfer sweep frame is computed as T × Z_up. When solid faces are
 // rotated relative to the coordinate axes the resulting frame normal can be
 // anti-parallel to n1, placing the profile outside the solid. The fix
-// reference_normal = n1 corrects the frame orientation for single-segment edges.
+// reference_normal = n1 corrects the frame orientation for single-segment
+// edges.
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -412,7 +412,8 @@ BOOST_AUTO_TEST_CASE(testChamfer_HexagonalPrism_Flat)
 // SECTION D: L-shape — concave auto-skip and multi-edge scenarios
 //
 // The L-shape has a reflex (concave) corner at (1,1). The chamfer algorithm
-// detects and skips concave edges automatically, always returning a valid solid.
+// detects and skips concave edges automatically, always returning a valid
+// solid.
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -448,17 +449,16 @@ BOOST_AUTO_TEST_CASE(testChamfer_LShape_AllEdges)
   auto l_shape = io::readWkt(L_SHAPE_WKT);
 
   // All 18 edges — the 4 at (1,1) will be silently skipped as concave
-  auto edges = io::readWkt(
-      "MULTILINESTRING Z("
-      "(0 0 0,0 0 1),(2 0 0,2 0 1),(2 1 0,2 1 1),"
-      "(1 1 0,1 1 1),"            // concave — skipped
-      "(1 2 0,1 2 1),(0 2 0,0 2 1),"
-      "(0 0 0,2 0 0),(2 0 0,2 1 0),(2 1 0,1 1 0),"
-      "(1 1 0,1 2 0),"            // concave — skipped
-      "(1 2 0,0 2 0),(0 2 0,0 0 0),"
-      "(0 0 1,2 0 1),(2 0 1,2 1 1),(2 1 1,1 1 1),"
-      "(1 1 1,1 2 1),"            // concave — skipped
-      "(1 2 1,0 2 1),(0 2 1,0 0 1))");
+  auto edges = io::readWkt("MULTILINESTRING Z("
+                           "(0 0 0,0 0 1),(2 0 0,2 0 1),(2 1 0,2 1 1),"
+                           "(1 1 0,1 1 1)," // concave — skipped
+                           "(1 2 0,1 2 1),(0 2 0,0 2 1),"
+                           "(0 0 0,2 0 0),(2 0 0,2 1 0),(2 1 0,1 1 0),"
+                           "(1 1 0,1 2 0)," // concave — skipped
+                           "(1 2 0,0 2 0),(0 2 0,0 0 0),"
+                           "(0 0 1,2 0 1),(2 0 1,2 1 1),(2 1 1,1 1 1),"
+                           "(1 1 1,1 2 1)," // concave — skipped
+                           "(1 2 1,0 2 1),(0 2 1,0 0 1))");
 
   algorithm::ChamferOptions opts;
   opts.type   = algorithm::ChamferType::FLAT;
@@ -545,7 +545,8 @@ BOOST_AUTO_TEST_CASE(testChamfer_Error_NotSolid)
   edge.addPoint(Point(1, 0, 0));
 
   algorithm::ChamferOptions opts;
-  BOOST_CHECK_THROW(algorithm::chamfer(poly, edge, opts), std::invalid_argument);
+  BOOST_CHECK_THROW(algorithm::chamfer(poly, edge, opts),
+                    std::invalid_argument);
 }
 
 /**
@@ -562,10 +563,12 @@ BOOST_AUTO_TEST_CASE(testChamfer_Error_InvalidRadius)
   algorithm::ChamferOptions opts;
 
   opts.radius = 0.0;
-  BOOST_CHECK_THROW(algorithm::chamfer(*cube, edge, opts), std::invalid_argument);
+  BOOST_CHECK_THROW(algorithm::chamfer(*cube, edge, opts),
+                    std::invalid_argument);
 
   opts.radius = -0.1;
-  BOOST_CHECK_THROW(algorithm::chamfer(*cube, edge, opts), std::invalid_argument);
+  BOOST_CHECK_THROW(algorithm::chamfer(*cube, edge, opts),
+                    std::invalid_argument);
 }
 
 /**

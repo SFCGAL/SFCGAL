@@ -68,7 +68,8 @@ struct ChamferOptions {
  *
  * **Multi-edge:** When a MultiLineString or multi-segment LineString is given,
  * each segment is processed independently (each mesh edge has its own dihedral
- * angle). The individual cutters are unioned before a single boolean difference.
+ * angle). The individual cutters are unioned before a single boolean
+ * difference.
  *
  * **Silent skipping:** Edges that fail validation (not found in mesh, concave,
  * angle out of range) are skipped with a warning log, not thrown as exceptions.
