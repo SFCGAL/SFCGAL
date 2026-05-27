@@ -9,6 +9,8 @@
 #include "SFCGAL/algorithm/isValid.h"
 #include "SFCGAL/triangulate/triangulate2DZ.h"
 
+#include <CGAL/exceptions.h>
+
 #include <algorithm>
 #include <cstdio>
 
@@ -778,14 +780,20 @@ union_surface_surface(Handle<2> a, Handle<2> b)
 {
   Polygon_with_holes_2 res;
 
-  if (CGAL::join(fix_sfs_valid_polygon(a.asSurface()),
-                 fix_sfs_valid_polygon(b.asSurface()), res)) {
-    DEBUG_OUT << "merged " << a.asSurface() << " and " << b.asSurface() << "\n";
-    Handle<2> h(res);
-    h.asSurface().addSplitsFrom(a.asSurface());
-    h.asSurface().addSplitsFrom(b.asSurface());
-    h.registerObservers(a);
-    h.registerObservers(b);
+  try {
+    if (CGAL::join(fix_sfs_valid_polygon(a.asSurface()),
+                   fix_sfs_valid_polygon(b.asSurface()), res)) {
+      DEBUG_OUT << "merged " << a.asSurface() << " and " << b.asSurface()
+                << "\n";
+      Handle<2> merged(res);
+      merged.asSurface().addSplitsFrom(a.asSurface());
+      merged.asSurface().addSplitsFrom(b.asSurface());
+      merged.registerObservers(a);
+      merged.registerObservers(b);
+    }
+  } catch (const CGAL::Failure_exception &) { // NOLINT(bugprone-empty-catch)
+    // join may fail on degenerate geometry; surfaces remain as separate
+    // handles and will be emitted individually.
   }
 }
 
@@ -843,10 +851,10 @@ union_volume_volume(Handle<3> a, Handle<3> b)
   auto &q = const_cast<MarkedPolyhedron &>(b.asVolume());
 
   // volumes must at least share a face, if they share only a point, this will
-  // cause an invalid geometry, if they only share an egde it will cause the
+  // cause an invalid geometry, if they only share an edge it will cause the
   // CGAL algo to throw
   //
-  // for the moment we use hte intersection algo and test the result
+  // for the moment we use the intersection algo and test the result
   detail::GeometrySet<3> inter;
   intersection(detail::GeometrySet<3>(a.asVolume()),
                detail::GeometrySet<3>(b.asVolume()), inter);
@@ -855,14 +863,21 @@ union_volume_volume(Handle<3> a, Handle<3> b)
       (static_cast<unsigned int>(!inter.surfaces().empty()) != 0U)) {
 
     MarkedPolyhedron output;
-    bool const       res =
-        CGAL::Polygon_mesh_processing::corefine_and_compute_union(p, q, output);
 
-    if (res && std::next(vertices(output).first) != vertices(output).second) {
-      Handle<3> h(output);
-      // @todo check that the volume is valid (connection on one point isn't)
-      h.registerObservers(a);
-      h.registerObservers(b);
+    try {
+      bool const res =
+          CGAL::Polygon_mesh_processing::corefine_and_compute_union(p, q,
+                                                                    output);
+
+      if (res && std::next(vertices(output).first) != vertices(output).second) {
+        Handle<3> merged(output);
+        // @todo check that the volume is valid (connection on one point isn't)
+        merged.registerObservers(a);
+        merged.registerObservers(b);
+      }
+    } catch (const CGAL::Failure_exception &) { // NOLINT(bugprone-empty-catch)
+      // corefine_and_compute_union may fail on degenerate volumes
+      // (shared edges or points); volumes remain separate.
     }
   }
 }

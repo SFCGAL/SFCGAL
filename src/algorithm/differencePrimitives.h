@@ -522,11 +522,16 @@ difference(const MarkedPolyhedron &polyA, const MarkedPolyhedron &polyB,
 {
   MarkedPolyhedron meshP = polyA;
   MarkedPolyhedron meshQ = polyB;
-  if (CGAL::Polygon_mesh_processing::corefine_and_compute_difference(
-          meshP, meshQ, meshP)) {
-    if (std::next(vertices(meshP).first) != vertices(meshP).second) {
-      *out++ = meshP;
+  try {
+    if (CGAL::Polygon_mesh_processing::corefine_and_compute_difference(
+            meshP, meshQ, meshP)) {
+      if (std::next(vertices(meshP).first) != vertices(meshP).second) {
+        *out++ = meshP;
+      }
     }
+  } catch (const CGAL::Failure_exception &) { // NOLINT(bugprone-empty-catch)
+    // corefine_and_compute_difference may fail on degenerate volumes;
+    // return empty.
   }
   return out;
 }
@@ -811,6 +816,7 @@ difference(const Polygon_with_holes_2 &a, const Polygon_with_holes_2 &b,
            PolygonOutputIteratorType out) -> PolygonOutputIteratorType
 {
   std::vector<Polygon_with_holes_2> temp;
+  // NOLINTBEGIN(bugprone-empty-catch)
   try {
     CGAL::difference(fix_sfs_valid_polygon(a), fix_sfs_valid_polygon(b),
                      std::back_inserter(temp));
@@ -832,20 +838,19 @@ difference(const Polygon_with_holes_2 &a, const Polygon_with_holes_2 &b,
         CGAL::difference(fix_sfs_valid_polygon(a),
                          Polygon_with_holes_2(b.outer_boundary()),
                          std::back_inserter(temp));
-      } catch (
-          const CGAL::Failure_exception &) { // NOLINT(bugprone-empty-catch)
+      } catch (const CGAL::Failure_exception &) {
       }
       for (auto hi = b.holes_begin(); hi != b.holes_end(); ++hi) {
         try {
           CGAL::intersection(fix_sfs_valid_polygon(a),
                              Polygon_with_holes_2(*hi),
                              std::back_inserter(temp));
-        } catch (
-            const CGAL::Failure_exception &) { // NOLINT(bugprone-empty-catch)
+        } catch (const CGAL::Failure_exception &) {
         }
       }
     }
   }
+  // NOLINTEND(bugprone-empty-catch)
 
   // polygon outer rings from difference can self intersect at points
   // therefore we need to split the generated polygons so that they are valid

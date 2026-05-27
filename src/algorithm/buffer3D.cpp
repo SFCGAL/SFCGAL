@@ -18,6 +18,7 @@
 #include <CGAL/Polygon_mesh_processing/repair.h>
 #include <CGAL/Polygon_mesh_processing/triangulate_faces.h>
 #include <CGAL/boost/graph/copy_face_graph.h>
+#include <CGAL/exceptions.h>
 #include <CGAL/minkowski_sum_3.h>
 
 namespace PMP = CGAL::Polygon_mesh_processing;
@@ -88,28 +89,35 @@ Buffer3D::computeRoundBuffer() const -> std::unique_ptr<PolyhedralSurface>
   // Generate polyhedron from sphere
   CGAL::Polyhedron_3<Kernel> spherePolyhedron = sphere.generatePolyhedron();
 
-  // Convert Polyhedron to a Nef_polyhedron
-  Nef_polyhedron N0(spherePolyhedron);
+  try {
+    // Convert Polyhedron to a Nef_polyhedron
+    Nef_polyhedron nefBase(spherePolyhedron);
 
-  // Create a polyline from _inputPoints
-  polyline poly;
-  if (!_inputPoints.empty()) {
-    // Create a non-const copy of the points
-    std::vector<Point_3> points_copy(_inputPoints.begin(), _inputPoints.end());
-    poly.emplace_back(&points_copy.front(), &points_copy.back() + 1);
+    // Create a polyline from _inputPoints
+    polyline poly;
+    if (!_inputPoints.empty()) {
+      // Create a non-const copy of the points
+      std::vector<Point_3> points_copy(_inputPoints.begin(),
+                                       _inputPoints.end());
+      poly.emplace_back(&points_copy.front(), &points_copy.back() + 1);
 
-    // Create a Nef_polyhedron from the polyline
-    Nef_polyhedron N1(poly.begin(), poly.end(),
-                      Nef_polyhedron::Polylines_tag());
+      // Create a Nef_polyhedron from the polyline
+      Nef_polyhedron nefPolyline(poly.begin(), poly.end(),
+                                 Nef_polyhedron::Polylines_tag());
 
-    // Perform Minkowski sum
-    Nef_polyhedron result = CGAL::minkowski_sum_3(N0, N1);
+      // Perform Minkowski sum
+      Nef_polyhedron result = CGAL::minkowski_sum_3(nefBase, nefPolyline);
 
-    // Convert result to SFCGAL::PolyhedralSurface
-    SFCGAL::detail::MarkedPolyhedron out;
-    result.convert_to_polyhedron(out);
-    return std::make_unique<PolyhedralSurface>(out);
-  } // If _inputPoints is empty, return an empty PolyhedralSurface
+      // Convert result to SFCGAL::PolyhedralSurface
+      SFCGAL::detail::MarkedPolyhedron out;
+      result.convert_to_polyhedron(out);
+      return std::make_unique<PolyhedralSurface>(out);
+    }
+  } catch (const CGAL::Assertion_exception &) { // NOLINT(bugprone-empty-catch)
+    // Nef construction, Minkowski sum, or conversion failed on degenerate
+    // input; return empty.
+  }
+
   return std::make_unique<PolyhedralSurface>();
 }
 
@@ -117,102 +125,110 @@ auto
 Buffer3D::computeCylSphereBuffer() const -> std::unique_ptr<PolyhedralSurface>
 {
   using Nef_polyhedron = CGAL::Nef_polyhedron_3<Kernel>;
-  Nef_polyhedron result;
 
-  // Add a sphere at the first point of the line
-  if (!_inputPoints.empty()) {
-    unsigned int subdivision_level =
-        std::max(1U, static_cast<unsigned int>(_segments / 16));
-    Sphere start_sphere(_radius, subdivision_level);
-    start_sphere.translate(SFCGAL::Kernel::Vector_3(
-        _inputPoints[0].x(), _inputPoints[0].y(), _inputPoints[0].z()));
-    CGAL::Polyhedron_3<Kernel> start_sphere_poly =
-        start_sphere.generatePolyhedron();
-    Nef_polyhedron start_sphere_nef(start_sphere_poly);
+  try {
+    Nef_polyhedron result;
 
-    result = start_sphere_nef;
-  }
-
-  // Create a cylinder and spheres for each segment of the line
-  for (size_t i = 0; i < _inputPoints.size() - 1; ++i) {
-    // Create a cylinder between each successive point
-    Kernel::Vector_3 axis(_inputPoints[i + 1].x() - _inputPoints[i].x(),
-                          _inputPoints[i + 1].y() - _inputPoints[i].y(),
-                          _inputPoints[i + 1].z() - _inputPoints[i].z());
-    Kernel::FT height = CGAL::sqrt(CGAL::to_double(axis.squared_length()));
-    Cylinder   cyl(_radius, height, _segments);
-
-    // apply rotation
-    const double axis_length =
-        CGAL::sqrt(CGAL::to_double(axis.squared_length()));
-    // If axis is non-zero and not aligned with +Z, apply rotation
-    if (axis_length > SFCGAL::EPSILON) {
-      const double nx = CGAL::to_double(axis.x()) / axis_length;
-      const double ny = CGAL::to_double(axis.y()) / axis_length;
-      const double nz = CGAL::to_double(axis.z()) / axis_length;
-
-      // Check if axis is not already aligned with +Z (0, 0, 1)
-      if (std::abs(nx) > SFCGAL::EPSILON || std::abs(ny) > SFCGAL::EPSILON ||
-          std::abs(nz - 1.0) > SFCGAL::EPSILON) {
-        // Compute rotation axis: cross product of +Z with desired axis
-        // +Z = (0, 0, 1), so cross product is (ny, -nx, 0)
-        const SFCGAL::Kernel::Vector_3 rotation_axis(ny, -nx, 0);
-
-        // Compute rotation angle using dot product: +Z · normalized_axis = nz
-        const double angle = std::acos(std::clamp(nz, -1.0, 1.0));
-
-        if (std::abs(angle) > SFCGAL::EPSILON) {
-          cyl.rotate(angle, rotation_axis);
-        }
-      }
-    }
-
-    // apply translation
-    cyl.translate(Kernel::Vector_3(_inputPoints[i].x(), _inputPoints[i].y(),
-                                   _inputPoints[i].z()));
-    CGAL::Polyhedron_3<Kernel> cyl_poly = cyl.generatePolyhedron();
-    Nef_polyhedron             cyl_nef(cyl_poly);
-
-    result = result.join(cyl_nef);
-
-    // Add a sphere at the junctions (rounded corners)
-    if (i < _inputPoints.size() - 1) {
-      Kernel::Vector_3 sphereCenter(_inputPoints[i + 1].x(),
-                                    _inputPoints[i + 1].y(),
-                                    _inputPoints[i + 1].z());
-      if (i < _inputPoints.size() - 2) {
-        // For intermediate points, use the bisector of the two adjacent
-        // segments
-        Kernel::Vector_3 prev_dir = _inputPoints[i + 1] - _inputPoints[i];
-        Kernel::Vector_3 next_dir = _inputPoints[i + 2] - _inputPoints[i + 1];
-        prev_dir =
-            prev_dir / CGAL::sqrt(CGAL::to_double(prev_dir.squared_length()));
-        next_dir =
-            next_dir / CGAL::sqrt(CGAL::to_double(next_dir.squared_length()));
-      }
-
+    // Add a sphere at the first point of the line
+    if (!_inputPoints.empty()) {
       unsigned int subdivision_level =
           std::max(1U, static_cast<unsigned int>(_segments / 16));
-      Sphere sphere(_radius, subdivision_level);
-      sphere.translate(sphereCenter);
-      CGAL::Polyhedron_3<Kernel> sphere_poly = sphere.generatePolyhedron();
-      Nef_polyhedron             sphere_nef(sphere_poly);
-      result = result.join(sphere_nef);
+      Sphere start_sphere(_radius, subdivision_level);
+      start_sphere.translate(SFCGAL::Kernel::Vector_3(
+          _inputPoints[0].x(), _inputPoints[0].y(), _inputPoints[0].z()));
+      CGAL::Polyhedron_3<Kernel> start_sphere_poly =
+          start_sphere.generatePolyhedron();
+      Nef_polyhedron start_sphere_nef(start_sphere_poly);
+
+      result = start_sphere_nef;
     }
+
+    // Create a cylinder and spheres for each segment of the line
+    for (size_t i = 0; i < _inputPoints.size() - 1; ++i) {
+      // Create a cylinder between each successive point
+      Kernel::Vector_3 axis(_inputPoints[i + 1].x() - _inputPoints[i].x(),
+                            _inputPoints[i + 1].y() - _inputPoints[i].y(),
+                            _inputPoints[i + 1].z() - _inputPoints[i].z());
+      Kernel::FT height = CGAL::sqrt(CGAL::to_double(axis.squared_length()));
+      Cylinder   cyl(_radius, height, _segments);
+
+      // apply rotation
+      const double axis_length =
+          CGAL::sqrt(CGAL::to_double(axis.squared_length()));
+      // If axis is non-zero and not aligned with +Z, apply rotation
+      if (axis_length > SFCGAL::EPSILON) {
+        const double nx = CGAL::to_double(axis.x()) / axis_length;
+        const double ny = CGAL::to_double(axis.y()) / axis_length;
+        const double nz = CGAL::to_double(axis.z()) / axis_length;
+
+        // Check if axis is not already aligned with +Z (0, 0, 1)
+        if (std::abs(nx) > SFCGAL::EPSILON || std::abs(ny) > SFCGAL::EPSILON ||
+            std::abs(nz - 1.0) > SFCGAL::EPSILON) {
+          // Compute rotation axis: cross product of +Z with desired axis
+          // +Z = (0, 0, 1), so cross product is (ny, -nx, 0)
+          const SFCGAL::Kernel::Vector_3 rotation_axis(ny, -nx, 0);
+
+          // Compute rotation angle using dot product: +Z · normalized_axis = nz
+          const double angle = std::acos(std::clamp(nz, -1.0, 1.0));
+
+          if (std::abs(angle) > SFCGAL::EPSILON) {
+            cyl.rotate(angle, rotation_axis);
+          }
+        }
+      }
+
+      // apply translation
+      cyl.translate(Kernel::Vector_3(_inputPoints[i].x(), _inputPoints[i].y(),
+                                     _inputPoints[i].z()));
+      CGAL::Polyhedron_3<Kernel> cyl_poly = cyl.generatePolyhedron();
+      Nef_polyhedron             cyl_nef(cyl_poly);
+
+      result = result.join(cyl_nef);
+
+      // Add a sphere at the junctions (rounded corners)
+      if (i < _inputPoints.size() - 1) {
+        Kernel::Vector_3 sphereCenter(_inputPoints[i + 1].x(),
+                                      _inputPoints[i + 1].y(),
+                                      _inputPoints[i + 1].z());
+        if (i < _inputPoints.size() - 2) {
+          // For intermediate points, use the bisector of the two adjacent
+          // segments
+          Kernel::Vector_3 prev_dir = _inputPoints[i + 1] - _inputPoints[i];
+          Kernel::Vector_3 next_dir = _inputPoints[i + 2] - _inputPoints[i + 1];
+          prev_dir =
+              prev_dir / CGAL::sqrt(CGAL::to_double(prev_dir.squared_length()));
+          next_dir =
+              next_dir / CGAL::sqrt(CGAL::to_double(next_dir.squared_length()));
+        }
+
+        unsigned int subdivision_level =
+            std::max(1U, static_cast<unsigned int>(_segments / 16));
+        Sphere sphere(_radius, subdivision_level);
+        sphere.translate(sphereCenter);
+        CGAL::Polyhedron_3<Kernel> sphere_poly = sphere.generatePolyhedron();
+        Nef_polyhedron             sphere_nef(sphere_poly);
+        result = result.join(sphere_nef);
+      }
+    }
+
+    // Convert the Nef_polyhedron to Polyhedron_3
+    CGAL::Polyhedron_3<Kernel> merged_mesh;
+    result.convert_to_polyhedron(merged_mesh);
+
+    // Clean up the geometry
+    PMP::remove_connected_components_of_negligible_size(merged_mesh);
+
+    // Convert the merged mesh to PolyhedralSurface and return
+    auto resultSurface = std::make_unique<PolyhedralSurface>();
+    resultSurface->addPatches(merged_mesh);
+
+    return resultSurface;
+  } catch (const CGAL::Assertion_exception &) { // NOLINT(bugprone-empty-catch)
+    // Nef construction, join, or conversion failed on degenerate input;
+    // return empty.
   }
 
-  // Convert the Nef_polyhedron to Polyhedron_3
-  CGAL::Polyhedron_3<Kernel> merged_mesh;
-  result.convert_to_polyhedron(merged_mesh);
-
-  // Clean up the geometry
-  PMP::remove_connected_components_of_negligible_size(merged_mesh);
-
-  // Convert the merged mesh to PolyhedralSurface and return
-  auto resultSurface = std::make_unique<PolyhedralSurface>();
-  resultSurface->addPatches(merged_mesh);
-
-  return resultSurface;
+  return std::make_unique<PolyhedralSurface>();
 }
 
 auto

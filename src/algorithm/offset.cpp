@@ -25,6 +25,7 @@
 #include <CGAL/Polygon_with_holes_2.h>
 
 #include <CGAL/approximated_offset_2.h>
+#include <CGAL/exceptions.h>
 #include <CGAL/minkowski_sum_2.h>
 #include <CGAL/offset_polygon_2.h>
 #include <limits>
@@ -150,7 +151,11 @@ polygonSetToMultiPolygon(const Offset_polygon_set_2 &polygonSet, const int &n)
     -> std::unique_ptr<MultiPolygon>
 {
   std::list<Offset_polygon_with_holes_2> res;
-  polygonSet.polygons_with_holes(std::back_inserter(res));
+  try {
+    polygonSet.polygons_with_holes(std::back_inserter(res));
+  } catch (const CGAL::Failure_exception &) {
+    return std::make_unique<MultiPolygon>();
+  }
 
   auto result = std::make_unique<MultiPolygon>();
 
@@ -206,10 +211,13 @@ offset(const Point &gA, const double &radius, Offset_polygon_set_2 &polygonSet)
   SFCGAL_OFFSET_ASSERT_FINITE_RADIUS(radius);
   Kernel::Circle_2 const circle(gA.toPoint_2(), radius * radius);
 
-  if (polygonSet.is_empty()) {
-    polygonSet.insert(circleToPolygon(circle));
-  } else {
-    polygonSet.join(circleToPolygon(circle));
+  try {
+    if (polygonSet.is_empty()) {
+      polygonSet.insert(circleToPolygon(circle));
+    } else {
+      polygonSet.join(circleToPolygon(circle));
+    }
+  } catch (const CGAL::Failure_exception &) { // NOLINT(bugprone-empty-catch)
   }
 }
 
@@ -223,16 +231,19 @@ offset(const LineString &lineString, const double &radius,
   SFCGAL_OFFSET_ASSERT_FINITE_RADIUS(radius);
 
   for (size_t i = 0; i < lineString.numSegments(); i++) {
-    Polygon_2 P;
-    P.push_back(lineString.pointN(i).toPoint_2());
-    P.push_back(lineString.pointN(i + 1).toPoint_2());
-    Offset_polygon_with_holes_2 const offset =
-        CGAL::approximated_offset_2(P, radius, SFCGAL_OFFSET_ACCURACY);
+    try {
+      Polygon_2 segPoly;
+      segPoly.push_back(lineString.pointN(i).toPoint_2());
+      segPoly.push_back(lineString.pointN(i + 1).toPoint_2());
+      Offset_polygon_with_holes_2 const offset =
+          CGAL::approximated_offset_2(segPoly, radius, SFCGAL_OFFSET_ACCURACY);
 
-    if (polygonSet.is_empty()) {
-      polygonSet.insert(offset);
-    } else {
-      polygonSet.join(offset);
+      if (polygonSet.is_empty()) {
+        polygonSet.insert(offset);
+      } else {
+        polygonSet.join(offset);
+      }
+    } catch (const CGAL::Failure_exception &) { // NOLINT(bugprone-empty-catch)
     }
   }
 }
@@ -249,12 +260,10 @@ offset(const Polygon &g, const double &radius, Offset_polygon_set_2 &polygonSet)
   /*
    * Invoke minkowski_sum_2 for exterior ring
    */
-  {
-    Offset_polygon_with_holes_2 offset;
-
+  try {
     if (radius >= 0) {
-      offset = CGAL::approximated_offset_2(g.exteriorRing().toPolygon_2(),
-                                           radius, SFCGAL_OFFSET_ACCURACY);
+      Offset_polygon_with_holes_2 offset = CGAL::approximated_offset_2(
+          g.exteriorRing().toPolygon_2(), radius, SFCGAL_OFFSET_ACCURACY);
       if (polygonSet.is_empty()) {
         polygonSet.insert(offset);
       } else {
@@ -274,6 +283,7 @@ offset(const Polygon &g, const double &radius, Offset_polygon_set_2 &polygonSet)
         }
       }
     }
+  } catch (const CGAL::Failure_exception &) { // NOLINT(bugprone-empty-catch)
   }
 
   /*
@@ -292,18 +302,22 @@ offset(const Polygon &g, const double &radius, Offset_polygon_set_2 &polygonSet)
     /*
      * compute the difference for each hole of the resulting polygons
      */
-    std::list<Offset_polygon_with_holes_2> interiorPolygons;
-    sumInteriorRings.polygons_with_holes(std::back_inserter(interiorPolygons));
+    try {
+      std::list<Offset_polygon_with_holes_2> interiorPolygons;
+      sumInteriorRings.polygons_with_holes(
+          std::back_inserter(interiorPolygons));
 
-    for (auto &interiorPolygon : interiorPolygons) {
+      for (auto &interiorPolygon : interiorPolygons) {
 
-      for (auto it_hole = interiorPolygon.holes_begin();
-           it_hole != interiorPolygon.holes_end(); ++it_hole) {
+        for (auto it_hole = interiorPolygon.holes_begin();
+             it_hole != interiorPolygon.holes_end(); ++it_hole) {
 
-        it_hole->reverse_orientation();
-        polygonSet.difference(*it_hole);
-      } // foreach hole
-    } // foreach polygon
+          it_hole->reverse_orientation();
+          polygonSet.difference(*it_hole);
+        } // foreach hole
+      } // foreach polygon
+    } catch (const CGAL::Failure_exception &) { // NOLINT(bugprone-empty-catch)
+    }
   }
 }
 
