@@ -2439,8 +2439,29 @@ BOOST_AUTO_TEST_CASE(testPrimitiveTransformTest)
 
     BOOST_CHECK_NE(strApi, strApi2);
 
+    double *sphereTransform = sfcgal_primitive_transformation(sphere);
+    double *sphereTranslatedTransform =
+        sfcgal_primitive_transformation(sphereT);
+    std::vector<double> data(sphereTransform, sphereTransform + 16);
+    std::vector<double> dataTranslated(sphereTranslatedTransform,
+                                       sphereTranslatedTransform + 16);
+
+    sfcgal_free_buffer(sphereTransform);
+    sfcgal_free_buffer(sphereTranslatedTransform);
+
     sfcgal_primitive_delete(sphere);
     sfcgal_primitive_delete(sphereT);
+
+    std::vector<double> expectedData{1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                                     0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0};
+    std::vector<double> expectedDataTranslated{1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+                                               0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+                                               1.0, 0.0, 1.0, 1.0};
+    BOOST_CHECK_EQUAL_COLLECTIONS(data.begin(), data.end(),
+                                  expectedData.begin(), expectedData.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(dataTranslated.begin(), dataTranslated.end(),
+                                  expectedDataTranslated.begin(),
+                                  expectedDataTranslated.end());
   }
 
   // rotation
@@ -2507,8 +2528,28 @@ BOOST_AUTO_TEST_CASE(testPrimitiveTransformTest)
 
     BOOST_CHECK_NE(strApi, strApi2);
 
+    double *sphereTransform       = sfcgal_primitive_transformation(sphere);
+    double *sphereScaledTransform = sfcgal_primitive_transformation(sphereS);
+    std::vector<double> data(sphereTransform, sphereTransform + 16);
+    std::vector<double> dataScaled(sphereScaledTransform,
+                                   sphereScaledTransform + 16);
+
+    sfcgal_free_buffer(sphereTransform);
+    sfcgal_free_buffer(sphereScaledTransform);
+
     sfcgal_primitive_delete(sphere);
     sfcgal_primitive_delete(sphereS);
+
+    std::vector<double> expectedData{1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                                     0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0};
+    std::vector<double> expectedDataScaled{3.0, 0.0, 0.0, 0.0, 0.0, 2.0,
+                                           0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+                                           0.0, 0.0, 0.0, 1.0};
+    BOOST_CHECK_EQUAL_COLLECTIONS(data.begin(), data.end(),
+                                  expectedData.begin(), expectedData.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(dataScaled.begin(), dataScaled.end(),
+                                  expectedDataScaled.begin(),
+                                  expectedDataScaled.end());
   }
 }
 
