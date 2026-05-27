@@ -39,7 +39,7 @@ public:
   void
   operator()(HDS &hds) override
   {
-    CGAL::Polyhedron_incremental_builder_3<HDS> B(hds, true);
+    CGAL::Polyhedron_incremental_builder_3<HDS> builder(hds, true);
 
     // Create icosahedron vertices
     const double phi      = (1.0 + std::sqrt(5.0)) / 2.0; // golden ratio
@@ -87,32 +87,32 @@ public:
       vertex = Point_3(radius * vec.x(), radius * vec.y(), radius * vec.z());
     }
 
-    B.begin_surface(vertices.size(), faces.size());
+    builder.begin_surface(vertices.size(), faces.size());
 
     try {
       // Add vertices
       for (const auto &vertex : vertices) {
-        B.add_vertex(vertex);
+        builder.add_vertex(vertex);
       }
 
       // Add faces
       for (const auto &face : faces) {
-        B.begin_facet();
-        B.add_vertex_to_facet(face[0]);
-        B.add_vertex_to_facet(face[1]);
-        B.add_vertex_to_facet(face[2]);
-        B.end_facet();
+        builder.begin_facet();
+        builder.add_vertex_to_facet(face[0]);
+        builder.add_vertex_to_facet(face[1]);
+        builder.add_vertex_to_facet(face[2]);
+        builder.end_facet();
       }
 
-      B.end_surface();
+      builder.end_surface();
 
-      if (B.error()) {
+      if (builder.error()) {
         throw std::runtime_error("CGAL polyhedron builder reported an error "
                                  "during icosahedron construction");
       }
     } catch (const std::exception &e) {
-      if (!B.error()) {
-        B.rollback();
+      if (!builder.error()) {
+        builder.rollback();
       }
       throw std::runtime_error(
           std::string("Failed to build subdivided icosahedron: ") + e.what());
@@ -234,17 +234,17 @@ Sphere::validateParameters(
 auto
 Sphere::generateSpherePolyhedron() const -> Polyhedron_3
 {
-  Polyhedron_3 P;
+  Polyhedron_3 polyhedron;
 
   Sphere_builder<Polyhedron_3::HalfedgeDS> builder(CGAL::to_double(radius()),
                                                    numSubdivisions());
-  P.delegate(builder);
+  polyhedron.delegate(builder);
 
   // handle affine transformation
   if (m_transform != Kernel::Aff_transformation_3(CGAL::IDENTITY)) {
-    PMP::transform(m_transform, P);
+    PMP::transform(m_transform, polyhedron);
   }
-  return P;
+  return polyhedron;
 }
 
 auto
