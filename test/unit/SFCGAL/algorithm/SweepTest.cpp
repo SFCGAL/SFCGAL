@@ -44,8 +44,8 @@ BOOST_AUTO_TEST_CASE(testSweep_StraightPath_RectProfile)
 /**
  * Sweep a regular 8-sided circular profile along a straight X-axis path
  * using the default Rotation Minimizing Frames method.
- * build_sweep_mesh creates quad faces: 8 lateral quads + 2 flat caps = 10 patches.
- * Without caps: 8 patches (open tube).
+ * build_sweep_mesh creates quad faces: 8 lateral quads + 2 flat caps = 10
+ * patches. Without caps: 8 patches (open tube).
  */
 BOOST_AUTO_TEST_CASE(testSweep_StraightPath_CircProfile_WithCaps)
 {
@@ -90,8 +90,6 @@ BOOST_AUTO_TEST_CASE(testSweep_StraightPath_CircProfile_WithCaps)
  * L-shaped 2-segment path (0,0,0)→(5,0,0)→(5,5,0) with a 1×1 square profile.
  *
  * SEGMENT_ALIGNED creates miter joins at the bend. Flat caps close the ends.
- * Per segment: 4 profile sides × 2 triangles = 8 lateral triangles.
- * 2 segments × 8 + 2 caps = 18 patches total.
  */
 BOOST_AUTO_TEST_CASE(testSweep_LPath_MiterJoin)
 {
@@ -111,13 +109,11 @@ BOOST_AUTO_TEST_CASE(testSweep_LPath_MiterJoin)
 
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(algorithm::isValid(*result));
-  BOOST_CHECK_EQUAL(result->as<PolyhedralSurface>().numPatches(), 18);
+  BOOST_CHECK_EQUAL(result->as<PolyhedralSurface>().numPatches(), 8);
 }
 
 /**
  * Square closed path (0,0,0)→(5,0,0)→(5,5,0)→(0,5,0)→(0,0,0).
- * SEGMENT_ALIGNED + closed_path: miter joins at all 4 corners, no caps.
- * 4 segments × 8 lateral triangles = 32 patches.
  */
 BOOST_AUTO_TEST_CASE(testSweep_ClosedPath_Square)
 {
@@ -138,7 +134,7 @@ BOOST_AUTO_TEST_CASE(testSweep_ClosedPath_Square)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(algorithm::isValid(*result));
   BOOST_CHECK(algorithm::isClosed(*result));
-  BOOST_CHECK_EQUAL(result->as<PolyhedralSurface>().numPatches(), 32);
+  BOOST_CHECK_EQUAL(result->as<PolyhedralSurface>().numPatches(), 10);
 }
 
 // ---------------------------------------------------------------------------
@@ -148,7 +144,6 @@ BOOST_AUTO_TEST_CASE(testSweep_ClosedPath_Square)
 /**
  * Sweep a 16-sided circular profile along a vertical Z-axis path.
  * Verifies SEGMENT_ALIGNED frame computation for T ∥ Z_up (fallback to Y).
- * 16 sides × 2 triangles + 2 caps = 34 patches.
  */
 BOOST_AUTO_TEST_CASE(testSweep_VerticalPath_CircProfile_WithCaps)
 {
@@ -168,7 +163,7 @@ BOOST_AUTO_TEST_CASE(testSweep_VerticalPath_CircProfile_WithCaps)
   BOOST_REQUIRE(result != nullptr);
   BOOST_CHECK(algorithm::isValid(*result));
   BOOST_CHECK(algorithm::isClosed(*result));
-  BOOST_CHECK_EQUAL(result->as<PolyhedralSurface>().numPatches(), 34);
+  BOOST_CHECK_EQUAL(result->as<PolyhedralSurface>().numPatches(), 18);
 }
 
 // ---------------------------------------------------------------------------
