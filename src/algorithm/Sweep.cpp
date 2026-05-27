@@ -163,6 +163,33 @@ propagate_frame_rmf(const Frame &prev_frame, const Kernel::Point_3 &prev_point,
   const Kernel::Vector_3 tangent_diff    = frame.tangent - reflected_tangent;
   const Kernel::FT       tangent_diff_sq = tangent_diff * tangent_diff;
 
+  // Detect near 180° turns.
+  // RMF transport becomes numerically unstable when consecutive
+  // tangents are almost opposite.
+  const Kernel::FT tangent_alignment = prev_frame.tangent * frame.tangent;
+
+  if (tangent_alignment < Kernel::FT(-0.95)) {
+
+    // Keep previous orientation and reproject it onto the plane
+    // orthogonal to the new tangent.
+    frame.normal =
+        prev_frame.normal - (prev_frame.normal * frame.tangent) * frame.tangent;
+
+    // Fallback if reprojection becomes degenerate.
+    if (frame.normal * frame.normal < Kernel::FT(NEAR_ZERO_SQ_LEN)) {
+
+      frame = compute_initial_frame(frame.tangent);
+      return frame;
+    }
+
+    frame.normal = normalizeVector(frame.normal);
+
+    frame.binormal =
+        normalizeVector(CGAL::cross_product(frame.tangent, frame.normal));
+
+    return frame;
+  }
+
   if (tangent_diff_sq < Kernel::FT(ZERO_SQ_LEN)) {
     // Tangents are parallel, use first reflection result
     frame.normal = reflected_normal;
