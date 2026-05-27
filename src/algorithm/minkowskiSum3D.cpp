@@ -55,6 +55,7 @@
 #include <CGAL/Nef_polyhedron_3.h>
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/convex_hull_3.h>
+#include <CGAL/exceptions.h>
 #include <CGAL/minkowski_sum_3.h>
 
 #include <list>
@@ -486,13 +487,60 @@ nefToGeometry(const Nef_polyhedron_3 &nef) -> std::unique_ptr<Geometry>
   }
 
   Polyhedron_3 poly;
-  nef.convert_to_polyhedron(poly);
+  try {
+    nef.convert_to_polyhedron(poly);
+  } catch (const CGAL::Assertion_exception &) {
+    return emptyResult();
+  }
 
   if (poly.is_empty()) {
     return emptyResult();
   }
 
   return std::make_unique<PolyhedralSurface>(poly);
+}
+
+/**
+ * @brief Compute Minkowski sum of Triangle + LineString via convex_hull_3
+ *
+ * The Minkowski sum of a triangle and a line segment is geometrically
+ * equivalent to the convex hull of the 6 points formed by the 3 triangle
+ * vertices and their translations by the line segment vector.
+ *
+ * @param triangle The Triangle operand
+ * @param lineString The LineString operand (must have >= 2 points)
+ * @return PolyhedralSurface result, or empty GeometryCollection on failure
+ */
+[[nodiscard]] static auto
+triangleLineStringMinkowski(const Triangle   &triangle,
+                            const LineString &lineString)
+    -> std::unique_ptr<Geometry>
+{
+  if (lineString.numPoints() < 2) {
+    return emptyResult();
+  }
+
+  Kernel::Vector_3 vec(lineString.pointN(1).x() - lineString.pointN(0).x(),
+                       lineString.pointN(1).y() - lineString.pointN(0).y(),
+                       lineString.pointN(1).z() - lineString.pointN(0).z());
+
+  std::vector<Kernel::Point_3> points;
+  points.reserve(6);
+  for (int i = 0; i < 3; ++i) {
+    points.push_back(triangle.vertex(i).toPoint_3());
+  }
+  for (int i = 0; i < 3; ++i) {
+    points.push_back(triangle.vertex(i).toPoint_3() + vec);
+  }
+
+  Polyhedron_3 result;
+  CGAL::convex_hull_3(points.begin(), points.end(), result);
+
+  if (result.is_empty()) {
+    return emptyResult();
+  }
+
+  return std::make_unique<PolyhedralSurface>(result);
 }
 
 auto
@@ -522,6 +570,17 @@ minkowskiSum3D(const Geometry &gA, const Geometry &gB,
     return result;
   }
 
+  // Triangle + LineString: compute via convex_hull_3 of the 6 points
+  // (3 triangle vertices + 3 translated by the line vector)
+  if (gA.geometryTypeId() == TYPE_TRIANGLE &&
+      gB.geometryTypeId() == TYPE_LINESTRING) {
+    return triangleLineStringMinkowski(gA.as<Triangle>(), gB.as<LineString>());
+  }
+  if (gA.geometryTypeId() == TYPE_LINESTRING &&
+      gB.geometryTypeId() == TYPE_TRIANGLE) {
+    return triangleLineStringMinkowski(gB.as<Triangle>(), gA.as<LineString>());
+  }
+
   // CGAL Minkowski sum 3D (Nef based) requires at least one operand
   // with dimension >= 2 (at least facets) for the Gaussian Map
   // calculation.  Point-specific cases are handled above.
@@ -541,7 +600,12 @@ minkowskiSum3D(const Geometry &gA, const Geometry &gB,
     return emptyResult();
   }
 
-  Nef_polyhedron_3 result = CGAL::minkowski_sum_3(nefA, nefB);
+  Nef_polyhedron_3 result;
+  try {
+    result = CGAL::minkowski_sum_3(nefA, nefB);
+  } catch (const CGAL::Assertion_exception &) {
+    return emptyResult();
+  }
 
   if (result.is_empty()) {
     return emptyResult();
