@@ -18,6 +18,7 @@
 #include <CGAL/Polygon_mesh_processing/corefinement.h>
 #include <CGAL/Side_of_triangle_mesh.h>
 #include <CGAL/box_intersection_d.h>
+#include <CGAL/exceptions.h>
 
 namespace SFCGAL::algorithm {
 
@@ -422,9 +423,7 @@ fix_cgal_valid_polygon(const Polygon_with_holes_2 &poly,
 inline auto
 fix_sfs_valid_polygon(const Polygon_with_holes_2 &poly) -> Polygon_with_holes_2
 {
-  CGAL::Gps_segment_traits_2<Kernel> traits;
-
-  if (are_holes_and_boundary_pairwise_disjoint(poly, traits)) {
+  if (poly.number_of_holes() == 0) {
     return poly;
   }
 
@@ -446,10 +445,10 @@ fix_sfs_valid_polygon(const Polygon_with_holes_2 &poly) -> Polygon_with_holes_2
 
     for (auto target = rings[ringIdx].vertices_begin();
          target != rings[ringIdx].vertices_end(); ++target) {
-      Segment_2 segment(target == rings[ringIdx].vertices_begin()
-                            ? *(rings[ringIdx].vertices_end() - 1)
-                            : *(target - 1),
-                        *target);
+      auto      segmentSource = target == rings[ringIdx].vertices_begin()
+                                    ? *(rings[ringIdx].vertices_end() - 1)
+                                    : *(target - 1);
+      Segment_2 segment(segmentSource, *target);
 
       // for every other ring
       for (size_t otherIdx = 0; otherIdx < rings.size(); ++otherIdx) {
@@ -459,7 +458,8 @@ fix_sfs_valid_polygon(const Polygon_with_holes_2 &poly) -> Polygon_with_holes_2
 
         for (auto vertex = rings[otherIdx].vertices_begin();
              vertex != rings[otherIdx].vertices_end(); ++vertex) {
-          if (CGAL::do_intersect(*vertex, segment)) {
+          if (*vertex != *target && *vertex != segmentSource &&
+              CGAL::do_intersect(*vertex, segment)) {
             out.back().push_back(*vertex);
           }
         }
@@ -810,16 +810,42 @@ auto
 difference(const Polygon_with_holes_2 &a, const Polygon_with_holes_2 &b,
            PolygonOutputIteratorType out) -> PolygonOutputIteratorType
 {
-  CGAL::Gps_segment_traits_2<Kernel> traits;
-
   std::vector<Polygon_with_holes_2> temp;
-  CGAL::difference(are_holes_and_boundary_pairwise_disjoint(a, traits)
-                       ? a
-                       : fix_sfs_valid_polygon(a),
-                   are_holes_and_boundary_pairwise_disjoint(b, traits)
-                       ? b
-                       : fix_sfs_valid_polygon(b),
-                   std::back_inserter(temp));
+  try {
+    CGAL::difference(fix_sfs_valid_polygon(a), fix_sfs_valid_polygon(b),
+                     std::back_inserter(temp));
+  } catch (const CGAL::Failure_exception &) {
+    // Fallback: if outer boundaries match, A \ B = reversed holes.
+    // Otherwise, decompose: A \ B = (A \ B_outer) ∪ (A ∩ holes).
+    if (a.outer_boundary() == b.outer_boundary()) {
+      for (auto hi = b.holes_begin(); hi != b.holes_end(); ++hi) {
+        Polygon_2 outer;
+        for (auto vtx = hi->vertices_begin(); vtx != hi->vertices_end();
+             ++vtx) {
+          outer.push_back(*vtx);
+        }
+        outer.reverse_orientation();
+        temp.emplace_back(outer);
+      }
+    } else {
+      try {
+        CGAL::difference(fix_sfs_valid_polygon(a),
+                         Polygon_with_holes_2(b.outer_boundary()),
+                         std::back_inserter(temp));
+      } catch (
+          const CGAL::Failure_exception &) { // NOLINT(bugprone-empty-catch)
+      }
+      for (auto hi = b.holes_begin(); hi != b.holes_end(); ++hi) {
+        try {
+          CGAL::intersection(fix_sfs_valid_polygon(a),
+                             Polygon_with_holes_2(*hi),
+                             std::back_inserter(temp));
+        } catch (
+            const CGAL::Failure_exception &) { // NOLINT(bugprone-empty-catch)
+        }
+      }
+    }
+  }
 
   // polygon outer rings from difference can self intersect at points
   // therefore we need to split the generated polygons so that they are valid

@@ -47,5 +47,8 @@ init_unit_test_suite(int /*unused*/, char **const /*unused*/) -> test_suite *
 {
   //	std::cerr << "init test suite" << std::endl;
   SFCGAL::Logger::get()->setLogLevel(SFCGAL::Logger::Info);
+  // CGAL must throw exceptions (not abort) so try/catch in algorithm code
+  // can handle precondition violations gracefully.
+  CGAL::set_error_behaviour(CGAL::THROW_EXCEPTION);
   return nullptr;
 }
