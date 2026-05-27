@@ -373,12 +373,13 @@ transform_profile_point(const Kernel::Point_2 &profile_pt,
 }
 
 /**
- * @brief Connect consecutive profile rings with quad faces.
+ * @brief Connect consecutive profile rings with triangles.
  * @pre All entries in @p profiles must have the same number of points.
  */
 auto
 build_sweep_mesh(Surface_mesh_3                                  &mesh,
-                 const std::vector<std::vector<Kernel::Point_3>> &profiles)
+                 const std::vector<std::vector<Kernel::Point_3>> &profiles,
+                 size_t                                           edge_count)
     -> std::vector<std::vector<Surface_mesh_3::Vertex_index>>
 {
   std::vector<std::vector<Surface_mesh_3::Vertex_index>> vertex_rings;
@@ -392,6 +393,7 @@ build_sweep_mesh(Surface_mesh_3                                  &mesh,
 
   vertex_rings.reserve(n_path_points);
 
+  // Create mesh vertices for each transformed profile ring
   for (const auto &profile : profiles) {
     std::vector<Surface_mesh_3::Vertex_index> ring;
     ring.reserve(profile.size());
@@ -401,13 +403,24 @@ build_sweep_mesh(Surface_mesh_3                                  &mesh,
     vertex_rings.push_back(std::move(ring));
   }
 
+  // Connect consecutive rings
   for (size_t i = 0; i < n_path_points - 1; ++i) {
     const auto &ring1 = vertex_rings[i];
     const auto &ring2 = vertex_rings[i + 1];
 
-    for (size_t j = 0; j < n_profile_points; ++j) {
-      size_t next_j = (j + 1) % n_profile_points;
-      mesh.add_face(ring1[j], ring2[j], ring2[next_j], ring1[next_j]);
+    for (size_t j = 0; j < edge_count; ++j) {
+      const size_t next_j = (j + 1) % n_profile_points;
+
+      // Use triangles instead of quads.
+      //
+      // In a continuous sweep, consecutive profile rings are generally not
+      // coplanar because the local frame rotates along the path (RMF/Frenet).
+      // This makes quad faces geometrically warped/non-planar.
+      //
+      // Triangulating each quad strip guarantees planar faces and produces
+      // a more robust mesh for downstream geometric operations.
+      mesh.add_face(ring1[j], ring1[next_j], ring2[next_j]);
+      mesh.add_face(ring1[j], ring2[next_j], ring2[j]);
     }
   }
 
@@ -695,9 +708,15 @@ sweep_continuous(const std::vector<Kernel::Point_3> &path_points,
     transformed_profiles.push_back(std::move(profile_3d));
   }
 
+  const bool closed_profile = profile.geometryTypeId() == TYPE_POLYGON ||
+                              (profile.geometryTypeId() == TYPE_LINESTRING &&
+                               profile.as<LineString>().isClosed());
+  const size_t edge_count =
+      closed_profile ? profile_points.size() : profile_points.size() - 1;
+
   // 3. Build Mesh
   Surface_mesh_3 mesh;
-  auto           vertex_rings = build_sweep_mesh(mesh, transformed_profiles);
+  auto vertex_rings = build_sweep_mesh(mesh, transformed_profiles, edge_count);
 
   if (!closed && (options.start_cap == SweepOptions::EndCapStyle::FLAT ||
                   options.end_cap == SweepOptions::EndCapStyle::FLAT)) {
