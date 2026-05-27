@@ -336,6 +336,44 @@ BOOST_AUTO_TEST_CASE(testChamfer_DiamondPrism_Flat)
   BOOST_CHECK_LT(vol(*result), vol_original);
 }
 
+BOOST_AUTO_TEST_CASE(testChamfer_DiamondPrism_Flat_Top)
+{
+  auto prism = make_prism({{2, 0}, {0, 2}, {-2, 0}, {0, -2}}, 3.0);
+
+  const double vol_original = vol(*prism);
+
+  // Vertical edge at the rightmost vertex (2,0)
+
+  MultiLineString edges;
+  LineString      edge1;
+  edge1.addPoint(Point(-2, 0, 3));
+  edge1.addPoint(Point(0, 2, 3));
+
+  LineString edge2;
+  edge2.addPoint(Point(0, 2, 3));
+  edge2.addPoint(Point(2, 0, 3));
+
+  edges.addGeometry(edge1);
+  edges.addGeometry(edge2);
+
+  // edge.addPoint(Point(0, -2, 3));
+
+  algorithm::ChamferOptions opts;
+  opts.type   = algorithm::ChamferType::FLAT;
+  opts.radius = 0.15;
+
+  auto result = algorithm::chamfer(*prism, edges, opts);
+
+  std::cout << "prism\n";
+  std::cout << result->as<Solid>().exteriorShell().asText(6) << "\n";
+  std::cout << "prism ok\n";
+
+  BOOST_REQUIRE(result != nullptr);
+  BOOST_CHECK(result->geometryTypeId() == TYPE_SOLID);
+  BOOST_CHECK(algorithm::isValid(*result));
+  BOOST_CHECK_LT(vol(*result), vol_original);
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // SECTION C: Non-90° dihedral angles
 // ═══════════════════════════════════════════════════════════════════════════
@@ -669,9 +707,11 @@ BOOST_AUTO_TEST_CASE(testChamferRealCoordinates)
   edge2.addPoint(Point(1033185.12244900, 6281327.88732300, 6.00000000));
   edge2.addPoint(Point(1033190.94578700, 6281328.90148500, 6.00000000));
 
+  std::cout << "on y va\n";
   std::unique_ptr<Geometry> result2 =
       algorithm::chamfer(*building, edge2, opts);
   BOOST_CHECK(result2 != nullptr);
+  std::cout << "on finit\n";
   std::cout << result2->as<Solid>().exteriorShell().asText(6) << "\n";
 }
 
