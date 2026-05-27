@@ -168,6 +168,22 @@ struct Is_not_marked {
   }
 };
 
+static void
+outputPolylinesToGeometrySet(const std::list<Polyline_3> &polylines,
+                             GeometrySet<3>              &output)
+{
+  for (const auto &polyline : polylines) {
+    if (polyline.size() == 1) {
+      output.addPrimitive(polyline[0]);
+    } else {
+      for (size_t k = 1; k < polyline.size(); ++k) {
+        CGAL::Segment_3<Kernel> const seg(polyline[k - 1], polyline[k]);
+        output.addPrimitive(seg);
+      }
+    }
+  }
+}
+
 // NOLINTBEGIN(bugprone-easily-swappable-parameters)
 void
 _intersection_solid_triangle(const MarkedPolyhedron         &polyhedron,
@@ -216,8 +232,8 @@ _intersection_solid_triangle(const MarkedPolyhedron         &polyhedron,
     for (const MarkedPolyhedron &mp : ccs) {
       // check if all vertices are on polya
       bool all_on = true;
-      for (auto v : vertices(mp)) {
-        if (side_of_tm(v->point()) != CGAL::ON_BOUNDARY) {
+      for (auto vtx : vertices(mp)) {
+        if (side_of_tm(vtx->point()) != CGAL::ON_BOUNDARY) {
           all_on = false;
           break;
         }
@@ -230,25 +246,24 @@ _intersection_solid_triangle(const MarkedPolyhedron         &polyhedron,
       }
     }
   } catch (const CGAL::Assertion_exception & /*unused*/) {
-    // clip() failed (coplanar triangle with polyhedron faces).
-    // The polylines computed above are still valid — output them below.
+    // clip() failed, likely due to coplanarity with polyhedron faces.
+    // Check if the triangle is entirely on or inside the polyhedron:
+    // if so, the triangle itself is the intersection surface.
+    if (side_of_tm(triangle.vertex(0)) != CGAL::ON_UNBOUNDED_SIDE &&
+        side_of_tm(triangle.vertex(1)) != CGAL::ON_UNBOUNDED_SIDE &&
+        side_of_tm(triangle.vertex(2)) != CGAL::ON_UNBOUNDED_SIDE) {
+      output.addPrimitive(triangle);
+      hasSurface = true;
+    }
+    // Otherwise (triangle is not fully on/inside), the polylines computed
+    // above are the correct intersection — output them below.
   }
 
   // If clip produced interior patches, the polylines are edges of those
   // patches and don't need to be output separately. Otherwise (clip failed
   // or produced only boundary patches), output the polylines.
   if (!hasSurface) {
-    for (auto &polyline : polylines) {
-      if (polyline.size() == 1) {
-        // it's a point
-        output.addPrimitive(polyline[0]);
-      } else {
-        for (size_t k = 1; k < polyline.size(); ++k) {
-          CGAL::Segment_3<Kernel> const seg(polyline[k - 1], polyline[k]);
-          output.addPrimitive(seg);
-        }
-      }
-    }
+    outputPolylinesToGeometrySet(polylines, output);
   }
 }
 // NOLINTEND(bugprone-easily-swappable-parameters)
