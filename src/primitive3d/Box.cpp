@@ -96,14 +96,17 @@ Box::generatePolyhedralSurface() const -> PolyhedralSurface
   m_polyhedral_surface = PolyhedralSurface();
 
   // vertices
-  std::vector<Point> points{{0, 0, 0},
-                            {xExtent(), 0, 0},
-                            {0, yExtent(), 0},
-                            {xExtent(), yExtent(), 0},
-                            {0, 0, zExtent()},
-                            {xExtent(), 0, zExtent()},
-                            {0, yExtent(), zExtent()},
-                            {xExtent(), yExtent(), zExtent()}};
+  const Kernel::FT   halfXExtent = xExtent() / 2.;
+  const Kernel::FT   halfYExtent = yExtent() / 2.;
+  const Kernel::FT   halfZExtent = zExtent() / 2.;
+  std::vector<Point> points{{-halfXExtent, -halfYExtent, -halfZExtent},
+                            {halfXExtent, -halfYExtent, -halfZExtent},
+                            {-halfXExtent, halfYExtent, -halfZExtent},
+                            {halfXExtent, halfYExtent, -halfZExtent},
+                            {-halfXExtent, -halfYExtent, halfZExtent},
+                            {halfXExtent, -halfYExtent, halfZExtent},
+                            {-halfXExtent, halfYExtent, halfZExtent},
+                            {halfXExtent, halfYExtent, halfZExtent}};
 
   // faces
   m_polyhedral_surface->addPatch(

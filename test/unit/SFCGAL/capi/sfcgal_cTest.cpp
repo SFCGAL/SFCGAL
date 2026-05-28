@@ -2297,15 +2297,18 @@ BOOST_AUTO_TEST_CASE(testBoxTest)
   sfcgal_geometry_t *poly = sfcgal_primitive_as_polyhedral_surface(box);
   char              *wkbApi;
   size_t             wkbLen;
-  sfcgal_geometry_as_text_decim(poly, 0, &wkbApi, &wkbLen);
+  sfcgal_geometry_as_text_decim(poly, 1, &wkbApi, &wkbLen);
   std::string strApi(wkbApi, wkbLen);
   sfcgal_geometry_delete(poly);
 
   BOOST_CHECK_EQUAL(
-      "POLYHEDRALSURFACE Z (((0 0 0,0 5 0,11 5 0,11 0 0,0 0 0)),((0 0 1,11 0 "
-      "1,11 5 1,0 5 1,0 0 1)),((0 0 0,11 0 0,11 0 1,0 0 1,0 0 0)),((0 5 0,0 5 "
-      "1,11 5 1,11 5 0,0 5 0)),((11 0 0,11 5 0,11 5 1,11 0 1,11 0 0)),((0 0 "
-      "0,0 0 1,0 5 1,0 5 0,0 0 0)))",
+      "POLYHEDRALSURFACE Z (((-5.6 -2.6 -0.6,-5.6 2.6 -0.6,5.6 2.6 -0.6,5.6 "
+      "-2.6 -0.6,-5.6 -2.6 -0.6)),((-5.6 -2.6 0.6,5.6 -2.6 0.6,5.6 2.6 "
+      "0.6,-5.6 2.6 0.6,-5.6 -2.6 0.6)),((-5.6 -2.6 -0.6,5.6 -2.6 -0.6,5.6 "
+      "-2.6 0.6,-5.6 -2.6 0.6,-5.6 -2.6 -0.6)),((-5.6 2.6 -0.6,-5.6 2.6 "
+      "0.6,5.6 2.6 0.6,5.6 2.6 -0.6,-5.6 2.6 -0.6)),((5.6 -2.6 -0.6,5.6 2.6 "
+      "-0.6,5.6 2.6 0.6,5.6 -2.6 0.6,5.6 -2.6 -0.6)),((-5.6 -2.6 -0.6,-5.6 "
+      "-2.6 0.6,-5.6 2.6 0.6,-5.6 2.6 -0.6,-5.6 -2.6 -0.6)))",
       strApi);
   sfcgal_free_buffer(wkbApi);
 
@@ -2379,13 +2382,12 @@ BOOST_AUTO_TEST_CASE(testCubeTest)
   std::string strApi(wkbApi, wkbLen);
   sfcgal_geometry_delete(poly);
 
-  BOOST_CHECK_EQUAL("POLYHEDRALSURFACE Z (((0 0 0,0 2 0,2 2 0,2 0 0,0 0 0)),"
-                    "((0 0 2,2 0 2,2 2 2,0 2 2,0 0 2)),"
-                    "((0 0 0,2 0 0,2 0 2,0 0 2,0 0 0)),"
-                    "((0 2 0,0 2 2,2 2 2,2 2 0,0 2 0)),"
-                    "((2 0 0,2 2 0,2 2 2,2 0 2,2 0 0)),"
-                    "((0 0 0,0 0 2,0 2 2,0 2 0,0 0 0)))",
-                    strApi);
+  BOOST_CHECK_EQUAL(
+      "POLYHEDRALSURFACE Z (((-1 -1 -1,-1 1 -1,1 1 -1,1 -1 -1,-1 -1 -1)),((-1 "
+      "-1 1,1 -1 1,1 1 1,-1 1 1,-1 -1 1)),((-1 -1 -1,1 -1 -1,1 -1 1,-1 -1 1,-1 "
+      "-1 -1)),((-1 1 -1,-1 1 1,1 1 1,1 1 -1,-1 1 -1)),((1 -1 -1,1 1 -1,1 1 "
+      "1,1 -1 1,1 -1 -1)),((-1 -1 -1,-1 -1 1,-1 1 1,-1 1 -1,-1 -1 -1)))",
+      strApi);
   sfcgal_free_buffer(wkbApi);
 
   sfcgal_geometry_t *poly2 = sfcgal_primitive_as_polyhedral_surface(cube2);

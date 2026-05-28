@@ -25,7 +25,7 @@ class SFCGAL_API Cube : public PrimitiveImpl<Cube, Primitive> {
 public:
   /**
    * @brief Constructs a Cube object in the first octant (+, +, +)
-   * with one corner at (0, 0, 0)
+   * centered at origin (0, 0, 0).
    *
    * @param size The cube size
    */

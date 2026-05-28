@@ -25,7 +25,7 @@ class SFCGAL_API Box : public PrimitiveImpl<Box, Primitive> {
 public:
   /**
    * @brief Constructs a Box object in the first octant (+, +, +)
-   * with one corner at (0, 0, 0)
+   * centered at origin (0, 0, 0).
    *
    * @param x_extent The box length in x direction
    * @param y_extent The box length in y direction
