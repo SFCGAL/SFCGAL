@@ -714,15 +714,32 @@ BOOST_AUTO_TEST_CASE(testChamferRealCoordinates)
   // opts); BOOST_CHECK(result != nullptr);
   // // std::cout << result->asText(6) << "\n";
 
+  // LineString edge2;
+  // edge2.addPoint(Point(1033182.54744700, 6281330.59181600, 6.00000000));
+  // edge2.addPoint(Point(1033184.60016900, 6281329.93019200, 6.00000000));
+  // edge2.addPoint(Point(1033185.12244900, 6281327.88732300, 6.00000000));
+  // edge2.addPoint(Point(1033190.94578700, 6281328.90148500, 6.00000000));
+
+  MultiLineString edges;
+  LineString      edge1;
+  edge1.addPoint(Point(1033182.54744700, 6281330.59181600, 6.00000000));
+  edge1.addPoint(Point(1033184.60016900, 6281329.93019200, 6.00000000));
+
   LineString edge2;
-  edge2.addPoint(Point(1033182.54744700, 6281330.59181600, 6.00000000));
   edge2.addPoint(Point(1033184.60016900, 6281329.93019200, 6.00000000));
   edge2.addPoint(Point(1033185.12244900, 6281327.88732300, 6.00000000));
-  edge2.addPoint(Point(1033190.94578700, 6281328.90148500, 6.00000000));
+
+  LineString edge3;
+  edge3.addPoint(Point(1033185.12244900, 6281327.88732300, 6.00000000));
+  edge3.addPoint(Point(1033190.94578700, 6281328.90148500, 6.00000000));
+
+  edges.addGeometry(edge1);
+  edges.addGeometry(edge2);
+  edges.addGeometry(edge3);
 
   std::cout << "on y va\n";
   std::unique_ptr<Geometry> result2 =
-      algorithm::chamfer(*building, edge2, opts);
+      algorithm::chamfer(*building, edges, opts);
   BOOST_CHECK(result2 != nullptr);
   std::cout << "on finit\n";
   std::cout << result2->as<Solid>().exteriorShell().asText(6) << "\n";
