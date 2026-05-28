@@ -13,6 +13,7 @@ set(SFCGALOP_SOURCES
     operations/operations_conversions.cpp
     operations/operations_metrics.cpp
     operations/operations_predicates.cpp
+    operations/operations_processing.cpp
     operations/operations_set.cpp
     operations/operations_transformations.cpp
     constructors.cpp
