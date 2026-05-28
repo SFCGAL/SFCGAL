@@ -2808,6 +2808,24 @@ sfcgal_geometry_simplify_surface_edge_ratio(
 }
 
 extern "C" auto
+sfcgal_primitive_type_id(const sfcgal_primitive_t *primitive)
+    -> sfcgal_primitive_type_t
+{
+  if (primitive == nullptr) {
+    return SFCGAL_TYPE_INVALID;
+  }
+
+  try {
+    return (sfcgal_primitive_type_t) reinterpret_cast<
+               const SFCGAL::Primitive *>(primitive)
+        ->primitiveTypeId();
+  } catch (std::exception &e) {
+    SFCGAL_ERROR("%s", e.what());
+    return SFCGAL_TYPE_INVALID;
+  }
+}
+
+extern "C" auto
 sfcgal_primitive_create(sfcgal_primitive_type_t primitive_type)
     -> sfcgal_primitive_t *
 {
@@ -2831,6 +2849,8 @@ sfcgal_primitive_create(sfcgal_primitive_type_t primitive_type)
     break;
   case SFCGAL_TYPE_CONE:
     primitive = new SFCGAL::Cone();
+    break;
+  case SFCGAL_TYPE_INVALID:
     break;
   }
 

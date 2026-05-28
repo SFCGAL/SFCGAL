@@ -1783,6 +1783,13 @@ BOOST_AUTO_TEST_CASE(testSphereTest)
 
   sfcgal_primitive_t *sphere = sfcgal_primitive_create(SFCGAL_TYPE_SPHERE);
 
+  sfcgal_primitive_type_t type = sfcgal_primitive_type_id(sphere);
+  BOOST_CHECK_EQUAL(type, SFCGAL_TYPE_SPHERE);
+
+  // check invalid type
+  sfcgal_primitive_type_t invalid_type = sfcgal_primitive_type_id(nullptr);
+  BOOST_CHECK_EQUAL(invalid_type, SFCGAL_TYPE_INVALID);
+
   // checks parameter list
   char  *params;
   size_t paramsLen;
@@ -1899,6 +1906,9 @@ BOOST_AUTO_TEST_CASE(testCylinderTest)
   sfcgal_set_error_handlers(printf, on_error);
 
   sfcgal_primitive_t *cylinder = sfcgal_primitive_create(SFCGAL_TYPE_CYLINDER);
+
+  sfcgal_primitive_type_t type = sfcgal_primitive_type_id(cylinder);
+  BOOST_CHECK_EQUAL(type, SFCGAL_TYPE_CYLINDER);
 
   // base_center parameter
   double *baseCenter =
@@ -2106,6 +2116,9 @@ BOOST_AUTO_TEST_CASE(testTorusTest)
 
   sfcgal_primitive_t *torus = sfcgal_primitive_create(SFCGAL_TYPE_TORUS);
 
+  sfcgal_primitive_type_t type = sfcgal_primitive_type_id(torus);
+  BOOST_CHECK_EQUAL(type, SFCGAL_TYPE_TORUS);
+
   // checks parameter list
   char  *params;
   size_t paramsLen;
@@ -2222,6 +2235,9 @@ BOOST_AUTO_TEST_CASE(testBoxTest)
 
   sfcgal_primitive_t *box = sfcgal_primitive_create(SFCGAL_TYPE_BOX);
 
+  sfcgal_primitive_type_t type = sfcgal_primitive_type_id(box);
+  BOOST_CHECK_EQUAL(type, SFCGAL_TYPE_BOX);
+
   // checks parameter list
   char  *params;
   size_t paramsLen;
@@ -2313,6 +2329,9 @@ BOOST_AUTO_TEST_CASE(testCubeTest)
 
   sfcgal_primitive_t *cube = sfcgal_primitive_create(SFCGAL_TYPE_CUBE);
 
+  sfcgal_primitive_type_t type = sfcgal_primitive_type_id(cube);
+  BOOST_CHECK_EQUAL(type, SFCGAL_TYPE_CUBE);
+
   // checks parameter list
   char  *params;
   size_t paramsLen;
@@ -2396,6 +2415,9 @@ BOOST_AUTO_TEST_CASE(testConeTest)
   sfcgal_set_error_handlers(printf, on_error);
 
   sfcgal_primitive_t *cone = sfcgal_primitive_create(SFCGAL_TYPE_CONE);
+
+  sfcgal_primitive_type_t type = sfcgal_primitive_type_id(cone);
+  BOOST_CHECK_EQUAL(type, SFCGAL_TYPE_CONE);
 
   // checks parameter list
   char  *params;

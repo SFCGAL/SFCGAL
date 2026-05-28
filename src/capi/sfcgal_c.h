@@ -2713,13 +2713,23 @@ typedef void sfcgal_primitive_t;
  * @ingroup capi
  */
 typedef enum {
-  SFCGAL_TYPE_BOX = 0,
+  SFCGAL_TYPE_INVALID = -1,
+  SFCGAL_TYPE_BOX     = 0,
   SFCGAL_TYPE_CONE,
   SFCGAL_TYPE_CUBE,
   SFCGAL_TYPE_CYLINDER,
   SFCGAL_TYPE_SPHERE,
   SFCGAL_TYPE_TORUS
 } sfcgal_primitive_type_t;
+
+/**
+ * Returns the type of a given primtive
+ * @param primitive the input primitive
+ * @return the type of primitive
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_primitive_type_t
+sfcgal_primitive_type_id(const sfcgal_primitive_t *primitive);
 
 /**
  * @brief Creates a new primitive of the specified type with default parameters.
