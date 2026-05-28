@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(testBuffer3D_LShape)
   // Test 90-degree bend (L-shape)
   double              radius   = 1.0;
   int                 segments = 8;
-  std::vector<Point>  points   = {Point(0, 0, 0), Point(5, 0, 0), Point(5, 5, 0)};
+  std::vector<Point>  points = {Point(0, 0, 0), Point(5, 0, 0), Point(5, 5, 0)};
   LineString          lineString(points);
   algorithm::Buffer3D buffer3d(lineString, radius, segments);
 
@@ -253,18 +253,16 @@ BOOST_AUTO_TEST_CASE(testBuffer3D_LShape)
   // Verify proper RMF frame propagation through the corner
   std::string wkt = buffer->asText(1);
   BOOST_CHECK(wkt.find("POLYHEDRALSURFACE Z") != std::string::npos);
-
-
 }
 
 BOOST_AUTO_TEST_CASE(testBuffer3D_UShape)
 {
   // Test U-bend (two 90-degree turns)
-  double             radius   = 1.0;
-  int                segments = 8;
-  std::vector<Point> points   = {Point(0, 0, 0), Point(5, 0, 0), Point(5, 5, 0),
-                                 Point(0, 5, 0)};
-  LineString         lineString(points);
+  double              radius   = 1.0;
+  int                 segments = 8;
+  std::vector<Point>  points = {Point(0, 0, 0), Point(5, 0, 0), Point(5, 5, 0),
+                                Point(0, 5, 0)};
+  LineString          lineString(points);
   algorithm::Buffer3D buffer3d(lineString, radius, segments);
 
   std::unique_ptr<PolyhedralSurface> buffer =
@@ -276,8 +274,6 @@ BOOST_AUTO_TEST_CASE(testBuffer3D_UShape)
   // Verify RMF propagates correctly through two corners
   std::string wkt = buffer->asText(1);
   BOOST_CHECK(wkt.find("POLYHEDRALSURFACE Z") != std::string::npos);
-
-
 }
 
 BOOST_AUTO_TEST_CASE(testBuffer3D_VerticalLine)
@@ -305,10 +301,10 @@ BOOST_AUTO_TEST_CASE(testBuffer3D_NearVerticalLine)
 {
   // Test near-singularity case: line nearly parallel to (0,0,1)
   // This ensures RMF handles small angles correctly
-  double             radius   = 1.0;
-  int                segments = 8;
-  std::vector<Point> points   = {Point(0, 0, 0), Point(0.01, 0.01, 10)};
-  LineString         lineString(points);
+  double              radius   = 1.0;
+  int                 segments = 8;
+  std::vector<Point>  points   = {Point(0, 0, 0), Point(0.01, 0.01, 10)};
+  LineString          lineString(points);
   algorithm::Buffer3D buffer3d(lineString, radius, segments);
 
   std::unique_ptr<PolyhedralSurface> buffer =
@@ -329,7 +325,7 @@ BOOST_AUTO_TEST_CASE(testBuffer3D_Helix)
   std::vector<Point> points;
 
   // Generate a helix with 3 turns
-  int    num_turns = 3;
+  int    num_turns           = 3;
   int    num_points_per_turn = 8;
   double helix_radius        = 2.0;
   double height_per_turn     = 5.0;
@@ -355,18 +351,16 @@ BOOST_AUTO_TEST_CASE(testBuffer3D_Helix)
   // This was the main failure case with the old fixed-frame approach
   std::string wkt = buffer->asText(1);
   BOOST_CHECK(wkt.find("POLYHEDRALSURFACE Z") != std::string::npos);
-
-
 }
 
 BOOST_AUTO_TEST_CASE(testBuffer3D_SharpAngle)
 {
   // Test sharp angle (120 degrees) - ensures RMF handles large rotations
-  double             radius   = 1.0;
-  int                segments = 8;
-  std::vector<Point> points   = {Point(0, 0, 0), Point(5, 0, 0),
-                                 Point(2.5, 4.33, 0)}; // 120 degree angle
-  LineString         lineString(points);
+  double              radius   = 1.0;
+  int                 segments = 8;
+  std::vector<Point>  points   = {Point(0, 0, 0), Point(5, 0, 0),
+                                  Point(2.5, 4.33, 0)}; // 120 degree angle
+  LineString          lineString(points);
   algorithm::Buffer3D buffer3d(lineString, radius, segments);
 
   std::unique_ptr<PolyhedralSurface> buffer =
@@ -375,7 +369,8 @@ BOOST_AUTO_TEST_CASE(testBuffer3D_SharpAngle)
   BOOST_CHECK(buffer->is3D());
   BOOST_CHECK(buffer->numGeometries() > 0);
 
-  // Sharp angle test: RMF should propagate smoothly even with large angle change
+  // Sharp angle test: RMF should propagate smoothly even with large angle
+  // change
   std::string wkt = buffer->asText(1);
   BOOST_CHECK(wkt.find("POLYHEDRALSURFACE Z") != std::string::npos);
 }
@@ -383,11 +378,11 @@ BOOST_AUTO_TEST_CASE(testBuffer3D_SharpAngle)
 BOOST_AUTO_TEST_CASE(testBuffer3D_CollinearSegments)
 {
   // Test collinear consecutive segments - RMF should detect zero rotation
-  double             radius   = 1.0;
-  int                segments = 8;
-  std::vector<Point> points   = {Point(0, 0, 0), Point(2, 0, 0), Point(5, 0, 0),
-                                 Point(10, 0, 0)};
-  LineString         lineString(points);
+  double              radius   = 1.0;
+  int                 segments = 8;
+  std::vector<Point>  points = {Point(0, 0, 0), Point(2, 0, 0), Point(5, 0, 0),
+                                Point(10, 0, 0)};
+  LineString          lineString(points);
   algorithm::Buffer3D buffer3d(lineString, radius, segments);
 
   std::unique_ptr<PolyhedralSurface> buffer =
@@ -399,18 +394,16 @@ BOOST_AUTO_TEST_CASE(testBuffer3D_CollinearSegments)
   // With collinear points, RMF should maintain constant frame orientation
   std::string wkt = buffer->asText(1);
   BOOST_CHECK(wkt.find("POLYHEDRALSURFACE Z") != std::string::npos);
-
-
 }
 
 BOOST_AUTO_TEST_CASE(testBuffer3D_ZigZag)
 {
   // Test zig-zag pattern - multiple alternating direction changes
-  double             radius   = 0.5;
-  int                segments = 8;
-  std::vector<Point> points   = {Point(0, 0, 0), Point(2, 2, 0), Point(4, 0, 0),
-                                 Point(6, 2, 0), Point(8, 0, 0)};
-  LineString         lineString(points);
+  double              radius   = 0.5;
+  int                 segments = 8;
+  std::vector<Point>  points = {Point(0, 0, 0), Point(2, 2, 0), Point(4, 0, 0),
+                                Point(6, 2, 0), Point(8, 0, 0)};
+  LineString          lineString(points);
   algorithm::Buffer3D buffer3d(lineString, radius, segments);
 
   std::unique_ptr<PolyhedralSurface> buffer =
@@ -422,8 +415,6 @@ BOOST_AUTO_TEST_CASE(testBuffer3D_ZigZag)
   // Zig-zag tests frame propagation through multiple alternating bends
   std::string wkt = buffer->asText(1);
   BOOST_CHECK(wkt.find("POLYHEDRALSURFACE Z") != std::string::npos);
-
-
 }
 
 BOOST_AUTO_TEST_CASE(testBuffer3D_3DSpiral)
@@ -457,8 +448,6 @@ BOOST_AUTO_TEST_CASE(testBuffer3D_3DSpiral)
   // Both curvature and torsion vary continuously
   std::string wkt = buffer->asText(1);
   BOOST_CHECK(wkt.find("POLYHEDRALSURFACE Z") != std::string::npos);
-
-
 }
 
 // Phase 3 robustness tests
