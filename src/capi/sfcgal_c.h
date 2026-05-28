@@ -2319,7 +2319,7 @@ sfcgal_geometry_centroid_3d(const sfcgal_geometry_t *geom);
  * @param geom2 second input geometry
  * @pre isValid(geom) == true
  * @post isValid(return) == true
- * @return 1 if geometries are almost equal. 0 otherwise.
+ * @return 1 if geometries are equal. 0 otherwise.
  * @ingroup capi
  */
 SFCGAL_API int
