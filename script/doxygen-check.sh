@@ -64,10 +64,12 @@ for f in $CHANGED_FILES; do
 
         # If it's a '.cpp' or '.c' file, add the corresponding '.h' file if it exists and it's not in the list
         if [[ "$f" =~ \.cpp$ ]] || [[ "$f" =~ \.c$ ]]; then
-            header="${f%.*}.h"
-            if [ -f "$header" ] && [[ ! " ${FILES_TO_CHECK[@]} " =~ " $header " ]]; then
-                FILES_TO_CHECK+=("$header")
-            fi
+            for ext in h hpp; do
+                header="${f%.*}.$ext"
+                if [ -f "$header" ] && [[ ! " ${FILES_TO_CHECK[@]} " =~ " $header " ]]; then
+                    FILES_TO_CHECK+=("$header")
+                fi
+            done
         fi
     fi
 done
