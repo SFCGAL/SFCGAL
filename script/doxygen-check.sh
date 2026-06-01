@@ -50,7 +50,12 @@ CHANGED_FILES=$(echo $CHANGED_FILES | sed '/^[\s\n\r]*$/d')
 # 2. for all the '.cpp' and '.c' files, add the corresponding '.h' file, if it exists and it's not already in the list
 # This ensures that doxygen does not return errors on '.cpp' or '.c' file because the documentation is in the header file.
 declare -a FILES_TO_CHECK
+primitive3d_changed=false
 for f in $CHANGED_FILES; do
+    if [[ "$f" =~ ^src/primitive3d/ ]]; then
+        primitive3d_changed=true
+    fi
+
     if [[ "$f" =~ \.cpp$ ]] || [[ "$f" =~ \.c$ ]] || [[ "$f" =~ \.hpp$ ]] || [[ "$f" =~ \.h$ ]]; then
         # Add the file if it's not already in the list
         if [[ ! " ${FILES_TO_CHECK[@]} " =~ " $f " ]]; then
@@ -66,6 +71,17 @@ for f in $CHANGED_FILES; do
         fi
     fi
 done
+
+# some primitive files use the @copydoc directive
+# In that case, they need the primitive.h file
+if $primitive3d_changed; then
+    for extra in src/primitive3d/Primitive.h; do
+        if [ -f "$extra" ] && [[ ! " ${FILES_TO_CHECK[@]} " =~ " $extra " ]]; then
+            FILES_TO_CHECK+=("$extra")
+        fi
+    done
+fi
+
 CHANGED_FILES="${FILES_TO_CHECK[@]}"
 
 # exit if nothing to do
