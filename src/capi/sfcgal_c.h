@@ -1875,6 +1875,12 @@ sfcgal_geometry_straight_skeleton_distance_in_m(const sfcgal_geometry_t *geom);
 
 /**
  * Returns the extrude straight skeleton of the given SFCGAL::Polygon
+ *
+ * This algorithm constructs an extrusion with a 45-degree pitch and a maximum
+ * height of height. The height rises until either the extrusion faces meet or
+ * the height reaches height, whichever occurs first. Therefore, height is not
+ * guaranteed to be reached.
+ *
  * @param geom the input geometry
  * @param height extrusion height
  * @pre geom must be a SFCGAL::Polygon
@@ -1893,6 +1899,12 @@ sfcgal_geometry_extrude_straight_skeleton(const sfcgal_geometry_t *geom,
  * Returns the union of the polygon z-extrusion (with respect to
  * building_height) and the extrude straight skeleton (with respect to
  * roof_height) of the given SFCGAL::Polygon
+ *
+ * This algorithm constructs a roof with a 45-degree pitch and a maximum height
+ * of roof_height. The roof rises until either the roof faces meet or the height
+ * reaches roof_height, whichever occurs first. Therefore, roof_height is not
+ * guaranteed to be reached.
+ *
  * @param geom the input geometry
  * @param building_height extrusion height of walls
  * @param roof_height extrusion height of roof
@@ -1932,6 +1944,12 @@ sfcgal_geometry_extrude_straight_skeleton_with_angles(
  * Returns the union of the polygon z-extrusion (with respect to
  * building_height) and the extrude straight skeleton (with respect to
  * roof_height) of the given SFCGAL::Polygon, with custom per-edge angles.
+ *
+ * This algorithm constructs a roof with custom slopes and a maximum height
+ * of roof_height. The roof rises until either the roof faces meet or the height
+ * reaches roof_height, whichever occurs first. Therefore, roof_height is not
+ * guaranteed to be reached.
+ *
  * @param geom the input geometry
  * @param building_height extrusion height of walls
  * @param roof_height extrusion height of roof
@@ -1976,6 +1994,12 @@ sfcgal_geometry_extrude_straight_skeleton_with_weights(
  * Returns the union of the polygon z-extrusion (with respect to
  * building_height) and the extrude straight skeleton (with respect to
  * roof_height) of the given SFCGAL::Polygon, with custom per-edge weights.
+ *
+ * This algorithm constructs a roof with custom edge weights and a maximum
+ * height of roof_height. The roof rises until either the roof faces meet or the
+ * height reaches roof_height, whichever occurs first. Therefore, roof_height is
+ * not guaranteed to be reached.
+ *
  * @param geom the input geometry
  * @param building_height extrusion height of walls
  * @param roof_height extrusion height of roof
