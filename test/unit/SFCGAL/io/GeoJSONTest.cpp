@@ -247,6 +247,38 @@ BOOST_AUTO_TEST_CASE(testReadPolyhedralSurfaceExtension)
   BOOST_CHECK_EQUAL(polyhedralSurface.numPatches(), 2U);
 }
 
+BOOST_AUTO_TEST_CASE(testReadSolidExtension)
+{
+  std::string const         json = R"({
+        "type": "Solid",
+        "coordinates": [[
+            [[[0,0,0], [1,0,0], [1,1,0], [0,1,0], [0,0,0]]],
+            [[[0,0,1], [1,0,1], [1,1,1], [0,1,1], [0,0,1]]]
+        ]]
+    })";
+  std::unique_ptr<Geometry> g    = readGeoJSON(json);
+
+  BOOST_CHECK(g->is<Solid>());
+  const auto &solid = g->as<Solid>();
+  BOOST_CHECK_EQUAL(solid.numGeometries(), 1U);
+}
+
+BOOST_AUTO_TEST_CASE(testReadMultiSolidExtension)
+{
+  std::string const         json = R"({
+        "type": "MultiSolid",
+        "coordinates": [[[
+            [[[0,0,0], [1,0,0], [1,1,0], [0,1,0], [0,0,0]]],
+            [[[0,0,1], [1,0,1], [1,1,1], [0,1,1], [0,0,1]]]
+        ]]]
+    })";
+  std::unique_ptr<Geometry> g    = readGeoJSON(json);
+
+  BOOST_CHECK(g->is<MultiSolid>());
+  const auto &multiSolid = g->as<MultiSolid>();
+  BOOST_CHECK_EQUAL(multiSolid.numGeometries(), 1U);
+}
+
 BOOST_AUTO_TEST_CASE(testReadPreparedWithCRS)
 {
   std::string const                 json     = R"({

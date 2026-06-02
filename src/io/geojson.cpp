@@ -198,6 +198,16 @@ parseSolid(const nlohmann::json &coords) -> std::unique_ptr<Solid>
   return solid;
 }
 
+auto
+parseMultiSolid(const nlohmann::json &coords) -> std::unique_ptr<MultiSolid>
+{
+  auto multiSolid = std::make_unique<MultiSolid>();
+  for (const auto &solidCoords : coords) {
+    multiSolid->addGeometry(parseSolid(solidCoords));
+  }
+  return multiSolid;
+}
+
 // Forward declaration for recursive parsing
 auto
 parseGeometryObject(const nlohmann::json &json) -> std::unique_ptr<Geometry>;
@@ -269,6 +279,9 @@ parseGeometryObject(const nlohmann::json &json) -> std::unique_ptr<Geometry>
   }
   if (type == "Solid") {
     return parseSolid(coords);
+  }
+  if (type == "MultiSolid") {
+    return parseMultiSolid(coords);
   }
 
   throw std::runtime_error("Unknown geometry type: " + type);
