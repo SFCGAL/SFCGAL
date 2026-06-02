@@ -80,6 +80,8 @@ struct ChamferOptions {
  * - Reflex (concave) edges are skipped.
  * - Both incident faces must be planar.
  * - The radius must be small enough that the cutter fits within the faces.
+ * - Edges spanning multiple continuous segments on non-axis-aligned geometries
+ * may fail.
  *
  * @param solid Input 3D Solid or PolyhedralSurface.
  * @param edge LineString or MultiLineString coinciding with solid edges.
