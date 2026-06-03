@@ -57,6 +57,7 @@ BOOST_AUTO_TEST_CASE(testSplit_Cube)
     std::getline(ifs, expectedWkt);
 
     const std::unique_ptr<Geometry> expectedGeom = io::readWkt(expectedWkt);
+    std::cout << "RESULT CUBE " << phsSplit->geometryN(i).asText(6) << "\n";
     BOOST_CHECK(algorithm::covers3D(phsSplit->geometryN(i), *expectedGeom));
   }
 }
