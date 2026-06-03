@@ -136,6 +136,6 @@ createRing(const Surface_mesh_3                            &mesh,
   ring.closes();
 
   return sum * faceNormal;
-};
+}
 
 } // namespace SFCGAL::detail::algorithm
