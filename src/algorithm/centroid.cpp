@@ -254,7 +254,7 @@ weightedCentroid(const MultiPoint &multipoint) -> WeightedCentroid
   totalM /= totalPoints;
 
   return {0 /* Empty area, by definition of points */, totalCentroid, totalM};
-};
+}
 
 /// @private
 auto
