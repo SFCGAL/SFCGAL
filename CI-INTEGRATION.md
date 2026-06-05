@@ -65,17 +65,6 @@
 
 ### 😺 GitHub CI
 
-#### 🔄 Cirrus CI
-| Platform | Badge | Environment |
-|:---------|:------|:------------|
-| Cirrus CI | [![Cirrus pipeline status](https://api.cirrus-ci.com/github/Oslandia/SFCGAL_CI.svg)](http://cirrus-ci.com/github/Oslandia/SFCGAL_CI) | Multiple Environments |
-
-| Environment | Compiler | CGAL Version |
-|:------------|:---------|:-------------|
-| 🍎 macOS | AppleClang | CGAL System* |
-| 😈 FreeBSD 14.2 | Clang | CGAL 6.1 |
-| 😈 FreeBSD 15.0 | Clang | CGAL 6.1 |
-
 #### 🔄 GitHub Actions
 
 ##### 🔍 CodeQL Analysis
