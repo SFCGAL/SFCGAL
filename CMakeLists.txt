@@ -441,7 +441,7 @@ endif()
 
 
 #-- Option to build the command-line interface
-option(SFCGAL_BUILD_CLI "Build the SFCGAL command-line interface tool" ON)
+option(SFCGAL_BUILD_CLI "Build the SFCGAL command-line interface tool" OFF)
 if(SFCGAL_BUILD_CLI)
     add_subdirectory(sfcgalop)
 endif()
