@@ -1,33 +1,15 @@
 #SFCGALOP - SFCGAL Geometry Operations CLI
 
-A command-line interface for performing geometric operations using the SFCGAL library.
+A command-line interface for performing geometric operations using the SFCGAL library largely inspired by geosop.
 
 ## Features
 
-- **50+ Geometric Operations**: Comprehensive support for 2D and 3D operations
-- **Terminal UI**: Unicode box-drawing tables with color support
-- **Multiple Input/Output Formats**: WKT, WKB support
-- **Robust Error Handling**: Detailed validation messages using SFCGAL's validation engine
-- **Cross-Platform**: Works on Linux, macOS, FreeBSD, and Windows
-
 ## Building
-
-### Requirements
-
-- C++17 compatible compiler
-- CMake 3.10+
-- SFCGAL library (>= 1.5.0)
-- CGAL (>= 5.6)
-- Boost (>= 1.69)
-- GMP and MPFR libraries
 
 ### Build Instructions
 
 ```bash
-mkdir build
-cd build
-cmake ..
-make -j8
+cmake ... -DSFCGAL_BUILD_CLI=ON
 ```
 
 ## Usage
@@ -42,16 +24,25 @@ sfcgalop [options] -a <WKT/WKB> [-b <WKT/WKB>] [operation] [params]
 
 ### Options
 
-- `-a, --geom-a <WKT/WKB>` : First geometry (required, use "stdin" to read from stdin)
-- `-b, --geom-b <WKT/WKB>` : Second geometry (for binary operations, use "stdin" to read from stdin)
-- `--validate` : Validate input geometries before operation
-- `-f, --format <fmt>` : Output format (wkt, wkb, txt/ewkt, obj, stl, vtk)
-- `--precision <n>` : Output precision (decimal places)
-- `--list` : List all available operations
-- `--help` : Show help message
-- `--help-op <op>` : Detailed help for specific operation
-- `-t, --time` : Show execution time
-- `-v, --verbose` : Verbose output
+```
+   Option                       Description
+   -a, --geom-a=ARG             Source for geometry A (WKT, WKB, file, stdin)
+   -b, --geom-b=ARG             Source for geometry B (WKT, WKB, file, stdin)
+   -f, --format=ARG             Output format: wkt, wkb, txt/ewkt, obj, geojson/json, stl, vtk (default: wkt)
+   -p, --precision=N            Decimal precision for output (default: 6)
+
+   Output Control:
+   -q, --quiet                  Disable result output
+   -t, --time                   Print execution time
+   -v, --verbose                Verbose output
+   -l, --list                   List all available operations
+   --validate                   Validate geometries before operations
+
+   Information:
+   -h, --help                   Show this help message
+   -V, --version                Show version information
+   --help-op=OPERATION          Show help for a specific opera
+```
 
 ### Examples
 
@@ -75,7 +66,7 @@ sfcgalop -a "POINT(0 0)" -b "POINT(3 4)" distance
 sfcgalop --validate \
   -a "POLYGON((0 0, 4 0, 4 4, 0 4, 0 0))" \
   -b "POLYGON((2 2, 6 2, 6 6, 2 6, 2 2))" \
-  intersection
+  intersection -p 0
 #Output : POLYGON((2 2, 2 4, 4 4, 4 2, 2 2))
 ```
 
@@ -114,7 +105,8 @@ sfcgalop -a "TIN Z (((0 0 0, 0 0 1, 0 1 0, 0 0 0)), ((0 0 0, 0 1 0, 1 0 0, 0 0 0
 #### Display geometry from file
 
 ```bash
-sfcgalop -a geometry.wkt
+echo "POINT(0 0)" > /tmp/geometry.wkt
+sfcgalop -a /tmp/geometry.wkt
 #Output : Geometry displayed in WKT format
 ```
 
@@ -132,89 +124,146 @@ sfcgalop -a "SOLID((((0 0 0, 0 1 0, 1 1 0, 1 0 0, 0 0 0)),
 
 ## Available Operations
 
-### Metrics
-- `area` - Calculate the 2D area of a geometry
-- `area3d` - Calculate the 3D surface area of a geometry
-- `volume` - Calculate the 3D volume of a solid geometry
-- `length` - Calculate the 2D length of linear geometries
-- `length3d` - Calculate the 3D length of linear geometries
-- `distance` - Calculate the 2D minimum distance between two geometries
-- `distance3d` - Calculate the 3D minimum distance between two geometries
+Use `sfcgalop --list` to list all operations
 
-### Predicates
-- `intersects` - Test if two geometries intersect in 2D
-- `intersects3d` - Test if two geometries intersect in 3D
-- `covers` - Test if geometry A completely covers geometry B
-- `is_valid` - Test if geometry is topologically valid
-- `is_simple` - Test if geometry has no self-intersections
-- `is_closed` - Test if linear geometry forms a closed ring
-- `is_3d` - Test if geometry has Z coordinates
-- `is_measured` - Test if geometry has measure (M) coordinates
-- `is_empty` - Test if geometry contains no points
+```
+╔══════════════════════════════════════════════════════════════╗
+║                 SFCGAL Available Operations                  ║
+╚══════════════════════════════════════════════════════════════╝
 
-### Set Operations
-- `intersection` - Compute the geometric intersection of two geometries
-- `intersection3d` - Compute the 3D geometric intersection of two geometries
-- `difference` - Compute geometry A minus geometry B
-- `difference3d` - Compute 3D geometry A minus geometry B
-- `union` - Compute the geometric union of two geometries
-- `union3d` - Compute the 3D geometric union of two geometries
+╭───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                   Complete Operations Reference                                                   │
+├──────────────────────────────────────┬──────────────┬──────────┬──────────────────────────────────────────────────────────────────┤
+│ Operation                            │ Input        │ Output   │ Description                                                      │
+├──────────────────────────────────────┼──────────────┼──────────┼──────────────────────────────────────────────────────────────────┤
+│ ▶ Analysis                           │              │          │                                                                  │
+│   normal                             │ A            │ G        │ Compute surface normal vector for polygon/triangle               │
+│   orientation                        │ A            │ D        │ Determine polygon ring orientation (clockwise/counter-clockwise) │
+│   partition                          │ A, params    │ G        │ Partition polygon into simpler pieces                            │
+│   visibility                         │ A, params    │ G        │ Compute visibility polygon from a point in polygon               │
+│                                      │              │          │                                                                  │
+│ ▶ Collections                        │              │          │                                                                  │
+│   collect                            │ A, B         │ G        │ Combine two geometries into a collection                         │
+│   collection_extract                 │ A            │ G        │ Extract polygons from geometry collection                        │
+│   collection_homogenize              │ A            │ G        │ Convert collection to appropriate multi-type                     │
+│   collection_to_multi                │ A            │ G        │ Convert collection to multi-geometry type                        │
+│                                      │              │          │                                                                  │
+│ ▶ Construction                       │              │          │                                                                  │
+│   alpha_shapes                       │ A, params    │ G        │ Compute alpha shapes from point cloud                            │
+│   alpha_wrapping_3d                  │ A, params    │ G        │ Create 3D alpha wrapping surface from points                     │
+│   boundary                           │ A            │ G        │ Compute the topological boundary of a geometry                   │
+│   buffer_3d                          │ A, params    │ G        │ Create a 3D buffer around points and lines                       │
+│   centroid                           │ A            │ G        │ Compute the geometric centroid of a geometry                     │
+│   centroid_3d                        │ A            │ G        │ Compute the geometric centroid of a 3D geometry                  │
+│   convex_hull                        │ A            │ G        │ Compute the 2D convex hull of a geometry                         │
+│   constrained_delaunay_triangulation │ A, B         │ G        │ Compute Constrained Delaunay Triangulation of a geometry         │
+│   convex_hull_3d                     │ A            │ G        │ Compute the 3D convex hull of a geometry                         │
+│   delaunay_triangulation             │ A            │ G        │ Compute Delaunay Triangulation of a geometry                     │
+│   envelope                           │ A            │ G        │ Compute the minimum bounding rectangle                           │
+│   extrude                            │ A, params    │ G        │ Extrude a 2D geometry to create a 3D solid                       │
+│   extrude_straight_skeleton          │ A, params    │ G        │ Extrude a polygon using straight skeleton                        │
+│   generate_flat_roof                 │ A, params    │ G        │ Generate a flat roof from a polygon                              │
+│   generate_gable_roof                │ A, params    │ G        │ Generate a gable roof from a polygon                             │
+│   generate_hipped_roof               │ A, params    │ G        │ Generate a hipped roof from a polygon                            │
+│   generate_roof                      │ A, params    │ G        │ Generate a roof from a polygon using a specified type            │
+│   generate_skillion_roof             │ A, params    │ G        │ Generate a skillion (mono-pitch) roof from a polygon             │
+│   insert_points_within_tolerance     │ A, B, params │ G        │ Insert points from geometry B into geometry A within tolerance   │
+│   line_substring                     │ A, params    │ G        │ Extract substring from linestring by fraction                    │
+│   medial_axis                        │ A, params    │ G        │ Compute the approximate medial axis of a polygon                 │
+│   minkowski_sum                      │ A, B         │ G        │ Compute Minkowski sum of two geometries                          │
+│   minkowski_sum_3d                   │ A, B         │ G        │ Compute 3D Minkowski sum of two geometries                       │
+│   offset                             │ A, params    │ G        │ Create an offset polygon at specified distance                   │
+│   straight_skeleton                  │ A, params    │ G        │ Compute the straight skeleton of a polygon                       │
+│   tessellate                         │ A            │ G        │ Tessellate a geometry into triangular faces                      │
+│   triangulate                        │ A            │ G        │ Triangulate a geometry (alias for tessellate)                    │
+│   sweep                              │ A, B, params │ G        │ Sweep a 2D profile along a 3D path to create a 3D surface        │
+│                                      │              │          │                                                                  │
+│ ▶ Constructors                       │              │          │                                                                  │
+│   make_box                           │ params       │ G        │ Create a 3D box primitive                                        │
+│   make_cone                          │ params       │ G        │ Create a 3D cone primitive (supports truncated cones)            │
+│   make_cube                          │ params       │ G        │ Create a 3D cube primitive                                       │
+│   make_cylinder                      │ params       │ G        │ Create a 3D cylinder primitive                                   │
+│   make_sphere                        │ params       │ G        │ Create a 3D sphere primitive using icosahedron subdivision       │
+│   make_torus                         │ params       │ G        │ Create a 3D torus primitive                                      │
+│                                      │              │          │                                                                  │
+│ ▶ Conversions                        │              │          │                                                                  │
+│   to_solid                           │ A            │          │ Convert a PolyhedralSurface to a Solid                           │
+│                                      │              │          │                                                                  │
+│ ▶ Metrics                            │              │          │                                                                  │
+│   area                               │ A            │ D        │ Calculate the 2D area of a geometry                              │
+│   area_3d                            │ A            │ D        │ Calculate the 3D surface area of a geometry                      │
+│   distance                           │ A, B         │ D        │ Calculate the 2D minimum distance between two geometries         │
+│   distance_3d                        │ A, B         │ D        │ Calculate the 3D minimum distance between two geometries         │
+│   length                             │ A            │ D        │ Calculate the 2D length of linear geometries                     │
+│   length_3d                          │ A            │ D        │ Calculate the 3D length of linear geometries                     │
+│   volume                             │ A            │ D        │ Calculate the 3D volume of a solid geometry                      │
+│                                      │              │          │                                                                  │
+│ ▶ Predicates                         │              │          │                                                                  │
+│   covers                             │ A, B         │ B        │ Test if geometry A completely covers geometry B                  │
+│   intersects                         │ A, B         │ B        │ Test if two geometries intersect in 2D                           │
+│   intersects_3d                      │ A, B         │ B        │ Test if two geometries intersect in 3D                           │
+│   is_3d                              │ A            │ B        │ Test if geometry has Z coordinates                               │
+│   is_closed                          │ A            │ B        │ Test if linear geometry forms a closed ring                      │
+│   is_empty                           │ A            │ B        │ Test if geometry contains no points                              │
+│   is_measured                        │ A            │ B        │ Test if geometry has measure (M) coordinates                     │
+│   is_simple                          │ A            │ B        │ Test if geometry has no self-intersections                       │
+│   is_valid                           │ A            │ B        │ Test if geometry is topologically valid                          │
+│                                      │              │          │                                                                  │
+│ ▶ Processing                         │              │          │                                                                  │
+│   chamfer                            │ B            │          │ Apply a chamfer or fillet operation to a solid along an edge     │
+│                                      │              │          │                                                                  │
+│ ▶ Set Operations                     │              │          │                                                                  │
+│   difference                         │ A, B         │ G        │ Compute geometry A minus geometry B                              │
+│   difference_3d                      │ A, B         │ G        │ Compute 3D geometry A minus geometry B                           │
+│   intersection                       │ A, B         │ G        │ Compute the geometric intersection of two geometries             │
+│   intersection_3d                    │ A, B         │ G        │ Compute the 3D geometric intersection of two geometries          │
+│   union                              │ A, B         │ G        │ Compute the geometric union of two geometries                    │
+│   union_3d                           │ A, B         │ G        │ Compute the 3D geometric union of two geometries                 │
+│                                      │              │          │                                                                  │
+│ ▶ Transformations                    │              │          │                                                                  │
+│   force_2d                           │ A            │ G        │ Remove Z coordinates to create 2D geometry                       │
+│   force_3d                           │ A, params    │ G        │ Add Z coordinates to create 3D geometry                          │
+│   force_measured                     │ A, params    │ G        │ Add measure coordinates to geometry                              │
+│   force_lhr                          │ A            │ G        │ Force a Left Handed Rule on the given Geometry                   │
+│   force_rhr                          │ A            │ G        │ Force a Right Handed Rule on the given Geometry                  │
+│   rotate                             │ A, params    │ G        │ Rotate geometry around specified axis                            │
+│   scale                              │ A, params    │ G        │ Scale geometry by specified factors                              │
+│   simplify                           │ A, params    │ G        │ Simplify geometry by removing vertices within tolerance          │
+│   split_3d                           │ A, params    │ G        │ Split geometry with a plane                                      │
+│   surface_simplification             │ A, params    │ G        │ Simplify a 3D surface mesh using edge collapse                   │
+│   translate                          │ A, params    │ G        │ Translate geometry by specified offset                           │
+╰──────────────────────────────────────┴──────────────┴──────────┴──────────────────────────────────────────────────────────────────╯
 
-### Construction
-- `boundary` - Compute the topological boundary of a geometry
-- `envelope` - Compute the minimum bounding rectangle
-- `convexhull` - Compute the 2D convex hull of a geometry
-- `convexhull3d` - Compute the 3D convex hull of a geometry
-- `centroid` - Compute the geometric centroid of a geometry
-- `straightskeleton` - Compute the straight skeleton of a polygon
-- `extrude` - Extrude a 2D geometry to create a 3D solid
-- `tessellate` - Tessellate a geometry into triangular faces
-- `triangulate` - Triangulate a geometry (alias for tessellate)
-- `offset` - Create an offset polygon at specified distance
-- `buffer3d` - Create a 3D buffer around points and lines
-- `minkowskisum` - Compute Minkowski sum of two geometries
-- `minkowskisum3d` - Compute 3D Minkowski sum of two geometries
-- `alphashapes` - Compute alpha shapes from point cloud
-- `alphawrapping3d` - Create 3D alpha wrapping surface from points
-- `linesubstring` - Extract substring from linestring by fraction
+ℹ Use --help-op=<operation> for detailed help on a specific operation
+```
 
-### Transformations
-- `translate` - Translate geometry by specified offset (params: dx dy [dz])
-- `rotate` - Rotate geometry around Z-axis by angle (params: angle [cx cy])
-- `scale` - Scale geometry by specified factors (params: sx [sy [sz]])
-- `force2d` - Remove Z coordinates to create 2D geometry
-- `force3d` - Add Z coordinates to create 3D geometry (params: [z_value])
-- `forcemeasured` - Add measure coordinates to geometry (params: [m_value])
-- `simplify` - Simplify geometry by removing vertices within tolerance (params: tolerance)
-- `polygonRepair` - Repairs invalid polygons using repair's method (params: method)
+### explenation
 
-### Collections
-- `collect` - Combine two geometries into a collection
-- `collection_extract` - Extract polygons from geometry collection
-- `collection_homogenize` - Convert collection to appropriate multi-type
-- `collection_to_multi` - Convert collection to multi-geometry type
+`sfcgalop --help-op=extrude`
 
-### Analysis
-- `orientation` - Determine polygon ring orientation (clockwise/counter-clockwise)
-- `visibility` - Compute visibility polygon from a point in polygon (params: px py)
-- `partition` - Partition polygon into simpler pieces (params: y|x|g|o|2|a)
-- `normal` - Compute surface normal vector for polygon/triangle
+```
+Operation: extrude
+Category: Construction
+Description: Extrude a 2D geometry to create a 3D solid
 
-## Architecture
+Parameters:
+  dx=X: X-axis extrusion distance
+  dy=Y: Y-axis extrusion distance
+  dz=Z: Z-axis extrusion distance (default: 1.0)
 
-### Core Components
+Example:
+  sfcgalop -a "POLYGON((0 0,1 0,1 1,0 1,0 0))" extrude "dx=0,dy=0,dz=2"
+```
 
-- **main.cpp**: Entry point and CLI argument parsing
-- **operations/operations.cpp**: All geometric operations implementation
-- **io.cpp**: Geometry I/O handling (WKT, WKB)
-- **error_handler.cpp**: Validation and error reporting
-- **text_ui.cpp**: Terminal UI with tables and formatting
+Input:
+  - A: Geometry A
+  - B: Geometry B
+  - params: parameters required by the algorithm
 
-### Design Principles
-
-1. **Robust Error Handling**: Detailed validation messages
-2. **Extensible Architecture**: Easy to add new operations
-3. **Cross-Platform Support**: Platform-specific handling isolated
+Output:
+  - G: Geometry
+  - B: boolean (true/false)
+  - D: double (number)
 
 ## Error Handling
 
@@ -242,8 +291,6 @@ SFCGAL uses a normalization system that allows multiple naming conventions for t
 - `line_substring`, `linesubstring`, and `LineSubstring` all refer to the same operation
 - `convex_hull_3d`, `convexhull3d`, and `ConvexHull3D` all refer to the same operation
 
-This approach provides flexibility while maintaining consistency.
-
 ### Canonical Names
 The preferred canonical names follow the underscore convention (e.g., `minkowski_sum`, `alpha_shapes`, `area_3d`).
 The `sfcgalop --list` command displays operations using these canonical names.
@@ -259,15 +306,6 @@ sfcgalop -a "POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))" area3d
 sfcgalop -a "POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))" AREA3D
 # All of these work the same way
 ```
-
-## Contributing
-
-Contributions are welcome! Please follow these guidelines:
-
-1. Use modern C++ features (C++17)
-2. Follow existing code style (use clang-format)
-3. Add tests for new operations
-4. Update documentation
 
 ## License
 
