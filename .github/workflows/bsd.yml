@@ -38,8 +38,13 @@ jobs:
             export CGAL_VERSION=6.2
             curl -L -o CGAL-${CGAL_VERSION}.tar.gz "https://github.com/CGAL/cgal/archive/refs/tags/v${CGAL_VERSION}.tar.gz"
             tar xzf CGAL-${CGAL_VERSION}.tar.gz
+            # From https://github.com/CGAL/cgal/pull/9526
+            curl -L -o bsd_minor.patch https://github.com/CGAL/cgal/commit/827548a844fef7060f3f6f7eefe5f3fff7e516bd.patch
+            cd cgal-${CGAL_VERSION}
+            patch -p1 < ../bsd_minor.patch
+            cd ..
 
-            cmake -GNinja -S . -B build -DSFCGAL_WITH_EIGEN=ON -DSFCGAL_BUILD_TESTS=ON -DCGAL_DIR=cgal-${CGAL_VERSION}
+            cmake -GNinja -S . -B build -DSFCGAL_WITH_EIGEN=ON -DSFCGAL_BUILD_TESTS=ON -DCGAL_DIR=cgal-${CGAL_VERSION} -DCMAKE_CXX_FLAGS="-DCGAL_NO_GDB_AUTOLOAD"
             cmake --build build -j `sysctl -n hw.ncpu`
             ctest -VV --test-dir build
 
