@@ -2367,7 +2367,8 @@ sfcgal_geometry_transform(const sfcgal_geometry_t *geom,
   const auto *g = reinterpret_cast<const SFCGAL::Geometry *>(geom);
   std::unique_ptr<SFCGAL::Geometry> gb = g->clone();
 
-  // row by row
+  // matrix4x4 is column-major
+  // Aff_transformation_3 expects row-major, so read (col*4)+row to transpose
   CGAL::Aff_transformation_3<SFCGAL::Kernel> transf{
       SFCGAL::Kernel::FT(matrix4x4[(0 * 4) + 0]),
       SFCGAL::Kernel::FT(matrix4x4[(1 * 4) + 0]),
