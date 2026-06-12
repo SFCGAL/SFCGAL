@@ -54,6 +54,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 .venv
-# mkdocs
+# properdocs
 .cache
 website/site

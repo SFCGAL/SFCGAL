@@ -23,7 +23,7 @@ doc:build:
     - python -m pip install -U -r requirements/website.txt
   script:
     - export PYTHONPATH=$(pwd)
-    - cd website && mkdocs build --verbose
+    - cd website && properdocs build --verbose
   artifacts:
     name: documentation
     expose_as: "built_documentation"

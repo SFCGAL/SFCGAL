@@ -3,7 +3,7 @@ repo_name: "SFCGAL"
 repo_url: "https://gitlab.com/sfcgal/SFCGAL/"
 
 theme:
-  name: material
+  name: materialx
   features:
     - navigation.hide
     - navigation.instant
