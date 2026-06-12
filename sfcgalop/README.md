@@ -212,7 +212,7 @@ Use `sfcgalop --list` to list all operations
 │ ▶ Processing                         │              │          │                                                                  │
 │   chamfer                            │ B            │          │ Apply a chamfer or fillet operation to a solid along an edge     │
 │                                      │              │          │                                                                  │
-│ ▶ Set Operations                     │              │          │                                                                  │
+│ ▶ Boolean Operations                 │              │          │                                                                  │
 │   difference                         │ A, B         │ G        │ Compute geometry A minus geometry B                              │
 │   difference_3d                      │ A, B         │ G        │ Compute 3D geometry A minus geometry B                           │
 │   intersection                       │ A, B         │ G        │ Compute the geometric intersection of two geometries             │

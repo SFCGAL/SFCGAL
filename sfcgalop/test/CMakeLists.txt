@@ -6,6 +6,7 @@ add_executable(test_sfcgalop
     ../text_ui.cpp
     ../constructors.cpp
     ../operations/operations.cpp
+    ../operations/operations_boolean.cpp
     ../operations/operations_registry.cpp
     ../operations/operations_analysis.cpp
     ../operations/operations_collections.cpp
@@ -15,7 +16,6 @@ add_executable(test_sfcgalop
     ../operations/operations_metrics.cpp
     ../operations/operations_predicates.cpp
     ../operations/operations_processing.cpp
-    ../operations/operations_set.cpp
     ../operations/operations_transformations.cpp
 )
 
