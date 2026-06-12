@@ -38,7 +38,7 @@ homebrew:generate:
     - job: build:macos_clang
       artifacts: true
   variables:
-    SFCGAL_VERSION: "2.3.0"
+    SFCGAL_VERSION: "3.0.0"
   rules:
     # on default branch
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
