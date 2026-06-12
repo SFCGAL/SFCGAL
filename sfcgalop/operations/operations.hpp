@@ -52,9 +52,9 @@ using Operations::print_operation_help;
  * operation that can be executed via the command line interface.
  */
 struct Operation {
-  std::string name; ///< Operation name (e.g., "area", "intersection")
-  std::string
-      category; ///< Category for grouping (e.g., "Metrics", "Set Operations")
+  std::string name;        ///< Operation name (e.g., "area", "intersection")
+  std::string category;    ///< Category for grouping (e.g., "Metrics", "Boolean
+                           ///< Operations")
   std::string description; ///< Short description for operation list
   bool        requires_b;  ///< Whether operation requires a second geometry
   std::string param_help;  ///< Detailed help text with parameters and examples

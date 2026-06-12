@@ -4,6 +4,7 @@
 #include "operations_registry.hpp"
 
 #include "operations_analysis.hpp"
+#include "operations_boolean.hpp"
 #include "operations_collections.hpp"
 #include "operations_construction.hpp"
 #include "operations_constructors.hpp"
@@ -11,7 +12,6 @@
 #include "operations_metrics.hpp"
 #include "operations_predicates.hpp"
 #include "operations_processing.hpp"
-#include "operations_set.hpp"
 #include "operations_transformations.hpp"
 
 namespace {
@@ -33,7 +33,7 @@ build_all_operations() -> std::vector<Operation>
   concat(Operations::operations_metrics);
   concat(Operations::operations_predicates);
   concat(Operations::get_operations_processing());
-  concat(Operations::operations_set);
+  concat(Operations::operations_boolean);
   concat(Operations::operations_transformations);
 
   return ops;

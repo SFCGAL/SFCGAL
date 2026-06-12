@@ -5,6 +5,7 @@ include(CheckCXXCompilerFlag)
 set(SFCGALOP_SOURCES
     main.cpp
     operations/operations.cpp
+    operations/operations_boolean.cpp
     operations/operations_registry.cpp
     operations/operations_analysis.cpp
     operations/operations_collections.cpp
@@ -14,7 +15,6 @@ set(SFCGALOP_SOURCES
     operations/operations_metrics.cpp
     operations/operations_predicates.cpp
     operations/operations_processing.cpp
-    operations/operations_set.cpp
     operations/operations_transformations.cpp
     constructors.cpp
     io.cpp
