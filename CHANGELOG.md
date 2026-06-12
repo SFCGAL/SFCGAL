@@ -6,6 +6,7 @@
 
 Already available in previous version: Cylinder/Sphere via Buffer3D. Version 2.3.0 adds a dedicated framework for all primitives.
 The available primitives are now:
+
 - Cylinder
 - Sphere
 - Box
