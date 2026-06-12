@@ -1,3 +1,6 @@
+import urllib
+import json
+
 def define_env(env):
     """Define variables, macros, and filters.
 
@@ -34,19 +37,12 @@ def define_env(env):
 
     @env.macro
     def get_project_version() -> str:
-        """Retrieve the project version from sonar-project.properties.
-
-        Returns:
-            str: The project version if found, or an error message if the file
-                 cannot be read or the version is not specified.
-        """
-        properties_file = "../sonar-project.properties"
+        url = "https://gitlab.com/api/v4/projects/SFCGAL%2FSFCGAL/releases?per_page=1"
         try:
-            with open(properties_file, "r", encoding="utf-8") as file:
-                for line in file:
-                    if line.startswith("sonar.projectVersion="):
-                        # Extract and return the version number
-                        return line.split("=", 1)[1].strip()
-            return "Version not found in the properties file."
-        except FileNotFoundError:
-            return f"File not found: {properties_file}"
+            with urllib.request.urlopen(url, timeout=5) as response:
+                releases = json.loads(response.read())
+                if releases:
+                    return releases[0]["tag_name"].lstrip("v")
+                return "No release found"
+        except Exception as e:
+            return f"Error fetching version: {e}"
