@@ -23,7 +23,7 @@ apt-get install --yes \
 cmake --version
 
 #CGAL
-wget https://github.com/CGAL/cgal/releases/download/v"$1"/CGAL-"$1".tar.xz || exit 1
+wget --tries=10 --waitretry=5 --timeout=90 --read-timeout=90 https://github.com/CGAL/cgal/releases/download/v"$1"/CGAL-"$1".tar.xz || exit 1
 tar xJf CGAL-"$1".tar.xz || exit 1
 cd CGAL-"$1" && mkdir build && cd build || exit 1
 cmake -DCMAKE_INSTALL_PREFIX="$CI_PROJECT_DIR/CGAL" .. || exit 1
