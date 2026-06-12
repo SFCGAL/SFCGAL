@@ -52,7 +52,7 @@
     - !723: perf(polygonRepair): disable fixOrientation (Loïc Bartoletti)
     - !734: Fix Tesselate typo: use tessellate instead (Jean Felder)
     - !741: Add macros to easily compare CGAL Versions (Jean Felder)
-		- !761: refactor(capi): Improve matrix comment in sfcgal_geometry_transform (Jean Felder)
+    - !761: refactor(capi): Improve matrix comment in sfcgal_geometry_transform (Jean Felder)
 
     ### Bug Fixes
     - !471: Orientation: fix PostGIS issue 3651 using CGAL orientation directly (Loïc Bartoletti)
@@ -186,8 +186,8 @@
     - !753: chore(centroid): Drop extra comma in weightedCentroid (Jean Felder)
     - !754: chore(meshtopolyhedralsurface): Drop extra comma in createRing (Jean Felder)
     - !756: ci: remove cirrus-ci (Loïc Bartoletti)
-		- !762: ci(debian): Improve cgal download timeout (Jean Felder)
-		- !764: refactor(sfcgalop): Rename set operation to boolean operation (Jean Felder)
+    - !762: ci(debian): Improve cgal download timeout (Jean Felder)
+    - !764: refactor(sfcgalop): Rename set operation to boolean operation (Jean Felder)
 
     ### Tests
     - !549: [capi- triangle] improve documentation and add a unit test (Jean Felder)
