@@ -761,7 +761,7 @@ recompose_segments(const typename GeometrySet<Dim>::SegmentCollection &segments,
   boost::graph_traits<Graph>::edge_iterator ei;
   boost::graph_traits<Graph>::edge_iterator ei_end;
 
-  for (boost::tie(ei, ei_end) = boost::edges(g); ei != ei_end; ++ei) {
+  for (std::tie(ei, ei_end) = boost::edges(g); ei != ei_end; ++ei) {
     if (boost::get(boost::edge_color, g)[*ei] == boost::white_color) {
       // not already marked, find the first ancestor with multiple connections,
       // or no connections or self (in case of a loop)
@@ -770,9 +770,9 @@ recompose_segments(const typename GeometrySet<Dim>::SegmentCollection &segments,
         boost::graph_traits<Graph>::in_edge_iterator ej;
         boost::graph_traits<Graph>::in_edge_iterator ek;
 
-        for (boost::tie(ej, ek) = boost::in_edges(boost::source(root, g), g);
+        for (std::tie(ej, ek) = boost::in_edges(boost::source(root, g), g);
              ek - ej == 1 && *ej != *ei;
-             boost::tie(ej, ek) = boost::in_edges(boost::source(root, g), g)) {
+             std::tie(ej, ek) = boost::in_edges(boost::source(root, g), g)) {
           root = *ej;
         }
       }
@@ -786,9 +786,9 @@ recompose_segments(const typename GeometrySet<Dim>::SegmentCollection &segments,
       boost::graph_traits<Graph>::out_edge_iterator ej;
       boost::graph_traits<Graph>::out_edge_iterator ek;
 
-      for (boost::tie(ej, ek) = boost::out_edges(boost::target(root, g), g);
+      for (std::tie(ej, ek) = boost::out_edges(boost::target(root, g), g);
            ek - ej == 1 && *ej != root;
-           boost::tie(ej, ek) = boost::out_edges(boost::target(*ej, g), g)) {
+           std::tie(ej, ek) = boost::out_edges(boost::target(*ej, g), g)) {
         line->addPoint(points[boost::target(*ej, g)]);
         boost::get(boost::edge_color, g)[*ej] = boost::black_color;
       }

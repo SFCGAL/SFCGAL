@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(iteratorTests)
   LineString::Point_2_const_iterator pi_end;
   int                                i = 0;
 
-  for (boost::tie(pi, pi_end) = g.points_2(); pi != pi_end; pi++, i++) {
+  for (std::tie(pi, pi_end) = g.points_2(); pi != pi_end; pi++, i++) {
     BOOST_CHECK_EQUAL(*pi, g.pointN(i).toPoint_2());
   }
 
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(iteratorTests)
   LineString::Point_3_const_iterator ppi_end;
   i = 0;
 
-  for (boost::tie(ppi, ppi_end) = g.points_3(); ppi != ppi_end; ppi++, i++) {
+  for (std::tie(ppi, ppi_end) = g.points_3(); ppi != ppi_end; ppi++, i++) {
     BOOST_CHECK_EQUAL(*ppi, g.pointN(i).toPoint_3());
   }
 }

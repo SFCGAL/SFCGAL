@@ -98,7 +98,7 @@ public:
    *
    * @code
    * typename GeometryGraph<V,E>::vertex_iterator it, end ;
-   * for ( boost::tie( it, end ) = g.vertices(); it != end; ++it ){
+   * for ( std::tie( it, end ) = g.vertices(); it != end; ++it ){
    * 		typename GeometryGraph<V,E>::vertex_descriptor vertex = *it ;
    * 		std::cout << g[ vertex ].coordinate << std::endl;
    * }
@@ -147,7 +147,7 @@ public:
    *
    * @code
    * typename GeometryGraph<V,E>::edge_iterator it, end ;
-   * for ( boost::tie( it, end ) = g.edges(); it != end; ++it ){
+   * for ( std::tie( it, end ) = g.edges(); it != end; ++it ){
    * 		typename GeometryGraph<V,E>::edge_descriptor edge = *it ;
    * 		std::cout << g.source(edge) << "," << g.target(edge) << std::endl;
    * }
@@ -263,7 +263,7 @@ public:
     {
       out_edge_iterator it, end;
 
-      for (boost::tie(it, end) = boost::out_edges(a, _graph); it != end; ++it) {
+      for (std::tie(it, end) = boost::out_edges(a, _graph); it != end; ++it) {
         if (target(*it) != b) {
           continue;
         }
@@ -275,7 +275,7 @@ public:
     {
       out_edge_iterator it, end;
 
-      for (boost::tie(it, end) = boost::out_edges(b, _graph); it != end; ++it) {
+      for (std::tie(it, end) = boost::out_edges(b, _graph); it != end; ++it) {
         if (target(*it) != a) {
           continue;
         }
@@ -309,8 +309,7 @@ public:
 
     in_edge_iterator it, end;
 
-    for (boost::tie(it, end) = boost::in_edges(vertex, _graph); it != end;
-         ++it) {
+    for (std::tie(it, end) = boost::in_edges(vertex, _graph); it != end; ++it) {
       edges.push_back(*it);
     }
 
@@ -328,7 +327,7 @@ public:
 
     out_edge_iterator it, end;
 
-    for (boost::tie(it, end) = boost::out_edges(vertex, _graph); it != end;
+    for (std::tie(it, end) = boost::out_edges(vertex, _graph); it != end;
          ++it) {
       edges.push_back(*it);
     }
@@ -347,7 +346,7 @@ public:
     {
       in_edge_iterator it, end;
 
-      for (boost::tie(it, end) = boost::in_edges(vertex, _graph); it != end;
+      for (std::tie(it, end) = boost::in_edges(vertex, _graph); it != end;
            ++it) {
         edges.push_back(std::make_pair(*it, REVERSE));
       }
@@ -357,7 +356,7 @@ public:
     {
       out_edge_iterator it, end;
 
-      for (boost::tie(it, end) = boost::out_edges(vertex, _graph); it != end;
+      for (std::tie(it, end) = boost::out_edges(vertex, _graph); it != end;
            ++it) {
         edges.push_back(std::make_pair(*it, DIRECT));
       }
@@ -381,7 +380,7 @@ public:
     {
       out_edge_iterator it, end;
 
-      for (boost::tie(it, end) = boost::out_edges(vertex, _graph); it != end;
+      for (std::tie(it, end) = boost::out_edges(vertex, _graph); it != end;
            ++it) {
         vertex_descriptor reached = target(*it);
 
@@ -395,7 +394,7 @@ public:
     if (withReverseDirection) {
       in_edge_iterator it, end;
 
-      for (boost::tie(it, end) = boost::in_edges(vertex, _graph); it != end;
+      for (std::tie(it, end) = boost::in_edges(vertex, _graph); it != end;
            ++it) {
         vertex_descriptor reached = source(*it);
 
