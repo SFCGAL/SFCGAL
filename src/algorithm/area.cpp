@@ -24,7 +24,6 @@
 #include <CGAL/Triangle_3.h>
 
 #include "SFCGAL/Exception.h"
-#include <boost/format.hpp>
 
 namespace SFCGAL::algorithm {
 
@@ -61,10 +60,8 @@ area(const Geometry &geom, [[maybe_unused]] NoValidityCheck noCheck) -> double
   }
 
   BOOST_THROW_EXCEPTION(Exception(
-      (boost::format(
-           "Unexpected geometry type (%s) in SFCGAL::algorithm::area") %
-       geom.geometryType())
-          .str()));
+      std::format("Unexpected geometry type ({}) in SFCGAL::algorithm::area",
+                  geom.geometryType())));
 }
 
 auto

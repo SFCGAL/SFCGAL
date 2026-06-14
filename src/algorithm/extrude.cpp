@@ -342,10 +342,8 @@ extrude(const Geometry &inputGeometry, const Kernel::Vector_3 &extrusionVector)
     break;
   }
 
-  BOOST_THROW_EXCEPTION(InappropriateGeometryException(
-      (boost::format("Extrusion of %s is not supported") %
-       inputGeometry.geometryType())
-          .str()));
+  BOOST_THROW_EXCEPTION(InappropriateGeometryException(std::format(
+      "Extrusion of %s is not supported", inputGeometry.geometryType())));
 }
 
 /// @private

@@ -5,7 +5,6 @@
 
 #include "../../../test_config.h"
 
-#include <boost/format.hpp>
 #include <fstream>
 
 #include "SFCGAL/GeometryCollection.h"
@@ -56,7 +55,7 @@ BOOST_AUTO_TEST_CASE(testTriangulatePolygon)
       continue;
     }
 
-    BOOST_TEST_MESSAGE(boost::format("[line#%s]%s") % numLine % line);
+    BOOST_TEST_MESSAGE(std::format("[line#{}]{}", numLine, line));
 
     std::istringstream iss(line);
     bool               shouldThrowException = false;
@@ -90,8 +89,8 @@ BOOST_AUTO_TEST_CASE(testTriangulatePolygon)
     BOOST_CHECK_NO_THROW(
         triangulate::triangulatePolygon3D(*g, triangulatedSurface));
 
-    BOOST_TEST_MESSAGE(boost::format("#%1% triangle(s)") %
-                       triangulatedSurface.numPatches());
+    BOOST_TEST_MESSAGE(
+        std::format("#{}% triangle(s)", triangulatedSurface.numPatches()));
 
     /*
      * make some checks

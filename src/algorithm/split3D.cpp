@@ -48,10 +48,8 @@ split3D(const Geometry &geometry, const Point &planePoint,
   }
 
   BOOST_THROW_EXCEPTION(Exception(
-      (boost::format(
-           "Unexpected geometry type (%s) in SFCGAL::algorithm::split3D") %
-       geometry.geometryType())
-          .str()));
+      std::format("Unexpected geometry type ({}) in SFCGAL::algorithm::split3D",
+                  geometry.geometryType())));
 }
 
 } // namespace SFCGAL::algorithm

@@ -74,16 +74,14 @@ isClosedPolyhedralSurface(const PolyhedralSurface &surface) -> Closure
       }
 
       return Closure::open(
-          (boost::format("Surface has %d boundary halfedges") % boundary_count)
-              .str());
+          std::format("Surface has {} boundary halfedges", boundary_count));
     }
 
     return Closure::closed();
 
   } catch (const std::exception &e) {
     return Closure::open(
-        (boost::format("Failed to convert to polyhedron: %s") % e.what())
-            .str());
+        std::format("Failed to convert to polyhedron: {}", e.what()));
   }
 }
 
@@ -110,16 +108,14 @@ isClosedTriangulatedSurface(const TriangulatedSurface &surface) -> Closure
       }
 
       return Closure::open(
-          (boost::format("Surface has %d boundary halfedges") % boundary_count)
-              .str());
+          std::format("Surface has {} boundary halfedges", boundary_count));
     }
 
     return Closure::closed();
 
   } catch (const std::exception &e) {
     return Closure::open(
-        (boost::format("Failed to convert to polyhedron: %s") % e.what())
-            .str());
+        std::format("Failed to convert to polyhedron: {}", e.what()));
   }
 }
 
@@ -133,9 +129,8 @@ isClosedSolid(const Solid &solid) -> Closure
   for (size_t i = 0; i < numShells; ++i) {
     Closure shellClosure = isClosedPolyhedralSurface(solid.shellN(i));
     if (!shellClosure) {
-      return Closure::open((boost::format("Shell %d is not closed: %s") % i %
-                            shellClosure.reason())
-                               .str());
+      return Closure::open(
+          std::format("Shell {} is not closed: {}", i, shellClosure.reason()));
     }
   }
 
@@ -154,9 +149,8 @@ isClosedMultiLineString(const MultiLineString &mls) -> Closure
   for (size_t i = 0; i < numGeom; ++i) {
     Closure ls_closure = isClosedLineString(mls.lineStringN(i));
     if (!ls_closure) {
-      return Closure::open((boost::format("LineString %d is not closed: %s") %
-                            i % ls_closure.reason())
-                               .str());
+      return Closure::open(std::format("LineString {} is not closed: {}", i,
+                                       ls_closure.reason()));
     }
   }
 
@@ -173,9 +167,8 @@ isClosedMultiSolid(const MultiSolid &msolid) -> Closure
   for (size_t i = 0; i < numGeom; ++i) {
     Closure solid_closure = isClosedSolid(msolid.solidN(i));
     if (!solid_closure) {
-      return Closure::open((boost::format("Solid %d is not closed: %s") % i %
-                            solid_closure.reason())
-                               .str());
+      return Closure::open(
+          std::format("Solid {} is not closed: {}", i, solid_closure.reason()));
     }
   }
 
@@ -219,10 +212,8 @@ isClosedNURBSCurve(const NURBSCurve &nurbsCurve) -> Closure
   // Return actual distance (not squared) in error message
   auto actualDistance = CGAL::sqrt(CGAL::to_double(squaredDistance));
   return Closure::open(
-      (boost::format(
-           "NURBS curve endpoints are not coincident (distance: %g)") %
-       actualDistance)
-          .str());
+      std::format("NURBS curve endpoints are not coincident (distance: {})",
+                  actualDistance));
 }
 
 } // namespace detail
@@ -275,10 +266,9 @@ isClosed(const Geometry &g) -> Closure
     for (size_t i = 0; i < numGeom; ++i) {
       Closure geom_closure = isClosed(collection.geometryN(i));
       if (!geom_closure) {
-        return Closure::open(
-            (boost::format("Geometry %d (%s) is not closed: %s") % i %
-             collection.geometryN(i).geometryType() % geom_closure.reason())
-                .str());
+        return Closure::open(std::format(
+            "Geometry {} ({}) is not closed: {}", i,
+            collection.geometryN(i).geometryType(), geom_closure.reason()));
       }
     }
 
@@ -287,8 +277,7 @@ isClosed(const Geometry &g) -> Closure
   }
 
   BOOST_THROW_EXCEPTION(Exception(
-      (boost::format("isClosed( %s ) is not defined") % g.geometryType())
-          .str()));
+      std::format("isClosed( {} ) is not defined", g.geometryType())));
 
   return Closure::open("Unknown geometry type");
 }

@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(testFileCoversTest)
       continue;
     }
 
-    BOOST_TEST_MESSAGE(boost::format("line#%s:%s") % numLine % line);
+    BOOST_TEST_MESSAGE(std::format("line#{}:{}", numLine, line));
 
     std::istringstream iss(line);
 

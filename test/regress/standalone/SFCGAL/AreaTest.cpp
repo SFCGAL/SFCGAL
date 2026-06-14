@@ -7,7 +7,6 @@
 
 #include "../../../test_config.h"
 
-#include <boost/format.hpp>
 #include <fstream>
 
 #include "SFCGAL/Point.h"
@@ -72,7 +71,7 @@ BOOST_AUTO_TEST_CASE(testComputeArea)
 
     std::unique_ptr<Geometry> g(io::readWkt(inputWkt));
     double                    area = algorithm::area3D(*g);
-    BOOST_TEST_MESSAGE(boost::format("area( '%1%' ) = %2%") % inputWkt % area);
+    BOOST_TEST_MESSAGE(std::format("area( '{}' ) = {}", inputWkt, area));
 
     RotateCoordinate rotateCoordinate;
     g->accept(rotateCoordinate);

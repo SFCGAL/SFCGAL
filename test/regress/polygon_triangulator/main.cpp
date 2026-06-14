@@ -162,7 +162,7 @@ main(int argc, char *argv[]) -> int
     try {
       std::unique_ptr<Geometry> g(io::readWkt(wkt));
 
-      // io::vtk( *g, (boost::format("/tmp/polygon_%s.vtk") % id ).str() );
+      // io::vtk( *g, std::format("/tmp/polygon_{}.vtk", id ) );
 
       if (force2d) {
         algorithm::force2D(*g);
@@ -194,16 +194,13 @@ main(int argc, char *argv[]) -> int
       invalidGeom.push_back(id_);
       numFailed++;
     } catch (std::exception &e) {
-      BOOST_ASSERT_MSG(false,
-                       (boost::format("%s:%d: unhandled std::exception: %s") %
-                        filename % lineNumber % e.what())
-                           .str()
-                           .c_str());
-    } catch (...) {
-      BOOST_ASSERT_MSG(false, (boost::format("%s:%d: unknown exception") %
-                               filename % lineNumber)
-                                  .str()
+      BOOST_ASSERT_MSG(false, std::format("{}:{}: unhandled std::exception: {}",
+                                          filename, lineNumber, e.what())
                                   .c_str());
+    } catch (...) {
+      BOOST_ASSERT_MSG(
+          false, std::format("{}:{}: unknown exception", filename, lineNumber)
+                     .c_str());
     }
 
     // output triangulated surface

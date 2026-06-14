@@ -31,9 +31,9 @@ BOOST_AUTO_TEST_CASE(pointIsSimple)
   std::string const               wkt = "POINT (3.0 4.0)";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
   Simplicity const                s = algorithm::isSimple(*g);
-  BOOST_CHECK_MESSAGE(s == Simplicity::simple(),
-                      (boost::format("%s should be simple: %s") %
-                       g->geometryType() % g->asText()));
+  BOOST_CHECK_MESSAGE(
+      s == Simplicity::simple(),
+      std::format("{} should be simple: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(point3DIsSimple)
@@ -41,9 +41,9 @@ BOOST_AUTO_TEST_CASE(point3DIsSimple)
   std::string const               wkt = "POINT (3.0 4.0 2.0)";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
   Simplicity const                s = algorithm::isSimple(*g);
-  BOOST_CHECK_MESSAGE(s == Simplicity::simple(),
-                      (boost::format("%s should be simple: %s") %
-                       g->geometryType() % g->asText()));
+  BOOST_CHECK_MESSAGE(
+      s == Simplicity::simple(),
+      std::format("{} should be simple: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(ShortLinestringIsSimple)
@@ -51,9 +51,9 @@ BOOST_AUTO_TEST_CASE(ShortLinestringIsSimple)
   std::string const               wkt = "LINESTRING (0.0 0.0, 2.0 0.0)";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
   Simplicity const                s = algorithm::isSimple(*g);
-  BOOST_CHECK_MESSAGE(s == Simplicity::simple(),
-                      (boost::format("%s should be simple: %s") %
-                       g->geometryType() % g->asText()));
+  BOOST_CHECK_MESSAGE(
+      s == Simplicity::simple(),
+      std::format("{} should be simple: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(LongLinestringIsSimple)
@@ -61,9 +61,9 @@ BOOST_AUTO_TEST_CASE(LongLinestringIsSimple)
   std::string const wkt = "LINESTRING (0.0 0.0, 2.0 0.0, 1.0 1.0)";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
   Simplicity const                s = algorithm::isSimple(*g);
-  BOOST_CHECK_MESSAGE(s == Simplicity::simple(),
-                      (boost::format("%s should be simple: %s") %
-                       g->geometryType() % g->asText()));
+  BOOST_CHECK_MESSAGE(
+      s == Simplicity::simple(),
+      std::format("{} should be simple: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(ComplexLongLinestringIsSimple)
@@ -71,9 +71,9 @@ BOOST_AUTO_TEST_CASE(ComplexLongLinestringIsSimple)
   std::string const wkt = "LINESTRING (0.0 0.0, 2.0 0.0, 1.0 1.0, 1.0 -1.0)";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
   Simplicity const                s = algorithm::isSimple(*g);
-  BOOST_CHECK_MESSAGE(s == Simplicity::complex("linestring self intersects"),
-                      (boost::format("%s should be complex: %s") %
-                       g->geometryType() % g->asText()));
+  BOOST_CHECK_MESSAGE(
+      s == Simplicity::complex("linestring self intersects"),
+      std::format("{} should be complex: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(ClosedLongLinestringIsSimple)
@@ -81,9 +81,9 @@ BOOST_AUTO_TEST_CASE(ClosedLongLinestringIsSimple)
   std::string const wkt = "LINESTRING (0.0 0.0, 2.0 0.0, 1.0 1.0, 0.0 0.0)";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
   Simplicity const                s = algorithm::isSimple(*g);
-  BOOST_CHECK_MESSAGE(s == Simplicity::simple(),
-                      (boost::format("%s should be simple: %s") %
-                       g->geometryType() % g->asText()));
+  BOOST_CHECK_MESSAGE(
+      s == Simplicity::simple(),
+      std::format("{} should be simple: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(PolygonIsSimple)
@@ -92,9 +92,9 @@ BOOST_AUTO_TEST_CASE(PolygonIsSimple)
                           "0.0 1.0 0.0, 0.0 0.0 0.0))";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
   Simplicity const                s = algorithm::isSimple(*g);
-  BOOST_CHECK_MESSAGE(s == Simplicity::simple(),
-                      (boost::format("%s should be simple: %s") %
-                       g->geometryType() % g->asText()));
+  BOOST_CHECK_MESSAGE(
+      s == Simplicity::simple(),
+      std::format("{} should be simple: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(ComplexPolygonIsSimple)
@@ -105,8 +105,7 @@ BOOST_AUTO_TEST_CASE(ComplexPolygonIsSimple)
   Simplicity const                s = algorithm::isSimple(*g);
   BOOST_CHECK_MESSAGE(
       s == Simplicity::complex("Points don't lie in the same plane."),
-      (boost::format("%s should be complex: %s") % g->geometryType() %
-       g->asText()));
+      std::format("{} should be complex: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(TriangleIsSimple)
@@ -115,9 +114,9 @@ BOOST_AUTO_TEST_CASE(TriangleIsSimple)
       "TRIANGLE Z ((0.0 0.0 0.0, 1.0 0.0 0.0, 1.0 1.0 0.0, 0.0 0.0 0.0))";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
   Simplicity const                s = algorithm::isSimple(*g);
-  BOOST_CHECK_MESSAGE(s == Simplicity::simple(),
-                      (boost::format("%s should be simple: %s") %
-                       g->geometryType() % g->asText()));
+  BOOST_CHECK_MESSAGE(
+      s == Simplicity::simple(),
+      std::format("{} should be simple: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(PolyhedralSurfaceIsSimple)
@@ -127,9 +126,9 @@ BOOST_AUTO_TEST_CASE(PolyhedralSurfaceIsSimple)
   std::unique_ptr<Geometry> const poly(io::readWkt(wkt));
   std::unique_ptr<Geometry>       g(algorithm::extrude(*poly, 0.0, 0.0, 10.0));
   Simplicity const                s = algorithm::isSimple(*g);
-  BOOST_CHECK_MESSAGE(s == Simplicity::simple(),
-                      (boost::format("%s should be simple: %s") %
-                       g->geometryType() % g->asText()));
+  BOOST_CHECK_MESSAGE(
+      s == Simplicity::simple(),
+      std::format("{} should be simple: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(ComplexPolyhedralSurfaceIsSimple)
@@ -146,8 +145,7 @@ BOOST_AUTO_TEST_CASE(ComplexPolyhedralSurfaceIsSimple)
   BOOST_CHECK_MESSAGE(
       s == Simplicity::complex(
                "Polygon 0 is complex: Points don't lie in the same plane."),
-      (boost::format("%s should be complex: %s") % g->geometryType() %
-       g->asText()));
+      std::format("{} should be complex: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(TriangulatedSurfaceIsSimple)
@@ -159,9 +157,9 @@ BOOST_AUTO_TEST_CASE(TriangulatedSurfaceIsSimple)
                             ((1.0 0.0 0.0, 0.0 1.0 0.0, 0.0 0.0 1.0, 1.0 0.0 0.0)))";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
   Simplicity const                s = algorithm::isSimple(*g);
-  BOOST_CHECK_MESSAGE(s == Simplicity::simple(),
-                      (boost::format("%s should be simple: %s") %
-                       g->geometryType() % g->asText()));
+  BOOST_CHECK_MESSAGE(
+      s == Simplicity::simple(),
+      std::format("{} should be simple: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(SolidIsSimple)
@@ -174,9 +172,9 @@ BOOST_AUTO_TEST_CASE(SolidIsSimple)
                  ((1 1 1, 1 1 0, 0 1 0, 0 1 1, 1 1 1))))";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
   Simplicity const                s = algorithm::isSimple(*g);
-  BOOST_CHECK_MESSAGE(s == Simplicity::simple(),
-                      (boost::format("%s should be simple: %s") %
-                       g->geometryType() % g->asText()));
+  BOOST_CHECK_MESSAGE(
+      s == Simplicity::simple(),
+      std::format("{} should be simple: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(ComplexSolidIsSimple)
@@ -193,8 +191,7 @@ BOOST_AUTO_TEST_CASE(ComplexSolidIsSimple)
   BOOST_CHECK_MESSAGE(
       s == Simplicity::complex("Shell 0 is complex: Polygon 0 is complex: "
                                "Points don't lie in the same plane."),
-      (boost::format("%s should be complex: %s") % g->geometryType() %
-       g->asText()));
+      std::format("{} should be complex: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(MultiPointIsSimple)
@@ -203,9 +200,9 @@ BOOST_AUTO_TEST_CASE(MultiPointIsSimple)
       "MULTIPOINT ((0.0 0.0), (1.0 0.0), (1.0 1.0), (0.0 1.0))";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
   Simplicity const                s = algorithm::isSimple(*g);
-  BOOST_CHECK_MESSAGE(s == Simplicity::simple(),
-                      (boost::format("%s should be simple: %s") %
-                       g->geometryType() % g->asText()));
+  BOOST_CHECK_MESSAGE(
+      s == Simplicity::simple(),
+      std::format("{} should be simple: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(ComplexMultiPointIsSimple)
@@ -217,8 +214,7 @@ BOOST_AUTO_TEST_CASE(ComplexMultiPointIsSimple)
   BOOST_CHECK_MESSAGE(
       s == Simplicity::complex(
                "Points 0 and 4 are duplicated in the MultiPoint."),
-      (boost::format("%s should be complex: %s") % g->geometryType() %
-       g->asText()));
+      std::format("{} should be complex: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(MultiLineStringIsSimple)
@@ -227,9 +223,9 @@ BOOST_AUTO_TEST_CASE(MultiLineStringIsSimple)
       "MULTILINESTRING((0.0 0.0, 2.0 0.0), (2.0 0.0, 1.0 1.0))";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
   Simplicity const                s = algorithm::isSimple(*g);
-  BOOST_CHECK_MESSAGE(s == Simplicity::simple(),
-                      (boost::format("%s should be simple: %s") %
-                       g->geometryType() % g->asText()));
+  BOOST_CHECK_MESSAGE(
+      s == Simplicity::simple(),
+      std::format("{} should be simple: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(ComplexMultiLineStringIsSimple)
@@ -242,8 +238,7 @@ BOOST_AUTO_TEST_CASE(ComplexMultiLineStringIsSimple)
   BOOST_CHECK_MESSAGE(
       s == Simplicity::complex(
                "LineString 2 is complex: linestring self intersects"),
-      (boost::format("%s should be complex: %s") % g->geometryType() %
-       g->asText()));
+      std::format("{} should be complex: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(MultiPolygonIsSimple)
@@ -252,9 +247,9 @@ BOOST_AUTO_TEST_CASE(MultiPolygonIsSimple)
                           "0.0, 0.0 1.0 0.0, 0.0 0.0 0.0)))";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
   Simplicity const                s = algorithm::isSimple(*g);
-  BOOST_CHECK_MESSAGE(s == Simplicity::simple(),
-                      (boost::format("%s should be simple: %s") %
-                       g->geometryType() % g->asText()));
+  BOOST_CHECK_MESSAGE(
+      s == Simplicity::simple(),
+      std::format("{} should be simple: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(ComplexMultiPolygonIsSimple)
@@ -267,8 +262,7 @@ BOOST_AUTO_TEST_CASE(ComplexMultiPolygonIsSimple)
   BOOST_CHECK_MESSAGE(
       s == Simplicity::complex(
                "Polygon 1 is complex: Points don't lie in the same plane."),
-      (boost::format("%s should be complex: %s") % g->geometryType() %
-       g->asText()));
+      std::format("{} should be complex: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(MultiSolidIsSimple)
@@ -289,9 +283,9 @@ BOOST_AUTO_TEST_CASE(MultiSolidIsSimple)
                  ))";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
   Simplicity const                s = algorithm::isSimple(*g);
-  BOOST_CHECK_MESSAGE(s == Simplicity::simple(),
-                      (boost::format("%s should be simple: %s") %
-                       g->geometryType() % g->asText()));
+  BOOST_CHECK_MESSAGE(
+      s == Simplicity::simple(),
+      std::format("{} should be simple: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(ComplexMultiSolidIsSimple)
@@ -315,8 +309,7 @@ BOOST_AUTO_TEST_CASE(ComplexMultiSolidIsSimple)
   BOOST_CHECK_MESSAGE(
       s == Simplicity::complex(
                "Solid 1 is complex: Points don't lie in the same plane."),
-      (boost::format("%s should be complex: %s") % g->geometryType() %
-       g->asText()));
+      std::format("{} should be complex: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(GeometryCollectionIsSimple)
@@ -325,9 +318,9 @@ BOOST_AUTO_TEST_CASE(GeometryCollectionIsSimple)
                           "0.0,1.0 0.0,1.0 1.0,0.0 0.0)))";
   std::unique_ptr<Geometry> const g(io::readWkt(wkt));
   Simplicity const                s = algorithm::isSimple(*g);
-  BOOST_CHECK_MESSAGE(s == Simplicity::simple(),
-                      (boost::format("%s should be simple: %s") %
-                       g->geometryType() % g->asText()));
+  BOOST_CHECK_MESSAGE(
+      s == Simplicity::simple(),
+      std::format("{} should be simple: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_CASE(ComplexGeometryCollectionIsSimple)
@@ -340,8 +333,7 @@ BOOST_AUTO_TEST_CASE(ComplexGeometryCollectionIsSimple)
   BOOST_CHECK_MESSAGE(
       s == Simplicity::complex(
                "LineString at index 2 is complex: linestring self intersects."),
-      (boost::format("%s should be complex: %s") % g->geometryType() %
-       g->asText()));
+      std::format("{} should be complex: {}", g->geometryType(), g->asText()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

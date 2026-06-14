@@ -89,10 +89,8 @@ geometryToMultipolygonWithHoles(const SFCGAL::Geometry &geometry)
   }
 
   default:
-    BOOST_THROW_EXCEPTION(SFCGAL::Exception(
-        (boost::format("polygonRepair is not implemented for %s") %
-         geometry.geometryType())
-            .str()));
+    BOOST_THROW_EXCEPTION(SFCGAL::Exception(std::format(
+        "polygonRepair is not implemented for {}", geometry.geometryType())));
   }
 }
 
@@ -120,17 +118,14 @@ polygonRepair(const Geometry &geometry, PolygonRepairRule repairRule)
     return std::make_unique<MultiPolygon>(repaired_mp);
 
   } catch (const CGAL::Precondition_exception &e) {
-    BOOST_THROW_EXCEPTION(Exception(
-        (boost::format("CGAL precondition error in polygon repair: %s") %
-         e.what())
-            .str()));
+    BOOST_THROW_EXCEPTION(Exception(std::format(
+        "CGAL precondition error in polygon repair: {}", e.what())));
   } catch (const CGAL::Assertion_exception &e) {
     BOOST_THROW_EXCEPTION(Exception(
-        (boost::format("CGAL assertion error in polygon repair: %s") % e.what())
-            .str()));
+        std::format("CGAL assertion error in polygon repair: {}", e.what())));
   } catch (const std::exception &e) {
-    BOOST_THROW_EXCEPTION(Exception(
-        (boost::format("Error in polygonRepair: %s") % e.what()).str()));
+    BOOST_THROW_EXCEPTION(
+        Exception(std::format("Error in polygonRepair: {}", e.what())));
   }
 }
 

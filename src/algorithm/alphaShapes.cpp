@@ -12,7 +12,6 @@
 
 #include "SFCGAL/Exception.h"
 #include "SFCGAL/Kernel.h"
-#include <boost/format.hpp>
 
 #include <CGAL/Alpha_shape_2.h>
 #include <CGAL/Alpha_shape_face_base_2.h>

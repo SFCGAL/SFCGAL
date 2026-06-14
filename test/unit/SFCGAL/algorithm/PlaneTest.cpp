@@ -66,8 +66,8 @@ BOOST_AUTO_TEST_CASE(testPlane)
     const LineString               *l = dynamic_cast<LineString *>(g.get());
     BOOST_CHECK_MESSAGE(
         algorithm::isPlane3D<Kernel>(*l, 1.e-9) == test[t]._isPlane,
-        (boost::format("LineString %d: %s %s") % t % test[t]._wkt %
-         (test[t]._isPlane ? "is plane" : "isn't plane")));
+        std::format("LineString {}: {} {}", t, test[t]._wkt,
+                    (test[t]._isPlane ? "is plane" : "isn't plane")));
   }
 }
 

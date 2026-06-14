@@ -243,10 +243,9 @@ PolyhedralSurface::setPatchN(std::unique_ptr<Polygon> patch, size_t const &idx)
 
   if (idx >= numPatches()) {
     BOOST_THROW_EXCEPTION(
-        Exception((boost::format("Cannot set geometry at position %s. "
-                                 "PolyhedralSurface has only %d geometries.") %
-                   idx % numPatches())
-                      .str()));
+        Exception(std::format("Cannot set geometry at position {}. "
+                              "PolyhedralSurface has only {} geometries.",
+                              idx, numPatches())));
   }
 
   _polygons[idx] = std::move(patch);

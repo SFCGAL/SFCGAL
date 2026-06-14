@@ -3,13 +3,11 @@
 // Copyright (c) 2024-2026, SFCGAL team.
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
-#include <boost/format.hpp>
-
+#include "SFCGAL/TriangulatedSurface.h"
 #include "SFCGAL/Exception.h"
 #include "SFCGAL/Geometry.h"
 #include "SFCGAL/GeometryVisitor.h"
 #include "SFCGAL/Kernel.h"
-#include "SFCGAL/TriangulatedSurface.h"
 
 #include <map>
 #include <memory>
@@ -145,11 +143,10 @@ auto
 TriangulatedSurface::patchN(size_t const &index) const -> const Triangle &
 {
   if (index >= numPatches()) {
-    BOOST_THROW_EXCEPTION(Exception(
-        (boost::format("Cannot access geometry at position %s. "
-                       "TriangulatedSurface has only %d geometries.") %
-         index % numGeometries())
-            .str()));
+    BOOST_THROW_EXCEPTION(
+        Exception(std::format("Cannot access geometry at position {}. "
+                              "TriangulatedSurface has only {} geometries.",
+                              index, numGeometries())));
   }
 
   return *_triangles[index];
@@ -159,11 +156,10 @@ auto
 TriangulatedSurface::patchN(size_t const &index) -> Triangle &
 {
   if (index >= numPatches()) {
-    BOOST_THROW_EXCEPTION(Exception(
-        (boost::format("Cannot access geometry at position %s. "
-                       "TriangulatedSurface has only %d geometries.") %
-         index % numPatches())
-            .str()));
+    BOOST_THROW_EXCEPTION(
+        Exception(std::format("Cannot access geometry at position {}. "
+                              "TriangulatedSurface has only {} geometries.",
+                              index, numPatches())));
   }
 
   return *_triangles[index];
@@ -176,11 +172,10 @@ TriangulatedSurface::setPatchN(std::unique_ptr<Triangle> triangle,
   BOOST_ASSERT(triangle != nullptr);
 
   if (idx >= numPatches()) {
-    BOOST_THROW_EXCEPTION(Exception(
-        (boost::format("Cannot set geometry at position %s. "
-                       "TriangulatedSurface has only %d geometries.") %
-         idx % numPatches())
-            .str()));
+    BOOST_THROW_EXCEPTION(
+        Exception(std::format("Cannot set geometry at position {}. "
+                              "TriangulatedSurface has only {} geometries.",
+                              idx, numPatches())));
   }
 
   _triangles[idx] = std::move(triangle);

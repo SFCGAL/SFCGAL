@@ -41,16 +41,17 @@ BOOST_AUTO_TEST_CASE(geometryIsValid)
     } catch (WktParseException &) {
       BOOST_CHECK_MESSAGE(
           !tg.isValid,
-          (boost::format("%d: parse error on valid geometry %s") % t % tg.wkt));
+          std::format("{}: parse error on valid geometry {}", t, tg.wkt));
+
       continue;
     }
 
     Validity const v = algorithm::isValid(*g);
-    BOOST_CHECK_MESSAGE(v == tg.isValid,
-                        (boost::format("%d:%s should be %s (%s)%s%s : %s") % t %
-                         g->geometryType() %
-                         (tg.isValid ? "valid" : "invalid") % tg.comment %
-                         (v ? "." : ", reason: ") % v.reason() % tg.wkt));
+    BOOST_CHECK_MESSAGE(
+        v == tg.isValid,
+        std::format("{}:{} should be {} ({}){}{} : {}", t, g->geometryType(),
+                    (tg.isValid ? "valid" : "invalid"), tg.comment,
+                    (v ? "." : ", reason: "), v.reason(), tg.wkt));
   }
 }
 

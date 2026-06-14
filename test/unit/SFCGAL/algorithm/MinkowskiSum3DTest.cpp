@@ -133,8 +133,8 @@ BOOST_AUTO_TEST_CASE(testFileMinkowskiSum3DTest)
       continue;
     }
 
-    BOOST_TEST_MESSAGE(boost::format("line#%s [%s]: %s") % numLine % testName %
-                       line.substr(0, 100));
+    BOOST_TEST_MESSAGE(std::format("line#{} [{}]: {}", numLine, testName,
+                                   line.substr(0, 100)));
 
     std::unique_ptr<Geometry> gA(io::readWkt(wktGA));
     std::unique_ptr<Geometry> gB(io::readWkt(wktGB));

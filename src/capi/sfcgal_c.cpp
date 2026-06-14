@@ -2981,8 +2981,7 @@ from_json(const nlohmann::json &jsonObject, PrimitiveParameterDesc &desc)
       desc.value = value.get<double>();
     } else {
       throw nlohmann::json::type_error::create(
-          306, (boost::format("Unknown type '%1%'.") % desc.type).str(),
-          nullptr);
+          306, std::format("Unknown type '{}'.", desc.type), nullptr);
     }
   }
 }

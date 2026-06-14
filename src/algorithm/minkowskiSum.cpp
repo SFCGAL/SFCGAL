@@ -121,10 +121,8 @@ minkowskiSum(const Geometry &gA, const Polygon_2 &gB,
   }
   }
 
-  BOOST_THROW_EXCEPTION(
-      Exception((boost::format("minkowskiSum( %s, 'Polygon' ) is not defined") %
-                 gA.geometryType())
-                    .str()));
+  BOOST_THROW_EXCEPTION(Exception(std::format(
+      "minkowskiSum( {}, 'Polygon' ) is not defined", gA.geometryType())));
 }
 
 /*

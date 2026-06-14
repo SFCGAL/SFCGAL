@@ -19,13 +19,6 @@ Logger::get() -> Logger *
 }
 
 void
-Logger::log(const Level &level, const boost::format &message,
-            const std::string &filename, const int &lineNumber)
-{
-  log(level, message.str(), filename, lineNumber);
-}
-
-void
 Logger::log(const Level &level, const std::string &message,
             const std::string &filename, const int &lineNumber)
 {

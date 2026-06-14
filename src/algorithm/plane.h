@@ -6,8 +6,6 @@
 #ifndef SFCGAL_ALGORITHM_PLANE_H_
 #define SFCGAL_ALGORITHM_PLANE_H_
 
-#include <boost/format.hpp>
-
 // #include "SFCGAL/detail/ublas.h"
 
 #include "SFCGAL/Exception.h"
@@ -90,10 +88,8 @@ plane3D(const Polygon &polygon, CGAL::Point_3<Kernel> &pointA,
         CGAL::Point_3<Kernel> &pointB, CGAL::Point_3<Kernel> &pointC) -> void
 {
   if (!hasPlane3D(polygon, pointA, pointB, pointC)) {
-    BOOST_THROW_EXCEPTION(
-        Exception((boost::format("can't find plane for Polygon '%1%'") %
-                   polygon.asText(3))
-                      .str()));
+    BOOST_THROW_EXCEPTION(Exception(
+        std::format("can't find plane for Polygon '{}'", polygon.asText(3))));
   }
 }
 

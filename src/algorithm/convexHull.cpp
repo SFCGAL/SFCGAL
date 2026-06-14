@@ -16,7 +16,6 @@
 
 #include "SFCGAL/Exception.h"
 #include "SFCGAL/Kernel.h"
-#include <boost/format.hpp>
 
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/algorithm.h>
