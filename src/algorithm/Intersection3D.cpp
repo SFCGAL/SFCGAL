@@ -325,37 +325,36 @@ intersection(const PrimitiveHandle<3> &primitive_a,
              dim_t<3> /*unused*/)
 {
   // everything vs a point
-  if (primitive_b.handle.which() == PrimitivePoint) {
+  if (primitive_b.handle.index() == PrimitivePoint) {
     if (algorithm::intersects(primitive_a, primitive_b)) {
-      output.addPrimitive(
-          *boost::get<const TypeForDimension<3>::Point *>(primitive_b.handle));
+      output.addPrimitive(*primitive_b.as<TypeForDimension<3>::Point>());
     }
-  } else if (primitive_a.handle.which() == PrimitiveSegment &&
-             primitive_b.handle.which() == PrimitiveSegment) {
+  } else if (primitive_a.handle.index() == PrimitiveSegment &&
+             primitive_b.handle.index() == PrimitiveSegment) {
     const auto        *seg1     = primitive_a.as<CGAL::Segment_3<Kernel>>();
     const auto        *seg2     = primitive_b.as<CGAL::Segment_3<Kernel>>();
     CGAL::Object const interObj = CGAL::intersection(*seg1, *seg2);
     output.addPrimitive(interObj);
-  } else if (primitive_a.handle.which() == PrimitiveSurface) {
+  } else if (primitive_a.handle.index() == PrimitiveSurface) {
     const auto *tri1 = primitive_a.as<CGAL::Triangle_3<Kernel>>();
 
-    if (primitive_b.handle.which() == PrimitiveSegment) {
+    if (primitive_b.handle.index() == PrimitiveSegment) {
       const auto        *seg2     = primitive_b.as<CGAL::Segment_3<Kernel>>();
       CGAL::Object const interObj = CGAL::intersection(*tri1, *seg2);
       output.addPrimitive(interObj);
-    } else if (primitive_b.handle.which() == PrimitiveSurface) {
+    } else if (primitive_b.handle.index() == PrimitiveSurface) {
       const auto        *tri2     = primitive_b.as<CGAL::Triangle_3<Kernel>>();
       CGAL::Object const interObj = CGAL::intersection(*tri1, *tri2);
       output.addPrimitive(interObj, /* pointsAsRing */ true);
     }
-  } else if (primitive_a.handle.which() == PrimitiveVolume) {
-    if (primitive_b.handle.which() == PrimitiveSegment) {
+  } else if (primitive_a.handle.index() == PrimitiveVolume) {
+    if (primitive_b.handle.index() == PrimitiveSegment) {
       _intersection_solid_segment(primitive_a, primitive_b, output);
-    } else if (primitive_b.handle.which() == PrimitiveSurface) {
+    } else if (primitive_b.handle.index() == PrimitiveSurface) {
       _intersection_solid_triangle(*primitive_a.as<MarkedPolyhedron>(),
                                    *primitive_b.as<CGAL::Triangle_3<Kernel>>(),
                                    output);
-    } else if (primitive_b.handle.which() == PrimitiveVolume) {
+    } else if (primitive_b.handle.index() == PrimitiveVolume) {
       const MarkedPolyhedron &solid_a = *primitive_a.as<MarkedPolyhedron>();
       const MarkedPolyhedron &solid_b = *primitive_b.as<MarkedPolyhedron>();
       BOOST_ASSERT(solid_a.is_closed());

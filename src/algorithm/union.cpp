@@ -329,14 +329,14 @@ operator<<(std::ostream &out, std::set<T *> &obs) -> std::ostream &
 template <int Dim>
 class Handle {
   struct ObservablePrimitive
-      : boost::variant<typename detail::Point_d<Dim>::Type, Segment_d<Dim>,
-                       Surface_d<Dim>, typename detail::Volume_d<Dim>::Type,
-                       EmptyPrimitive> {
+      : std::variant<typename detail::Point_d<Dim>::Type, Segment_d<Dim>,
+                     Surface_d<Dim>, typename detail::Volume_d<Dim>::Type,
+                     EmptyPrimitive> {
     template <class T>
     ObservablePrimitive(const T &p)
-        : boost::variant<typename detail::Point_d<Dim>::Type, Segment_d<Dim>,
-                         Surface_d<Dim>, typename detail::Volume_d<Dim>::Type,
-                         EmptyPrimitive>(p)
+        : std::variant<typename detail::Point_d<Dim>::Type, Segment_d<Dim>,
+                       Surface_d<Dim>, typename detail::Volume_d<Dim>::Type,
+                       EmptyPrimitive>(p)
     {
     }
 
@@ -344,7 +344,7 @@ class Handle {
     auto
     as() -> T &
     {
-      return boost::get<T &>(*this);
+      return std::get<T &>(*this);
     }
 
     std::set<ObservablePrimitive **>
@@ -440,44 +440,44 @@ public:
   asPoint() -> typename detail::Point_d<Dim>::Type &
   {
     BOOST_ASSERT((*_p)->_observers.count(_p));
-    BOOST_ASSERT(which() == PrimitivePoint);
-    return boost::get<typename detail::Point_d<Dim>::Type &>(*(*_p));
+    BOOST_ASSERT(index() == PrimitivePoint);
+    return std::get<typename detail::Point_d<Dim>::Type>(*(*_p));
   }
 
   auto
   asSegment() -> Segment_d<Dim> &
   {
     BOOST_ASSERT((*_p)->_observers.count(_p));
-    BOOST_ASSERT(which() == PrimitiveSegment);
-    return boost::get<Segment_d<Dim> &>(*(*_p));
+    BOOST_ASSERT(index() == PrimitiveSegment);
+    return std::get<Segment_d<Dim>>(*(*_p));
   }
 
   auto
   asSurface() -> Surface_d<Dim> &
   {
     BOOST_ASSERT((*_p)->_observers.count(_p));
-    BOOST_ASSERT(which() == PrimitiveSurface);
-    return boost::get<Surface_d<Dim> &>(*(*_p));
+    BOOST_ASSERT(index() == PrimitiveSurface);
+    return std::get<Surface_d<Dim>>(*(*_p));
   }
 
   auto
   asVolume() -> typename detail::Volume_d<Dim>::Type &
   {
     BOOST_ASSERT((*_p)->_observers.count(_p));
-    BOOST_ASSERT(which() == PrimitiveVolume);
-    return boost::get<typename detail::Volume_d<Dim>::Type &>(*(*_p));
+    BOOST_ASSERT(index() == PrimitiveVolume);
+    return std::get<typename detail::Volume_d<Dim>::Type>(*(*_p));
   }
 
   auto
-  which() -> PrimitiveType
+  index() -> PrimitiveType
   {
-    return PrimitiveType((*_p)->which());
+    return PrimitiveType((*_p)->index());
   }
 
   auto
   empty() -> bool
   {
-    return which() == PrimitiveEmpty;
+    return index() == PrimitiveEmpty;
   }
 
   // makes all handles observing a observe 'this' instead
@@ -890,9 +890,9 @@ struct UnionOnBoxCollision {
   {
     DEBUG_OUT << "collision of boxes\n";
 
-    switch (a.handle().which()) {
+    switch (a.handle().index()) {
     case PrimitivePoint:
-      switch (b.handle().which()) {
+      switch (b.handle().index()) {
       case PrimitivePoint:
         union_point_point(a.handle(), b.handle());
         break;
@@ -916,7 +916,7 @@ struct UnionOnBoxCollision {
       break;
 
     case PrimitiveSegment:
-      switch (b.handle().which()) {
+      switch (b.handle().index()) {
       case PrimitivePoint:
         union_point_segment(b.handle(), a.handle());
         break;
@@ -940,7 +940,7 @@ struct UnionOnBoxCollision {
       break;
 
     case PrimitiveSurface:
-      switch (b.handle().which()) {
+      switch (b.handle().index()) {
       case PrimitivePoint:
         union_point_surface(b.handle(), a.handle());
         break;
@@ -964,7 +964,7 @@ struct UnionOnBoxCollision {
       break;
 
     case PrimitiveVolume:
-      switch (b.handle().which()) {
+      switch (b.handle().index()) {
       case PrimitivePoint:
         union_point_volume(b.handle(), a.handle());
         break;
@@ -1001,7 +1001,7 @@ collectPrimitives(const typename HandledBox<Dim>::Vector &boxes,
   Handle<Dim> empty;
 
   for (auto bit = boxes.begin(); bit != boxes.end(); ++bit) {
-    switch (bit->handle().which()) {
+    switch (bit->handle().index()) {
     case PrimitivePoint:
       output.addPrimitive(bit->handle().asPoint());
       empty.registerObservers(bit->handle());

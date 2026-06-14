@@ -46,8 +46,8 @@ dispatch_intersection_sym(const PrimitiveHandle<Dim> &pa,
                           const PrimitiveHandle<Dim> &pb,
                           GeometrySet<Dim>           &output)
 {
-  // assume types are ordered by dimension within the boost::variant
-  if (pa.handle.which() >= pb.handle.which()) {
+  // assume types are ordered by dimension within the std::variant
+  if (pa.handle.index() >= pb.handle.index()) {
     intersection(pa, pb, output, dim_t<Dim>());
   } else {
     intersection(pb, pa, output, dim_t<Dim>());

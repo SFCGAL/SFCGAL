@@ -204,19 +204,19 @@ template <>
 void
 GeometrySet<2>::addPrimitive(const PrimitiveHandle<2> &primitiveHandle)
 {
-  switch (primitiveHandle.handle.which()) {
+  switch (primitiveHandle.handle.index()) {
   case PrimitivePoint:
-    _points.insert(*boost::get<const TypeForDimension<2>::Point *>(
-        primitiveHandle.handle));
+    _points.insert(
+        *std::get<const TypeForDimension<2>::Point *>(primitiveHandle.handle));
     break;
 
   case PrimitiveSegment:
-    _segments.insert(*boost::get<const TypeForDimension<2>::Segment *>(
+    _segments.insert(*std::get<const TypeForDimension<2>::Segment *>(
         primitiveHandle.handle));
     break;
 
   case PrimitiveSurface:
-    _surfaces.emplace_back(*boost::get<const TypeForDimension<2>::Surface *>(
+    _surfaces.emplace_back(*std::get<const TypeForDimension<2>::Surface *>(
         primitiveHandle.handle));
     break;
 
@@ -233,30 +233,34 @@ template <>
 void
 GeometrySet<3>::addPrimitive(const PrimitiveHandle<3> &primitiveHandle)
 {
-  switch (primitiveHandle.handle.which()) {
+  switch (primitiveHandle.handle.index()) {
   case PrimitivePoint:
-    _points.insert(*boost::get<const TypeForDimension<3>::Point *>(
-        primitiveHandle.handle));
+    _points.insert(
+        *std::get<const TypeForDimension<3>::Point *>(primitiveHandle.handle));
     break;
 
   case PrimitiveSegment:
-    _segments.insert(*boost::get<const TypeForDimension<3>::Segment *>(
+    _segments.insert(*std::get<const TypeForDimension<3>::Segment *>(
         primitiveHandle.handle));
     break;
 
   case PrimitiveSurface:
-    _surfaces.emplace_back(*boost::get<const TypeForDimension<3>::Surface *>(
+    _surfaces.emplace_back(*std::get<const TypeForDimension<3>::Surface *>(
         primitiveHandle.handle));
     break;
 
   case PrimitiveVolume: {
     const TypeForDimension<3>::Volume &volume =
-        *boost::get<const TypeForDimension<3>::Volume *>(
-            primitiveHandle.handle);
+        *std::get<const TypeForDimension<3>::Volume *>(primitiveHandle.handle);
     BOOST_ASSERT(!volume.empty());
     _volumes.emplace_back(volume);
     break;
   }
+
+  default:
+    BOOST_THROW_EXCEPTION(
+        Exception("Unexpected PrimitiveHandle variant index"));
+    break;
   }
 }
 
@@ -1048,29 +1052,29 @@ GeometrySet<Dim>::collectPoints(const PrimitiveHandle<Dim> &primitiveHandle)
   using TSurface = typename TypeForDimension<Dim>::Surface;
   using TVolume  = typename TypeForDimension<Dim>::Volume;
 
-  switch (primitiveHandle.handle.which()) {
+  switch (primitiveHandle.handle.index()) {
   case PrimitivePoint: {
-    const TPoint *point = boost::get<const TPoint *>(primitiveHandle.handle);
+    const TPoint *point = std::get<const TPoint *>(primitiveHandle.handle);
     _points.insert(*point);
     break;
   }
 
   case PrimitiveSegment: {
     const TSegment *segment =
-        boost::get<const TSegment *>(primitiveHandle.handle);
+        std::get<const TSegment *>(primitiveHandle.handle);
     _points.insert(segment->source());
     _points.insert(segment->target());
     break;
   }
 
   case PrimitiveSurface: {
-    _collect_points(*boost::get<const TSurface *>(primitiveHandle.handle),
+    _collect_points(*std::get<const TSurface *>(primitiveHandle.handle),
                     _points);
     break;
   }
 
   case PrimitiveVolume: {
-    _collect_points(*boost::get<const TVolume *>(primitiveHandle.handle),
+    _collect_points(*std::get<const TVolume *>(primitiveHandle.handle),
                     _points);
     break;
   }
