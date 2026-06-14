@@ -254,10 +254,9 @@ PolyhedralSurface::setPatchN(std::unique_ptr<Polygon> patch, size_t const &idx)
   BOOST_ASSERT(patch != nullptr);
 
   if (idx >= numPatches()) {
-    BOOST_THROW_EXCEPTION(
-        Exception(std::format("Cannot set geometry at position {}. "
-                              "PolyhedralSurface has only {} geometries.",
-                              idx, numPatches())));
+    throw Exception(std::format("Cannot set geometry at position {}. "
+                                "PolyhedralSurface has only {} geometries.",
+                                idx, numPatches()));
   }
 
   _polygons[idx] = std::move(patch);
@@ -277,7 +276,7 @@ PolyhedralSurface::setPatchN(std::unique_ptr<Geometry> geometry,
     std::ostringstream oss;
     oss << "try to set a '" << geometry->geometryType()
         << "' in a PolyhedralSurface\n";
-    BOOST_THROW_EXCEPTION(InappropriateGeometryException(oss.str()));
+    throw InappropriateGeometryException(oss.str());
   }
 
   setPatchN(geom_unique_ptr_as<Polygon>(std::move(geometry)), idx);

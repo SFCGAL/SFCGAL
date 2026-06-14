@@ -276,8 +276,8 @@ isClosed(const Geometry &g) -> Closure
   }
   }
 
-  BOOST_THROW_EXCEPTION(Exception(
-      std::format("isClosed( {} ) is not defined", g.geometryType())));
+  throw Exception(
+      std::format("isClosed( {} ) is not defined", g.geometryType()));
 
   return Closure::open("Unknown geometry type");
 }

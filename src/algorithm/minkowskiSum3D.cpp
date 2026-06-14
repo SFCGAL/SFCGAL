@@ -464,10 +464,10 @@ geometryToNef(const Geometry &g) -> Nef_polyhedron_3
     return geometryCollectionToNef(g.as<GeometryCollection>());
 
   default:
-    BOOST_THROW_EXCEPTION(GeometryInvalidityException(
+    throw GeometryInvalidityException(
         "Unsupported geometry type for Minkowski sum 3D: " + g.geometryType() +
         " (type id: " + std::to_string(static_cast<int>(g.geometryTypeId())) +
-        ")"));
+        ")");
   }
 }
 // NOLINTEND(readability-function-cognitive-complexity)

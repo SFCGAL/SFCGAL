@@ -22,7 +22,6 @@
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/TriangulatedSurface.h"
 
-#include <boost/exception/all.hpp>
 #include <exception>
 
 namespace SFCGAL::detail::io {
@@ -106,7 +105,7 @@ WktWriter::writeRec(const Geometry &geometry)
 
   std::ostringstream oss;
   oss << "WktWriter : '" << geometry.geometryType() << "' is not supported";
-  BOOST_THROW_EXCEPTION(InappropriateGeometryException(oss.str()));
+  throw InappropriateGeometryException(oss.str());
 }
 
 void
@@ -545,7 +544,7 @@ WktWriter::writeWeights(const std::vector<Kernel::FT> &weights)
       std::ostringstream oss;
       oss << "Invalid NURBS weight at index " << i << ": "
           << CGAL::to_double(weights[i]) << ". Weights must be positive.";
-      BOOST_THROW_EXCEPTION(Exception(oss.str()));
+      throw Exception(oss.str());
     } else {
       // Original weight is valid, use it
       if (_exactWrite) {

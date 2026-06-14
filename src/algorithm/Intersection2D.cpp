@@ -115,13 +115,13 @@ intersection(const PrimitiveHandle<2> &pa, const PrimitiveHandle<2> &pb,
     // However, touching by a single point is valid for OGC
     // FIXME: not implemented yet
     if (numIntersectionPoints(*poly1) > 0) {
-      BOOST_THROW_EXCEPTION(NotImplementedException(
-          "Intersection does not support polygon with connected rings"));
+      throw NotImplementedException(
+          "Intersection does not support polygon with connected rings");
     }
 
     if (numIntersectionPoints(*poly2) > 0) {
-      BOOST_THROW_EXCEPTION(NotImplementedException(
-          "Intersection does not support polygon with connected rings"));
+      throw NotImplementedException(
+          "Intersection does not support polygon with connected rings");
     }
 
     // now call on polygon's interiors

@@ -92,8 +92,8 @@ BoundaryVisitor::visit(const Triangle &g)
 void
 BoundaryVisitor::visit(const Solid &g)
 {
-  BOOST_THROW_EXCEPTION(Exception(std::format(
-      "unsupported type {} in boundary operation", g.geometryType())));
+  throw Exception(std::format("unsupported type {} in boundary operation",
+                              g.geometryType()));
 }
 
 void
@@ -139,15 +139,15 @@ BoundaryVisitor::visit(const MultiPolygon &g)
 void
 BoundaryVisitor::visit(const MultiSolid &g)
 {
-  BOOST_THROW_EXCEPTION(Exception(std::format(
-      "unsupported type {} in boundary operation", g.geometryType())));
+  throw Exception(std::format("unsupported type {} in boundary operation",
+                              g.geometryType()));
 }
 
 void
 BoundaryVisitor::visit(const GeometryCollection &g)
 {
-  BOOST_THROW_EXCEPTION(Exception(std::format(
-      "unsupported type {} in boundary operation", g.geometryType())));
+  throw Exception(std::format("unsupported type {} in boundary operation",
+                              g.geometryType()));
 }
 
 void

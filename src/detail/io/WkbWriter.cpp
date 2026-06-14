@@ -21,7 +21,6 @@
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/TriangulatedSurface.h"
 
-#include <boost/exception/all.hpp>
 #include <exception>
 
 namespace {
@@ -99,7 +98,7 @@ WkbWriter::writeRec(const Geometry &geometry, std::endian wkbOrder)
     std::ostringstream oss;
     oss << "WkbWriter: type '" << geometry.geometryType()
         << "' is not supported";
-    BOOST_THROW_EXCEPTION(InappropriateGeometryException(oss.str()));
+    throw InappropriateGeometryException(oss.str());
   }
 }
 

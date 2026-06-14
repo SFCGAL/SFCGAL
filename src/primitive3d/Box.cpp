@@ -65,7 +65,7 @@ Box::validateParameters(
       CGAL::to_double(std::get<Kernel::FT>(tempParameters.at("z_extent")));
 
   if (xExtent < 0. || yExtent < 0. || zExtent < 0) {
-    BOOST_THROW_EXCEPTION(Exception("Box parameters cannot be negative."));
+    throw Exception("Box parameters cannot be negative.");
   }
 }
 

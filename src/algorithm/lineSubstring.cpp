@@ -131,13 +131,13 @@ lineSubstring(const LineString &ls, double start, double end)
   // Check for out of range start, end.
 
   if (std::fabs(start) > 1.0) {
-    BOOST_THROW_EXCEPTION(Exception(
-        "SFCGAL::algorithm::lineSubstring: start value out of range."));
+    throw Exception(
+        "SFCGAL::algorithm::lineSubstring: start value out of range.");
   }
 
   if (std::fabs(end) > 1.0) {
-    BOOST_THROW_EXCEPTION(
-        Exception("SFCGAL::algorithm::lineSubstring: end value out of range."));
+    throw Exception(
+        "SFCGAL::algorithm::lineSubstring: end value out of range.");
   }
 
   // Convert start and end into their equivalent positive values.

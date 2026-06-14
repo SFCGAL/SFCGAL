@@ -105,8 +105,7 @@ volume(const Geometry &g) -> Kernel::FT
   }
   }
 
-  BOOST_THROW_EXCEPTION(
-      Exception(std::format("volume( {} ) is not defined", g.geometryType())));
+  throw Exception(std::format("volume( {} ) is not defined", g.geometryType()));
 
   return 0; // to avoid warning
 }

@@ -136,8 +136,7 @@ visibility(const Geometry &polygon, const Geometry &point,
     while (cont) {
       he++;
       if (he == arr.halfedges_end()) {
-        BOOST_THROW_EXCEPTION(
-            Exception("Can not find corresponding half edge (from vertex)."));
+        throw Exception("Can not find corresponding half edge (from vertex).");
       }
 
       cont = !Segment_2(he->source()->point(), he->target()->point())
@@ -159,7 +158,7 @@ visibility(const Geometry &polygon, const Geometry &point,
     if (he != nullptr) {
       fh = tev.compute_visibility(queryPoint, *he, output_arr);
     } else {
-      BOOST_THROW_EXCEPTION(Exception("Can not find corresponding hedge."));
+      throw Exception("Can not find corresponding hedge.");
     }
     break;
   }
@@ -173,7 +172,7 @@ visibility(const Geometry &polygon, const Geometry &point,
     if ((face != nullptr) && !((*face)->is_unbounded())) {
       fh = tev.compute_visibility(queryPoint, *face, output_arr);
     } else {
-      BOOST_THROW_EXCEPTION(Exception("Can not find corresponding face."));
+      throw Exception("Can not find corresponding face.");
     }
     break;
   }
@@ -231,7 +230,7 @@ visibility(const Geometry &polygon, const Geometry &pointA,
   while (cont) {
     he++;
     if (he == arr.halfedges_end()) {
-      BOOST_THROW_EXCEPTION(Exception("Can not find corresponding half edge."));
+      throw Exception("Can not find corresponding half edge.");
     }
 
     cont = !Segment_2(he->source()->point(), he->target()->point())

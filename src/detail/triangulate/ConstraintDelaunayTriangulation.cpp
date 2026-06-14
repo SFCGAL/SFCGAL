@@ -19,8 +19,8 @@ ConstraintDelaunayTriangulation::addVertex(const Coordinate &position)
     -> ConstraintDelaunayTriangulation::Vertex_handle
 {
   if (position.isEmpty()) {
-    BOOST_THROW_EXCEPTION(Exception(
-        "try to add empty position to ConstraintDelaunayTriangulation"));
+    throw Exception(
+        "try to add empty position to ConstraintDelaunayTriangulation");
   }
 
   Vertex_handle vertex =

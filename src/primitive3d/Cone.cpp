@@ -74,7 +74,7 @@ Cone::validateParameters(
       CGAL::to_double(std::get<Kernel::FT>(tempParameters.at("top_radius")));
 
   if (height <= 0. || bottomRadius < 0. || topRadius < 0) {
-    BOOST_THROW_EXCEPTION(Exception("Cone parameters cannot be negative."));
+    throw Exception("Cone parameters cannot be negative.");
   }
 }
 

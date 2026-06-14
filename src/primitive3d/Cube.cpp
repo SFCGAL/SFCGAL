@@ -41,7 +41,7 @@ Cube::validateParameters(
       CGAL::to_double(std::get<Kernel::FT>(tempParameters.at("size")));
 
   if (size < 0.) {
-    BOOST_THROW_EXCEPTION(Exception("Cube size cannot be negative."));
+    throw Exception("Cube size cannot be negative.");
   }
 }
 

@@ -23,18 +23,18 @@ EqualityStrictness::operator|(Flag flag) -> EqualityStrictness &
   if ((((_flags & CheckCoverOrPoint) != 0) &&
        flag >= InternalPointOrdered) || //
       (((flag & CheckCoverOrPoint) != 0) && _flags >= InternalPointOrdered)) {
-    BOOST_THROW_EXCEPTION(Exception(std::format(
+    throw Exception(std::format(
         "Conflict in EqualityStrictness flags: can not have CheckCoverOrPoint "
         "and any of InternalPoint* checks ('{}' vs '{}')",
-        toString(), EqualityStrictness(flag).toString())));
+        toString(), EqualityStrictness(flag).toString()));
   }
 
   // can not have multiple InternalPoint* checks
   if (_flags >= InternalPointOrdered && flag >= InternalPointOrdered) {
-    BOOST_THROW_EXCEPTION(Exception(
+    throw Exception(
         std::format("Conflict in EqualityStrictness flags: can not have "
                     "multiple InternalPoint* checks ('{}' vs '{}')",
-                    toString(), EqualityStrictness(flag).toString())));
+                    toString(), EqualityStrictness(flag).toString()));
   }
 
   _flags |= flag;
@@ -214,8 +214,8 @@ compareSubPartOrdered(const Geometry &geomA, const Geometry &geomB,
   }
 
   default:
-    BOOST_THROW_EXCEPTION(NotImplementedException(
-        std::format("Unmanaged geometry type: {}.", geomA.geometryType())));
+    throw NotImplementedException(
+        std::format("Unmanaged geometry type: {}.", geomA.geometryType()));
   }
 }
 
@@ -281,8 +281,8 @@ compareSubPartNonOrdered(const Geometry &geomA, const Geometry &geomB,
   }
 
   default:
-    BOOST_THROW_EXCEPTION(NotImplementedException(
-        std::format("Unmanaged geometry type: {}.", geomA.geometryType())));
+    throw NotImplementedException(
+        std::format("Unmanaged geometry type: {}.", geomA.geometryType()));
   }
 }
 
@@ -588,8 +588,8 @@ hasSubPart(const Geometry &geom) -> bool
     return true;
 
   default:
-    BOOST_THROW_EXCEPTION(NotImplementedException(
-        std::format("Unmanaged geometry type: {}.", geom.geometryType())));
+    throw NotImplementedException(
+        std::format("Unmanaged geometry type: {}.", geom.geometryType()));
   }
 }
 

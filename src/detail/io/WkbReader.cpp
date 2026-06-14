@@ -18,7 +18,7 @@
 #include "SFCGAL/PolyhedralSurface.h"
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/TriangulatedSurface.h"
-#include <boost/exception/all.hpp>
+
 #include <exception>
 
 namespace SFCGAL::detail::io {
@@ -64,8 +64,7 @@ WkbReader::readInnerPoint() -> Point
     }
     return SFCGAL::Point{x, y};
   } catch (std::exception &e) {
-    BOOST_THROW_EXCEPTION(
-        WkbParseException(std::format("InnerPoint error: {}", e.what())));
+    throw WkbParseException(std::format("InnerPoint error: {}", e.what()));
   }
 }
 
@@ -84,8 +83,7 @@ WkbReader::readInnerLineString() -> LineString
       result.addPoint(readInnerPoint());
     }
   } catch (std::exception &e) {
-    BOOST_THROW_EXCEPTION(
-        WkbParseException(std::format("InnerLineString error: {}", e.what())));
+    throw WkbParseException(std::format("InnerLineString error: {}", e.what()));
   }
   return result;
 }
@@ -112,8 +110,7 @@ WkbReader::readInnerPolygon() -> Polygon
       }
     }
   } catch (std::exception &e) {
-    BOOST_THROW_EXCEPTION(
-        WkbParseException(std::format("InnerPolygon error: {}", e.what())));
+    throw WkbParseException(std::format("InnerPolygon error: {}", e.what()));
   }
 
   return result;
@@ -145,8 +142,7 @@ WkbReader::readInnerTriangle() -> Triangle
 
     return SFCGAL::Triangle{geom.pointN(0), geom.pointN(1), geom.pointN(2)};
   } catch (std::exception &e) {
-    BOOST_THROW_EXCEPTION(
-        WkbParseException(std::format("InnerTriangle error: {}", e.what())));
+    throw WkbParseException(std::format("InnerTriangle error: {}", e.what()));
   }
 }
 
@@ -168,8 +164,8 @@ WkbReader::readInnerMultiGeometries() -> M
       result.addGeometry(geom);
     }
   } catch (std::exception &e) {
-    BOOST_THROW_EXCEPTION(WkbParseException(
-        std::format("InnerMultiGeometries error: {}", e.what())));
+    throw WkbParseException(
+        std::format("InnerMultiGeometries error: {}", e.what()));
   }
   return result;
 }
@@ -192,8 +188,8 @@ WkbReader::readInnerGeometryCollection() -> GeometryCollection
       }
     }
   } catch (std::exception &e) {
-    BOOST_THROW_EXCEPTION(WkbParseException(
-        std::format("InnerGeometryCollection error: {}", e.what())));
+    throw WkbParseException(
+        std::format("InnerGeometryCollection error: {}", e.what()));
   }
   return result;
 }
@@ -217,8 +213,8 @@ WkbReader::readInnerTriangulatedSurface() -> TriangulatedSurface
       }
     }
   } catch (std::exception &e) {
-    BOOST_THROW_EXCEPTION(WkbParseException(
-        std::format("InnerTriangulatedSurface error: {}", e.what())));
+    throw WkbParseException(
+        std::format("InnerTriangulatedSurface error: {}", e.what()));
   }
   return result;
 }
@@ -241,8 +237,8 @@ WkbReader::readInnerPolyhedralSurface() -> PolyhedralSurface
       }
     }
   } catch (std::exception &e) {
-    BOOST_THROW_EXCEPTION(WkbParseException(
-        std::format("InnerPolyhedralSurface error: {}", e.what())));
+    throw WkbParseException(
+        std::format("InnerPolyhedralSurface error: {}", e.what()));
   }
   SFCGAL::PolyhedralSurface const result{geoms};
   return result;
@@ -266,8 +262,7 @@ WkbReader::readInnerSolid() -> Solid
       }
     }
   } catch (std::exception &e) {
-    BOOST_THROW_EXCEPTION(
-        WkbParseException(std::format("InnerSolid error: {}", e.what())));
+    throw WkbParseException(std::format("InnerSolid error: {}", e.what()));
   }
   SFCGAL::Solid const result{geoms};
   return result;
@@ -283,8 +278,8 @@ WkbReader::readInnerNURBSCurve() -> NURBSCurve
 
     // Validate degree
     if (degree == 0 || degree > 100) {
-      BOOST_THROW_EXCEPTION(Exception(std::format(
-          "Invalid NURBS degree: {} (must be > 0 and <= 100)", degree)));
+      throw Exception(std::format(
+          "Invalid NURBS degree: {} (must be > 0 and <= 100)", degree));
     }
 
     // Read number of control points
@@ -292,9 +287,9 @@ WkbReader::readInnerNURBSCurve() -> NURBSCurve
 
     // Validate control points count
     if (numControlPoints < degree + 1) {
-      BOOST_THROW_EXCEPTION(Exception(std::format(
+      throw Exception(std::format(
           "Invalid control points count: {} (must be >= degree + 1 = {})",
-          numControlPoints, (degree + 1))));
+          numControlPoints, (degree + 1)));
     }
 
     // Limit element and coordinate counts to avoid excessive memory use
@@ -335,8 +330,8 @@ WkbReader::readInnerNURBSCurve() -> NURBSCurve
       auto y = read<double>();
 
       if (!std::isfinite(x) || !std::isfinite(y)) {
-        BOOST_THROW_EXCEPTION(Exception(std::format(
-            "Invalid coordinates at control point {}: x={}, y={}", i, x, y)));
+        throw Exception(std::format(
+            "Invalid coordinates at control point {}: x={}, y={}", i, x, y));
       }
 
       Point controlPoint;
@@ -344,9 +339,9 @@ WkbReader::readInnerNURBSCurve() -> NURBSCurve
         auto z = read<double>();
         auto m = read<double>();
         if (!std::isfinite(z) || !std::isfinite(m)) {
-          BOOST_THROW_EXCEPTION(Exception(std::format(
+          throw Exception(std::format(
               "Invalid z or m coordinate at control point {}: z={}, m={}", i, z,
-              m)));
+              m));
         }
         controlPoint =
             Point(NURBSCurve::FT(x), NURBSCurve::FT(y), NURBSCurve::FT(z));
@@ -354,16 +349,16 @@ WkbReader::readInnerNURBSCurve() -> NURBSCurve
       } else if (_is3D) {
         auto z = read<double>();
         if (!std::isfinite(z)) {
-          BOOST_THROW_EXCEPTION(Exception(std::format(
-              "Invalid z coordinate at control point {}: z={}", i, z)));
+          throw Exception(std::format(
+              "Invalid z coordinate at control point {}: z={}", i, z));
         }
         controlPoint =
             Point(NURBSCurve::FT(x), NURBSCurve::FT(y), NURBSCurve::FT(z));
       } else if (_isMeasured) {
         auto m = read<double>();
         if (!std::isfinite(m)) {
-          BOOST_THROW_EXCEPTION(Exception(std::format(
-              "Invalid m coordinate at control point {}: m={}", i, m)));
+          throw Exception(std::format(
+              "Invalid m coordinate at control point {}: m={}", i, m));
         }
         controlPoint = Point(NURBSCurve::FT(x), NURBSCurve::FT(y));
         controlPoint.setM(m);
@@ -380,10 +375,9 @@ WkbReader::readInnerNURBSCurve() -> NURBSCurve
       if (hasWeight != 0) {
         auto weight = read<double>();
         if (!std::isfinite(weight) || weight <= 0.0) {
-          BOOST_THROW_EXCEPTION(
-              Exception(std::format("Invalid weight at control point {}: {} "
-                                    "(must be finite and positive)",
-                                    i, weight)));
+          throw Exception(std::format("Invalid weight at control point {}: {} "
+                                      "(must be finite and positive)",
+                                      i, weight));
         }
         weights.emplace_back(weight);
       } else {
@@ -400,9 +394,9 @@ WkbReader::readInnerNURBSCurve() -> NURBSCurve
     // Validate knot vector size
     uint32_t expectedKnots = numControlPoints + degree + 1;
     if (numKnots != expectedKnots) {
-      BOOST_THROW_EXCEPTION(Exception(std::format(
+      throw Exception(std::format(
           "Invalid knot vector size: {} (expected {} = {} + {} + 1)", numKnots,
-          expectedKnots, numControlPoints, degree)));
+          expectedKnots, numControlPoints, degree));
     }
 
     std::vector<NURBSCurve::Knot> knots;
@@ -411,8 +405,8 @@ WkbReader::readInnerNURBSCurve() -> NURBSCurve
     for (uint32_t i = 0; i < numKnots; i++) {
       auto knot = read<double>();
       if (!std::isfinite(knot)) {
-        BOOST_THROW_EXCEPTION(Exception(std::format(
-            "Invalid knot value at index {}: {} (must be finite)", i, knot)));
+        throw Exception(std::format(
+            "Invalid knot value at index {}: {} (must be finite)", i, knot));
       }
       knots.emplace_back(knot);
     }
@@ -420,10 +414,9 @@ WkbReader::readInnerNURBSCurve() -> NURBSCurve
     // Validate that knots are non-decreasing
     for (uint32_t i = 1; i < numKnots; i++) {
       if (knots[i] < knots[i - 1]) {
-        BOOST_THROW_EXCEPTION(Exception(std::format(
+        throw Exception(std::format(
             "Knot vector not non-decreasing: knot[{}] = {} < knot[{}] = {}", i,
-            CGAL::to_double(knots[i]), (i - 1),
-            CGAL::to_double(knots[i - 1]))));
+            CGAL::to_double(knots[i]), (i - 1), CGAL::to_double(knots[i - 1])));
       }
     }
 
@@ -433,8 +426,8 @@ WkbReader::readInnerNURBSCurve() -> NURBSCurve
     return curve;
 
   } catch (std::exception &e) {
-    BOOST_THROW_EXCEPTION(Exception(
-        std::format("WkbReader::readInnerNURBSCurve error: {}", e.what())));
+    throw Exception(
+        std::format("WkbReader::readInnerNURBSCurve error: {}", e.what()));
   }
 }
 // NOLINTEND(readability-function-cognitive-complexity)

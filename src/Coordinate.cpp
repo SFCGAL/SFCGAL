@@ -27,8 +27,8 @@ Coordinate::Coordinate(const Kernel::FT &x, const Kernel::FT &y,
 Coordinate::Coordinate(const double &x, const double &y)
 {
   if (!std::isfinite(x) || !std::isfinite(y)) {
-    BOOST_THROW_EXCEPTION(NonFiniteValueException(
-        "cannot create coordinate with non finite value"));
+    throw NonFiniteValueException(
+        "cannot create coordinate with non finite value");
   }
 
   _storage = Kernel::Point_2(x, y);
@@ -37,8 +37,8 @@ Coordinate::Coordinate(const double &x, const double &y)
 Coordinate::Coordinate(const double &x, const double &y, const double &z)
 {
   if (!std::isfinite(x) || !std::isfinite(y) || !std::isfinite(z)) {
-    BOOST_THROW_EXCEPTION(NonFiniteValueException(
-        "cannot create coordinate with non finite value"));
+    throw NonFiniteValueException(
+        "cannot create coordinate with non finite value");
   }
 
   _storage = Kernel::Point_3(x, y, z);
@@ -111,8 +111,7 @@ struct GetXVisitor {
   auto
   operator()(const Coordinate::Empty & /*unused*/) const -> Kernel::FT
   {
-    BOOST_THROW_EXCEPTION(
-        Exception("trying to get an empty coordinate x value"));
+    throw Exception("trying to get an empty coordinate x value");
     return 0;
   }
   /// @brief Get X coordinate from 2D point
@@ -150,8 +149,7 @@ struct GetYVisitor {
   auto
   operator()(const Coordinate::Empty & /*unused*/) const -> Kernel::FT
   {
-    BOOST_THROW_EXCEPTION(
-        Exception("trying to get an empty coordinate y value"));
+    throw Exception("trying to get an empty coordinate y value");
     return 0;
   }
   /// @brief Get Y coordinate from 2D point
@@ -189,8 +187,7 @@ struct GetZVisitor {
   auto
   operator()(const Coordinate::Empty & /*unused*/) const -> Kernel::FT
   {
-    BOOST_THROW_EXCEPTION(
-        Exception("trying to get an empty coordinate z value"));
+    throw Exception("trying to get an empty coordinate z value");
     return 0;
   }
   /// @brief Handle 2D points (no Z coordinate)
@@ -353,15 +350,13 @@ Coordinate::operator<(const Coordinate &other) const -> bool
 {
   // no empty comparison
   if (isEmpty() || other.isEmpty()) {
-    BOOST_THROW_EXCEPTION(
-        Exception("try to compare empty points using a < b "));
+    throw Exception("try to compare empty points using a < b ");
   }
 
   // no mixed dimension comparison
   if ((is3D() && !other.is3D()) || (!is3D() && other.is3D())) {
-    BOOST_THROW_EXCEPTION(
-        Exception("try to compare empty points with different coordinate "
-                  "dimension using a < b"));
+    throw Exception("try to compare empty points with different coordinate "
+                    "dimension using a < b");
   }
 
   // comparison along x
@@ -424,9 +419,8 @@ Coordinate::almostEqual(const Coordinate &other, const double tolerance) const
 
   // no mixed dimension comparison
   if ((is3D() && !other.is3D()) || (!is3D() && other.is3D())) {
-    BOOST_THROW_EXCEPTION(
-        Exception("try to compare points with different coordinate "
-                  "dimension using a.almostEqual(b)"));
+    throw Exception("try to compare points with different coordinate "
+                    "dimension using a.almostEqual(b)");
   }
 
   result = SFCGAL::almostEqual(x(), other.x(), Kernel::FT(tolerance)) &&

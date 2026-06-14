@@ -7,9 +7,8 @@
 #define SFCGAL_EXCEPTION_H_
 
 #include "SFCGAL/config.h"
-#include <boost/exception/all.hpp>
-#include <boost/format.hpp>
-#include <boost/throw_exception.hpp>
+
+#include <source_location>
 #include <string>
 
 namespace SFCGAL {
@@ -18,11 +17,10 @@ namespace SFCGAL {
  * Base SFCGAL Exception
  *
  * \code
- * BOOST_THROW_EXCEPTION( Exception("invalid geometry") );
+ * throw Exception("invalid geometry");
  * \endcode
  */
-class SFCGAL_API Exception : public virtual boost::exception,
-                             public virtual std::exception {
+class SFCGAL_API Exception : public std::exception {
 public:
   /**
    * @brief Default constructor
@@ -31,8 +29,11 @@ public:
   /**
    * @brief Constructor with message
    * @param message The exception message
+   * @param location The exception source location
    */
-  explicit Exception(std::string const &message) noexcept;
+  explicit Exception(
+      std::string          message,
+      std::source_location location = std::source_location::current()) noexcept;
   /**
    * @brief Copy constructor
    */
@@ -62,19 +63,21 @@ public:
    * returns the exception message
    * @return The exception message
    */
-  auto
+  [[nodiscard]] auto
   what() const noexcept -> const char * override;
 
   /**
    * returns diagnostic information (file, line, etc.)
    * @return Diagnostic information string
    */
-  auto
+  [[nodiscard]] auto
   diagnostic() const noexcept -> std::string;
 
 protected:
-  /// @brief Exception message
+  /// @brief Exception displayed message: raw message
   std::string _message;
+  /// @brief Exception diagnostic: contains source location
+  std::string _diagnostic;
 };
 
 /**
@@ -86,8 +89,11 @@ public:
   /**
    * @brief Constructor with message
    * @param message The exception message
+   * @param location The exception source location
    */
-  explicit GeometryInvalidityException(std::string const &message) noexcept;
+  explicit GeometryInvalidityException(
+      std::string const   &message,
+      std::source_location location = std::source_location::current()) noexcept;
   /**
    * @brief Copy constructor
    */
@@ -126,8 +132,11 @@ public:
   /**
    * @brief Constructor with message
    * @param message The exception message
+   * @param location The exception source location
    */
-  explicit NotImplementedException(std::string const &message) noexcept;
+  explicit NotImplementedException(
+      std::string const   &message,
+      std::source_location location = std::source_location::current()) noexcept;
   /**
    * @brief Copy constructor
    */
@@ -164,8 +173,11 @@ public:
   /**
    * @brief Constructor with message
    * @param message The exception message
+   * @param location The exception source location
    */
-  explicit InappropriateGeometryException(std::string const &message) noexcept;
+  explicit InappropriateGeometryException(
+      std::string const   &message,
+      std::source_location location = std::source_location::current()) noexcept;
   /**
    * @brief Copy constructor
    */
@@ -204,8 +216,11 @@ public:
   /**
    * @brief Constructor with message
    * @param message The exception message
+   * @param location The exception source location
    */
-  explicit NonFiniteValueException(std::string const &message) noexcept;
+  explicit NonFiniteValueException(
+      std::string const   &message,
+      std::source_location location = std::source_location::current()) noexcept;
   /**
    * @brief Copy constructor
    */
@@ -239,8 +254,11 @@ public:
   /**
    * @brief Constructor with message
    * @param message The exception message
+   * @param location The exception source location
    */
-  explicit WktParseException(std::string const &message) noexcept;
+  explicit WktParseException(
+      std::string const   &message,
+      std::source_location location = std::source_location::current()) noexcept;
   /**
    * @brief Copy constructor
    */
@@ -276,8 +294,11 @@ public:
   /**
    * @brief Constructor with message
    * @param message The exception message
+   * @param location The exception source location
    */
-  explicit WkbParseException(std::string const &message) noexcept;
+  explicit WkbParseException(
+      std::string const   &message,
+      std::source_location location = std::source_location::current()) noexcept;
   /**
    * @brief Copy constructor
    */

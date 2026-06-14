@@ -258,8 +258,7 @@ GeometrySet<3>::addPrimitive(const PrimitiveHandle<3> &primitiveHandle)
   }
 
   default:
-    BOOST_THROW_EXCEPTION(
-        Exception("Unexpected PrimitiveHandle variant index"));
+    throw Exception("Unexpected PrimitiveHandle variant index");
     break;
   }
 }

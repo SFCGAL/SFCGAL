@@ -67,8 +67,7 @@ parseObjData(std::istream &inOBJ) -> ObjData
     if (type == "v") {
       // Vertex: v x y z [w]
       if (obj_data.vertices.size() >= SFCGAL_MAX_OBJ_VERTICES) {
-        BOOST_THROW_EXCEPTION(
-            Exception("OBJ file exceeds maximum vertex count"));
+        throw Exception("OBJ file exceeds maximum vertex count");
       }
       double x = 0.0;
       double y = 0.0;
@@ -81,7 +80,7 @@ parseObjData(std::istream &inOBJ) -> ObjData
     } else if (type == "f") {
       // Face: f v1 v2 v3 ...
       if (obj_data.faces.size() >= SFCGAL_MAX_OBJ_FACES) {
-        BOOST_THROW_EXCEPTION(Exception("OBJ file exceeds maximum face count"));
+        throw Exception("OBJ file exceeds maximum face count");
       }
       std::vector<size_t> face;
       std::string         vertex_data;
@@ -93,52 +92,47 @@ parseObjData(std::istream &inOBJ) -> ObjData
         try {
           size_t vertex_index = std::stoul(vertex_index_str);
           if (vertex_index == 0) {
-            BOOST_THROW_EXCEPTION(
-                Exception("Invalid vertex index 0 in OBJ file"));
+            throw Exception("Invalid vertex index 0 in OBJ file");
           }
           // Convert from 1-based to 0-based indexing
           face.push_back(vertex_index - 1);
         } catch (const std::invalid_argument &) {
-          BOOST_THROW_EXCEPTION(
-              Exception("Invalid face vertex index: " + vertex_index_str));
+          throw Exception("Invalid face vertex index: " + vertex_index_str);
         } catch (const std::out_of_range &) {
-          BOOST_THROW_EXCEPTION(
-              Exception("Face vertex index out of range: " + vertex_index_str));
+          throw Exception("Face vertex index out of range: " +
+                          vertex_index_str);
         }
       }
       if (face.size() < 3) {
-        BOOST_THROW_EXCEPTION(Exception("Face must have at least 3 vertices"));
+        throw Exception("Face must have at least 3 vertices");
       }
       obj_data.faces.push_back(face);
     } else if (type == "l") {
       // Line: l v1 v2 ...
       if (obj_data.lines.size() >= SFCGAL_MAX_OBJ_LINES) {
-        BOOST_THROW_EXCEPTION(Exception("OBJ file exceeds maximum line count"));
+        throw Exception("OBJ file exceeds maximum line count");
       }
       std::vector<size_t> line_indices;
       size_t              vertex_index;
       while (iss >> vertex_index) {
         if (vertex_index == 0) {
-          BOOST_THROW_EXCEPTION(
-              Exception("Invalid vertex index 0 in OBJ file"));
+          throw Exception("Invalid vertex index 0 in OBJ file");
         }
         line_indices.push_back(vertex_index - 1);
       }
       if (line_indices.size() < 2) {
-        BOOST_THROW_EXCEPTION(Exception("Line must have at least 2 vertices"));
+        throw Exception("Line must have at least 2 vertices");
       }
       obj_data.lines.push_back(line_indices);
     } else if (type == "p") {
       // Point: p v1
       if (obj_data.points.size() >= SFCGAL_MAX_OBJ_POINTS) {
-        BOOST_THROW_EXCEPTION(
-            Exception("OBJ file exceeds maximum point count"));
+        throw Exception("OBJ file exceeds maximum point count");
       }
       size_t vertex_index;
       if (iss >> vertex_index) {
         if (vertex_index == 0) {
-          BOOST_THROW_EXCEPTION(
-              Exception("Invalid vertex index 0 in OBJ file"));
+          throw Exception("Invalid vertex index 0 in OBJ file");
         }
         obj_data.points.push_back(vertex_index - 1);
       }
@@ -168,7 +162,7 @@ createGeometryFromObjData(const ObjData &obj_data) -> std::unique_ptr<Geometry>
 
   // Create geometry based on what we found
   if (faces.empty() && lines.empty() && points.empty()) {
-    BOOST_THROW_EXCEPTION(Exception("No geometry found in OBJ file"));
+    throw Exception("No geometry found in OBJ file");
   }
 
   // If we have faces, create a TriangulatedSurface or PolyhedralSurface
@@ -187,8 +181,7 @@ createGeometryFromObjData(const ObjData &obj_data) -> std::unique_ptr<Geometry>
       for (const auto &face : faces) {
         if (face[0] >= vertices.size() || face[1] >= vertices.size() ||
             face[2] >= vertices.size()) {
-          BOOST_THROW_EXCEPTION(
-              Exception("Face references invalid vertex index"));
+          throw Exception("Face references invalid vertex index");
         }
 
         auto triangle = std::make_unique<Triangle>(
@@ -206,8 +199,7 @@ createGeometryFromObjData(const ObjData &obj_data) -> std::unique_ptr<Geometry>
 
       for (size_t vertex_idx : face) {
         if (vertex_idx >= vertices.size()) {
-          BOOST_THROW_EXCEPTION(
-              Exception("Face references invalid vertex index"));
+          throw Exception("Face references invalid vertex index");
         }
         ring->addPoint(vertices[vertex_idx]);
       }
@@ -231,8 +223,7 @@ createGeometryFromObjData(const ObjData &obj_data) -> std::unique_ptr<Geometry>
       auto linestring = std::make_unique<LineString>();
       for (size_t vertex_idx : line_indices) {
         if (vertex_idx >= vertices.size()) {
-          BOOST_THROW_EXCEPTION(
-              Exception("Line references invalid vertex index"));
+          throw Exception("Line references invalid vertex index");
         }
         linestring->addPoint(vertices[vertex_idx]);
       }
@@ -247,7 +238,7 @@ createGeometryFromObjData(const ObjData &obj_data) -> std::unique_ptr<Geometry>
 
   for (size_t vertex_idx : points) {
     if (vertex_idx >= vertices.size()) {
-      BOOST_THROW_EXCEPTION(Exception("Point references invalid vertex index"));
+      throw Exception("Point references invalid vertex index");
     }
     multipoint->addGeometry(std::make_unique<Point>(vertices[vertex_idx]));
   }
@@ -368,8 +359,8 @@ save(const Geometry &geom, std::ostream &out)
           break;
         }
         default:
-          BOOST_THROW_EXCEPTION(InappropriateGeometryException(
-              "Unsupported geometry type: " + geom.geometryType()));
+          throw InappropriateGeometryException("Unsupported geometry type: " +
+                                               geom.geometryType());
         }
       };
 
@@ -418,8 +409,7 @@ save(const Geometry &geom, const std::string &filename)
 {
   std::ofstream out(filename);
   if (!out) {
-    BOOST_THROW_EXCEPTION(
-        Exception("Unable to open file " + filename + " for writing."));
+    throw Exception("Unable to open file " + filename + " for writing.");
   }
   save(geom, out);
 }
@@ -463,8 +453,8 @@ loadFromFile(const std::filesystem::path &filename) -> std::unique_ptr<Geometry>
 {
   std::ifstream inOBJ(filename);
   if (!inOBJ) {
-    BOOST_THROW_EXCEPTION(Exception("Unable to open file " + filename.string() +
-                                    " for reading."));
+    throw Exception(
+        std::format("Unable to open file {} for reading.", filename.string()));
   }
   return load(inOBJ);
 }

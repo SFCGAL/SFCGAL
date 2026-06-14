@@ -803,8 +803,8 @@ difference(const Triangle_3 &triangle, const MarkedPolyhedron &polyhedron,
 
           std::vector< Segment_3 > intersectionCountours;
 
-          BOOST_THROW_EXCEPTION(NotImplementedException("Triangle_3 - Volume is
-     not implemented") );
+          throw NotImplementedException("Triangle_3 - Volume is
+     not implemented");
       }
       return out;
   */
