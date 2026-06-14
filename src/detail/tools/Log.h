@@ -9,60 +9,9 @@
 #include "SFCGAL/config.h"
 
 #include <format>
+#include <ostream>
+#include <source_location>
 #include <string>
-
-/**
- *
- * Helper method to log debug message
- *
- * \code
- * SFCGAL_DEBUG( "start new method" ) ;
- * \endcode
- */
-#define SFCGAL_DEBUG(message)                                                  \
-  SFCGAL::Logger::get()->log(SFCGAL::Logger::Debug, message, __FILE__, __LINE__)
-/**
- *
- * Helper method to log information message
- *
- * \code
- * SFCGAL_INFO( "start new method" ) ;
- * \endcode
- */
-#define SFCGAL_INFO(message)                                                   \
-  SFCGAL::Logger::get()->log(SFCGAL::Logger::Info, message, __FILE__, __LINE__)
-/**
- *
- * Helper method to log warning message
- *
- * \code
- * SFCGAL_WARNING( "start new method" ) ;
- * \endcode
- */
-#define SFCGAL_WARNING(message)                                                \
-  SFCGAL::Logger::get()->log(SFCGAL::Logger::Warning, message, __FILE__,       \
-                             __LINE__)
-/**
- *
- * Helper method to log error message
- *
- * \code
- * SFCGAL_ERROR( "invalid geometry" ) ;
- * \endcode
- */
-#define SFCGAL_ERROR(message)                                                  \
-  SFCGAL::Logger::get()->log(SFCGAL::Logger::Info, message, __FILE__, __LINE__)
-/**
- *
- * Helper method to log critical message
- *
- * \code
- * SFCGAL_ERROR( "unexpected behavior in triangulate" ) ;
- * \endcode
- */
-#define SFCGAL_CRITICAL(message)                                               \
-  SFCGAL::Logger::get()->log(SFCGAL::Logger::Critical, message, __FILE__,      \
-                             __LINE__)
 
 namespace SFCGAL {
 
@@ -146,29 +95,136 @@ logger() -> Logger &;
 
 } // namespace SFCGAL
 
-#define SFCGAL_LOG(level, msg)                                                 \
-  do {                                                                         \
-    SFCGAL::Logger::get() << "[" << (level) << " " << __FILE__ << ":"          \
-                          << __LINE__ << "] " << msg << std::endl;             \
-  } while (0)
+inline void
+SFCGAL_LOG(const std::string &level, const std::string &msg,
+           std::source_location loc = std::source_location::current())
+{
+  SFCGAL::Logger::Level lvl = SFCGAL::Logger::Info;
+  if (level == "DEBUG") {
+    lvl = SFCGAL::Logger::Debug;
+  }
+  if (level == "WARNING") {
+    lvl = SFCGAL::Logger::Warning;
+  }
+  if (level == "ERROR") {
+    lvl = SFCGAL::Logger::Error;
+  }
+  if (level == "CRITICAL") {
+    lvl = SFCGAL::Logger::Critical;
+  }
+
+  SFCGAL::Logger::get()->log(lvl, msg, loc.file_name(),
+                             static_cast<int>(loc.line()));
+}
+
+inline void
+LOG_NOTICE(const std::string   &msg,
+           std::source_location loc = std::source_location::current())
+{
+  SFCGAL_LOG("NOTICE", msg, loc);
+}
+
+inline void
+LOG_ERROR(const std::string   &msg,
+          std::source_location loc = std::source_location::current())
+{
+  SFCGAL_LOG("ERROR", msg, loc);
+}
 
 #ifndef NDEBUG
-  #define LOG_DEBUG(msg)                                                       \
-    do {                                                                       \
-      SFCGAL_LOG("DEBUG", msg);                                                \
-    } while (0)
+inline void
+LOG_DEBUG(const std::string   &msg,
+          std::source_location loc = std::source_location::current())
+{
+  SFCGAL_LOG("DEBUG", msg, loc);
+}
 #else
-  #define LOG_DEBUG(msg)                                                       \
-    do {                                                                       \
-    } while (0)
+inline void
+LOG_DEBUG(const std::string & /*msg*/,
+          std::source_location /*loc*/ = std::source_location::current())
+{
+  // no-op in release
+}
 #endif
-#define LOG_NOTICE(msg)                                                        \
-  do {                                                                         \
-    SFCGAL_LOG("NOTICE", msg);                                                 \
-  } while (0)
-#define LOG_ERROR(msg)                                                         \
-  do {                                                                         \
-    SFCGAL_LOG("ERROR", msg);                                                  \
-  } while (0)
 
-#endif
+/**
+ *
+ * Helper method to log debug message
+ *
+ * \code
+ * SFCGAL_DEBUG( "start new method" ) ;
+ * \endcode
+ */
+inline void
+SFCGAL_DEBUG(const std::string   &message,
+             std::source_location loc = std::source_location::current())
+{
+  SFCGAL::Logger::get()->log(SFCGAL::Logger::Debug, message, loc.file_name(),
+                             static_cast<int>(loc.line()));
+}
+
+/**
+ *
+ * Helper method to log information message
+ *
+ * \code
+ * SFCGAL_INFO( "start new method" ) ;
+ * \endcode
+ */
+inline void
+SFCGAL_INFO(const std::string   &message,
+            std::source_location loc = std::source_location::current())
+{
+  SFCGAL::Logger::get()->log(SFCGAL::Logger::Info, message, loc.file_name(),
+                             static_cast<int>(loc.line()));
+}
+
+/**
+ *
+ * Helper method to log warning message
+ *
+ * \code
+ * SFCGAL_WARNING( "start new method" ) ;
+ * \endcode
+ */
+inline void
+SFCGAL_WARNING(const std::string   &message,
+               std::source_location loc = std::source_location::current())
+{
+  SFCGAL::Logger::get()->log(SFCGAL::Logger::Warning, message, loc.file_name(),
+                             static_cast<int>(loc.line()));
+}
+
+/**
+ *
+ * Helper method to log error message
+ *
+ * \code
+ * SFCGAL_ERROR( "invalid geometry" ) ;
+ * \endcode
+ */
+inline void
+SFCGAL_ERROR(const std::string   &message,
+             std::source_location loc = std::source_location::current())
+{
+  SFCGAL::Logger::get()->log(SFCGAL::Logger::Error, message, loc.file_name(),
+                             static_cast<int>(loc.line()));
+}
+
+/**
+ *
+ * Helper method to log critical message
+ *
+ * \code
+ * SFCGAL_ERROR( "unexpected behavior in triangulate" ) ;
+ * \endcode
+ */
+inline void
+SFCGAL_CRITICAL(const std::string   &message,
+                std::source_location loc = std::source_location::current())
+{
+  SFCGAL::Logger::get()->log(SFCGAL::Logger::Critical, message, loc.file_name(),
+                             static_cast<int>(loc.line()));
+}
+
+#endif // SFCGAL_LOG_H_
