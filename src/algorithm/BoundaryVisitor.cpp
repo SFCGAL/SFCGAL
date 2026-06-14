@@ -235,7 +235,7 @@ BoundaryVisitor::getBoundaryFromLineStrings(const graph::GeometryGraph &graph)
   vertex_iterator it;
   vertex_iterator end;
 
-  for (boost::tie(it, end) = graph.vertices(); it != end; ++it) {
+  for (std::tie(it, end) = graph.vertices(); it != end; ++it) {
     vertex_descriptor vertex = *it;
 
     if (graph.degree(vertex) == 1) {
@@ -271,7 +271,7 @@ BoundaryVisitor::getBoundaryFromPolygons(const graph::GeometryGraph &g)
   edge_iterator it;
   edge_iterator end;
 
-  for (boost::tie(it, end) = g.edges(); it != end; ++it) {
+  for (std::tie(it, end) = g.edges(); it != end; ++it) {
     if (g.edges(g.source(*it), g.target(*it)).size() == 1U) {
       boundaryEdges.push_back(*it);
     }

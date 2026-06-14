@@ -43,7 +43,7 @@ isHalfEdge(const GeometryGraphT<V, E> &graph) -> bool
   std::set<std::complex<vertex_descriptor>, detail::ComplexComparator> edges;
   edge_iterator                                                        it, end;
 
-  for (boost::tie(it, end) = graph.edges(); it != end; ++it) {
+  for (std::tie(it, end) = graph.edges(); it != end; ++it) {
     std::complex<vertex_descriptor> cedge(graph.source(*it), graph.target(*it));
 
     if (edges.find(cedge) != edges.end()) {
