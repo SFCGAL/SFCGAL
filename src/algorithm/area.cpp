@@ -59,9 +59,9 @@ area(const Geometry &geom, [[maybe_unused]] NoValidityCheck noCheck) -> double
     return 0;
   }
 
-  BOOST_THROW_EXCEPTION(Exception(
+  throw Exception(
       std::format("Unexpected geometry type ({}) in SFCGAL::algorithm::area",
-                  geom.geometryType())));
+                  geom.geometryType()));
 }
 
 auto
@@ -182,7 +182,7 @@ area3D(const Geometry &geom, [[maybe_unused]] NoValidityCheck noCheck) -> double
     return 0;
   }
 
-  BOOST_THROW_EXCEPTION(Exception("missing case in SFCGAL::algorithm::area3D"));
+  throw Exception("missing case in SFCGAL::algorithm::area3D");
 }
 
 auto

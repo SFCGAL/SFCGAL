@@ -84,8 +84,7 @@ convexHull(const Geometry &geometry) -> std::unique_ptr<Geometry>
     poly->exteriorRing().addPoint(*epoints.begin());
     return poly;
   }
-  BOOST_THROW_EXCEPTION(
-      Exception("unexpected CGAL output type in CGAL::convex_hull_2"));
+  throw Exception("unexpected CGAL output type in CGAL::convex_hull_2");
 }
 
 /// @private
@@ -152,8 +151,7 @@ convexHull3D(const Geometry &geometry) -> std::unique_ptr<Geometry>
 
     return result;
   }
-  BOOST_THROW_EXCEPTION(
-      Exception("unexpected CGAL output type in CGAL::convex_hull_3"));
+  throw Exception("unexpected CGAL output type in CGAL::convex_hull_3");
 }
 
 } // namespace SFCGAL::algorithm

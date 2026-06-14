@@ -218,15 +218,15 @@ Sphere::validateParameters(
       CGAL::to_double(std::get<Kernel::FT>(tempParameters.at("radius")));
 
   if (radius <= 0.) {
-    BOOST_THROW_EXCEPTION(Exception("Sphere radius must be positive."));
+    throw Exception("Sphere radius must be positive.");
   }
 
   const unsigned int num_subdivisions =
       std::get<unsigned int>(tempParameters.at("num_subdivisions"));
 
   if (num_subdivisions > 6) {
-    BOOST_THROW_EXCEPTION(Exception(
-        "Sphere subdivisions should not exceed 6 (too many vertices)."));
+    throw Exception(
+        "Sphere subdivisions should not exceed 6 (too many vertices).");
   }
 }
 

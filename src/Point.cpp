@@ -205,9 +205,8 @@ Point::almostEqual(const Point &other, const double tolerance) const -> bool
   // no mixed dimension comparison
   if ((isMeasured() && !other.isMeasured()) ||
       (!isMeasured() && other.isMeasured())) {
-    BOOST_THROW_EXCEPTION(
-        Exception("try to compare points with different coordinate "
-                  "dimension using a.almostEqual(b)"));
+    throw Exception("try to compare points with different coordinate dimension "
+                    "using a.almostEqual(b)");
   }
 
   if (isMeasured()) {

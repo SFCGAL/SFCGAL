@@ -46,7 +46,7 @@ using Offset_polygon_set_2        = CGAL::General_polygon_set_2<Gps_traits_2>;
 
 #define SFCGAL_OFFSET_ASSERT_FINITE_RADIUS(r)                                  \
   if (!std::isfinite(r))                                                       \
-    BOOST_THROW_EXCEPTION(NonFiniteValueException("radius is non finite"));
+    throw NonFiniteValueException("radius is non finite");
 namespace SFCGAL::algorithm {
 
 /**

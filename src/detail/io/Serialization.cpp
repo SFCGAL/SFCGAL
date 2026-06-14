@@ -149,8 +149,8 @@ load(boost::archive::binary_iarchive &ar, CGAL::Gmpz &z,
 
   // Limit GMP limb allocation to avoid excessive memory use
   if (rsize > SFCGAL_MAX_GMP_LIMBS) {
-    BOOST_THROW_EXCEPTION(SFCGAL::Exception(
-        "Serialization error: GMP number size exceeds maximum allowed"));
+    throw SFCGAL::Exception(
+        "Serialization error: GMP number size exceeds maximum allowed");
   }
 
   mpz->_mp_size = size;
@@ -212,8 +212,8 @@ load(boost::archive::binary_iarchive &ar, mpz_class &z,
 
   // Limit GMP limb allocation to avoid excessive memory use
   if (rsize > SFCGAL_MAX_GMP_LIMBS) {
-    BOOST_THROW_EXCEPTION(SFCGAL::Exception(
-        "Serialization error: GMP number size exceeds maximum allowed"));
+    throw SFCGAL::Exception(
+        "Serialization error: GMP number size exceeds maximum allowed");
   }
 
   mpz->_mp_size = size;

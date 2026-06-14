@@ -70,10 +70,9 @@ Torus::validateParameters(
       CGAL::to_double(std::get<Kernel::FT>(tempParameters.at("tube_radius")));
 
   if (mainRadius <= 0. || tubeRadius <= 0.) {
-    BOOST_THROW_EXCEPTION(Exception("Torus parameters cannot be negative."));
+    throw Exception("Torus parameters cannot be negative.");
   } else if (tubeRadius >= mainRadius) {
-    BOOST_THROW_EXCEPTION(
-        Exception("Tube radius cannot be greater than main radius."));
+    throw Exception("Tube radius cannot be greater than main radius.");
   }
 }
 

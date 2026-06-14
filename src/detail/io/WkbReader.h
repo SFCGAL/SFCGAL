@@ -62,8 +62,7 @@ public:
     // collections (e.g., GeometryCollection inside
     // GeometryCollection recursively).
     if (_recursionDepth >= SFCGAL_MAX_RECURSION_DEPTH) {
-      BOOST_THROW_EXCEPTION(
-          Exception("WkbReader: maximum recursion depth exceeded"));
+      throw Exception("WkbReader: maximum recursion depth exceeded");
     }
 
     // Ensure depth counter is decremented even on exception
@@ -72,7 +71,7 @@ public:
     // wkbOrder
     std::byte wkbOrder{read<std::byte>()};
     if (wkbOrder != std::byte{0} && wkbOrder != std::byte{1}) {
-      BOOST_THROW_EXCEPTION(WkbParseException("invalid WKB byte order marker"));
+      throw WkbParseException("invalid WKB byte order marker");
     }
     const bool wkbIsLittleEndian = (wkbOrder == std::byte{1});
     const bool cpuIsLittleEndian = (std::endian::native == std::endian::little);
@@ -244,8 +243,8 @@ private:
     }
 
     if (!isValidGeometryType(geometryType)) {
-      BOOST_THROW_EXCEPTION(Exception("WkbReader: invalid geometry type '" +
-                                      std::to_string(geometryType) + "'"));
+      throw Exception("WkbReader: invalid geometry type '" +
+                      std::to_string(geometryType) + "'");
     }
 
     return static_cast<GeometryType>(geometryType);
@@ -297,7 +296,7 @@ private:
     default:
       std::ostringstream oss;
       oss << "WkbReader: type '" << geometryType << "' is not supported";
-      BOOST_THROW_EXCEPTION(SFCGAL::WkbParseException(oss.str()));
+      throw SFCGAL::WkbParseException(oss.str());
 
       return {};
     }
@@ -429,9 +428,9 @@ private:
   checkElementCount(uint32_t count, const char *elementType)
   {
     if (count > SFCGAL_MAX_TOTAL_ELEMENTS) {
-      BOOST_THROW_EXCEPTION(
-          Exception(std::string("WkbReader: element count exceeds limit for ") +
-                    elementType));
+      throw Exception(
+          std::string("WkbReader: element count exceeds limit for ") +
+          elementType);
     }
   }
 
@@ -445,8 +444,7 @@ private:
   checkCoordinateCount(uint32_t count)
   {
     if (count > SFCGAL_MAX_TOTAL_COORDINATES) {
-      BOOST_THROW_EXCEPTION(
-          Exception("WkbReader: coordinate count exceeds limit"));
+      throw Exception("WkbReader: coordinate count exceeds limit");
     }
   }
 

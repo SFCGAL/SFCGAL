@@ -37,7 +37,7 @@ WktReader::readSRID() -> srid_t
     _reader.read(srid);
 
     if (!_reader.match(";")) {
-      BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+      throw WktParseException(parseErrorMessage());
     }
   }
 
@@ -49,8 +49,7 @@ WktReader::readGeometry() -> std::unique_ptr<Geometry>
 {
   // Guard against stack overflow from deeply nested geometry collections
   if (_recursionDepth >= SFCGAL_MAX_RECURSION_DEPTH) {
-    BOOST_THROW_EXCEPTION(
-        WktParseException("WktReader: maximum recursion depth exceeded"));
+    throw WktParseException("WktReader: maximum recursion depth exceeded");
   }
 
   // Ensure depth counter is decremented even on exception
@@ -140,7 +139,7 @@ WktReader::readGeometry() -> std::unique_ptr<Geometry>
   }
   }
 
-  BOOST_THROW_EXCEPTION(WktParseException("unexpected geometry"));
+  throw WktParseException("unexpected geometry");
 }
 
 auto
@@ -191,7 +190,7 @@ WktReader::readGeometryType() -> GeometryType
 
   std::ostringstream errorStream;
   errorStream << "can't parse WKT geometry type (" << _reader.context() << ")";
-  BOOST_THROW_EXCEPTION(WktParseException(errorStream.str()));
+  throw WktParseException(errorStream.str());
 }
 
 void
@@ -202,13 +201,13 @@ WktReader::readInnerPoint(Point &point)
   }
 
   if (!_reader.match('(')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   readPointCoordinate(point);
 
   if (!_reader.match(')')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 }
 
@@ -220,7 +219,7 @@ WktReader::readInnerLineString(LineString &lineString)
   }
 
   if (!_reader.match('(')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   while (!_reader.eof()) {
@@ -231,7 +230,7 @@ WktReader::readInnerLineString(LineString &lineString)
       lineString.addPoint(std::move(point));
       checkCoordinateCount(lineString.numPoints());
     } else {
-      BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+      throw WktParseException(parseErrorMessage());
     }
 
     if (_reader.match(',')) {
@@ -242,12 +241,12 @@ WktReader::readInnerLineString(LineString &lineString)
   }
 
   if (lineString.numPoints() < 2U) {
-    BOOST_THROW_EXCEPTION(WktParseException(
-        "WKT parse error, LineString should have at least 2 points"));
+    throw WktParseException(
+        "WKT parse error, LineString should have at least 2 points");
   }
 
   if (!_reader.match(')')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 }
 
@@ -259,7 +258,7 @@ WktReader::readInnerPolygon(Polygon &polygon)
   }
 
   if (!_reader.match('(')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   for (int i = 0; !_reader.eof(); i++) {
@@ -278,7 +277,7 @@ WktReader::readInnerPolygon(Polygon &polygon)
   }
 
   if (!_reader.match(')')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 }
 
@@ -290,11 +289,11 @@ WktReader::readInnerTriangle(Triangle &triangle)
   }
 
   if (!_reader.match('(')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   if (!_reader.match('(')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   // 4 points to read
@@ -310,24 +309,23 @@ WktReader::readInnerTriangle(Triangle &triangle)
   }
 
   if (points.size() != 4) {
-    BOOST_THROW_EXCEPTION(
-        WktParseException("WKT parse error, expected 4 points for triangle"));
+    throw WktParseException("WKT parse error, expected 4 points for triangle");
   }
 
   if (points.back() != points.front()) {
-    BOOST_THROW_EXCEPTION(
-        WktParseException("WKT parse error, first point different of the last "
-                          "point for triangle"));
+    throw WktParseException(
+        "WKT parse error, first point different of the last "
+        "point for triangle");
   }
 
   triangle = Triangle(points[0], points[1], points[2]);
 
   if (!_reader.match(')')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   if (!_reader.match(')')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 }
 
@@ -339,7 +337,7 @@ WktReader::readInnerMultiPoint(MultiPoint &multiPoint)
   }
 
   if (!_reader.match('(')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   while (!_reader.eof()) {
@@ -356,7 +354,7 @@ WktReader::readInnerMultiPoint(MultiPoint &multiPoint)
       readPointCoordinate(*point);
 
       if (parenthesisOpen && !_reader.match(')')) {
-        BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+        throw WktParseException(parseErrorMessage());
       }
     }
 
@@ -371,7 +369,7 @@ WktReader::readInnerMultiPoint(MultiPoint &multiPoint)
   }
 
   if (!_reader.match(')')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 }
 
@@ -383,7 +381,7 @@ WktReader::readInnerMultiLineString(MultiLineString &multiLineString)
   }
 
   if (!_reader.match('(')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   while (!_reader.eof()) {
@@ -401,7 +399,7 @@ WktReader::readInnerMultiLineString(MultiLineString &multiLineString)
   }
 
   if (!_reader.match(')')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 }
 
@@ -413,7 +411,7 @@ WktReader::readInnerMultiPolygon(MultiPolygon &multiPolygon)
   }
 
   if (!_reader.match('(')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   while (!_reader.eof()) {
@@ -431,7 +429,7 @@ WktReader::readInnerMultiPolygon(MultiPolygon &multiPolygon)
   }
 
   if (!_reader.match(')')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 }
 
@@ -443,7 +441,7 @@ WktReader::readInnerGeometryCollection(GeometryCollection &collection)
   }
 
   if (!_reader.match('(')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   while (!_reader.eof()) {
@@ -470,7 +468,7 @@ WktReader::readInnerGeometryCollection(GeometryCollection &collection)
   }
 
   if (!_reader.match(')')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 }
 
@@ -482,7 +480,7 @@ WktReader::readInnerTriangulatedSurface(TriangulatedSurface &tin)
   }
 
   if (!_reader.match('(')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   while (!_reader.eof()) {
@@ -496,7 +494,7 @@ WktReader::readInnerTriangulatedSurface(TriangulatedSurface &tin)
   }
 
   if (!_reader.match(')')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 }
 
@@ -508,7 +506,7 @@ WktReader::readInnerPolyhedralSurface(PolyhedralSurface &surface)
   }
 
   if (!_reader.match('(')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   while (!_reader.eof()) {
@@ -523,7 +521,7 @@ WktReader::readInnerPolyhedralSurface(PolyhedralSurface &surface)
   }
 
   if (!_reader.match(')')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 }
 
@@ -536,7 +534,7 @@ WktReader::readInnerSolid(Solid &solid)
 
   // solid begin
   if (!_reader.match('(')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   for (int i = 0; !_reader.eof(); i++) {
@@ -556,7 +554,7 @@ WktReader::readInnerSolid(Solid &solid)
 
   // solid end
   if (!_reader.match(')')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 }
 
@@ -568,7 +566,7 @@ WktReader::readInnerMultiSolid(MultiSolid &multiSolid)
   }
 
   if (!_reader.match('(')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   while (!_reader.eof()) {
@@ -586,7 +584,7 @@ WktReader::readInnerMultiSolid(MultiSolid &multiSolid)
   }
 
   if (!_reader.match(')')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 }
 
@@ -625,18 +623,18 @@ WktReader::readInnerNURBSCurve(NURBSCurve &geometry)
 
   // NEW FORMAT: Read degree first (ISO compliant)
   if (!_reader.match('(')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   unsigned int degree = readDegree();
 
   if (!_reader.match(',')) {
-    BOOST_THROW_EXCEPTION(WktParseException("Expected comma after degree"));
+    throw WktParseException("Expected comma after degree");
   }
 
   // Read control points - always present after degree
   if (!_reader.match('(')) {
-    BOOST_THROW_EXCEPTION(WktParseException("Expected control points list"));
+    throw WktParseException("Expected control points list");
   }
 
   std::vector<Point> controlPoints;
@@ -651,18 +649,17 @@ WktReader::readInnerNURBSCurve(NURBSCurve &geometry)
   }
 
   if (!_reader.match(')')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   if (controlPoints.empty()) {
-    BOOST_THROW_EXCEPTION(
-        WktParseException("NURBS curve must have at least one control point"));
+    throw WktParseException("NURBS curve must have at least one control point");
   }
 
   // Validate degree
   if (degree >= controlPoints.size()) {
-    BOOST_THROW_EXCEPTION(WktParseException(
-        "NURBS degree must be less than number of control points"));
+    throw WktParseException(
+        "NURBS degree must be less than number of control points");
   }
 
   // Parse optional elements after control points: weights and/or knots
@@ -705,23 +702,23 @@ WktReader::readInnerNURBSCurve(NURBSCurve &geometry)
   }
 
   if (!_reader.match(')')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   // Validate weights if provided
   if (!weights.empty() && weights.size() != controlPoints.size()) {
-    BOOST_THROW_EXCEPTION(WktParseException(
-        "Number of weights must match number of control points"));
+    throw WktParseException(
+        "Number of weights must match number of control points");
   }
 
   // Validate that all weights are positive
   if (!weights.empty()) {
     for (size_t i = 0; i < weights.size(); ++i) {
       if (weights[i] <= 0) {
-        BOOST_THROW_EXCEPTION(WktParseException(
+        throw WktParseException(
             "Weight " + std::to_string(i) +
             " is non-positive: " + std::to_string(CGAL::to_double(weights[i])) +
-            ". All weights must be positive"));
+            ". All weights must be positive");
       }
     }
   }
@@ -729,9 +726,9 @@ WktReader::readInnerNURBSCurve(NURBSCurve &geometry)
   // Validate knot vector if provided
   if (!knots.empty() &&
       !validateKnotVector(knots, controlPoints.size(), degree)) {
-    BOOST_THROW_EXCEPTION(WktParseException(
+    throw WktParseException(
         "Invalid knot vector: must be non-decreasing and have exactly " +
-        std::to_string(controlPoints.size() + degree + 1) + " elements"));
+        std::to_string(controlPoints.size() + degree + 1) + " elements");
   }
 
   // Construct the NURBS curve using appropriate constructor
@@ -757,13 +754,13 @@ WktReader::readWeightsVector() -> std::vector<Kernel::FT>
   std::vector<Kernel::FT> weights;
 
   if (!_reader.match('(')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   while (!_reader.eof()) {
     Kernel::FT weight;
     if (!_reader.read(weight)) {
-      BOOST_THROW_EXCEPTION(WktParseException("Expected weight value"));
+      throw WktParseException("Expected weight value");
     }
 
     if (weight <= Kernel::FT(0)) {
@@ -780,7 +777,7 @@ WktReader::readWeightsVector() -> std::vector<Kernel::FT>
   }
 
   if (!_reader.match(')')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   return weights;
@@ -792,13 +789,13 @@ WktReader::readKnotsVector() -> std::vector<Kernel::FT>
   std::vector<Kernel::FT> knots;
 
   if (!_reader.match('(')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   while (!_reader.eof()) {
     Kernel::FT knot;
     if (!_reader.read(knot)) {
-      BOOST_THROW_EXCEPTION(WktParseException("Expected knot value"));
+      throw WktParseException("Expected knot value");
     }
 
     knots.push_back(knot);
@@ -809,7 +806,7 @@ WktReader::readKnotsVector() -> std::vector<Kernel::FT>
   }
 
   if (!_reader.match(')')) {
-    BOOST_THROW_EXCEPTION(WktParseException(parseErrorMessage()));
+    throw WktParseException(parseErrorMessage());
   }
 
   return knots;
@@ -820,7 +817,7 @@ WktReader::readDegree() -> unsigned int
 {
   unsigned int degree;
   if (!_reader.read(degree)) {
-    BOOST_THROW_EXCEPTION(WktParseException("Expected degree value"));
+    throw WktParseException("Expected degree value");
   }
   return degree;
 }
@@ -841,19 +838,18 @@ WktReader::readPointCoordinate(Point &point) -> bool
   }
 
   if (coordinates.size() < 2) {
-    BOOST_THROW_EXCEPTION(WktParseException(std::format(
-        "WKT parse error, Coordinate dimension < 2 ({})", _reader.context())));
+    throw WktParseException(std::format(
+        "WKT parse error, Coordinate dimension < 2 ({})", _reader.context()));
   }
 
   if (coordinates.size() > 4) {
-    BOOST_THROW_EXCEPTION(
-        WktParseException("WKT parse error, Coordinate dimension > 4"));
+    throw WktParseException("WKT parse error, Coordinate dimension > 4");
   }
 
   if (_isMeasured && _is3D) {
     // XYZM
     if (coordinates.size() != 4) {
-      BOOST_THROW_EXCEPTION(WktParseException("bad coordinate dimension"));
+      throw WktParseException("bad coordinate dimension");
     }
 
     point = Point(coordinates[0], coordinates[1], coordinates[2]);
@@ -861,8 +857,8 @@ WktReader::readPointCoordinate(Point &point) -> bool
   } else if (_isMeasured && !_is3D) {
     // XYM
     if (coordinates.size() != 3) {
-      BOOST_THROW_EXCEPTION(WktParseException(
-          "bad coordinate dimension (expecting XYM coordinates)"));
+      throw WktParseException(
+          "bad coordinate dimension (expecting XYM coordinates)");
     }
 
     point = Point(coordinates[0], coordinates[1]);
@@ -890,9 +886,8 @@ void
 WktReader::checkElementCount(size_t count, const char *elementType)
 {
   if (count > SFCGAL_MAX_TOTAL_ELEMENTS) {
-    BOOST_THROW_EXCEPTION(
-        Exception(std::string("WktReader: element count exceeds limit for ") +
-                  elementType));
+    throw Exception(std::string("WktReader: element count exceeds limit for ") +
+                    elementType);
   }
 }
 
@@ -900,8 +895,7 @@ void
 WktReader::checkCoordinateCount(size_t count)
 {
   if (count > SFCGAL_MAX_TOTAL_COORDINATES) {
-    BOOST_THROW_EXCEPTION(
-        Exception("WktReader: coordinate count exceeds limit"));
+    throw Exception("WktReader: coordinate count exceeds limit");
   }
 }
 

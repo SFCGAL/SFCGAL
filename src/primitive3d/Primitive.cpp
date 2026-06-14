@@ -14,8 +14,8 @@ Primitive::setParameter(const std::string        &name,
 
   // check that parameter name exists
   if (parameterIt == m_parameters.end()) {
-    BOOST_THROW_EXCEPTION(Exception(std::format(
-        "{} does not have a parameter named {}", primitiveType(), name)));
+    throw Exception(std::format("{} does not have a parameter named {}",
+                                primitiveType(), name));
   }
 
   // check the type of the parameter
@@ -27,8 +27,7 @@ Primitive::setParameter(const std::string        &name,
       parameterIt->second);
 
   if (!typeMatches) {
-    BOOST_THROW_EXCEPTION(
-        Exception(std::format("Wrong type for parameter {}.", name)));
+    throw Exception(std::format("Wrong type for parameter {}.", name));
     return;
   }
 
@@ -57,8 +56,8 @@ Primitive::parameter(const std::string &name) const -> PrimitiveParameter
   auto parameterIt = m_parameters.find(name);
   // check that parameter name exists
   if (parameterIt == m_parameters.end()) {
-    BOOST_THROW_EXCEPTION(Exception(std::format(
-        "{} does not have a parameter named {}", primitiveType(), name)));
+    throw Exception(std::format("{} does not have a parameter named {}",
+                                primitiveType(), name));
   }
 
   return parameterIt->second;

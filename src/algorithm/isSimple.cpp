@@ -249,8 +249,8 @@ isSimple(const Geometry &g, const double &toleranceAbs) -> const Simplicity
     return isSimple(g.as<GeometryCollection>(), toleranceAbs);
   }
 
-  BOOST_THROW_EXCEPTION(Exception(
-      std::format("isSimple( {} ) is not defined", g.geometryType())));
+  throw Exception(
+      std::format("isSimple( {} ) is not defined", g.geometryType()));
   return Simplicity::complex(std::format("isSimple( {} ) is not defined",
                                          g.geometryType())); // to avoid warning
 }

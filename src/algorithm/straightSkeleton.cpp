@@ -356,10 +356,10 @@ checkNoTouchingHoles(const Polygon &geom)
       //       more than a single point, which may be
       //       still dangerous. @todo find out !
       if (!inter->isEmpty() && inter->is<Point>()) {
-        BOOST_THROW_EXCEPTION(NotImplementedException(
+        throw NotImplementedException(
             std::string("straight skeleton of Polygon with point ") +
             "touching rings is not implemented. " + "Error at " +
-            inter->asText()));
+            inter->asText());
       }
     }
   }
@@ -470,7 +470,7 @@ straightSkeleton(const Polygon &geom, bool /*autoOrientation*/, bool innerOnly,
   SHARED_PTR<Straight_skeleton_2> const skeleton = straightSkeleton(polygon);
 
   if (skeleton == nullptr) {
-    BOOST_THROW_EXCEPTION(Exception("CGAL failed to create straightSkeleton"));
+    throw Exception("CGAL failed to create straightSkeleton");
   }
 
   if (outputDistanceInM) {
@@ -497,8 +497,7 @@ straightSkeleton(const MultiPolygon &geom, bool /*autoOrientation*/,
     SHARED_PTR<Straight_skeleton_2> const skeleton = straightSkeleton(polygon);
 
     if (skeleton == nullptr) {
-      BOOST_THROW_EXCEPTION(
-          Exception("CGAL failed to create straightSkeleton"));
+      throw Exception("CGAL failed to create straightSkeleton");
     }
 
     if (outputDistanceInM) {
@@ -536,19 +535,17 @@ approximateMedialAxis(const Geometry &geom, bool projectToEdges)
           straightSkeleton(polygon);
 
       if (skeleton == nullptr) {
-        BOOST_THROW_EXCEPTION(
-            Exception("CGAL failed to create straightSkeleton"));
+        throw Exception("CGAL failed to create straightSkeleton");
       }
 
       straightSkeletonToMedialAxis(*skeleton, *mx, trans, projectToEdges);
     } catch (const std::exception &e) {
       std::string msg = e.what();
       if (msg.find("not implemented") != std::string::npos) {
-        BOOST_THROW_EXCEPTION(NotImplementedException(
-            std::string("straightSkeleton error: ") + msg));
+        throw NotImplementedException(std::string("straightSkeleton error: ") +
+                                      msg);
       } else {
-        BOOST_THROW_EXCEPTION(
-            Exception(std::string("straightSkeleton error: ") + msg));
+        throw Exception(std::string("straightSkeleton error: ") + msg);
       }
     }
   }
@@ -606,9 +603,9 @@ extrudeStraightSkeleton(const Polygon &geom, double height,
   const bool hasAngles  = angles.size() != 1 || !angles[0].empty();
 
   if (hasWeights && hasAngles) {
-    BOOST_THROW_EXCEPTION(
-        SFCGAL::Exception("Cannot specify both weights and angles parameters. "
-                          "Use one or the other."));
+    throw SFCGAL::Exception(
+        "Cannot specify both weights and angles parameters. "
+        "Use one or the other.");
   }
 
   // Determine which parameter to use (weights takes priority)
@@ -625,8 +622,8 @@ extrudeStraightSkeleton(const Polygon &geom, double height,
   if (!finalWeights.empty()) {
     size_t numRingsWeights = finalWeights.size();
     if (numRingsWeights == 0) {
-      BOOST_THROW_EXCEPTION(SFCGAL::Exception(
-          "Bad format for weights/angles list. List of list needed."));
+      throw SFCGAL::Exception(
+          "Bad format for weights/angles list. List of list needed.");
     }
 
     // Check that we have a weight for exactly each ring segment
@@ -637,16 +634,16 @@ extrudeStraightSkeleton(const Polygon &geom, double height,
           size_t numSegments        = geom.ringN(ringIdx).numSegments();
           size_t numSegmentsWeights = finalWeights[ringIdx].size();
           if (numSegments != numSegmentsWeights) {
-            BOOST_THROW_EXCEPTION(SFCGAL::Exception(
+            throw SFCGAL::Exception(
                 std::format("Needs {} weights/angles for ring {}, found {}",
-                            numSegments, ringIdx, numSegmentsWeights)));
+                            numSegments, ringIdx, numSegmentsWeights));
           }
         }
       } else {
-        BOOST_THROW_EXCEPTION(SFCGAL::Exception(
+        throw SFCGAL::Exception(
             std::format("Weights/angles list does not contain the correct "
                         "number of rings (needs {}, found {})",
-                        numRings, numRingsWeights)));
+                        numRings, numRingsWeights));
       }
     }
   }
@@ -700,7 +697,7 @@ extrudeStraightSkeleton(const Geometry &geom, double height,
   SFCGAL_ASSERT_GEOMETRY_VALIDITY_2D(geom);
 
   if (geom.geometryTypeId() != TYPE_POLYGON) {
-    BOOST_THROW_EXCEPTION(Exception("Geometry must be a Polygon"));
+    throw Exception("Geometry must be a Polygon");
   }
   std::unique_ptr<PolyhedralSurface> result(extrudeStraightSkeleton(
       geom.as<Polygon>(), height, std::move(weights), std::move(angles)));
@@ -781,8 +778,7 @@ straightSkeletonPartition(const Geometry &geom, bool autoOrientation)
   case TYPE_MULTIPOLYGON:
     return straightSkeletonPartition(geom.as<MultiPolygon>(), autoOrientation);
   default:
-    BOOST_THROW_EXCEPTION(
-        Exception("Geometry must be a Polygon or MultiPolygon"));
+    throw Exception("Geometry must be a Polygon or MultiPolygon");
   }
 
   return result;
@@ -820,7 +816,7 @@ straightSkeletonPartition(const Polygon &geom, bool /*autoOrientation*/)
   SHARED_PTR<Straight_skeleton_2> const skeleton = straightSkeleton(polygon);
 
   if (skeleton == nullptr) {
-    BOOST_THROW_EXCEPTION(Exception("CGAL failed to create straightSkeleton"));
+    throw Exception("CGAL failed to create straightSkeleton");
   }
 
   // Function to create a polygon from a face

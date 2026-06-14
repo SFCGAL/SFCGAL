@@ -79,8 +79,8 @@ length(const Geometry &g) -> double
     return 0.0;
   }
 
-  BOOST_THROW_EXCEPTION(Exception(
-      std::format("undefined length for geometry type {}", g.geometryType())));
+  throw Exception(
+      std::format("undefined length for geometry type {}", g.geometryType()));
 
   return 0.0;
 }
@@ -150,8 +150,8 @@ length3D(const Geometry &g) -> double
     return 0.0;
   }
 
-  BOOST_THROW_EXCEPTION(Exception(
-      std::format("undefined length for geometry type {}", g.geometryType())));
+  throw Exception(
+      std::format("undefined length for geometry type {}", g.geometryType()));
   return 0.0;
 }
 

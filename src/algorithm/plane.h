@@ -88,8 +88,8 @@ plane3D(const Polygon &polygon, CGAL::Point_3<Kernel> &pointA,
         CGAL::Point_3<Kernel> &pointB, CGAL::Point_3<Kernel> &pointC) -> void
 {
   if (!hasPlane3D(polygon, pointA, pointB, pointC)) {
-    BOOST_THROW_EXCEPTION(Exception(
-        std::format("can't find plane for Polygon '{}'", polygon.asText(3))));
+    throw Exception(
+        std::format("can't find plane for Polygon '{}'", polygon.asText(3)));
   }
 }
 
@@ -104,7 +104,7 @@ auto
 plane3D(const Polygon &polygon) -> CGAL::Plane_3<Kernel>
 {
   if (polygon.isEmpty()) {
-    BOOST_THROW_EXCEPTION(Exception("Cannot compute plane for empty polygon"));
+    throw Exception("Cannot compute plane for empty polygon");
   }
 
   CGAL::Vector_3<Kernel> nrml = normal3D<Kernel>(polygon, true);
@@ -129,7 +129,7 @@ plane3D(const Polygon &polygon, const Plane3DInexactUnsafe & /* unused */)
     -> CGAL::Plane_3<Kernel>
 {
   if (polygon.isEmpty()) {
-    BOOST_THROW_EXCEPTION(Exception("Cannot compute plane for empty polygon"));
+    throw Exception("Cannot compute plane for empty polygon");
   }
 
   CGAL::Vector_3<Kernel> nrml = normal3D<Kernel>(polygon, false);

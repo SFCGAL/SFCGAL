@@ -587,9 +587,8 @@ isValid(const Solid &solid, const double &toleranceAbs) -> Validity
   }
 
   if (solid.numInteriorShells() != 0U) {
-    BOOST_THROW_EXCEPTION(
-        Exception("function is not fully implemented (orientation, covering "
-                  "and intersections of interior shells missing"));
+    throw Exception("function is not fully implemented (orientation, covering "
+                    "and intersections of interior shells missing");
   }
 
   return Validity::valid();
@@ -671,8 +670,8 @@ isValid(const Geometry &geometry, const double &toleranceAbs) -> Validity
     return isValid(geometry.as<NURBSCurve>(), toleranceAbs);
   }
 
-  BOOST_THROW_EXCEPTION(Exception(
-      std::format("isValid( {} ) is not defined", geometry.geometryType())));
+  throw Exception(
+      std::format("isValid( {} ) is not defined", geometry.geometryType()));
   return Validity::invalid(
       std::format("isValid( {} ) is not defined",
                   geometry.geometryType())); // to avoid warning

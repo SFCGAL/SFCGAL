@@ -46,7 +46,7 @@ NURBSCurve::NURBSCurve(const std::vector<Point> &controlPoints,
 
     const auto [isValid, reason] = validateData();
     if (!isValid) {
-      BOOST_THROW_EXCEPTION(Exception("Invalid NURBS curve data: " + reason));
+      throw Exception("Invalid NURBS curve data: " + reason);
     }
   }
 }
@@ -62,7 +62,7 @@ NURBSCurve::NURBSCurve(const std::vector<Point> &controlPoints,
 
     const auto [isValid, reason] = validateData();
     if (!isValid) {
-      BOOST_THROW_EXCEPTION(Exception("Invalid NURBS curve data: " + reason));
+      throw Exception("Invalid NURBS curve data: " + reason);
     }
   }
 }
@@ -75,7 +75,7 @@ NURBSCurve::NURBSCurve(const std::vector<Point> &controlPoints,
 {
   const auto [isValid, reason] = validateData();
   if (!isValid) {
-    BOOST_THROW_EXCEPTION(Exception("Invalid NURBS curve data: " + reason));
+    throw Exception("Invalid NURBS curve data: " + reason);
   }
 }
 
@@ -134,7 +134,7 @@ NURBSCurve::createCircularArc(const Point &center, const FT &radius,
     -> std::unique_ptr<NURBSCurve>
 {
   if (radius <= FT(0)) {
-    BOOST_THROW_EXCEPTION(Exception("Arc radius must be positive"));
+    throw Exception("Arc radius must be positive");
   }
 
   double startAngleDouble = CGAL::to_double(startAngle);
@@ -524,7 +524,7 @@ NURBSCurve::generateKnotVectorForEndCondition(
 
   case EndCondition::PERIODIC:
     // Handled separately in interpolatePeriodicCurve
-    BOOST_THROW_EXCEPTION(Exception("Periodic knots handled separately"));
+    throw Exception("Periodic knots handled separately");
     break;
   }
 
@@ -542,8 +542,7 @@ NURBSCurve::interpolateClampedCurve(const std::vector<Point>     &points,
 
   size_t numPoints = points.size();
   if (numPoints < degree + 1) {
-    BOOST_THROW_EXCEPTION(
-        Exception("Not enough points for clamped interpolation"));
+    throw Exception("Not enough points for clamped interpolation");
   }
 
   // For clamped interpolation, we solve the system N * P = Q
@@ -663,9 +662,8 @@ NURBSCurve::interpolateClampedCurve(const std::vector<Point>     &points,
     }
 
   } catch (const std::exception &e) {
-    BOOST_THROW_EXCEPTION(
-        Exception("Failed to solve clamped interpolation system: " +
-                  std::string(e.what())));
+    throw Exception("Failed to solve clamped interpolation system: " +
+                    std::string(e.what()));
   }
 
   return controlPoints;
@@ -683,8 +681,7 @@ NURBSCurve::interpolateNaturalCurve(const std::vector<Point>     &points,
 
   size_t numDataPoints = points.size();
   if (numDataPoints < degree + 1) {
-    BOOST_THROW_EXCEPTION(
-        Exception("Not enough points for natural interpolation"));
+    throw Exception("Not enough points for natural interpolation");
   }
 
   // Set up the interpolation matrix system N * P = Q
@@ -859,14 +856,12 @@ NURBSCurve::interpolatePeriodicCurve(const std::vector<Point> &points,
     -> std::unique_ptr<NURBSCurve>
 {
   if (points.size() < degree + 1) {
-    BOOST_THROW_EXCEPTION(
-        Exception("Not enough points for periodic interpolation"));
+    throw Exception("Not enough points for periodic interpolation");
   }
 
   // Check if curve is actually closed
   if (algorithm::distance(points.front(), points.back()) > EPSILON) {
-    BOOST_THROW_EXCEPTION(
-        Exception("Points must form closed curve for periodic interpolation"));
+    throw Exception("Points must form closed curve for periodic interpolation");
   }
 
   // For periodic curves, we need to wrap points and create uniform knot spacing
@@ -921,8 +916,7 @@ NURBSCurve::interpolateCurve(const std::vector<Point> &points,
     -> std::unique_ptr<NURBSCurve>
 {
   if (points.size() < 2) {
-    BOOST_THROW_EXCEPTION(
-        Exception("Need at least 2 points for interpolation"));
+    throw Exception("Need at least 2 points for interpolation");
   }
 
   // Handle periodic curves specially
@@ -961,11 +955,11 @@ NURBSCurve::interpolateCurve(const std::vector<Point> &points,
 
   case EndCondition::PERIODIC:
     // Already handled above
-    BOOST_THROW_EXCEPTION(Exception("Periodic case should be handled earlier"));
+    throw Exception("Periodic case should be handled earlier");
     break;
 
   default:
-    BOOST_THROW_EXCEPTION(Exception("Unknown EndCondition"));
+    throw Exception("Unknown EndCondition");
   }
 
   auto curve = std::make_unique<NURBSCurve>(
@@ -1045,12 +1039,11 @@ NURBSCurve::approximateCurve(const std::vector<Point> &points,
     -> std::unique_ptr<NURBSCurve>
 {
   if (points.size() < 2) {
-    BOOST_THROW_EXCEPTION(
-        Exception("Need at least 2 points for approximation"));
+    throw Exception("Need at least 2 points for approximation");
   }
 
   if (degree < 1) {
-    BOOST_THROW_EXCEPTION(Exception("Degree must be at least 1"));
+    throw Exception("Degree must be at least 1");
   }
 
   // Ensure we have enough control points for the degree
@@ -1268,9 +1261,8 @@ NURBSCurve::approximateCurve(const std::vector<Point> &points,
     }
 
   } catch (const std::exception &e) {
-    BOOST_THROW_EXCEPTION(
-        Exception("Failed to solve least-squares approximation system: " +
-                  std::string(e.what())));
+    throw Exception("Failed to solve least-squares approximation system: " +
+                    std::string(e.what()));
   }
 
   // Create the approximating curve
@@ -1293,7 +1285,7 @@ NURBSCurve::fitCurve(const std::vector<Point> &points, unsigned int degree,
                      size_t maxControlPoints) -> std::unique_ptr<NURBSCurve>
 {
   if (points.empty()) {
-    BOOST_THROW_EXCEPTION(Exception("Cannot fit curve with no points"));
+    throw Exception("Cannot fit curve with no points");
   }
 
   switch (fitMethod) {
@@ -1307,7 +1299,7 @@ NURBSCurve::fitCurve(const std::vector<Point> &points, unsigned int degree,
                             maxControlPoints);
 
   default:
-    BOOST_THROW_EXCEPTION(Exception("Unknown FitMethod"));
+    throw Exception("Unknown FitMethod");
   }
 }
 
@@ -1385,12 +1377,12 @@ auto
 NURBSCurve::evaluate(Parameter parameter) const -> Point
 {
   if (_controlPoints.empty()) {
-    BOOST_THROW_EXCEPTION(Exception("Cannot evaluate empty NURBS curve"));
+    throw Exception("Cannot evaluate empty NURBS curve");
   }
 
   const auto bounds = parameterBounds();
   if (parameter < bounds.first || parameter > bounds.second) {
-    BOOST_THROW_EXCEPTION(Exception("Parameter outside valid range"));
+    throw Exception("Parameter outside valid range");
   }
 
   if (_controlPoints.size() == 1) {
@@ -1439,8 +1431,7 @@ NURBSCurve::tangent(Parameter parameter) const -> Point
                               : FT(0))));
 
   if (magnitude < EPSILON) {
-    BOOST_THROW_EXCEPTION(
-        Exception("Cannot compute tangent at singular point"));
+    throw Exception("Cannot compute tangent at singular point");
   }
 
   return {firstDerivative.x() / magnitude, firstDerivative.y() / magnitude,
@@ -1451,8 +1442,7 @@ auto
 NURBSCurve::normal(Parameter parameter) const -> Point
 {
   if (is3D()) {
-    BOOST_THROW_EXCEPTION(
-        Exception("Normal vector not uniquely defined for 3D curves"));
+    throw Exception("Normal vector not uniquely defined for 3D curves");
   }
 
   Point tangentVec = tangent(parameter);
@@ -1463,7 +1453,7 @@ auto
 NURBSCurve::binormal(Parameter parameter) const -> Point
 {
   if (!is3D()) {
-    BOOST_THROW_EXCEPTION(Exception("Binormal only defined for 3D curves"));
+    throw Exception("Binormal only defined for 3D curves");
   }
 
   Point firstDeriv  = derivative(parameter, 1);
@@ -1480,8 +1470,7 @@ NURBSCurve::binormal(Parameter parameter) const -> Point
       CGAL::to_double(crossX * crossX + crossY * crossY + crossZ * crossZ));
 
   if (magnitude < EPSILON) {
-    BOOST_THROW_EXCEPTION(
-        Exception("Cannot compute binormal at inflection point"));
+    throw Exception("Cannot compute binormal at inflection point");
   }
 
   return {crossX / magnitude, crossY / magnitude, crossZ / magnitude};
@@ -1828,7 +1817,7 @@ auto
 NURBSCurve::length(Parameter from, Parameter to, FT tolerance) const -> FT
 {
   if (isEmpty()) {
-    BOOST_THROW_EXCEPTION(Exception("Cannot compute length of empty curve"));
+    throw Exception("Cannot compute length of empty curve");
   }
 
   const auto bounds = parameterBounds();
@@ -2044,8 +2033,7 @@ NURBSCurve::join(const Curve &other, Continuity /*continuity*/,
 {
   const auto *otherNurbs = dynamic_cast<const NURBSCurve *>(&other);
   if (otherNurbs == nullptr) {
-    BOOST_THROW_EXCEPTION(
-        Exception("Can only join NURBS curves with other NURBS curves"));
+    throw Exception("Can only join NURBS curves with other NURBS curves");
   }
 
   if (isEmpty() && otherNurbs->isEmpty()) {
@@ -2064,8 +2052,7 @@ NURBSCurve::join(const Curve &other, Continuity /*continuity*/,
   Point otherStart = otherNurbs->startPoint();
 
   if (algorithm::distance(thisEnd, otherStart) > tolerance) {
-    BOOST_THROW_EXCEPTION(
-        Exception("Curves are not adjacent within tolerance"));
+    throw Exception("Curves are not adjacent within tolerance");
   }
 
   // Prepare joined control points
@@ -2138,8 +2125,7 @@ NURBSCurve::closestPoint(const Point &point, Parameter *outParameter) const
     -> Point
 {
   if (_controlPoints.empty()) {
-    BOOST_THROW_EXCEPTION(
-        Exception("Cannot find closest point on empty curve"));
+    throw Exception("Cannot find closest point on empty curve");
   }
 
   const auto [closestPt, parameter] = projectPointToCurve(point);
@@ -2168,7 +2154,7 @@ NURBSCurve::setControlPoints(const std::vector<Point> &controlPoints)
 
   const auto [isValid, reason] = validateData();
   if (!isValid) {
-    BOOST_THROW_EXCEPTION(Exception("Invalid control points: " + reason));
+    throw Exception("Invalid control points: " + reason);
   }
 }
 
@@ -2176,7 +2162,7 @@ auto
 NURBSCurve::controlPointN(size_t index) -> Point &
 {
   if (index >= _controlPoints.size()) {
-    BOOST_THROW_EXCEPTION(Exception("Control point index out of bounds"));
+    throw Exception("Control point index out of bounds");
   }
   return _controlPoints[index];
 }
@@ -2185,7 +2171,7 @@ auto
 NURBSCurve::controlPointN(size_t index) const -> const Point &
 {
   if (index >= _controlPoints.size()) {
-    BOOST_THROW_EXCEPTION(Exception("Control point index out of bounds"));
+    throw Exception("Control point index out of bounds");
   }
   return _controlPoints[index];
 }
@@ -2194,13 +2180,13 @@ void
 NURBSCurve::setControlPoint(size_t index, const Point &point)
 {
   if (index >= _controlPoints.size()) {
-    BOOST_THROW_EXCEPTION(Exception("Control point index out of bounds"));
+    throw Exception("Control point index out of bounds");
   }
 
   if (!_controlPoints.empty() &&
       (_controlPoints[0].is3D() != point.is3D() ||
        _controlPoints[0].isMeasured() != point.isMeasured())) {
-    BOOST_THROW_EXCEPTION(Exception("Control point dimension mismatch"));
+    throw Exception("Control point dimension mismatch");
   }
 
   _controlPoints[index] = point;
@@ -2210,17 +2196,15 @@ void
 NURBSCurve::setWeights(const std::vector<FT> &weights)
 {
   if (!weights.empty() && weights.size() != _controlPoints.size()) {
-    BOOST_THROW_EXCEPTION(
-        Exception("Weight count (" + std::to_string(weights.size()) +
-                  ") does not match control point count (" +
-                  std::to_string(_controlPoints.size()) + ")"));
+    throw Exception("Weight count (" + std::to_string(weights.size()) +
+                    ") does not match control point count (" +
+                    std::to_string(_controlPoints.size()) + ")");
   }
 
   for (size_t weightIdx = 0; weightIdx < weights.size(); ++weightIdx) {
     if (weights[weightIdx] <= FT(0)) {
-      BOOST_THROW_EXCEPTION(Exception("Weight at index " +
-                                      std::to_string(weightIdx) +
-                                      " must be positive"));
+      throw Exception("Weight at index " + std::to_string(weightIdx) +
+                      " must be positive");
     }
   }
 
@@ -2234,7 +2218,7 @@ NURBSCurve::weight(size_t index) const -> FT
     return {1};
   }
   if (index >= _weights.size()) {
-    BOOST_THROW_EXCEPTION(Exception("Weight index out of bounds"));
+    throw Exception("Weight index out of bounds");
   }
   return _weights[index];
 }
@@ -2243,7 +2227,7 @@ void
 NURBSCurve::setWeight(size_t index, const FT &weight)
 {
   if (weight <= FT(0)) {
-    BOOST_THROW_EXCEPTION(Exception("Weight must be positive"));
+    throw Exception("Weight must be positive");
   }
 
   if (_weights.empty()) {
@@ -2251,7 +2235,7 @@ NURBSCurve::setWeight(size_t index, const FT &weight)
   }
 
   if (index >= _weights.size()) {
-    BOOST_THROW_EXCEPTION(Exception("Weight index out of bounds"));
+    throw Exception("Weight index out of bounds");
   }
   _weights[index] = weight;
 }
@@ -2311,7 +2295,7 @@ NURBSCurve::setKnotVector(const std::vector<Knot> &knots)
   _knotVector                  = knots;
   const auto [isValid, reason] = validateData();
   if (!isValid) {
-    BOOST_THROW_EXCEPTION(Exception("Invalid knot vector: " + reason));
+    throw Exception("Invalid knot vector: " + reason);
   }
 }
 
@@ -2319,7 +2303,7 @@ auto
 NURBSCurve::knot(size_t index) const -> Knot
 {
   if (index >= _knotVector.size()) {
-    BOOST_THROW_EXCEPTION(Exception("Knot index out of bounds"));
+    throw Exception("Knot index out of bounds");
   }
   return _knotVector[index];
 }
@@ -2343,40 +2327,36 @@ NURBSCurve::insertKnot([[maybe_unused]] const Knot  &parameter,
                        [[maybe_unused]] unsigned int times) const
     -> std::unique_ptr<NURBSCurve>
 {
-  BOOST_THROW_EXCEPTION(
-      Exception("insertKnot: NURBS knot insertion not yet implemented"));
+  throw Exception("insertKnot: NURBS knot insertion not yet implemented");
 }
 
 auto
 NURBSCurve::refineKnotVector([[maybe_unused]] const std::vector<Knot> &newKnots)
     const -> std::unique_ptr<NURBSCurve>
 {
-  BOOST_THROW_EXCEPTION(Exception(
-      "refineKnotVector: NURBS knot vector refinement not yet implemented"));
+  throw Exception(
+      "refineKnotVector: NURBS knot vector refinement not yet implemented");
 }
 
 auto
 NURBSCurve::elevateDegree([[maybe_unused]] unsigned int times) const
     -> std::unique_ptr<NURBSCurve>
 {
-  BOOST_THROW_EXCEPTION(
-      Exception("elevateDegree: NURBS degree elevation not yet implemented"));
+  throw Exception("elevateDegree: NURBS degree elevation not yet implemented");
 }
 
 auto
 NURBSCurve::reduceDegree([[maybe_unused]] const FT &tolerance) const
     -> std::unique_ptr<NURBSCurve>
 {
-  BOOST_THROW_EXCEPTION(
-      Exception("reduceDegree: NURBS degree reduction not yet implemented"));
+  throw Exception("reduceDegree: NURBS degree reduction not yet implemented");
 }
 
 auto
 NURBSCurve::removeKnots([[maybe_unused]] const FT &tolerance) const
     -> std::unique_ptr<NURBSCurve>
 {
-  BOOST_THROW_EXCEPTION(
-      Exception("removeKnots: NURBS knot removal not yet implemented"));
+  throw Exception("removeKnots: NURBS knot removal not yet implemented");
 }
 // NOLINTEND(readability-convert-member-functions-to-static)
 
@@ -2570,7 +2550,7 @@ NURBSCurve::deBoorRational(size_t span, const Parameter &parameter) const
   HomogeneousPoint &result = temp[_degree];
 
   if (CGAL::abs(result.weight) < EPSILON) {
-    BOOST_THROW_EXCEPTION(Exception("Division by zero in NURBS evaluation"));
+    throw Exception("Division by zero in NURBS evaluation");
   }
 
   FT invWeight = FT(1) / result.weight;
@@ -2922,7 +2902,7 @@ NURBSCurve::projectPointToCurve(const Point &point, const FT &tolerance,
     -> std::pair<Point, Parameter>
 {
   if (_controlPoints.empty()) {
-    BOOST_THROW_EXCEPTION(Exception("Cannot project to empty curve"));
+    throw Exception("Cannot project to empty curve");
   }
 
   FT        minDistance = algorithm::distance(point, _controlPoints[0]);

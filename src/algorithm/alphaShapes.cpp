@@ -92,7 +92,7 @@ computeAlpha(const Geometry &geometry, Alpha_shape_2 &alphaShape,
   if (it_alpha != alphaShape.alpha_end()) {
     result = CGAL::to_double(*it_alpha);
   } else {
-    BOOST_THROW_EXCEPTION(Exception("Can't find alpha value."));
+    throw Exception("Can't find alpha value.");
   }
 
   return result;

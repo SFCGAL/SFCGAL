@@ -69,8 +69,7 @@ auto
 centroid(const Geometry &geom) -> std::unique_ptr<Point>
 {
   if (geom.isEmpty()) {
-    BOOST_THROW_EXCEPTION(
-        InappropriateGeometryException("No point in geometry."));
+    throw InappropriateGeometryException("No point in geometry.");
   }
 
   WeightedCentroid wCent = weightedCentroid(geom);
@@ -94,8 +93,7 @@ auto
 centroid3D(const Geometry &geom) -> std::unique_ptr<Point>
 {
   if (geom.isEmpty()) {
-    BOOST_THROW_EXCEPTION(
-        InappropriateGeometryException("No point in geometry."));
+    throw InappropriateGeometryException("No point in geometry.");
   }
 
   WeightedCentroid wCent = weightedCentroid(geom, true);
@@ -167,9 +165,9 @@ weightedCentroid(const Geometry &geom, bool enable3DComputation)
   }
 
   return wCent;
-  BOOST_THROW_EXCEPTION(Exception(std::format(
+  throw Exception(std::format(
       "Unexpected geometry type (%s) in SFCGAL::algorithm::weightedCentroid",
-      geom.geometryType())));
+      geom.geometryType()));
 }
 
 /// @private
@@ -182,9 +180,9 @@ weightedCentroid(const Triangle &triangle, bool enable3DComputation)
                        triangle.vertex(2), enable3DComputation);
 
   if (wCentroid.area == 0.0) {
-    BOOST_THROW_EXCEPTION(InappropriateGeometryException(
+    throw InappropriateGeometryException(
         "SFCGAL::algorithm::Centroid of Triangle without 2D area is not "
-        "valid."));
+        "valid.");
   }
 
   return wCentroid;
@@ -313,9 +311,9 @@ weightedCentroid(const LineString &lineString, bool enable3DComputation)
   }
 
   if (totalArea == 0.0) {
-    BOOST_THROW_EXCEPTION(InappropriateGeometryException(
+    throw InappropriateGeometryException(
         "SFCGAL::algorithm::Centroid of LineString without 2D area is not "
-        "valid."));
+        "valid.");
   }
 
   totalWeightedCentroid /= totalArea;
@@ -350,10 +348,10 @@ weightedCentroid(const Polygon &polygon, bool enable3DComputation)
         totalWeightedCentroid -= ringCentroid.area * ringCentroid.centroid;
       }
     } catch (InappropriateGeometryException &e) {
-      BOOST_THROW_EXCEPTION(InappropriateGeometryException(
+      throw InappropriateGeometryException(
           std::format("SFCGAL::algorithm::Centroid of Polygon failed at ring "
                       "{} with cause: \n{}",
-                      i, e.what())));
+                      i, e.what()));
     }
   }
 
@@ -415,10 +413,10 @@ weightedCentroid(const Solid &solid, bool enable3DComputation)
         totalWeightedCentroid -= shellCentroid.area * shellCentroid.centroid;
       }
     } catch (InappropriateGeometryException &e) {
-      BOOST_THROW_EXCEPTION(InappropriateGeometryException(
+      throw InappropriateGeometryException(
           std::format("SFCGAL::algorithm::Centroid of Solid failed at shell {} "
                       "with cause: \n{}",
-                      i, e.what())));
+                      i, e.what()));
     }
   }
 

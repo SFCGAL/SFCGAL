@@ -68,8 +68,8 @@ triangulatePolygon3D(const Geometry      &g,
   }
 
   default:
-    BOOST_THROW_EXCEPTION(InappropriateGeometryException(std::format(
-        "can't triangulate 3d polygons for type '{}'", g.geometryType())));
+    throw InappropriateGeometryException(std::format(
+        "can't triangulate 3d polygons for type '{}'", g.geometryType()));
   }
 }
 
@@ -123,8 +123,8 @@ triangulatePolygon3D(const Polygon       &polygon,
    * Make sure polygon is not degenerate
    */
   if (!algorithm::hasPlane3D<Kernel>(polygon)) {
-    BOOST_THROW_EXCEPTION(Exception(
-        std::format("can't find plane for polygon {}", polygon.asText())));
+    throw Exception(
+        std::format("can't find plane for polygon {}", polygon.asText()));
   }
 
   /*

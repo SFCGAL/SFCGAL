@@ -90,9 +90,9 @@ distance(const Geometry &geometry1, const Geometry &geometry2,
     return distanceGeometryCollectionToGeometry(geometry1, geometry2);
 
   case TYPE_SOLID:
-    BOOST_THROW_EXCEPTION(NotImplementedException(
+    throw NotImplementedException(
         std::format("distance({},{}) is not implemented",
-                    geometry1.geometryType(), geometry2.geometryType())));
+                    geometry1.geometryType(), geometry2.geometryType()));
   }
 
   BOOST_ASSERT(false);
@@ -135,9 +135,9 @@ distancePointGeometry(const Point &point, const Geometry &geometry) -> double
     return distanceGeometryCollectionToGeometry(geometry, point);
 
   case TYPE_SOLID:
-    BOOST_THROW_EXCEPTION(NotImplementedException(
+    throw NotImplementedException(
         std::format("distance({},{}) is not implemented", point.geometryType(),
-                    geometry.geometryType())));
+                    geometry.geometryType()));
   }
 
   BOOST_ASSERT(false);
@@ -253,9 +253,9 @@ distanceLineStringGeometry(const LineString &lineString,
     return distanceGeometryCollectionToGeometry(geometry, lineString);
 
   case TYPE_SOLID:
-    BOOST_THROW_EXCEPTION(NotImplementedException(
+    throw NotImplementedException(
         std::format("distance({},{}) is not implemented",
-                    lineString.geometryType(), geometry.geometryType())));
+                    lineString.geometryType(), geometry.geometryType()));
   }
 
   BOOST_ASSERT(false);
@@ -360,9 +360,9 @@ distancePolygonGeometry(const Polygon &polygon, const Geometry &geometry)
     return distanceGeometryCollectionToGeometry(geometry, polygon);
 
   case TYPE_SOLID:
-    BOOST_THROW_EXCEPTION(NotImplementedException(
+    throw NotImplementedException(
         std::format("distance({},{}) is not implemented",
-                    polygon.geometryType(), geometry.geometryType())));
+                    polygon.geometryType(), geometry.geometryType()));
   }
 
   BOOST_ASSERT(false);

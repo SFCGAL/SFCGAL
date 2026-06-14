@@ -131,10 +131,9 @@ auto
 GeometryCollection::geometryN(size_t const &n) const -> const Geometry &
 {
   if (n >= numGeometries()) {
-    BOOST_THROW_EXCEPTION(
-        Exception(std::format("Cannot access geometry at position {}. "
-                              "GeometryCollection has only {} geometries.",
-                              n, numGeometries())));
+    throw Exception(std::format("Cannot access geometry at position {}. "
+                                "GeometryCollection has only {} geometries.",
+                                n, numGeometries()));
   }
 
   return *_geometries[n];
@@ -144,10 +143,9 @@ auto
 GeometryCollection::geometryN(size_t const &n) -> Geometry &
 {
   if (n >= numGeometries()) {
-    BOOST_THROW_EXCEPTION(
-        Exception(std::format("Cannot access geometry at position {}. "
-                              "GeometryCollection has only {} geometries.",
-                              n, numGeometries())));
+    throw Exception(std::format("Cannot access geometry at position {}. "
+                                "GeometryCollection has only {} geometries.",
+                                n, numGeometries()));
   }
 
   return *_geometries[n];
@@ -160,17 +158,16 @@ GeometryCollection::setGeometryN(std::unique_ptr<Geometry> geometry,
   BOOST_ASSERT(geometry != nullptr);
 
   if (idx >= numGeometries()) {
-    BOOST_THROW_EXCEPTION(
-        Exception(std::format("Cannot set geometry at position {}. "
-                              "GeometryCollection has only {} geometries.",
-                              idx, numGeometries())));
+    throw Exception(std::format("Cannot set geometry at position {}. "
+                                "GeometryCollection has only {} geometries.",
+                                idx, numGeometries()));
   }
 
   if (!isAllowed(*geometry)) {
     std::ostringstream oss;
     oss << "try to add a '" << geometry->geometryType() << "' in a '"
         << geometryType() << "'\n";
-    BOOST_THROW_EXCEPTION(InappropriateGeometryException(oss.str()));
+    throw InappropriateGeometryException(oss.str());
   }
 
   _geometries[idx] = std::move(geometry);
@@ -191,7 +188,7 @@ GeometryCollection::addGeometry(std::unique_ptr<Geometry> geometry)
     std::ostringstream oss;
     oss << "try to add a '" << geometry->geometryType() << "' in a '"
         << geometryType() << "'\n";
-    BOOST_THROW_EXCEPTION(InappropriateGeometryException(oss.str()));
+    throw InappropriateGeometryException(oss.str());
   }
 
   _geometries.emplace_back(std::move(geometry));

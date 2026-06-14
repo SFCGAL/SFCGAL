@@ -68,12 +68,11 @@ Cylinder::validateParameters(
       std::get<unsigned int>(tempParameters.at("num_radial"));
 
   if (radius <= 0.) {
-    BOOST_THROW_EXCEPTION(Exception("Cylinder radius cannot be negative."));
+    throw Exception("Cylinder radius cannot be negative.");
   } else if (height <= 0.) {
-    BOOST_THROW_EXCEPTION(Exception("Cylinder height cannot be negative."));
+    throw Exception("Cylinder height cannot be negative.");
   } else if (num_radial < 3) {
-    BOOST_THROW_EXCEPTION(
-        Exception("Cylinder requires at least 3 radial segments."));
+    throw Exception("Cylinder requires at least 3 radial segments.");
   }
 }
 

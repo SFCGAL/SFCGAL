@@ -6,6 +6,7 @@
 #ifndef SFCGAL_GRAPH_ALGORITHM_MAKECONSISTENTORIENTATION_H_
 #define SFCGAL_GRAPH_ALGORITHM_MAKECONSISTENTORIENTATION_H_
 
+#include "SFCGAL/Exception.h"
 #include "SFCGAL/detail/graph/GeometryGraph.h"
 #include <map>
 
@@ -73,9 +74,9 @@ makeConsistentOrientation(
    * consistent orientation
    */
   if (hasOppositeEdge && hasParallelEdge) {
-    BOOST_THROW_EXCEPTION(
-        Exception("can't make consistent orientation between EdgeStrings (both "
-                  "opposite and parallel edge found)"));
+    throw Exception(
+        "can't make consistent orientation between EdgeStrings (both "
+        "opposite and parallel edge found)");
   }
 
   /*

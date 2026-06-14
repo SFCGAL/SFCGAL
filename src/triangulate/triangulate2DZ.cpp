@@ -141,8 +141,8 @@ triangulate2DZ(const Geometry                  &g,
   case TYPE_MULTISOLID:
     // note: we can't have a valid geom in 2D that comes from a solid
     // since a solid closed and thus self-intersects once projected
-    BOOST_THROW_EXCEPTION(InappropriateGeometryException(std::format(
-        "can't process 2DZ triangulation for type '{}'", g.geometryType())));
+    throw InappropriateGeometryException(std::format(
+        "can't process 2DZ triangulation for type '{}'", g.geometryType()));
   }
 }
 

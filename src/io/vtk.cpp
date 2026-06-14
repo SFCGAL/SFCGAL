@@ -120,8 +120,8 @@ save(const Geometry &geom, std::ostream &out)
           break;
         }
         default:
-          BOOST_THROW_EXCEPTION(InappropriateGeometryException(
-              "Unsupported geometry type: " + geometry.geometryType()));
+          throw InappropriateGeometryException("Unsupported geometry type: " +
+                                               geometry.geometryType());
         }
       };
 
@@ -167,8 +167,7 @@ save(const Geometry &geom, const std::string &filename)
 {
   std::ofstream out(filename);
   if (!out) {
-    BOOST_THROW_EXCEPTION(
-        Exception("Unable to open file " + filename + " for writing."));
+    throw Exception("Unable to open file " + filename + " for writing.");
   }
   save(geom, out);
 }

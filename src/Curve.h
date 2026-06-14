@@ -303,8 +303,7 @@ public:
   [[nodiscard]] virtual auto
   numControlPoints() const -> size_t
   {
-    BOOST_THROW_EXCEPTION(
-        Exception("numControlPoints() not supported for this curve type"));
+    throw Exception("numControlPoints() not supported for this curve type");
   }
 
   /**
@@ -315,8 +314,7 @@ public:
   [[nodiscard]] virtual auto
   isRational() const -> bool
   {
-    BOOST_THROW_EXCEPTION(
-        Exception("isRational() not supported for this curve type"));
+    throw Exception("isRational() not supported for this curve type");
   }
 
   /**
@@ -335,8 +333,7 @@ public:
   weight(size_t index) const -> FT
   {
     static_cast<void>(index); // Suppress unused parameter warning
-    BOOST_THROW_EXCEPTION(
-        Exception("weight() not supported for this curve type"));
+    throw Exception("weight() not supported for this curve type");
   }
 
   /**
@@ -356,8 +353,7 @@ public:
   controlPointN(size_t index) const -> const Point &
   {
     static_cast<void>(index); // Suppress unused parameter warning
-    BOOST_THROW_EXCEPTION(
-        Exception("controlPointN() not supported for this curve type"));
+    throw Exception("controlPointN() not supported for this curve type");
   }
 
   /**
@@ -376,8 +372,7 @@ public:
   controlPointN(size_t index) -> Point &
   {
     static_cast<void>(index); // Suppress unused parameter warning
-    BOOST_THROW_EXCEPTION(
-        Exception("controlPointN() not supported for this curve type"));
+    throw Exception("controlPointN() not supported for this curve type");
   }
 
   // Convenience methods (implemented in base class)

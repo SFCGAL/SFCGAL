@@ -65,8 +65,7 @@ difference(const Point_2 &primitive, const PrimitiveHandle<2> &pb,
     break;
 
   default:
-    BOOST_THROW_EXCEPTION(
-        Exception("Unexpected PrimitiveHandle variant index"));
+    throw Exception("Unexpected PrimitiveHandle variant index");
     break;
   }
 
@@ -92,8 +91,7 @@ difference(const Segment_2 &primitive, const PrimitiveHandle<2> &pb,
     break;
 
   default:
-    BOOST_THROW_EXCEPTION(
-        Exception("Unexpected PrimitiveHandle variant index"));
+    throw Exception("Unexpected PrimitiveHandle variant index");
     break;
   }
 
@@ -119,8 +117,8 @@ difference(const Polygon_with_holes_2 &primitive, const PrimitiveHandle<2> &pb,
     break;
 
   default:
-    BOOST_THROW_EXCEPTION(
-        Exception("Unexpected PrimitiveHandle variant index"));
+    throw Exception("Unexpected PrimitiveHandle variant index");
+
     break;
   }
 
@@ -150,8 +148,8 @@ difference(const Point_3 &primitive, const PrimitiveHandle<3> &pb,
     break;
 
   default:
-    BOOST_THROW_EXCEPTION(
-        Exception("Unexpected PrimitiveHandle variant index"));
+    throw Exception("Unexpected PrimitiveHandle variant index");
+
     break;
   }
 
@@ -181,8 +179,8 @@ difference(const Segment_3 &primitive, const PrimitiveHandle<3> &pb,
     break;
 
   default:
-    BOOST_THROW_EXCEPTION(
-        Exception("Unexpected PrimitiveHandle variant index"));
+    throw Exception("Unexpected PrimitiveHandle variant index");
+
     break;
   }
 
@@ -212,8 +210,8 @@ difference(const Triangle_3 &primitive, const PrimitiveHandle<3> &pb,
     break;
 
   default:
-    BOOST_THROW_EXCEPTION(
-        Exception("Unexpected PrimitiveHandle variant index"));
+    throw Exception("Unexpected PrimitiveHandle variant index");
+
     break;
   }
 
@@ -243,8 +241,8 @@ difference(const MarkedPolyhedron &primitive, const PrimitiveHandle<3> &pb,
     break;
 
   default:
-    BOOST_THROW_EXCEPTION(
-        Exception("Unexpected PrimitiveHandle variant index"));
+    throw Exception("Unexpected PrimitiveHandle variant index");
+
     break;
   }
 
@@ -300,8 +298,8 @@ appendDifference(const PrimitiveHandle<2>                              &pa,
   }
 
   default:
-    BOOST_THROW_EXCEPTION(
-        Exception("Unexpected PrimitiveHandle variant index"));
+    throw Exception("Unexpected PrimitiveHandle variant index");
+
     break;
   }
 }
@@ -339,8 +337,7 @@ appendDifference(const PrimitiveHandle<3>                              &pa,
   }
 
   default:
-    BOOST_THROW_EXCEPTION(
-        Exception("Unexpected PrimitiveHandle variant index"));
+    throw Exception("Unexpected PrimitiveHandle variant index");
     break;
   }
 }

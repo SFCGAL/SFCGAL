@@ -112,9 +112,8 @@ distance3D(const Geometry &gA, const Geometry &gB,
     return distanceGeometryCollectionToGeometry3D(gB, gA);
   }
 
-  BOOST_THROW_EXCEPTION(
-      Exception(std::format("distance3D({},{}) is not implemented",
-                            gA.geometryType(), gB.geometryType())));
+  throw Exception(std::format("distance3D({},{}) is not implemented",
+                              gA.geometryType(), gB.geometryType()));
 }
 
 auto
@@ -161,9 +160,8 @@ distancePointGeometry3D(const Point &gA, const Geometry &gB) -> double
     return distanceGeometryCollectionToGeometry3D(gB, gA);
   }
 
-  BOOST_THROW_EXCEPTION(
-      Exception(std::format("distance3D({},{}) is not implemented",
-                            gA.geometryType(), gB.geometryType())));
+  throw Exception(std::format("distance3D({},{}) is not implemented",
+                              gA.geometryType(), gB.geometryType()));
 }
 
 auto
@@ -328,9 +326,8 @@ distanceLineStringGeometry3D(const LineString &gA, const Geometry &gB) -> double
     return distanceGeometryCollectionToGeometry3D(gB, gA);
   }
 
-  BOOST_THROW_EXCEPTION(
-      Exception(std::format("distance3D({},{}) is not implemented",
-                            gA.geometryType(), gB.geometryType())));
+  throw Exception(std::format("distance3D({},{}) is not implemented",
+                              gA.geometryType(), gB.geometryType()));
 }
 
 auto
@@ -503,9 +500,8 @@ distanceTriangleGeometry3D(const Triangle &gA, const Geometry &gB) -> double
     return distanceGeometryCollectionToGeometry3D(gB, gA);
   }
 
-  BOOST_THROW_EXCEPTION(
-      Exception(std::format("distance3D({},{}) is not implemented",
-                            gA.geometryType(), gB.geometryType())));
+  throw Exception(std::format("distance3D({},{}) is not implemented",
+                              gA.geometryType(), gB.geometryType()));
 }
 
 auto
@@ -678,9 +674,8 @@ distanceSolidGeometry3D(const Solid &gA, const Geometry &gB) -> double
     return distanceGeometryCollectionToGeometry3D(gB, gA);
   }
 
-  BOOST_THROW_EXCEPTION(
-      Exception(std::format("distance3D(%s,%s) is not implemented",
-                            gA.geometryType(), gB.geometryType())));
+  throw Exception(std::format("distance3D(%s,%s) is not implemented",
+                              gA.geometryType(), gB.geometryType()));
 }
 
 auto

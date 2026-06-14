@@ -122,7 +122,7 @@ static sfcgal_error_handler_t __sfcgal_error_handler   = printf;
 
   #define SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(call)                         \
     try {                                                                      \
-      call                                                                     \
+      call;                                                                    \
     } catch (std::exception & e) {                                             \
       SFCGAL_ERROR("%s", e.what());                                            \
       return 0;                                                                \
@@ -130,7 +130,7 @@ static sfcgal_error_handler_t __sfcgal_error_handler   = printf;
 
   #define SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(call)                  \
     try {                                                                      \
-      call                                                                     \
+      call;                                                                    \
     } catch (std::exception & e) {                                             \
       SFCGAL_ERROR("%s", e.what());                                            \
     }
@@ -237,7 +237,7 @@ down_cast(sfcgal_geometry_t *geom) -> T *
   T *result = dynamic_cast<T *>(static_cast<SFCGAL::Geometry *>(geom));
 
   if (!result) {
-    BOOST_THROW_EXCEPTION(SFCGAL::Exception("wrong geometry type"));
+    throw SFCGAL::Exception("wrong geometry type");
   }
 
   return result;
@@ -251,7 +251,7 @@ down_const_cast(const sfcgal_geometry_t *geom) -> const T *
       dynamic_cast<const T *>(static_cast<const SFCGAL::Geometry *>(geom));
 
   if (!result) {
-    BOOST_THROW_EXCEPTION(SFCGAL::Exception("wrong geometry type"));
+    throw SFCGAL::Exception("wrong geometry type");
   }
 
   return result;
@@ -326,7 +326,7 @@ extern "C" void
 sfcgal_set_geometry_validation(int /*enabled*/)
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
-      BOOST_THROW_EXCEPTION(SFCGAL::Exception("Not implemented")););
+      throw SFCGAL::Exception("Not implemented"));
 }
 
 extern "C" auto
@@ -2767,9 +2767,9 @@ cSimplificationStrategyToCpp(sfcgal_simplification_strategy_t strategy)
 #else
   case SFCGAL_SIMPLIFICATION_STRATEGY_GARLAND_HECKBERT:
   case SFCGAL_SIMPLIFICATION_STRATEGY_LINDSTROM_TURK:
-    BOOST_THROW_EXCEPTION(
-        SFCGAL::Exception("The chosen simplification strategy requires SFCGAL "
-                          "to be built with -DSFCGAL_WITH_EIGEN=ON."));
+    throw SFCGAL::Exception(
+        "The chosen simplification strategy requires SFCGAL "
+        "to be built with -DSFCGAL_WITH_EIGEN=ON.");
 #endif // SFCGAL_WITH_EIGEN
   default:
     return SFCGAL::algorithm::SimplificationStrategy::EDGE_LENGTH;
@@ -3284,7 +3284,7 @@ safeGeometryToPoint(const sfcgal_geometry_t *geom) -> const SFCGAL::Point *
   }
   const auto *geometry = reinterpret_cast<const SFCGAL::Geometry *>(geom);
   if (geometry->geometryTypeId() != SFCGAL::TYPE_POINT) {
-    BOOST_THROW_EXCEPTION(SFCGAL::Exception("Expected Point geometry"));
+    throw SFCGAL::Exception("Expected Point geometry");
   }
   return static_cast<const SFCGAL::Point *>(geometry);
 }
@@ -3294,11 +3294,11 @@ auto
 safeGeometryToNURBSCurve(sfcgal_geometry_t *geom) -> SFCGAL::NURBSCurve *
 {
   if (geom == nullptr) {
-    BOOST_THROW_EXCEPTION(SFCGAL::Exception("Geometry cannot be null"));
+    throw SFCGAL::Exception("Geometry cannot be null");
   }
   auto *geometry = reinterpret_cast<SFCGAL::Geometry *>(geom);
   if (geometry->geometryTypeId() != SFCGAL::TYPE_NURBSCURVE) {
-    BOOST_THROW_EXCEPTION(SFCGAL::Exception("Expected NURBSCurve geometry"));
+    throw SFCGAL::Exception("Expected NURBSCurve geometry");
   }
   return static_cast<SFCGAL::NURBSCurve *>(geometry);
 }
@@ -3309,11 +3309,11 @@ safeGeometryToConstNURBSCurve(const sfcgal_geometry_t *geom)
     -> const SFCGAL::NURBSCurve *
 {
   if (geom == nullptr) {
-    BOOST_THROW_EXCEPTION(SFCGAL::Exception("Geometry cannot be null"));
+    throw SFCGAL::Exception("Geometry cannot be null");
   }
   const auto *geometry = reinterpret_cast<const SFCGAL::Geometry *>(geom);
   if (geometry->geometryTypeId() != SFCGAL::TYPE_NURBSCURVE) {
-    BOOST_THROW_EXCEPTION(SFCGAL::Exception("Expected NURBSCurve geometry"));
+    throw SFCGAL::Exception("Expected NURBSCurve geometry");
   }
   return static_cast<const SFCGAL::NURBSCurve *>(geometry);
 }
@@ -3323,14 +3323,14 @@ convertPointArray(const sfcgal_geometry_t **points, size_t num_points)
     -> std::vector<SFCGAL::Point>
 {
   if (points == nullptr) {
-    BOOST_THROW_EXCEPTION(SFCGAL::Exception("Points array cannot be null"));
+    throw SFCGAL::Exception("Points array cannot be null");
   }
   std::vector<SFCGAL::Point> result;
   result.reserve(num_points);
   for (size_t i = 0; i < num_points; ++i) {
     const auto *point = safeGeometryToPoint(points[i]);
     if (point == nullptr) {
-      BOOST_THROW_EXCEPTION(SFCGAL::Exception("Point cannot be null"));
+      throw SFCGAL::Exception("Point cannot be null");
     }
     result.push_back(*point);
   }
@@ -3446,7 +3446,7 @@ sfcgal_nurbs_curve_create_circular_arc(const sfcgal_geometry_t *center,
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
       const auto *centerPoint = safeGeometryToPoint(center);
       if (centerPoint == nullptr) {
-        BOOST_THROW_EXCEPTION(SFCGAL::Exception("Center point cannot be null"));
+        throw SFCGAL::Exception("Center point cannot be null");
       } const auto *normalPoint =
           normal ? safeGeometryToPoint(normal) : nullptr;
 
@@ -3531,7 +3531,7 @@ sfcgal_nurbs_curve_set_control_point_n(sfcgal_geometry_t *curve, size_t index,
       auto       *nurbsCurve = safeGeometryToNURBSCurve(curve);
       const auto *pointPtr   = safeGeometryToPoint(point);
       if (pointPtr == nullptr) {
-        BOOST_THROW_EXCEPTION(SFCGAL::Exception("Point cannot be null"));
+        throw SFCGAL::Exception("Point cannot be null");
       } nurbsCurve->setControlPoint(index, *pointPtr);)
 }
 

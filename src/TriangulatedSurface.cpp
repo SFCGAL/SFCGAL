@@ -143,10 +143,9 @@ auto
 TriangulatedSurface::patchN(size_t const &index) const -> const Triangle &
 {
   if (index >= numPatches()) {
-    BOOST_THROW_EXCEPTION(
-        Exception(std::format("Cannot access geometry at position {}. "
-                              "TriangulatedSurface has only {} geometries.",
-                              index, numGeometries())));
+    throw Exception(std::format("Cannot access geometry at position {}. "
+                                "TriangulatedSurface has only {} geometries.",
+                                index, numGeometries()));
   }
 
   return *_triangles[index];
@@ -156,10 +155,9 @@ auto
 TriangulatedSurface::patchN(size_t const &index) -> Triangle &
 {
   if (index >= numPatches()) {
-    BOOST_THROW_EXCEPTION(
-        Exception(std::format("Cannot access geometry at position {}. "
-                              "TriangulatedSurface has only {} geometries.",
-                              index, numPatches())));
+    throw Exception(std::format("Cannot access geometry at position {}. "
+                                "TriangulatedSurface has only {} geometries.",
+                                index, numPatches()));
   }
 
   return *_triangles[index];
@@ -172,10 +170,9 @@ TriangulatedSurface::setPatchN(std::unique_ptr<Triangle> triangle,
   BOOST_ASSERT(triangle != nullptr);
 
   if (idx >= numPatches()) {
-    BOOST_THROW_EXCEPTION(
-        Exception(std::format("Cannot set geometry at position {}. "
-                              "TriangulatedSurface has only {} geometries.",
-                              idx, numPatches())));
+    throw Exception(std::format("Cannot set geometry at position {}. "
+                                "TriangulatedSurface has only {} geometries.",
+                                idx, numPatches()));
   }
 
   _triangles[idx] = std::move(triangle);
@@ -195,7 +192,7 @@ TriangulatedSurface::setPatchN(std::unique_ptr<Geometry> geometry,
     std::ostringstream oss;
     oss << "try to set a '" << geometry->geometryType()
         << "' in a TriangulatedSurface\n";
-    BOOST_THROW_EXCEPTION(InappropriateGeometryException(oss.str()));
+    throw InappropriateGeometryException(oss.str());
   }
 
   setPatchN(geom_unique_ptr_as<Triangle>(std::move(geometry)), idx);
@@ -286,11 +283,10 @@ public:
       if (edges.find(std::make_pair(pointA, pointB)) != edges.end() ||
           edges.find(std::make_pair(pointB, pointC)) != edges.end() ||
           edges.find(std::make_pair(pointC, pointA)) != edges.end()) {
-        BOOST_THROW_EXCEPTION(
-            Exception("When trying to build a CGAL::Polyhedron_3 from a "
-                      "TriangulatedSurface: bad orientation for " +
-                      surf.geometryN(i).asText() +
-                      " consider using ConsistentOrientationBuilder first"));
+        throw Exception("When trying to build a CGAL::Polyhedron_3 from a "
+                        "TriangulatedSurface: bad orientation for " +
+                        surf.geometryN(i).asText() +
+                        " consider using ConsistentOrientationBuilder first");
       }
 
       builder.add_vertex_to_facet(points[pointA]);

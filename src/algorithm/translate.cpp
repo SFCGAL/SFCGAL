@@ -51,8 +51,8 @@ translate(Geometry &geometry, const double &dx, const double &dy,
           const double &dz)
 {
   if (!std::isfinite(dx) || !std::isfinite(dy) || !std::isfinite(dz)) {
-    BOOST_THROW_EXCEPTION(NonFiniteValueException(
-        "trying to translate with non finite value in direction"));
+    throw NonFiniteValueException(
+        "trying to translate with non finite value in direction");
   }
 
   translate(geometry, Kernel::FT(dx), Kernel::FT(dy), Kernel::FT(dz));

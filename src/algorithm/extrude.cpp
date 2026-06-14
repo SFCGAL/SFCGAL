@@ -342,8 +342,8 @@ extrude(const Geometry &inputGeometry, const Kernel::Vector_3 &extrusionVector)
     break;
   }
 
-  BOOST_THROW_EXCEPTION(InappropriateGeometryException(std::format(
-      "Extrusion of %s is not supported", inputGeometry.geometryType())));
+  throw InappropriateGeometryException(std::format(
+      "Extrusion of %s is not supported", inputGeometry.geometryType()));
 }
 
 /// @private
@@ -377,8 +377,8 @@ extrude(const Geometry &geom, const double &displacementX,
 {
   if (!std::isfinite(displacementX) || !std::isfinite(displacementY) ||
       !std::isfinite(displacementZ)) {
-    BOOST_THROW_EXCEPTION(NonFiniteValueException(
-        "trying to extrude with non finite value in extrusionVector"));
+    throw NonFiniteValueException(
+        "trying to extrude with non finite value in extrusionVector");
   }
 
   return extrude(geom, Kernel::FT(displacementX), Kernel::FT(displacementY),
@@ -392,8 +392,8 @@ extrude(const Polygon &polygon, const double &height)
 {
 
   if (!std::isfinite(height)) {
-    BOOST_THROW_EXCEPTION(NonFiniteValueException(
-        "trying to extrude with non finite value in extrusionVector"));
+    throw NonFiniteValueException(
+        "trying to extrude with non finite value in extrusionVector");
   }
 
   return extrude(polygon, Kernel::Vector_3(0.0, 0.0, height), false);
