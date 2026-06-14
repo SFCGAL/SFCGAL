@@ -14,9 +14,18 @@
 #include <algorithm>
 #include <cstdio>
 
-#define DEBUG_OUT                                                              \
-  if (0)                                                                       \
-  std::cerr << __FILE__ << ":" << __LINE__ << " debug: "
+inline auto
+DEBUG_OUT(std::source_location loc = std::source_location::current())
+    -> std::ostream &
+{
+#ifndef NDEBUG
+  return std::cerr << loc.file_name() << ":" << loc.line() << " debug: ";
+#else
+  [[maybe_unused]] auto unused = loc;
+  static std::ostream   null_stream(nullptr);
+  return null_stream;
+#endif
+}
 
 namespace SFCGAL::algorithm {
 
@@ -226,7 +235,7 @@ struct Surface_d<3> : Triangle_3 {
       }
     }
 
-    DEBUG_OUT << "triangulating " << filtered.size() << " lines\n";
+    DEBUG_OUT() << "triangulating " << filtered.size() << " lines\n";
 
     // now we want to triangulate
     TriangulatedSurface ts;
@@ -269,7 +278,7 @@ struct Surface_d<3> : Triangle_3 {
       }
     }
 
-    DEBUG_OUT << "generated " << res.size() << " triangles\n";
+    DEBUG_OUT() << "generated " << res.size() << " triangles\n";
 
     return res;
   }
@@ -546,8 +555,8 @@ compute_bboxes(const detail::GeometrySet<Dim> &gs, OutputIterator out)
   }
 
   for (auto it = gs.surfaces().begin(); it != gs.surfaces().end(); ++it) {
-    DEBUG_OUT << "Adding surface " << it->primitive() << "\n";
-    DEBUG_OUT << "       surface box " << it->primitive().bbox() << "\n";
+    DEBUG_OUT() << "Adding surface " << it->primitive() << "\n";
+    DEBUG_OUT() << "       surface box " << it->primitive().bbox() << "\n";
     *out++ = typename HandledBox<Dim>::Type(it->primitive().bbox(),
                                             Handle<Dim>(it->primitive()));
   }
@@ -787,8 +796,8 @@ union_surface_surface(Handle<2> a, Handle<2> b)
   try {
     if (CGAL::join(fix_sfs_valid_polygon(a.asSurface()),
                    fix_sfs_valid_polygon(b.asSurface()), res)) {
-      DEBUG_OUT << "merged " << a.asSurface() << " and " << b.asSurface()
-                << "\n";
+      DEBUG_OUT() << "merged " << a.asSurface() << " and " << b.asSurface()
+                  << "\n";
       Handle<2> merged(res);
       merged.asSurface().addSplitsFrom(a.asSurface());
       merged.asSurface().addSplitsFrom(b.asSurface());
@@ -892,7 +901,7 @@ struct UnionOnBoxCollision {
   operator()(typename HandledBox<Dim>::Type &a,
              typename HandledBox<Dim>::Type &b)
   {
-    DEBUG_OUT << "collision of boxes\n";
+    DEBUG_OUT() << "collision of boxes\n";
 
     switch (a.handle().index()) {
     case PrimitivePoint:
