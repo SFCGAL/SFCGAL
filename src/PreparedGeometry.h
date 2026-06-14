@@ -12,7 +12,6 @@
 #include "SFCGAL/Envelope.h"
 
 #include <boost/endian/conversion.hpp>
-#include <boost/noncopyable.hpp>
 #include <boost/serialization/split_member.hpp>
 
 #include <stdint.h> // uint32_t
@@ -28,7 +27,7 @@ class Geometry;
  * It is noncopyable since it stores a std::unique_ptr<SFCGAL::Geometry>
  *
  */
-class SFCGAL_API PreparedGeometry : public boost::noncopyable {
+class SFCGAL_API PreparedGeometry {
 public:
   /**
    * Default constructor
@@ -50,6 +49,11 @@ public:
   PreparedGeometry(Geometry *geometry, srid_t srid = 0);
 
   ~PreparedGeometry();
+
+  // PreparedGeometry is noncopyable
+  PreparedGeometry(const PreparedGeometry &) = delete;
+  auto
+  operator=(const PreparedGeometry &) -> PreparedGeometry & = delete;
 
   /**
    * Geometry accessors
