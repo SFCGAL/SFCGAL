@@ -20,8 +20,10 @@ class Sfcgal < Formula
 
   depends_on "cgal"
   depends_on "boost"
+  depends_on "eigen"
   depends_on "gmp"
   depends_on "mpfr"
+  depends_on "nlohmann-json"
 
   def install
     lib.install Dir["lib/*"]
