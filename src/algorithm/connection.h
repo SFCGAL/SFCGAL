@@ -11,7 +11,6 @@
 #include "SFCGAL/Validity.h"
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/connected_components.hpp>
-#include <boost/noncopyable.hpp>
 #include <map>
 
 namespace SFCGAL::algorithm {
@@ -23,8 +22,13 @@ namespace SFCGAL::algorithm {
  * @todo unittest
  */
 
-class SFCGAL_API SurfaceGraph : boost::noncopyable {
+class SFCGAL_API SurfaceGraph {
 public:
+  // SurfaceGraph is noncopyable
+  SurfaceGraph(const SurfaceGraph &) = delete;
+  auto
+  operator=(const SurfaceGraph &) -> SurfaceGraph & = delete;
+
   /// Vertex index type for identifying vertices in the surface graph
   using VertexIndex = size_t;
   /// Face index type for identifying faces in the surface graph
