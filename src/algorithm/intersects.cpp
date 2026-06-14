@@ -46,18 +46,18 @@ _intersects(const PrimitiveHandle<2> &handle1,
   // Point vs. Point
   //
 
-  if (handle1.handle.which() == PrimitivePoint &&
-      handle2.handle.which() == PrimitivePoint) {
-    return *boost::get<const CGAL::Point_2<Kernel> *>(handle1.handle) ==
-           *boost::get<const CGAL::Point_2<Kernel> *>(handle2.handle);
+  if (handle1.handle.index() == PrimitivePoint &&
+      handle2.handle.index() == PrimitivePoint) {
+    return *handle1.as<const CGAL::Point_2<Kernel>>() ==
+           *handle1.as<const CGAL::Point_2<Kernel>>();
   }
 
   //
   // Segment vs. Point
   //
 
-  if (handle1.handle.which() == PrimitiveSegment &&
-      handle2.handle.which() == PrimitivePoint) {
+  if (handle1.handle.index() == PrimitiveSegment &&
+      handle2.handle.index() == PrimitivePoint) {
     const auto *seg = handle1.as<CGAL::Segment_2<Kernel>>();
     const auto *pt  = handle2.as<CGAL::Point_2<Kernel>>();
     return seg->has_on(*pt);
@@ -67,8 +67,8 @@ _intersects(const PrimitiveHandle<2> &handle1,
   // Segment vs. Segment
   //
 
-  if (handle1.handle.which() == PrimitiveSegment &&
-      handle2.handle.which() == PrimitiveSegment) {
+  if (handle1.handle.index() == PrimitiveSegment &&
+      handle2.handle.index() == PrimitiveSegment) {
     const auto *seg1 = handle1.as<CGAL::Segment_2<Kernel>>();
     const auto *seg2 = handle2.as<CGAL::Segment_2<Kernel>>();
     return CGAL::do_intersect(*seg1, *seg2);
@@ -78,8 +78,8 @@ _intersects(const PrimitiveHandle<2> &handle1,
   // Polygon vs. Point
   //
 
-  if (handle1.handle.which() == PrimitiveSurface &&
-      handle2.handle.which() == PrimitivePoint) {
+  if (handle1.handle.index() == PrimitiveSurface &&
+      handle2.handle.index() == PrimitivePoint) {
     // Polygon versus Point
     const auto *poly = handle1.as<CGAL::Polygon_with_holes_2<Kernel>>();
     const auto *pt   = handle2.as<CGAL::Point_2<Kernel>>();
@@ -111,8 +111,8 @@ _intersects(const PrimitiveHandle<2> &handle1,
   // Polygon vs. Segment
   //
 
-  if (handle1.handle.which() == PrimitiveSurface &&
-      handle2.handle.which() == PrimitiveSegment) {
+  if (handle1.handle.index() == PrimitiveSurface &&
+      handle2.handle.index() == PrimitiveSegment) {
     const auto *poly = handle1.as<CGAL::Polygon_with_holes_2<Kernel>>();
     const auto *seg  = handle2.as<CGAL::Segment_2<Kernel>>();
 
@@ -154,8 +154,8 @@ _intersects(const PrimitiveHandle<2> &handle1,
   // Polygon vs. Polygon
   //
 
-  if (handle1.handle.which() == PrimitiveSurface &&
-      handle2.handle.which() == PrimitiveSurface) {
+  if (handle1.handle.index() == PrimitiveSurface &&
+      handle2.handle.index() == PrimitiveSurface) {
     const auto *poly1 = handle1.as<CGAL::Polygon_with_holes_2<Kernel>>();
     const auto *poly2 = handle2.as<CGAL::Polygon_with_holes_2<Kernel>>();
 
@@ -234,7 +234,7 @@ _intersects(const PrimitiveHandle<2> &handle1,
 // NOLINTEND(readability-function-cognitive-complexity)
 
 /// intersects of a volume with any other type
-struct intersects_volume_x : public boost::static_visitor<bool> {
+struct intersects_volume_x {
   const MarkedPolyhedron *polyhedron;
 
   intersects_volume_x(const MarkedPolyhedron *vol) : polyhedron(vol) {}
@@ -284,45 +284,45 @@ auto
 _intersects(const PrimitiveHandle<3> &handle1,
             const PrimitiveHandle<3> &handle2) -> bool
 {
-  if (handle1.handle.which() == PrimitivePoint &&
-      handle2.handle.which() == PrimitivePoint) {
-    return *boost::get<const CGAL::Point_3<Kernel> *>(handle1.handle) ==
-           *boost::get<const CGAL::Point_3<Kernel> *>(handle2.handle);
+  if (handle1.handle.index() == PrimitivePoint &&
+      handle2.handle.index() == PrimitivePoint) {
+    return *handle1.as<const CGAL::Point_3<Kernel>>() ==
+           *handle2.as<const CGAL::Point_3<Kernel>>();
   }
-  if (handle1.handle.which() == PrimitiveSegment &&
-      handle2.handle.which() == PrimitivePoint) {
+  if (handle1.handle.index() == PrimitiveSegment &&
+      handle2.handle.index() == PrimitivePoint) {
     const auto *seg = handle1.as<CGAL::Segment_3<Kernel>>();
     const auto *pt  = handle2.as<CGAL::Point_3<Kernel>>();
     return seg->has_on(*pt);
   }
-  if (handle1.handle.which() == PrimitiveSegment &&
-      handle2.handle.which() == PrimitiveSegment) {
+  if (handle1.handle.index() == PrimitiveSegment &&
+      handle2.handle.index() == PrimitiveSegment) {
     const auto *sega = handle1.as<CGAL::Segment_3<Kernel>>();
     const auto *segb = handle2.as<CGAL::Segment_3<Kernel>>();
     return CGAL::do_intersect(*sega, *segb);
   }
 
-  if (handle1.handle.which() == PrimitiveVolume) {
+  if (handle1.handle.index() == PrimitiveVolume) {
     intersects_volume_x visitor(handle1.as<MarkedPolyhedron>());
-    return boost::apply_visitor(visitor, handle2.handle);
+    return std::visit(visitor, handle2.handle);
   }
 
-  if (handle1.handle.which() == PrimitiveSurface &&
-      handle2.handle.which() == PrimitivePoint) {
+  if (handle1.handle.index() == PrimitiveSurface &&
+      handle2.handle.index() == PrimitivePoint) {
     const auto *tri = handle1.as<CGAL::Triangle_3<Kernel>>();
     const auto *pt  = handle2.as<CGAL::Point_3<Kernel>>();
     return tri->has_on(*pt);
   }
 
-  if (handle1.handle.which() == PrimitiveSurface &&
-      handle2.handle.which() == PrimitiveSegment) {
+  if (handle1.handle.index() == PrimitiveSurface &&
+      handle2.handle.index() == PrimitiveSegment) {
     const auto *tri = handle1.as<CGAL::Triangle_3<Kernel>>();
     const auto *seg = handle2.as<CGAL::Segment_3<Kernel>>();
     return CGAL::do_intersect(*tri, *seg);
   }
 
-  if (handle1.handle.which() == PrimitiveSurface &&
-      handle2.handle.which() == PrimitiveSurface) {
+  if (handle1.handle.index() == PrimitiveSurface &&
+      handle2.handle.index() == PrimitiveSurface) {
     const auto *tri1 = handle1.as<CGAL::Triangle_3<Kernel>>();
     const auto *tri2 = handle2.as<CGAL::Triangle_3<Kernel>>();
     return CGAL::do_intersect(*tri1, *tri2);
@@ -338,8 +338,8 @@ auto
 dispatch_intersects_sym(const PrimitiveHandle<Dim> &handle1,
                         const PrimitiveHandle<Dim> &handle2) -> bool
 {
-  // assume types are ordered by dimension within the boost::variant
-  if (handle1.handle.which() >= handle2.handle.which()) {
+  // assume types are ordered by dimension within the std::variant
+  if (handle1.handle.index() >= handle2.handle.index()) {
     return _intersects(handle1, handle2);
   }
   // NOLINTNEXTLINE(readability-suspicious-call-argument)

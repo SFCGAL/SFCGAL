@@ -51,7 +51,7 @@ auto
 difference(const Point_2 &primitive, const PrimitiveHandle<2> &pb,
            OutputIteratorType out) -> OutputIteratorType
 {
-  switch (pb.handle.which()) {
+  switch (pb.handle.index()) {
   case PrimitivePoint:
     difference(primitive, *pb.as<Point_2>(), out);
     break;
@@ -63,6 +63,11 @@ difference(const Point_2 &primitive, const PrimitiveHandle<2> &pb,
   case PrimitiveSurface:
     difference(primitive, *pb.as<Polygon_with_holes_2>(), out);
     break;
+
+  default:
+    BOOST_THROW_EXCEPTION(
+        Exception("Unexpected PrimitiveHandle variant index"));
+    break;
   }
 
   return out;
@@ -73,7 +78,7 @@ auto
 difference(const Segment_2 &primitive, const PrimitiveHandle<2> &pb,
            OutputIteratorType out) -> OutputIteratorType
 {
-  switch (pb.handle.which()) {
+  switch (pb.handle.index()) {
   case PrimitivePoint:
     *out++ = primitive;
     break;
@@ -85,6 +90,11 @@ difference(const Segment_2 &primitive, const PrimitiveHandle<2> &pb,
   case PrimitiveSurface:
     difference(primitive, *pb.as<Polygon_with_holes_2>(), out);
     break;
+
+  default:
+    BOOST_THROW_EXCEPTION(
+        Exception("Unexpected PrimitiveHandle variant index"));
+    break;
   }
 
   return out;
@@ -95,7 +105,7 @@ auto
 difference(const Polygon_with_holes_2 &primitive, const PrimitiveHandle<2> &pb,
            OutputIteratorType out) -> OutputIteratorType
 {
-  switch (pb.handle.which()) {
+  switch (pb.handle.index()) {
   case PrimitivePoint:
     *out++ = primitive;
     break;
@@ -107,6 +117,11 @@ difference(const Polygon_with_holes_2 &primitive, const PrimitiveHandle<2> &pb,
   case PrimitiveSurface:
     difference(primitive, *pb.as<Polygon_with_holes_2>(), out);
     break;
+
+  default:
+    BOOST_THROW_EXCEPTION(
+        Exception("Unexpected PrimitiveHandle variant index"));
+    break;
   }
 
   return out;
@@ -117,7 +132,7 @@ auto
 difference(const Point_3 &primitive, const PrimitiveHandle<3> &pb,
            OutputIteratorType out) -> OutputIteratorType
 {
-  switch (pb.handle.which()) {
+  switch (pb.handle.index()) {
   case PrimitivePoint:
     difference(primitive, *pb.as<Point_3>(), out);
     break;
@@ -133,6 +148,11 @@ difference(const Point_3 &primitive, const PrimitiveHandle<3> &pb,
   case PrimitiveVolume:
     difference(primitive, *pb.as<MarkedPolyhedron>(), out);
     break;
+
+  default:
+    BOOST_THROW_EXCEPTION(
+        Exception("Unexpected PrimitiveHandle variant index"));
+    break;
   }
 
   return out;
@@ -143,7 +163,7 @@ auto
 difference(const Segment_3 &primitive, const PrimitiveHandle<3> &pb,
            OutputIteratorType out) -> OutputIteratorType
 {
-  switch (pb.handle.which()) {
+  switch (pb.handle.index()) {
   case PrimitivePoint:
     *out++ = primitive;
     break;
@@ -159,6 +179,11 @@ difference(const Segment_3 &primitive, const PrimitiveHandle<3> &pb,
   case PrimitiveVolume:
     difference(primitive, *pb.as<MarkedPolyhedron>(), out);
     break;
+
+  default:
+    BOOST_THROW_EXCEPTION(
+        Exception("Unexpected PrimitiveHandle variant index"));
+    break;
   }
 
   return out;
@@ -169,7 +194,7 @@ auto
 difference(const Triangle_3 &primitive, const PrimitiveHandle<3> &pb,
            OutputIteratorType out) -> OutputIteratorType
 {
-  switch (pb.handle.which()) {
+  switch (pb.handle.index()) {
   case PrimitivePoint:
     *out++ = primitive;
     break;
@@ -185,6 +210,11 @@ difference(const Triangle_3 &primitive, const PrimitiveHandle<3> &pb,
   case PrimitiveVolume:
     difference(primitive, *pb.as<MarkedPolyhedron>(), out);
     break;
+
+  default:
+    BOOST_THROW_EXCEPTION(
+        Exception("Unexpected PrimitiveHandle variant index"));
+    break;
   }
 
   return out;
@@ -195,7 +225,7 @@ auto
 difference(const MarkedPolyhedron &primitive, const PrimitiveHandle<3> &pb,
            OutputIteratorType out) -> OutputIteratorType
 {
-  switch (pb.handle.which()) {
+  switch (pb.handle.index()) {
   case PrimitivePoint:
     *out++ = primitive;
     break;
@@ -210,6 +240,11 @@ difference(const MarkedPolyhedron &primitive, const PrimitiveHandle<3> &pb,
 
   case PrimitiveVolume:
     difference(primitive, *pb.as<MarkedPolyhedron>(), out);
+    break;
+
+  default:
+    BOOST_THROW_EXCEPTION(
+        Exception("Unexpected PrimitiveHandle variant index"));
     break;
   }
 
@@ -244,7 +279,7 @@ appendDifference(const PrimitiveHandle<2>                              &pa,
                  CollisionMapper<2>::PrimitiveHandleSet::const_iterator end,
                  GeometrySet<2>                                        &output)
 {
-  switch (pa.handle.which()) {
+  switch (pa.handle.index()) {
   case PrimitivePoint: {
     std::vector<Point_2> res = difference(*pa.as<Point_2>(), begin, end);
     output.addPoints(res.begin(), res.end());
@@ -263,6 +298,11 @@ appendDifference(const PrimitiveHandle<2>                              &pa,
     output.addSurfaces(res.begin(), res.end());
     return;
   }
+
+  default:
+    BOOST_THROW_EXCEPTION(
+        Exception("Unexpected PrimitiveHandle variant index"));
+    break;
   }
 }
 
@@ -272,7 +312,7 @@ appendDifference(const PrimitiveHandle<3>                              &pa,
                  CollisionMapper<3>::PrimitiveHandleSet::const_iterator end,
                  GeometrySet<3>                                        &output)
 {
-  switch (pa.handle.which()) {
+  switch (pa.handle.index()) {
   case PrimitivePoint: {
     std::vector<Point_3> res = difference(*pa.as<Point_3>(), begin, end);
     output.addPoints(res.begin(), res.end());
@@ -297,6 +337,11 @@ appendDifference(const PrimitiveHandle<3>                              &pa,
     output.addVolumes(res.begin(), res.end());
     break;
   }
+
+  default:
+    BOOST_THROW_EXCEPTION(
+        Exception("Unexpected PrimitiveHandle variant index"));
+    break;
   }
 }
 

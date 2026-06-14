@@ -70,12 +70,12 @@ intersection(const PrimitiveHandle<2> &pa, const PrimitiveHandle<2> &pb,
              GeometrySet<2> &output, dim_t<2> /*unused*/)
 {
   // everything vs a point
-  if (pb.handle.which() == PrimitivePoint) {
+  if (pb.handle.index() == PrimitivePoint) {
     if (algorithm::intersects(pa, pb)) {
       output.addPrimitive(*pb.as<CGAL::Point_2<Kernel>>());
     }
-  } else if (pa.handle.which() == PrimitiveSurface &&
-             pb.handle.which() == PrimitiveSurface) {
+  } else if (pa.handle.index() == PrimitiveSurface &&
+             pb.handle.index() == PrimitiveSurface) {
     const auto *poly1 = pa.as<CGAL::Polygon_with_holes_2<Kernel>>();
     const auto *poly2 = pb.as<CGAL::Polygon_with_holes_2<Kernel>>();
 
@@ -126,14 +126,14 @@ intersection(const PrimitiveHandle<2> &pa, const PrimitiveHandle<2> &pb,
 
     // now call on polygon's interiors
     CGAL::intersection(*poly1, *poly2, std::back_inserter(output.surfaces()));
-  } else if (pa.handle.which() == PrimitiveSegment &&
-             pb.handle.which() == PrimitiveSegment) {
+  } else if (pa.handle.index() == PrimitiveSegment &&
+             pb.handle.index() == PrimitiveSegment) {
     const auto        *seg1     = pa.as<CGAL::Segment_2<Kernel>>();
     const auto        *seg2     = pb.as<CGAL::Segment_2<Kernel>>();
     CGAL::Object const interObj = CGAL::intersection(*seg1, *seg2);
     output.addPrimitive(interObj);
-  } else if (pa.handle.which() == PrimitiveSurface &&
-             pb.handle.which() == PrimitiveSegment) {
+  } else if (pa.handle.index() == PrimitiveSurface &&
+             pb.handle.index() == PrimitiveSegment) {
     const auto *poly = pa.as<CGAL::Polygon_with_holes_2<Kernel>>();
     const auto *seg  = pb.as<CGAL::Segment_2<Kernel>>();
 

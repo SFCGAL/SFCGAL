@@ -6,9 +6,6 @@
 #ifndef SFCGAL_DETAIL_GEOMETRY_SET_H_
 #define SFCGAL_DETAIL_GEOMETRY_SET_H_
 
-#include <boost/ptr_container/ptr_vector.hpp>
-#include <boost/variant.hpp>
-
 #include <cstdint>
 
 #include "SFCGAL/config.h"
@@ -50,10 +47,10 @@ template <int Dim>
 struct PrimitiveHandle {
   /// Variant type holding a pointer to one of the primitive types (Point,
   /// Segment, Surface, or Volume)
-  using Type = boost::variant<const typename Point_d<Dim>::Type *,
-                              const typename Segment_d<Dim>::Type *,
-                              const typename Surface_d<Dim>::Type *,
-                              const typename Volume_d<Dim>::Type *>;
+  using Type = std::variant<const typename Point_d<Dim>::Type *,
+                            const typename Segment_d<Dim>::Type *,
+                            const typename Surface_d<Dim>::Type *,
+                            const typename Volume_d<Dim>::Type *>;
   Type handle; ///< The stored primitive handle
 
   /**
@@ -73,7 +70,8 @@ struct PrimitiveHandle {
   [[nodiscard]] auto
   as() const -> const T *
   {
-    return boost::get<const T *>(handle);
+    auto *ptr = std::get_if<const T *>(&handle);
+    return ptr ? *ptr : nullptr;
   }
 };
 
