@@ -6,12 +6,14 @@
 #define SFCGAL_IO_WKBWRITER_H_
 
 #include <array>
-#include <boost/endian/conversion.hpp>
+#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
 #include <vector>
+
+#include <boost/endian/conversion.hpp>
 
 #include "SFCGAL/Geometry.h"
 #include "SFCGAL/config.h"
@@ -53,8 +55,7 @@ public:
    * @param wkbOrder Byte order for WKB output
    */
   void
-  write(const Geometry      &geometry,
-        boost::endian::order wkbOrder = boost::endian::order::native);
+  write(const Geometry &geometry, std::endian wkbOrder = std::endian::native);
 
   /**
    * write EWKB for a geometry
@@ -65,65 +66,64 @@ public:
    */
   void
   write(const Geometry &geometry, const srid_t &srid,
-        boost::endian::order wkbOrder = boost::endian::order::native);
+        std::endian wkbOrder = std::endian::native);
 
 private:
   /**
    * Dedicated method to write the geometry type into _wkb data
    */
   void
-  writeGeometryType(const Geometry &geometry, boost::endian::order wkbOrder =
-                                                  boost::endian::order::native);
+  writeGeometryType(const Geometry &geometry,
+                    std::endian     wkbOrder = std::endian::native);
 
   /**
    * Dedicated method to write Point into _wkb data
    */
   void
-  writeInner(const Point         &geometry,
-             boost::endian::order wkbOrder = boost::endian::order::native);
+  writeInner(const Point &geometry, std::endian wkbOrder = std::endian::native);
 
   /**
    * Dedicated method to write LineString into _wkb data
    */
   void
-  writeInner(const LineString    &geometry,
-             boost::endian::order wkbOrder = boost::endian::order::native);
+  writeInner(const LineString &geometry,
+             std::endian       wkbOrder = std::endian::native);
   /**
    * Dedicated method to write Ring into _wkb data
    *
    * This method is shared by LineString and Polygon.
    */
   void
-  writeInnerRing(const LineString    &geometry,
-                 boost::endian::order wkbOrder = boost::endian::order::native);
+  writeInnerRing(const LineString &geometry,
+                 std::endian       wkbOrder = std::endian::native);
 
   /**
    * Dedicated method to write Polygon into _wkb data
    */
   void
-  writeInner(const Polygon       &geometry,
-             boost::endian::order wkbOrder = boost::endian::order::native);
+  writeInner(const Polygon &geometry,
+             std::endian    wkbOrder = std::endian::native);
 
   /**
    * Dedicated method to write GeometryCollection into _wkb data
    */
   void
   writeInner(const GeometryCollection &geometry,
-             boost::endian::order      wkbOrder = boost::endian::order::native);
+             std::endian               wkbOrder = std::endian::native);
 
   /**
    * Dedicated method to write PolyhedralSurface into _wkb data
    */
   void
   writeInner(const PolyhedralSurface &polyhedralSurface,
-             boost::endian::order     wkbOrder = boost::endian::order::native);
+             std::endian              wkbOrder = std::endian::native);
 
   /**
    * Dedicated method to write TriangulatedSurface into _wkb data
    */
   void
   writeInner(const TriangulatedSurface &triangulatedSurface,
-             boost::endian::order wkbOrder = boost::endian::order::native);
+             std::endian                wkbOrder = std::endian::native);
 
   /**
    * Dedicated method to write Multi Geometries into _wkb data
@@ -131,36 +131,36 @@ private:
    */
   template <typename M, typename G>
   void
-  writeInner(const M &geometry, boost::endian::order wkbOrder);
+  writeInner(const M &geometry, std::endian wkbOrder);
 
   /**
    * Dedicated method to write Triangle into _wkb data
    */
   void
-  writeInner(const Triangle      &geometry,
-             boost::endian::order wkbOrder = boost::endian::order::native);
+  writeInner(const Triangle &geometry,
+             std::endian     wkbOrder = std::endian::native);
 
   /**
    * Dedicated method to write NURBSCurve into _wkb data
    */
   void
-  writeInner(const NURBSCurve    &geometry,
-             boost::endian::order wkbOrder = boost::endian::order::native);
+  writeInner(const NURBSCurve &geometry,
+             std::endian       wkbOrder = std::endian::native);
 
   /**
    * Dedicated method to write Point into _wkb data
    */
   void
-  writeCoordinate(const Point         &geometry,
-                  boost::endian::order wkbOrder = boost::endian::order::native);
+  writeCoordinate(const Point &geometry,
+                  std::endian  wkbOrder = std::endian::native);
 
   /**
    * Method to write Geometry into _wkb data
    * Only for recursive call use
    */
   void
-  writeRec(const Geometry      &geometry,
-           boost::endian::order wkbOrder = boost::endian::order::native);
+  writeRec(const Geometry &geometry,
+           std::endian     wkbOrder = std::endian::native);
 
   std::ostream &_s;
 
@@ -188,10 +188,10 @@ private:
 
   template <typename T>
   auto
-  toByte(const T value, boost::endian::order byteOrder) -> void
+  toByte(const T value, std::endian byteOrder) -> void
   {
     T valueSwapped = value;
-    if (boost::endian::order::native != byteOrder) {
+    if (std::endian::native != byteOrder) {
       boost::endian::endian_reverse_inplace(valueSwapped);
     }
     toStream(

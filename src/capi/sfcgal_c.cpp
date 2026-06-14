@@ -588,7 +588,7 @@ sfcgal_geometry_as_wkb(const sfcgal_geometry_t *geom, char **buffer,
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
       std::string wkb = reinterpret_cast<const SFCGAL::Geometry *>(geom)->asWkb(
-          boost::endian::order::native, false);
+          std::endian::native, false);
       alloc_and_copy(wkb, buffer, len);)
 }
 
@@ -598,7 +598,7 @@ sfcgal_geometry_as_hexwkb(const sfcgal_geometry_t *geom, char **buffer,
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR_NO_RET(
       std::string wkb = reinterpret_cast<const SFCGAL::Geometry *>(geom)->asWkb(
-          boost::endian::order::native, true);
+          std::endian::native, true);
       alloc_and_copy(wkb, buffer, len);)
 }
 

@@ -6,6 +6,8 @@
 
 #include "../io.hpp"
 #include <SFCGAL/Geometry.h>
+
+#include <functional>
 #include <map>
 #include <memory>
 #include <optional>

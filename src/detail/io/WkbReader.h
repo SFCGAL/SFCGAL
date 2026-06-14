@@ -28,8 +28,6 @@
 #include "SFCGAL/detail/io/RecursionGuard.h"
 #include "SFCGAL/detail/tools/InputStreamReader.h"
 
-#include <boost/endian/conversion.hpp> // don't use bit, since it requires c++20
-
 //
 namespace SFCGAL::detail::io {
 
@@ -73,8 +71,7 @@ public:
 
     // wkbOrder
     std::byte wkbOrder{read<std::byte>()};
-    _swapEndian =
-        boost::endian::order::native == boost::endian::order(wkbOrder);
+    _swapEndian = std::endian::native == std::endian(wkbOrder);
 
     _geometry = readGeometry();
   }

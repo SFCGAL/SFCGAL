@@ -9,9 +9,8 @@
 #include "SFCGAL/algorithm/equality.h"
 #include "SFCGAL/config.h"
 
-#include <boost/endian/conversion.hpp>
-#include <boost/shared_ptr.hpp>
-
+#include <bit>
+#include <cstdint>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -261,8 +260,8 @@ public:
    * [OGC/SFA]returns the WKB string
    */
   [[nodiscard]] auto
-  asWkb(boost::endian::order wkbOrder = boost::endian::order::native,
-        bool                 asHex    = false) const -> std::string;
+  asWkb(std::endian wkbOrder = std::endian::native, bool asHex = false) const
+      -> std::string;
   /**
    * [OGC/SFA]Returns a polygon representing the BBOX of the geometry
    * @todo In order to adapt to 3D, would be better to define an "Envelope

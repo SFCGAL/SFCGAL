@@ -63,8 +63,7 @@ BOOST_AUTO_TEST_CASE(writeWkb)
   while (std::getline(ifs, inputWkt)) {
     std::unique_ptr<Geometry> g(io::readWkt(inputWkt));
     std::getline(efs, expectedWkb);
-    BOOST_CHECK_EQUAL(g->asWkb(boost::endian::order::native, true),
-                      expectedWkb);
+    BOOST_CHECK_EQUAL(g->asWkb(std::endian::native, true), expectedWkb);
   }
 }
 
@@ -88,8 +87,7 @@ BOOST_AUTO_TEST_CASE(readWkb)
     std::unique_ptr<Geometry> g(io::readWkt(inputWkt));
 
     // check if geom loaded from wtk matched the expected wkb
-    BOOST_CHECK_EQUAL(g->asWkb(boost::endian::order::native, true),
-                      expectedWkb);
+    BOOST_CHECK_EQUAL(g->asWkb(std::endian::native, true), expectedWkb);
 
     std::unique_ptr<Geometry> gWkb;
     try {
@@ -138,8 +136,7 @@ BOOST_AUTO_TEST_CASE(PostgisEWkb)
     std::unique_ptr<PreparedGeometry> gEwkt(io::readEwkt(ewkt));
     if (!(expectedWkt.find("EMPTY") != std::string::npos) &&
         !inputWkb.empty()) {
-      BOOST_CHECK_EQUAL(gEwkt->asEWKB(boost::endian::order::native, true),
-                        inputWkb);
+      BOOST_CHECK_EQUAL(gEwkt->asEWKB(std::endian::native, true), inputWkb);
     }
 
     std::vector allowedBeThyFailFull = allowedBeThyFail;
@@ -220,7 +217,7 @@ BOOST_AUTO_TEST_CASE(test_writeWkbEwkbZM)
 {
   auto point = Point(1.0, 2.0, 3.0);
   point.setM(4.0);
-  std::string wkb = point.asWkb(boost::endian::order::native, true);
+  std::string               wkb = point.asWkb(std::endian::native, true);
   std::unique_ptr<Geometry> g2(io::readWkb(wkb, true));
   BOOST_CHECK(g2->is3D());
   BOOST_CHECK(g2->isMeasured());

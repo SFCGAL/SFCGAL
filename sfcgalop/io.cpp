@@ -12,7 +12,7 @@
 #include <SFCGAL/io/wkt.h>
 
 #include <algorithm>
-#include <boost/endian/arithmetic.hpp>
+#include <bit>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -259,7 +259,7 @@ print_result(const std::optional<OperationResult> &result, OutputFormat format,
               out << arg->asText(precision) << "\n";
               break;
             case OutputFormat::WKB:
-              out << arg->asWkb(boost::endian::order::native, true) << "\n";
+              out << arg->asWkb(std::endian::native, true) << "\n";
               break;
             case OutputFormat::TXT:
               // Use WKT with full precision as EWKT equivalent
