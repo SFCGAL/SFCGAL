@@ -58,8 +58,7 @@ Coordinate::~Coordinate() = default;
 /**
  * @brief Visitor to get coordinate dimension
  */
-class CoordinateDimensionVisitor : public boost::static_visitor<int> {
-public:
+struct CoordinateDimensionVisitor {
   /// @brief Handle empty coordinates
   /// @return 0 for empty coordinates
   auto
@@ -87,26 +86,25 @@ auto
 Coordinate::coordinateDimension() const -> int
 {
   CoordinateDimensionVisitor visitor;
-  return boost::apply_visitor(visitor, _storage);
+  return std::visit(visitor, _storage);
 }
 
 auto
 Coordinate::isEmpty() const -> bool
 {
-  return _storage.which() == 0;
+  return _storage.index() == 0;
 }
 
 auto
 Coordinate::is3D() const -> bool
 {
-  return _storage.which() == 2;
+  return _storage.index() == 2;
 }
 
 /**
  * @brief Visitor to get X coordinate value
  */
-class GetXVisitor : public boost::static_visitor<Kernel::FT> {
-public:
+struct GetXVisitor {
   /// @brief Handle empty coordinates
   /// @throws Exception when trying to get X from empty coordinate
   /// @return Never returns (throws exception)
@@ -139,14 +137,13 @@ auto
 Coordinate::x() const -> Kernel::FT
 {
   GetXVisitor visitor;
-  return boost::apply_visitor(visitor, _storage);
+  return std::visit(visitor, _storage);
 }
 
 /**
  * @brief Visitor to get Y coordinate value
  */
-class GetYVisitor : public boost::static_visitor<Kernel::FT> {
-public:
+struct GetYVisitor {
   /// @brief Handle empty coordinates
   /// @throws Exception when trying to get Y from empty coordinate
   /// @return Never returns (throws exception)
@@ -179,14 +176,13 @@ auto
 Coordinate::y() const -> Kernel::FT
 {
   GetYVisitor visitor;
-  return boost::apply_visitor(visitor, _storage);
+  return std::visit(visitor, _storage);
 }
 
 /**
  * @brief Visitor to get Z coordinate value
  */
-class GetZVisitor : public boost::static_visitor<Kernel::FT> {
-public:
+struct GetZVisitor {
   /// @brief Handle empty coordinates
   /// @throws Exception when trying to get Z from empty coordinate
   /// @return Never returns (throws exception)
@@ -218,7 +214,7 @@ auto
 Coordinate::z() const -> Kernel::FT
 {
   GetZVisitor visitor;
-  return boost::apply_visitor(visitor, _storage);
+  return std::visit(visitor, _storage);
 }
 
 //----------------------
@@ -226,8 +222,7 @@ Coordinate::z() const -> Kernel::FT
 /**
  * @brief Visitor to round coordinate values
  */
-class RoundVisitor : public boost::static_visitor<> {
-public:
+struct RoundVisitor {
   /// @brief Constructor with scale factor
   /// @param scaleFactor The scaling factor for rounding
   RoundVisitor(const long &scaleFactor) : _scaleFactor(scaleFactor) {}
@@ -275,7 +270,7 @@ auto
 Coordinate::round(const long &scaleFactor) -> Coordinate &
 {
   RoundVisitor roundVisitor(scaleFactor);
-  boost::apply_visitor(roundVisitor, _storage);
+  std::visit(roundVisitor, _storage);
   return *this;
 }
 
@@ -284,8 +279,7 @@ Coordinate::round(const long &scaleFactor) -> Coordinate &
 /**
  * @brief Visitor to convert coordinate to CGAL 2D point
  */
-class ToPoint2Visitor : public boost::static_visitor<Kernel::Point_2> {
-public:
+struct ToPoint2Visitor {
   /// @brief Handle empty coordinates
   /// @return Origin point for empty coordinates
   auto
@@ -315,14 +309,13 @@ auto
 Coordinate::toPoint_2() const -> Kernel::Point_2
 {
   ToPoint2Visitor visitor;
-  return boost::apply_visitor(visitor, _storage);
+  return std::visit(visitor, _storage);
 }
 
 /**
  * @brief Visitor to convert coordinate to CGAL 3D point
  */
-class ToPoint3Visitor : public boost::static_visitor<Kernel::Point_3> {
-public:
+struct ToPoint3Visitor {
   /// @brief Handle empty coordinates
   /// @return Origin point for empty coordinates
   auto
@@ -352,7 +345,7 @@ auto
 Coordinate::toPoint_3() const -> Kernel::Point_3
 {
   ToPoint3Visitor visitor;
-  return boost::apply_visitor(visitor, _storage);
+  return std::visit(visitor, _storage);
 }
 
 auto
@@ -458,9 +451,9 @@ Coordinate::dropZ() -> bool
 auto
 Coordinate::swapXY() -> void
 {
-  if (_storage.which() == 1) {
+  if (_storage.index() == 1) {
     _storage = Kernel::Point_2(y(), x());
-  } else if (_storage.which() == 2) {
+  } else if (_storage.index() == 2) {
     _storage = Kernel::Point_3(y(), x(), z());
   }
 }
