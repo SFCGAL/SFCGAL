@@ -32,7 +32,7 @@ docker:build:windows-image:
     - docker logout $env:CI_REGISTRY
 
 docker:push:windows-latest:
-  stage: docker
+  stage: docker-push
   tags:
     - saas-windows-medium-amd64
   rules:
@@ -52,7 +52,7 @@ docker:push:windows-latest:
     - docker logout $env:CI_REGISTRY
 
 docker:push:windows-tag:
-  stage: docker
+  stage: docker-push
   tags:
     - saas-windows-medium-amd64
   rules:

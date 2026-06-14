@@ -5,6 +5,7 @@ stages:
   - sonar-build-test
   - doc
   - docker
+  - docker-push
   - .post
 
 variables:
