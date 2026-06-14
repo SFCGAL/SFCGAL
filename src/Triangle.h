@@ -7,7 +7,6 @@
 #define SFCGAL_TRIANGLE_H_
 
 #include <array>
-#include <boost/shared_ptr.hpp>
 
 #include <boost/serialization/base_object.hpp>
 
