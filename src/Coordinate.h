@@ -8,10 +8,8 @@
 
 #include "SFCGAL/config.h"
 
-#include <boost/array.hpp>
 #include <boost/assert.hpp>
 #include <boost/serialization/split_member.hpp>
-#include <boost/variant.hpp>
 
 #include "SFCGAL/numeric.h"
 
@@ -231,7 +229,7 @@ public:
   class Empty {};
 
 private:
-  boost::variant<Empty, Kernel::Point_2, Kernel::Point_3> _storage;
+  std::variant<Empty, Kernel::Point_2, Kernel::Point_3> _storage;
 
 public:
   /**
@@ -245,13 +243,13 @@ public:
     int dim = coordinateDimension();
     ar << dim;
 
-    if (_storage.which() > 0) {
+    if (_storage.index() > 0) {
       const Kernel::FT &x_ = x();
       const Kernel::FT &y_ = y();
       ar << x_;
       ar << y_;
 
-      if (_storage.which() == 2) {
+      if (_storage.index() == 2) {
         const Kernel::FT &z_ = z();
         ar << z_;
       }
