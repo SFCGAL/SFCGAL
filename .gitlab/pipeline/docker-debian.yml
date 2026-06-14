@@ -1,5 +1,5 @@
 docker:build:debian-image:
-  stage: docker
+  stage: docker-build
   rules:
     # on default branch
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

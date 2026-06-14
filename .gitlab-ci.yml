@@ -4,7 +4,7 @@ stages:
   - plateform-build-test
   - sonar-build-test
   - doc
-  - docker
+  - docker-build
   - docker-push
   - .post
 

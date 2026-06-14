@@ -1,5 +1,5 @@
 docker:build:windows-image:
-  stage: docker
+  stage: docker-build
   tags:
     - saas-windows-medium-amd64
   rules:
