@@ -51,14 +51,11 @@ doc:pages:
   needs:
     - job: doc:build
       artifacts: true
-    - job: build:macos_clang
-      artifacts: true
   variables:
     GIT_STRATEGY: none
   script:
-    - mkdir -p public/homebrew/
+    - mkdir -p public
     - cp -rf website/site/* public/
-    - cp sfcgal* public/homebrew/
   artifacts:
     paths:
       - public

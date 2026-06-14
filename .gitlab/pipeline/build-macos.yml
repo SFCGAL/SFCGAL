@@ -43,15 +43,48 @@ homebrew:generate:
     # on default branch
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: always
+      variables:
+        PACKAGE_VERSION: "latest"
     # on a tag
     - if: $CI_COMMIT_TAG
       when: always
+      variables:
+        PACKAGE_VERSION: "${CI_COMMIT_TAG#v}"
     # on a MR if previous jobs are successful
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
       when: manual
+      variables:
+        PACKAGE_VERSION: "latest"
   script:
-    - .gitlab/generate-homebrew.sh ${CI_PROJECT_DIR}/install ${SFCGAL_VERSION}
+    - .gitlab/generate-homebrew.sh ${CI_PROJECT_DIR}/install ${SFCGAL_VERSION} ${PACKAGE_VERSION}
   artifacts:
     paths:
-      - sfcgal--latest.arm64_sequoia.bottle.tar.gz
-      - sfcgal-latest.rb
+      - sfcgal-*.tar.gz
+      - sfcgal-*.rb
+
+homebrew:publish:
+  stage: package-push
+  image: debian:stable
+  needs:
+    - job: homebrew:generate
+      artifacts: true
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: always
+      variables:
+        PACKAGE_VERSION: "${CI_COMMIT_TAG#v}"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: always
+      variables:
+        PACKAGE_VERSION: "latest"
+  before_script:
+    - apt update && apt install --no-install-recommends --yes ca-certificates curl
+  script:
+    - |
+      for file in *.rb *.tar.gz; do
+        [ -f "$file" ] || continue
+        curl --fail-with-body \
+          --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+          --upload-file "${file}" \
+          "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/homebrew/${PACKAGE_VERSION}/$(basename "${file}")"
+      done
