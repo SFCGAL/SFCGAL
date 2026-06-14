@@ -13,7 +13,6 @@
 
 #include <boost/endian/conversion.hpp>
 #include <boost/noncopyable.hpp>
-#include <boost/optional.hpp>
 #include <boost/serialization/split_member.hpp>
 
 #include <stdint.h> // uint32_t
@@ -171,7 +170,7 @@ protected:
   srid_t _srid;
 
   /// @brief Cached bounding box of the geometry
-  mutable boost::optional<Envelope> _envelope;
+  mutable std::optional<Envelope> _envelope;
 };
 
 } // namespace SFCGAL

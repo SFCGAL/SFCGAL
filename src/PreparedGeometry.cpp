@@ -49,7 +49,7 @@ auto
 PreparedGeometry::envelope() const -> const Envelope &
 {
   if (!_envelope) {
-    _envelope.reset(_geometry->envelope());
+    _envelope = _geometry->envelope();
   }
 
   return *_envelope;
