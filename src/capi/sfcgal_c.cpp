@@ -670,7 +670,9 @@ extern "C" auto
 sfcgal_io_read_obj_file(const char *filename) -> sfcgal_geometry_t *
 {
   SFCGAL_GEOMETRY_CONVERT_CATCH_TO_ERROR(
-      return SFCGAL::io::OBJ::loadFromFile(std::filesystem::u8path(filename))
+      return SFCGAL::io::OBJ::loadFromFile(
+                 std::filesystem::path(std::u8string(
+                     reinterpret_cast<const char8_t *>(filename))))
           .release();)
 }
 
