@@ -317,8 +317,7 @@ WkbReader::readInnerNURBSCurve() -> NURBSCurve
       // Store current swap state and temporarily switch if needed
       // Use RAII to ensure swap state is always restored
       bool savedSwapEndian = _swapEndian;
-      _swapEndian =
-          boost::endian::order::native == boost::endian::order(pointByteOrder);
+      _swapEndian          = std::endian::native == std::endian(pointByteOrder);
 
       // RAII guard to restore swap state in case of exception
       struct SwapEndianGuard {

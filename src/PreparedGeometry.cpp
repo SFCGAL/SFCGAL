@@ -87,8 +87,7 @@ PreparedGeometry::asEWKT(const int &numDecimals) const -> std::string
 }
 
 auto
-PreparedGeometry::asEWKB(boost::endian::order wkbOrder, bool asHex) const
-    -> std::string
+PreparedGeometry::asEWKB(std::endian wkbOrder, bool asHex) const -> std::string
 {
   std::ostringstream    oss;
   detail::io::WkbWriter writer(oss, asHex);

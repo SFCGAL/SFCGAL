@@ -46,7 +46,7 @@ Geometry::asText(const int &numDecimals) const -> std::string
 }
 
 auto
-Geometry::asWkb(boost::endian::order wkbOrder, bool asHex) const -> std::string
+Geometry::asWkb(std::endian wkbOrder, bool asHex) const -> std::string
 {
   std::ostringstream    oss;
   detail::io::WkbWriter writer(oss, asHex);

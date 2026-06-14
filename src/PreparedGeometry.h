@@ -11,7 +11,6 @@
 
 #include "SFCGAL/Envelope.h"
 
-#include <boost/endian/conversion.hpp>
 #include <boost/serialization/split_member.hpp>
 
 #include <stdint.h> // uint32_t
@@ -124,8 +123,8 @@ public:
    * @return Extended WKB representation
    */
   auto
-  asEWKB(boost::endian::order wkbOrder = boost::endian::order::native,
-         bool                 asHex    = false) const -> std::string;
+  asEWKB(std::endian wkbOrder = std::endian::native, bool asHex = false) const
+      -> std::string;
 
   /**
    * @brief Save prepared geometry to archive

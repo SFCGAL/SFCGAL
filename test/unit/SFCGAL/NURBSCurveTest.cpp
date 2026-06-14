@@ -1419,11 +1419,11 @@ BOOST_AUTO_TEST_CASE(testInteroperability)
   for (const auto &wktString : wkts) {
     BOOST_CHECK_NO_THROW(auto geom = SFCGAL::io::readWkt(wktString));
     auto geom         = SFCGAL::io::readWkt(wktString);
-    auto wkb          = geom->asWkb(boost::endian::order::native, true);
+    auto wkb          = geom->asWkb(std::endian::native, true);
     auto geom_bak     = SFCGAL::io::readWkb(wkb, true);
     auto wkt_bak      = geom_bak->asText();
     auto geom_wkt_bak = SFCGAL::io::readWkt(wkt_bak);
-    auto wkb_bak_bak  = geom_wkt_bak->asWkb(boost::endian::order::native, true);
+    auto wkb_bak_bak  = geom_wkt_bak->asWkb(std::endian::native, true);
 
     BOOST_CHECK_EQUAL(geom->as<NURBSCurve>().degree(),
                       geom_bak->as<NURBSCurve>().degree());
