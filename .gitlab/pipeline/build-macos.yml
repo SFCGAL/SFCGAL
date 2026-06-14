@@ -8,7 +8,6 @@ build:macos_clang:
     HOMEBREW_NO_INSTALL_UPGRADE: 1
     HOMEBREW_NO_INSTALL_CLEANUP: 1
     HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-    SFCGAL_VERSION: "2.3.0"
   dependencies: []
   rules:
     # on default branch
@@ -28,6 +27,29 @@ build:macos_clang:
     - ctest --test-dir build -VV
     - mkdir -p ${CI_PROJECT_DIR}/install
     - cmake --install build --prefix ${CI_PROJECT_DIR}/install
+  artifacts:
+    paths:
+      - install/
+
+homebrew:generate:
+  stage: package-build
+  image: debian:stable
+  needs:
+    - job: build:macos_clang
+      artifacts: true
+  variables:
+    SFCGAL_VERSION: "2.3.0"
+  rules:
+    # on default branch
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: always
+    # on a tag
+    - if: $CI_COMMIT_TAG
+      when: always
+    # on a MR if previous jobs are successful
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      when: manual
+  script:
     - .gitlab/generate-homebrew.sh ${CI_PROJECT_DIR}/install ${SFCGAL_VERSION}
   artifacts:
     paths:

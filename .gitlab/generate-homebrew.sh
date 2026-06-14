@@ -7,7 +7,7 @@ CURRENT_VERSION="$2"
 
 ARCHIVE="sfcgal--latest.arm64_sequoia.bottle.tar.gz"
 tar -czvf ${ARCHIVE} -C ${INSTALL_DIR} .
-SHA256=$(shasum -a 256 "${ARCHIVE}" | awk '{print $1}')
+SHA256=$(sha256sum "${ARCHIVE}" | awk '{print $1}')
 
 cat <<EOF > sfcgal-latest.rb
 class Sfcgal < Formula
