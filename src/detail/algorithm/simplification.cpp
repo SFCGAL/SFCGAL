@@ -376,11 +376,9 @@ organizeSimplifiedConstraints(
       break;
 
     default:
-      BOOST_THROW_EXCEPTION(NotImplementedException(
-          (boost::format("Unknown constraint type '%d' encountered during "
-                         "simplification.") %
-           static_cast<int>(info.type))
-              .str()));
+      BOOST_THROW_EXCEPTION(NotImplementedException(std::format(
+          "Unknown constraint type '{}' encountered during simplification.",
+          static_cast<int>(info.type))));
     }
   }
 }

@@ -28,7 +28,6 @@
 #include <CGAL/Triangle_3.h>
 
 #include "SFCGAL/Exception.h"
-#include <boost/format.hpp>
 
 namespace SFCGAL::algorithm {
 
@@ -168,11 +167,9 @@ weightedCentroid(const Geometry &geom, bool enable3DComputation)
   }
 
   return wCent;
-  BOOST_THROW_EXCEPTION(
-      Exception((boost::format("Unexpected geometry type (%s) in "
-                               "SFCGAL::algorithm::weightedCentroid") %
-                 geom.geometryType())
-                    .str()));
+  BOOST_THROW_EXCEPTION(Exception(std::format(
+      "Unexpected geometry type (%s) in SFCGAL::algorithm::weightedCentroid",
+      geom.geometryType())));
 }
 
 /// @private
@@ -354,10 +351,9 @@ weightedCentroid(const Polygon &polygon, bool enable3DComputation)
       }
     } catch (InappropriateGeometryException &e) {
       BOOST_THROW_EXCEPTION(InappropriateGeometryException(
-          (boost::format("SFCGAL::algorithm::Centroid of Polygon failed at "
-                         "ring %d with cause: \n%s") %
-           i % e.what())
-              .str()));
+          std::format("SFCGAL::algorithm::Centroid of Polygon failed at ring "
+                      "{} with cause: \n{}",
+                      i, e.what())));
     }
   }
 
@@ -420,10 +416,9 @@ weightedCentroid(const Solid &solid, bool enable3DComputation)
       }
     } catch (InappropriateGeometryException &e) {
       BOOST_THROW_EXCEPTION(InappropriateGeometryException(
-          (boost::format("SFCGAL::algorithm::Centroid of Solid failed at "
-                         "shell %d with cause: \n%s") %
-           i % e.what())
-              .str()));
+          std::format("SFCGAL::algorithm::Centroid of Solid failed at shell {} "
+                      "with cause: \n{}",
+                      i, e.what())));
     }
   }
 

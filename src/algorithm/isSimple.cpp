@@ -38,8 +38,7 @@ isSimple(const LineString &linestring) -> const Simplicity
 {
   if (linestring.is3D() ? selfIntersects3D(linestring)
                         : selfIntersects(linestring)) {
-    return Simplicity::complex(
-        boost::format("linestring self intersects").str());
+    return Simplicity::complex("linestring self intersects");
   }
   return Simplicity::simple();
 }
@@ -69,7 +68,7 @@ isSimple(const PolyhedralSurface &phs, const double &toleranceAbs)
 
     if (!s) {
       return Simplicity::complex(
-          (boost::format("Polygon %d is complex: %s") % g % s.reason()).str());
+          std::format("Polygon {} is complex: {}", g, s.reason()));
     }
   }
 
@@ -89,7 +88,7 @@ isSimple(const Solid &solid, const double &toleranceAbs) -> const Simplicity
 
     if (!s) {
       return Simplicity::complex(
-          (boost::format("Polygon %d is complex: %s") % g % s.reason()).str());
+          std::format("Polygon {} is complex: {}", g, s.reason()));
     }
   }
 
@@ -106,11 +105,8 @@ isSimple(const MultiPoint &multipoint) -> const Simplicity
       bool const duplicated_points =
           multipoint.pointN(l) == multipoint.pointN(other_l);
       if (duplicated_points) {
-        return Simplicity::complex(
-            (boost::format(
-                 "Points %d and %d are duplicated in the MultiPoint.") %
-             l % other_l)
-                .str());
+        return Simplicity::complex(std::format(
+            "Points {} and {} are duplicated in the MultiPoint.", l, other_l));
       }
     }
   }
@@ -131,8 +127,7 @@ isSimple(const MultiLineString &mls) -> const Simplicity
 
     if (!s) {
       return Simplicity::complex(
-          (boost::format("LineString %d is complex: %s") % g % s.reason())
-              .str());
+          std::format("LineString {} is complex: {}", g, s.reason()));
     }
   }
 
@@ -151,7 +146,7 @@ isSimple(const MultiPolygon &mpoly, const double &toleranceAbs)
     Simplicity const s = isSimple(mpoly.polygonN(g), toleranceAbs);
     if (!s) {
       return Simplicity::complex(
-          (boost::format("Polygon %d is complex: %s") % g % s.reason()).str());
+          std::format("Polygon {} is complex: {}", g, s.reason()));
     }
   }
 
@@ -172,7 +167,7 @@ isSimple(const MultiSolid &msolid, const double &toleranceAbs)
 
     if (!s) {
       return Simplicity::complex(
-          (boost::format("Solid %d is complex: %s") % g % s.reason()).str());
+          std::format("Solid {} is complex: {}", g, s.reason()));
     }
   }
 
@@ -193,9 +188,8 @@ isSimple(const GeometryCollection &collection, const double &toleranceAbs)
 
     if (!s) {
       return Simplicity::complex(
-          (boost::format("%s at index %d is complex: %s") %
-           collection.geometryN(g).geometryType() % g % s.reason())
-              .str());
+          std::format("{} at index {} is complex: {}",
+                      collection.geometryN(g).geometryType(), g, s.reason()));
     }
   }
 
@@ -256,11 +250,9 @@ isSimple(const Geometry &g, const double &toleranceAbs) -> const Simplicity
   }
 
   BOOST_THROW_EXCEPTION(Exception(
-      (boost::format("isSimple( %s ) is not defined") % g.geometryType())
-          .str()));
-  return Simplicity::complex(
-      (boost::format("isSimple( %s ) is not defined") % g.geometryType())
-          .str()); // to avoid warning
+      std::format("isSimple( {} ) is not defined", g.geometryType())));
+  return Simplicity::complex(std::format("isSimple( {} ) is not defined",
+                                         g.geometryType())); // to avoid warning
 }
 
 } // namespace SFCGAL::algorithm

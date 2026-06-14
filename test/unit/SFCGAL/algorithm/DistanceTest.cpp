@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE( testDistanceBetweenEmptyGeometriesIsDefined )
 
     for ( size_t i = 0; i < geometryTypes.size(); i++ ) {
         for ( size_t j = 0; j < geometryTypes.size(); j++ ) {
-            BOOST_TEST_MESSAGE( boost::format( "distance(%s,%s)" ) % geometryTypes[i] % geometryTypes[j] );
+          BOOST_TEST_MESSAGE( std::format( "distance({},{})", geometryTypes[i], geometryTypes[j] );
 
             std::unique_ptr< Geometry > gA( registry.newGeometryByTypeName( geometryTypes[i] ) );
             std::unique_ptr< Geometry > gB( registry.newGeometryByTypeName( geometryTypes[j] ) );
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE( testDistance3DBetweenEmptyGeometriesIsDefined )
 
     for ( size_t i = 0; i < geometryTypes.size(); i++ ) {
         for ( size_t j = 0; j < geometryTypes.size(); j++ ) {
-            BOOST_TEST_MESSAGE( boost::format( "distance3D(%s,%s)" ) % geometryTypes[i] % geometryTypes[j] );
+          BOOST_TEST_MESSAGE( std::format( "distance3D({},{})", geometryTypes[i], geometryTypes[j] );
 
             std::unique_ptr< Geometry > gA( registry.newGeometryByTypeName( geometryTypes[i] ) );
             std::unique_ptr< Geometry > gB( registry.newGeometryByTypeName( geometryTypes[j] ) );

@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(testEmpty)
 
   for (const auto &geometryType : geometryTypes) {
     std::unique_ptr<Geometry> g(registry.newGeometryByTypeName(geometryType));
-    BOOST_TEST_MESSAGE(boost::format("tessellate(%s)") % g->asText());
+    BOOST_TEST_MESSAGE(std::format("tessellate({})", g->asText()));
     std::unique_ptr<Geometry> result = algorithm::tessellate(*g);
     BOOST_CHECK(result->isEmpty());
   }

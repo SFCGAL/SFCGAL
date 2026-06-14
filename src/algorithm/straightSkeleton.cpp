@@ -638,18 +638,15 @@ extrudeStraightSkeleton(const Polygon &geom, double height,
           size_t numSegmentsWeights = finalWeights[ringIdx].size();
           if (numSegments != numSegmentsWeights) {
             BOOST_THROW_EXCEPTION(SFCGAL::Exception(
-                (boost::format(
-                     "Needs %d weights/angles for ring %d, found %d") %
-                 numSegments % ringIdx % numSegmentsWeights)
-                    .str()));
+                std::format("Needs {} weights/angles for ring {}, found {}",
+                            numSegments, ringIdx, numSegmentsWeights)));
           }
         }
       } else {
         BOOST_THROW_EXCEPTION(SFCGAL::Exception(
-            (boost::format("Weights/angles list does not contain the correct "
-                           "number of rings (needs %d, found %d)") %
-             numRings % numRingsWeights)
-                .str()));
+            std::format("Weights/angles list does not contain the correct "
+                        "number of rings (needs {}, found {})",
+                        numRings, numRingsWeights)));
       }
     }
   }

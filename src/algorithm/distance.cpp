@@ -91,9 +91,8 @@ distance(const Geometry &geometry1, const Geometry &geometry2,
 
   case TYPE_SOLID:
     BOOST_THROW_EXCEPTION(NotImplementedException(
-        (boost::format("distance(%s,%s) is not implemented") %
-         geometry1.geometryType() % geometry2.geometryType())
-            .str()));
+        std::format("distance({},{}) is not implemented",
+                    geometry1.geometryType(), geometry2.geometryType())));
   }
 
   BOOST_ASSERT(false);
@@ -137,9 +136,8 @@ distancePointGeometry(const Point &point, const Geometry &geometry) -> double
 
   case TYPE_SOLID:
     BOOST_THROW_EXCEPTION(NotImplementedException(
-        (boost::format("distance(%s,%s) is not implemented") %
-         point.geometryType() % geometry.geometryType())
-            .str()));
+        std::format("distance({},{}) is not implemented", point.geometryType(),
+                    geometry.geometryType())));
   }
 
   BOOST_ASSERT(false);
@@ -256,9 +254,8 @@ distanceLineStringGeometry(const LineString &lineString,
 
   case TYPE_SOLID:
     BOOST_THROW_EXCEPTION(NotImplementedException(
-        (boost::format("distance(%s,%s) is not implemented") %
-         lineString.geometryType() % geometry.geometryType())
-            .str()));
+        std::format("distance({},{}) is not implemented",
+                    lineString.geometryType(), geometry.geometryType())));
   }
 
   BOOST_ASSERT(false);
@@ -364,9 +361,8 @@ distancePolygonGeometry(const Polygon &polygon, const Geometry &geometry)
 
   case TYPE_SOLID:
     BOOST_THROW_EXCEPTION(NotImplementedException(
-        (boost::format("distance(%s,%s) is not implemented") %
-         polygon.geometryType() % geometry.geometryType())
-            .str()));
+        std::format("distance({},{}) is not implemented",
+                    polygon.geometryType(), geometry.geometryType())));
   }
 
   BOOST_ASSERT(false);

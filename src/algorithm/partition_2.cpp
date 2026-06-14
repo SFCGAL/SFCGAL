@@ -13,7 +13,6 @@
 
 #include "SFCGAL/Exception.h"
 #include "SFCGAL/Kernel.h"
-#include <boost/format.hpp>
 
 #include <CGAL/algorithm.h>
 #include <CGAL/partition_2.h>

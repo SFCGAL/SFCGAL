@@ -22,7 +22,6 @@
 
 #include "../../../test_config.h"
 
-#include <boost/format.hpp>
 #include <boost/test/unit_test.hpp>
 
 using namespace boost::unit_test;
@@ -63,10 +62,10 @@ BOOST_AUTO_TEST_SUITE(SFCGAL_IntersectsTest)
 //
 //    bool intersects1 = algorithm::intersects3D( tri1, surf );
 //    bool intersects2 = algorithm::intersects3D( tri2, surf );
-//    BOOST_TEST_MESSAGE( boost::format("triangle1 intersects the teapot: %1%")
-//    % (intersects1 ? "YES" : "NO") ); BOOST_CHECK_EQUAL( intersects1, true );
-//    BOOST_TEST_MESSAGE( boost::format("triangle2 intersects the teapot: %1%")
-//    % (intersects2 ? "YES" : "NO") ); BOOST_CHECK_EQUAL( intersects2, false );
+//    BOOST_TEST_MESSAGE( std::format("triangle1 intersects the teapot: {}",
+//    (intersects1 ? "YES" : "NO") )); BOOST_CHECK_EQUAL( intersects1, true );
+//    BOOST_TEST_MESSAGE( std::format("triangle2 intersects the teapot: {}",
+//    (intersects2 ? "YES" : "NO") )); BOOST_CHECK_EQUAL( intersects2, false );
 //}
 
 //

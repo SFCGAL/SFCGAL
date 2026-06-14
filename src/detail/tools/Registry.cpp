@@ -68,9 +68,10 @@ Registry::newGeometryByTypeName(const std::string &geometryTypeName) const
     }
   }
 
-  SFCGAL_WARNING(boost::format("Registry can't create a new Geometry for the "
-                               "type '%s' (returning null pointer)") %
-                 geometryTypeName);
+  SFCGAL_WARNING(std::format("Registry can't create a new Geometry for the "
+                             "type '{}' (returning null pointer)",
+                             geometryTypeName));
+
   return nullptr;
 }
 
@@ -83,9 +84,10 @@ Registry::newGeometryByTypeId(int typeId) const -> std::unique_ptr<Geometry>
     }
   }
 
-  SFCGAL_WARNING(boost::format("Registry can't create a new Geometry for the "
-                               "type '%d' (returning null pointer)") %
-                 typeId);
+  SFCGAL_WARNING(std::format("Registry can't create a new Geometry for the "
+                             "type '{}' (returning null pointer)",
+                             typeId));
+
   return nullptr;
 }
 

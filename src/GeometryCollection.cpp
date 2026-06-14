@@ -3,7 +3,7 @@
 // Copyright (c) 2024-2026, SFCGAL team.
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
-#include <boost/format.hpp>
+#include <format>
 #include <memory>
 
 #include "SFCGAL/Geometry.h"
@@ -132,10 +132,9 @@ GeometryCollection::geometryN(size_t const &n) const -> const Geometry &
 {
   if (n >= numGeometries()) {
     BOOST_THROW_EXCEPTION(
-        Exception((boost::format("Cannot access geometry at position %s. "
-                                 "GeometryCollection has only %d geometries.") %
-                   n % numGeometries())
-                      .str()));
+        Exception(std::format("Cannot access geometry at position {}. "
+                              "GeometryCollection has only {} geometries.",
+                              n, numGeometries())));
   }
 
   return *_geometries[n];
@@ -146,10 +145,9 @@ GeometryCollection::geometryN(size_t const &n) -> Geometry &
 {
   if (n >= numGeometries()) {
     BOOST_THROW_EXCEPTION(
-        Exception((boost::format("Cannot access geometry at position %s. "
-                                 "GeometryCollection has only %d geometries.") %
-                   n % numGeometries())
-                      .str()));
+        Exception(std::format("Cannot access geometry at position {}. "
+                              "GeometryCollection has only {} geometries.",
+                              n, numGeometries())));
   }
 
   return *_geometries[n];
@@ -163,10 +161,9 @@ GeometryCollection::setGeometryN(std::unique_ptr<Geometry> geometry,
 
   if (idx >= numGeometries()) {
     BOOST_THROW_EXCEPTION(
-        Exception((boost::format("Cannot set geometry at position %s. "
-                                 "GeometryCollection has only %d geometries.") %
-                   idx % numGeometries())
-                      .str()));
+        Exception(std::format("Cannot set geometry at position {}. "
+                              "GeometryCollection has only {} geometries.",
+                              idx, numGeometries())));
   }
 
   if (!isAllowed(*geometry)) {

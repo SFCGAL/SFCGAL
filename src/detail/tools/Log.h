@@ -8,7 +8,7 @@
 
 #include "SFCGAL/config.h"
 
-#include <boost/format.hpp>
+#include <format>
 #include <string>
 
 /**
@@ -90,17 +90,6 @@ public:
    */
   static Logger *
   get();
-
-  /**
-   * log a message using boost format
-   * @param level the log level
-   * @param message the message to log
-   * @param filename the filename (optional)
-   * @param lineNumber the line number in the file (optional)
-   */
-  void
-  log(const Level &level, const boost::format &message,
-      const std::string &filename = "", const int &lineNumber = -1);
 
   /**
    * log a message

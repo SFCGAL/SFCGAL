@@ -12,8 +12,6 @@
 #include "SFCGAL/TriangulatedSurface.h"
 #include "SFCGAL/detail/GetPointsVisitor.h"
 
-#include <boost/format.hpp>
-
 #include <vector>
 
 namespace SFCGAL::algorithm {
@@ -25,21 +23,18 @@ EqualityStrictness::operator|(Flag flag) -> EqualityStrictness &
   if ((((_flags & CheckCoverOrPoint) != 0) &&
        flag >= InternalPointOrdered) || //
       (((flag & CheckCoverOrPoint) != 0) && _flags >= InternalPointOrdered)) {
-    BOOST_THROW_EXCEPTION(
-        Exception((boost::format("Conflict in EqualityStrictness flags: can "
-                                 "not have CheckCoverOrPoint and any of "
-                                 "InternalPoint* checks ('%s' vs '%s')") %
-                   toString() % EqualityStrictness(flag).toString())
-                      .str()));
+    BOOST_THROW_EXCEPTION(Exception(std::format(
+        "Conflict in EqualityStrictness flags: can not have CheckCoverOrPoint "
+        "and any of InternalPoint* checks ('{}' vs '{}')",
+        toString(), EqualityStrictness(flag).toString())));
   }
 
   // can not have multiple InternalPoint* checks
   if (_flags >= InternalPointOrdered && flag >= InternalPointOrdered) {
     BOOST_THROW_EXCEPTION(Exception(
-        (boost::format("Conflict in EqualityStrictness flags: can not have "
-                       "multiple InternalPoint* checks ('%s' vs '%s')") %
-         toString() % EqualityStrictness(flag).toString())
-            .str()));
+        std::format("Conflict in EqualityStrictness flags: can not have "
+                    "multiple InternalPoint* checks ('{}' vs '{}')",
+                    toString(), EqualityStrictness(flag).toString())));
   }
 
   _flags |= flag;
@@ -220,8 +215,7 @@ compareSubPartOrdered(const Geometry &geomA, const Geometry &geomB,
 
   default:
     BOOST_THROW_EXCEPTION(NotImplementedException(
-        (boost::format("Unmanaged geometry type: %d.") % geomA.geometryType())
-            .str()));
+        std::format("Unmanaged geometry type: {}.", geomA.geometryType())));
   }
 }
 
@@ -288,8 +282,7 @@ compareSubPartNonOrdered(const Geometry &geomA, const Geometry &geomB,
 
   default:
     BOOST_THROW_EXCEPTION(NotImplementedException(
-        (boost::format("Unmanaged geometry type: %d.") % geomA.geometryType())
-            .str()));
+        std::format("Unmanaged geometry type: {}.", geomA.geometryType())));
   }
 }
 
@@ -596,8 +589,7 @@ hasSubPart(const Geometry &geom) -> bool
 
   default:
     BOOST_THROW_EXCEPTION(NotImplementedException(
-        (boost::format("Unmanaged geometry type: %d.") % geom.geometryType())
-            .str()));
+        std::format("Unmanaged geometry type: {}.", geom.geometryType())));
   }
 }
 

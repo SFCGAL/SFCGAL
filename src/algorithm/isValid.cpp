@@ -33,7 +33,6 @@
 #include "SFCGAL/detail/algorithm/coversPoints.h"
 #include "SFCGAL/detail/tools/Log.h"
 
-#include <boost/format.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/undirected_dfs.hpp>
 #include <boost/graph/visitors.hpp>
@@ -53,10 +52,8 @@ SFCGAL_ASSERT_GEOMETRY_VALIDITY_(const Geometry &g, const std::string &ctxt)
     const Validity sfcgalAssertGeometryValidity = algorithm::isValid(g);
     if (!sfcgalAssertGeometryValidity) {
       throw GeometryInvalidityException(
-          (boost::format(ctxt + "%s is invalid : %s : %s") %
-           (g).geometryType() % sfcgalAssertGeometryValidity.reason() %
-           (g).asText())
-              .str());
+          std::format("{} {} is invalid : {} : {}", ctxt, g.geometryType(),
+                      sfcgalAssertGeometryValidity.reason(), (g).asText()));
     }
   }
 }
@@ -215,7 +212,7 @@ validatePolygonRingsBasic(const Polygon &polygon) -> Validity
   for (size_t ring = 0; ring != numRings; ++ring) {
     if (polygon.ringN(ring).numPoints() < 4) {
       return Validity::invalid(
-          (boost::format("not enough points in ring %d") % ring).str());
+          std::format("not enough points in ring {}", ring));
     }
 
     const double distanceToClose =
@@ -225,14 +222,12 @@ validatePolygonRingsBasic(const Polygon &polygon) -> Validity
                                             polygon.ringN(ring).endPoint());
 
     if (distanceToClose > 0) {
-      return Validity::invalid(
-          (boost::format("ring %d is not closed") % ring).str());
+      return Validity::invalid(std::format("ring {} is not closed", ring));
     }
 
     if (polygon.is3D() ? selfIntersects3D(polygon.ringN(ring))
                        : selfIntersects(polygon.ringN(ring))) {
-      return Validity::invalid(
-          (boost::format("ring %d self intersects") % ring).str());
+      return Validity::invalid(std::format("ring {} self intersects", ring));
     }
   }
 
@@ -247,7 +242,7 @@ validatePolygonRingsBasic(const Polygon &polygon) -> Validity
     }
     if (idx == currentRing.numPoints()) {
       return Validity::invalid(
-          (boost::format("ring %d degenerated to a point") % ring).str());
+          std::format("ring {} degenerated to a point", ring));
     }
   }
 
@@ -264,11 +259,9 @@ validatePolygonRingsOrientation(const Polygon &polygon,
 
     for (std::size_t ring = 0; ring < polygon.numInteriorRings(); ++ring) {
       if (extCCWO == isCounterClockWiseOriented(polygon.interiorRingN(ring))) {
-        return Validity::invalid(
-            (boost::format("exterior ring and interior ring %d have the same "
-                           "orientation") %
-             ring)
-                .str());
+        return Validity::invalid(std::format(
+            "exterior ring and interior ring {} have the same orientation",
+            ring));
       }
     }
   }
@@ -290,10 +283,9 @@ validatePolygonRingsOrientation(const Polygon &polygon,
 
         if (nExt * nInt > 0) {
           return Validity::invalid(
-              (boost::format("interior ring %d is oriented in the same "
-                             "direction as exterior ring") %
-               ring)
-                  .str());
+              std::format("interior ring {} is oriented in the same direction "
+                          "as exterior ring",
+                          ring));
         }
       }
     }
@@ -320,10 +312,8 @@ validatePolygonRingsIntersections(const Polygon &polygon) -> Validity
                                         polygon.ringN(otherRingIdx));
 
       if (!inter->isEmpty() && !inter->is<Point>()) {
-        return Validity::invalid(
-            (boost::format("intersection between ring %d and %d") % ringIdx %
-             otherRingIdx)
-                .str());
+        return Validity::invalid(std::format(
+            "intersection between ring {} and {}", ringIdx, otherRingIdx));
       }
       if (!inter->isEmpty() && inter->is<Point>()) {
         touchingRings.emplace_back(ringIdx, otherRingIdx);
@@ -366,8 +356,7 @@ validatePolygonInteriorRings(const Polygon &polygon) -> Validity
                        : !coversPoints(Polygon(polygon.exteriorRing()),
                                        Polygon(polygon.interiorRingN(ring)))) {
       return Validity::invalid(
-          (boost::format("exterior ring doesn't cover interior ring %d") % ring)
-              .str());
+          std::format("exterior ring doesn't cover interior ring {}", ring));
     }
   }
 
@@ -379,9 +368,7 @@ validatePolygonInteriorRings(const Polygon &polygon) -> Validity
                          : coversPoints(Polygon(polygon.interiorRingN(ri)),
                                         Polygon(polygon.interiorRingN(rj)))) {
         return Validity::invalid(
-            (boost::format("interior ring %d covers interior ring %d") % ri %
-             rj)
-                .str());
+            std::format("interior ring {} covers interior ring {}", ri, rj));
       }
     }
   }
@@ -412,9 +399,8 @@ isValid(const MultiLineString &multilinestring, const double &toleranceAbs)
         isValid(multilinestring.lineStringN(l), toleranceAbs);
 
     if (!validity) {
-      return Validity::invalid((boost::format("LineString %d is invalid: %s") %
-                                l % validity.reason())
-                                   .str());
+      return Validity::invalid(
+          std::format("LineString {} is invalid: {}", l, validity.reason()));
     }
   }
 
@@ -436,9 +422,8 @@ isValid(const MultiPolygon &multipolygon, const double &toleranceAbs)
         isValid(multipolygon.polygonN(poly), toleranceAbs);
 
     if (!validity) {
-      return Validity::invalid((boost::format("Polygon %d is invalid: %s") %
-                                poly % validity.reason())
-                                   .str());
+      return Validity::invalid(
+          std::format("Polygon {} is invalid: {}", poly, validity.reason()));
     }
   }
 
@@ -453,8 +438,7 @@ isValid(const MultiPolygon &multipolygon, const double &toleranceAbs)
       // intersection can be empty, a point, or a set of points
       if (!inter->isEmpty() && inter->dimension() != 0) {
         return Validity::invalid(
-            (boost::format("intersection between Polygon %d and %d") % pi % pj)
-                .str());
+            std::format("intersection between Polygon {} and {}", pi, pj));
       }
     }
   }
@@ -478,10 +462,9 @@ isValid(const GeometryCollection &geometrycollection,
 
     if (!validity) {
       return Validity::invalid(
-          (boost::format("%s %d is invalid: %s") %
-           geometrycollection.geometryN(geom).geometryType() % geom %
-           validity.reason())
-              .str());
+          std::format("{} {} is invalid: {}",
+                      geometrycollection.geometryN(geom).geometryType(), geom,
+                      validity.reason()));
     }
   }
 
@@ -503,9 +486,8 @@ isValid(const TriangulatedSurface &triangulatedsurface,
         isValid(triangulatedsurface.patchN(tri), toleranceAbs);
 
     if (!validity) {
-      return Validity::invalid((boost::format("Triangle %d is invalid: %s") %
-                                tri % validity.reason())
-                                   .str());
+      return Validity::invalid(
+          std::format("Triangle {} is invalid: {}", tri, validity.reason()));
     }
   }
 
@@ -549,9 +531,8 @@ isValid(const PolyhedralSurface &polyhedralsurface, const SurfaceGraph &graph,
         isValid(polyhedralsurface.patchN(patch), toleranceAbs);
 
     if (!validity) {
-      return Validity::invalid((boost::format("Polygon %d is invalid: %s") %
-                                patch % validity.reason())
-                                   .str());
+      return Validity::invalid(
+          std::format("Polygon {} is invalid: {}", patch, validity.reason()));
     }
   }
 
@@ -595,15 +576,13 @@ isValid(const Solid &solid, const double &toleranceAbs) -> Validity
 
     if (!validity) {
       return Validity::invalid(
-          (boost::format("PolyhedralSurface (shell) %d is invalid: %s") %
-           shell % validity.reason())
-              .str());
+          std::format("PolyhedralSurface (shell) {} is invalid: {}", shell,
+                      validity.reason()));
     }
 
     if (!isClosed(graph)) {
       return Validity::invalid(
-          (boost::format("PolyhedralSurface (shell) %d is not closed") % shell)
-              .str());
+          std::format("PolyhedralSurface (shell) {} is not closed", shell));
     }
   }
 
@@ -630,8 +609,7 @@ isValid(const MultiSolid &multisolid, const double &toleranceAbs) -> Validity
 
     if (!validity) {
       return Validity::invalid(
-          (boost::format("Solid %d is invalid: %s") % solid % validity.reason())
-              .str());
+          std::format("Solid {} is invalid: {}", solid, validity.reason()));
     }
   }
 
@@ -694,11 +672,10 @@ isValid(const Geometry &geometry, const double &toleranceAbs) -> Validity
   }
 
   BOOST_THROW_EXCEPTION(Exception(
-      (boost::format("isValid( %s ) is not defined") % geometry.geometryType())
-          .str()));
+      std::format("isValid( {} ) is not defined", geometry.geometryType())));
   return Validity::invalid(
-      (boost::format("isValid( %s ) is not defined") % geometry.geometryType())
-          .str()); // to avoid warning
+      std::format("isValid( {} ) is not defined",
+                  geometry.geometryType())); // to avoid warning
 }
 
 void

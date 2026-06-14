@@ -7,7 +7,6 @@
 
 #include "../../../test_config.h"
 
-#include <boost/format.hpp>
 #include <fstream>
 
 #include "SFCGAL/GeometryCollection.h"
@@ -79,7 +78,7 @@ BOOST_AUTO_TEST_CASE(testFileDistanceTest)
       continue;
     }
 
-    BOOST_TEST_MESSAGE((boost::format("%s:%d") % filename % lineNo).str());
+    BOOST_TEST_MESSAGE(std::format("{}:{}", filename, lineNo));
 
     std::istringstream iss(line);
 

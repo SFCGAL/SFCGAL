@@ -3,6 +3,7 @@
 // Copyright (c) 2024-2026, SFCGAL team.
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
+#include <format>
 #include <fstream>
 
 #include "SFCGAL/Exception.h"
@@ -13,7 +14,6 @@
 
 #include "../../../test_config.h"
 
-#include <boost/format.hpp>
 #include <boost/test/unit_test.hpp>
 
 using namespace SFCGAL;
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(testFileIntersectionTest)
     }
 
     if (test_one_line == -1) {
-      BOOST_TEST_MESSAGE(boost::format("line#%s:%s") % numLine % line);
+      BOOST_TEST_MESSAGE(std::format("line#{}:{}", numLine, line));
     }
 
     std::istringstream iss(line);
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(testFileIntersectionTest)
       if (numLine != test_one_line) {
         continue;
       }
-      BOOST_TEST_MESSAGE(boost::format("line#%s:%s") % numLine % line);
+      BOOST_TEST_MESSAGE(std::format("line#{}:{}", numLine, line));
     }
 
     std::unique_ptr<Geometry> gA;

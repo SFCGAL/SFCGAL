@@ -65,8 +65,8 @@ auto
 distance3D(const Geometry &gA, const Geometry &gB,
            [[maybe_unused]] NoValidityCheck noCheck) -> double
 {
-  // SFCGAL_DEBUG( boost::format("dispatch distance3D(%s,%s)") % gA.asText() %
-  // gB.asText() );
+  // SFCGAL_DEBUG( std::format("dispatch distance3D({},{})", gA.asText(),
+  // gB.asText()) );
 
   switch (gA.geometryTypeId()) {
   case TYPE_POINT:
@@ -84,13 +84,13 @@ distance3D(const Geometry &gA, const Geometry &gB,
   }
 
   case TYPE_POLYGON:
-    // SFCGAL_DEBUG( boost::format("gA is a Polygon (%s)") % gA.geometryTypeId()
-    // );
+    // SFCGAL_DEBUG( std::format("gA is a Polygon ({})", gA.geometryTypeId()
+    // ) );
     return distancePolygonGeometry3D(gA.as<Polygon>(), gB);
 
   case TYPE_TRIANGLE:
-    // SFCGAL_DEBUG( boost::format("gA is a Triangle (%s)") %
-    // gA.geometryTypeId() );
+    // SFCGAL_DEBUG( std::format("gA is a Triangle ({})",
+    // gA.geometryTypeId()) );
     return distanceTriangleGeometry3D(gA.as<Triangle>(), gB);
 
   case TYPE_POLYHEDRALSURFACE:
@@ -113,16 +113,15 @@ distance3D(const Geometry &gA, const Geometry &gB,
   }
 
   BOOST_THROW_EXCEPTION(
-      Exception((boost::format("distance3D(%s,%s) is not implemented") %
-                 gA.geometryType() % gB.geometryType())
-                    .str()));
+      Exception(std::format("distance3D({},{}) is not implemented",
+                            gA.geometryType(), gB.geometryType())));
 }
 
 auto
 distancePointGeometry3D(const Point &gA, const Geometry &gB) -> double
 {
-  // SFCGAL_DEBUG( boost::format("dispatch distancePointGeometry3D(%s,%s)") %
-  // gA.asText() % gB.asText() );
+  // SFCGAL_DEBUG( std::format("dispatch distancePointGeometry3D({},{})",
+  // gA.asText(), gB.asText()) );
 
   switch (gB.geometryTypeId()) {
   case TYPE_POINT:
@@ -163,9 +162,8 @@ distancePointGeometry3D(const Point &gA, const Geometry &gB) -> double
   }
 
   BOOST_THROW_EXCEPTION(
-      Exception((boost::format("distance3D(%s,%s) is not implemented") %
-                 gA.geometryType() % gB.geometryType())
-                    .str()));
+      Exception(std::format("distance3D({},{}) is not implemented",
+                            gA.geometryType(), gB.geometryType())));
 }
 
 auto
@@ -287,8 +285,8 @@ distancePointSolid3D(const Point &gA, const Solid &gB) -> double
 auto
 distanceLineStringGeometry3D(const LineString &gA, const Geometry &gB) -> double
 {
-  // SFCGAL_DEBUG( boost::format("dispatch distanceLineStringGeometry3D(%s,%s)")
-  // % gA.asText() % gB.asText() );
+  // SFCGAL_DEBUG( std::format("dispatch distanceLineStringGeometry3D({},{})",
+  // gA.asText(), gB.asText() );
 
   switch (gB.geometryTypeId()) {
   case TYPE_POINT:
@@ -331,9 +329,8 @@ distanceLineStringGeometry3D(const LineString &gA, const Geometry &gB) -> double
   }
 
   BOOST_THROW_EXCEPTION(
-      Exception((boost::format("distance3D(%s,%s) is not implemented") %
-                 gA.geometryType() % gB.geometryType())
-                    .str()));
+      Exception(std::format("distance3D({},{}) is not implemented",
+                            gA.geometryType(), gB.geometryType())));
 }
 
 auto
@@ -463,8 +460,8 @@ distanceLineStringSolid3D(const LineString &gA, const Solid &gB) -> double
 auto
 distanceTriangleGeometry3D(const Triangle &gA, const Geometry &gB) -> double
 {
-  // SFCGAL_DEBUG( boost::format("dispatch distanceTriangleGeometry3D(%s,%s)") %
-  // gA.asText() % gB.asText() );
+  // SFCGAL_DEBUG( std::format("dispatch distanceTriangleGeometry3D({},{})",
+  // gA.asText(), gB.asText()) );
 
   switch (gB.geometryTypeId()) {
   case TYPE_POINT:
@@ -507,9 +504,8 @@ distanceTriangleGeometry3D(const Triangle &gA, const Geometry &gB) -> double
   }
 
   BOOST_THROW_EXCEPTION(
-      Exception((boost::format("distance3D(%s,%s) is not implemented") %
-                 gA.geometryType() % gB.geometryType())
-                    .str()));
+      Exception(std::format("distance3D({},{}) is not implemented",
+                            gA.geometryType(), gB.geometryType())));
 }
 
 auto
@@ -580,8 +576,8 @@ distanceTriangleSolid3D(const Triangle &gA, const Solid &gB) -> double
 auto
 distancePolygonGeometry3D(const Polygon &gA, const Geometry &gB) -> double
 {
-  // SFCGAL_DEBUG( boost::format("dispatch distancePolygonGeometry3D(%s,%s)") %
-  // gA.asText() % gB.asText() );
+  // SFCGAL_DEBUG( std::format("dispatch distancePolygonGeometry3D({},{})",
+  // gA.asText(), gB.asText()) );
 
   if (gA.isEmpty() || gB.isEmpty()) {
     return std::numeric_limits<double>::infinity();
@@ -639,8 +635,8 @@ distanceTriangulatedSurfaceGeometry3D(
 auto
 distanceSolidGeometry3D(const Solid &gA, const Geometry &gB) -> double
 {
-  // SFCGAL_DEBUG( boost::format("dispatch distanceSolidGeometry3D(%s,%s)") %
-  // gA.asText() % gB.asText() );
+  // SFCGAL_DEBUG( std::format("dispatch distanceSolidGeometry3D({},{})",
+  // gA.asText(), gB.asText()) );
 
   switch (gB.geometryTypeId()) {
   case TYPE_POINT:
@@ -683,16 +679,15 @@ distanceSolidGeometry3D(const Solid &gA, const Geometry &gB) -> double
   }
 
   BOOST_THROW_EXCEPTION(
-      Exception((boost::format("distance3D(%s,%s) is not implemented") %
-                 gA.geometryType() % gB.geometryType())
-                    .str()));
+      Exception(std::format("distance3D(%s,%s) is not implemented",
+                            gA.geometryType(), gB.geometryType())));
 }
 
 auto
 distanceSolidSolid3D(const Solid &gA, const Solid &gB) -> double
 {
-  // SFCGAL_DEBUG( boost::format("dispatch distancePolygonGeometry3D(%s,%s)") %
-  // gA.asText() % gB.asText() );
+  // SFCGAL_DEBUG( std::format("dispatch distancePolygonGeometry3D({},{})",
+  // gA.asText(), gB.asText()) );
 
   if (gA.isEmpty() || gB.isEmpty()) {
     return std::numeric_limits<double>::infinity();
@@ -825,9 +820,9 @@ auto
 distanceGeometryCollectionToGeometry3D(const Geometry &gA, const Geometry &gB)
     -> double
 {
-  // SFCGAL_DEBUG( boost::format("dispatch
-  // distanceGeometryCollectionToGeometry3D(%s,%s)") % gA.asText() % gB.asText()
-  // );
+  // SFCGAL_DEBUG( std::format("dispatch
+  // distanceGeometryCollectionToGeometry3D({},{})", % gA.asText(), gB.asText()
+  // ) );
 
   if (gA.isEmpty() || gB.isEmpty()) {
     return std::numeric_limits<double>::infinity();
