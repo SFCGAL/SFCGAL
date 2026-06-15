@@ -64,3 +64,32 @@ debian_gcc_auto:
     matrix:
       - CGAL_VERSION: [$CGAL_LATEST_VERSION]
         OS_VERSION: ["testing"]
+
+debian_test_32bits:
+  stage: plateform-build-test
+  image: debian:unstable
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
+  script:
+    - dpkg --add-architecture i386
+    - apt update -qq
+    - apt install --yes wget gcc-multilib g++-multilib cmake xz-utils
+    - apt install --yes libboost-program-options-dev:i386 libboost-test-dev:i386 libboost-thread-dev:i386 nlohmann-json3-dev:i386 libboost-serialization-dev:i386 libmpfr-dev:i386 libgmp-dev:i386 libeigen3-dev:i386
+    - wget --tries=10 --waitretry=5 --timeout=90 --read-timeout=90 https://github.com/CGAL/cgal/releases/download/v6.2/CGAL-6.2.tar.xz && tar xJf CGAL-6.2.tar.xz && cd CGAL-6.2 && mkdir build && cd build && cmake -DCMAKE_C_FLAGS="-m32" -DCMAKE_CXX_FLAGS="-m32" -DCMAKE_INSTALL_PREFIX="$CI_PROJECT_DIR/CGAL" .. && make && make install
+    - cd $CI_PROJECT_DIR
+    - cmake
+        -DSFCGAL_WITH_EIGEN=ON
+        -DSFCGAL_BUILD_TESTS=ON
+        -DSFCGAL_BUILD_CLI=ON
+        -DCMAKE_C_COMPILER=/usr/bin/gcc
+        -DCMAKE_CXX_COMPILER=/usr/bin/g++
+        -DCGAL_DIR=${CI_PROJECT_DIR}/CGAL-6.2
+        -DCMAKE_C_FLAGS="-m32"
+        -DCMAKE_CXX_FLAGS="-m32"
+        -DCMAKE_EXE_LINKER_FLAGS="-m32"
+        -DCMAKE_SHARED_LINKER_FLAGS="-m32"
+    - make -j$(nproc)
+    - ctest -VV
