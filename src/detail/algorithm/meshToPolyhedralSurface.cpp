@@ -15,7 +15,8 @@ namespace SFCGAL::detail::algorithm {
 /// @{
 /// @privatesection
 
-using VertexIndex = Surface_mesh_3::Vertex_index;
+template <typename MeshType>
+using VertexIndex = typename boost::graph_traits<MeshType>::vertex_descriptor;
 
 /**
  * Checks whether two faces are coplanar within given tolerances.
@@ -32,10 +33,12 @@ using VertexIndex = Surface_mesh_3::Vertex_index;
  *
  * @return true if the two faces are considered coplanar, false otherwise.
  */
+template <typename MeshType>
 static auto
-areCoplanarFaces(const Surface_mesh_3 &mesh, FaceIndex face1, FaceIndex face2,
-                 const Vector_3 &normal1, const Vector_3 &normal2,
-                 const Kernel::FT &epsAngle, const Kernel::FT &epsDist) -> bool
+areCoplanarFaces(const MeshType &mesh, FaceIndex<MeshType> face1,
+                 FaceIndex<MeshType> face2, const Vector_3 &normal1,
+                 const Vector_3 &normal2, const Kernel::FT &epsAngle,
+                 const Kernel::FT &epsDist) -> bool
 {
   // A degenerate face has a null normal, hence no plane: both tests below
   // would then compare 0 to 0 and swallow it into any group.
@@ -59,55 +62,60 @@ areCoplanarFaces(const Surface_mesh_3 &mesh, FaceIndex face1, FaceIndex face2,
 
   // Test if every vertex of face2 lies in the plane of face1:
   //   (n1.(pt - pt0))^2 <= epsDist^2 * |n1|^2
-  const Point_3   &pt0       = mesh.point(mesh.source(mesh.halfedge(face1)));
+  auto           vertexPointMap = get(CGAL::vertex_point, mesh);
+  const Point_3 &pt0 = get(vertexPointMap, source(halfedge(face1, mesh), mesh));
   const Kernel::FT maxDistSq = epsDist * epsDist * len1Sq;
-  auto halfedges = CGAL::halfedges_around_face(mesh.halfedge(face2), mesh);
-  return std::all_of(halfedges.begin(), halfedges.end(),
-                     [&](auto halfedge) -> auto {
-                       const Point_3   &pt = mesh.point(mesh.source(halfedge));
-                       const Kernel::FT dotProj = normal1 * (pt - pt0);
-                       return dotProj * dotProj <= maxDistSq;
-                     });
+  auto halfedges = CGAL::halfedges_around_face(halfedge(face2, mesh), mesh);
+  return std::all_of(
+      halfedges.begin(), halfedges.end(), [&](auto halfedge) -> auto {
+        const Point_3   &pt      = get(vertexPointMap, source(halfedge, mesh));
+        const Kernel::FT dotProj = normal1 * (pt - pt0);
+        return dotProj * dotProj <= maxDistSq;
+      });
 }
 
 /// @} end of private section
 
+template <typename MeshType>
 auto
-groupCoplanarFaces(const Surface_mesh_3 &mesh, const Kernel::FT &epsAngle,
+groupCoplanarFaces(const MeshType &mesh, const Kernel::FT &epsAngle,
                    const Kernel::FT &epsDist)
-    -> std::vector<std::vector<FaceIndex>>
+    -> std::vector<std::vector<FaceIndex<MeshType>>>
 {
-  std::vector<bool>     visited(mesh.num_faces(), false);
-  std::vector<Vector_3> normals(mesh.num_faces(), CGAL::NULL_VECTOR);
+  std::unordered_map<FaceIndex<MeshType>, bool>     visited;
+  std::unordered_map<FaceIndex<MeshType>, Vector_3> normals;
 
-  for (FaceIndex face : mesh.faces()) {
+  for (FaceIndex<MeshType> face : faces(mesh)) {
+    visited[face] = false;
     normals[face] = PMP::compute_face_normal(face, mesh);
   }
 
-  std::vector<std::vector<FaceIndex>> result;
+  std::vector<std::vector<FaceIndex<MeshType>>> result;
 
   // Iterate over all faces to look for coplanar components
-  for (const auto &seedFace : mesh.faces()) {
+  for (const auto &seedFace : faces(mesh)) {
     if (visited[seedFace]) {
       continue;
     }
 
-    std::queue<FaceIndex> queue;
+    std::queue<FaceIndex<MeshType>> queue;
     queue.push(seedFace);
     visited[seedFace] = true;
-    std::vector<FaceIndex> coplanarGroup;
+    std::vector<FaceIndex<MeshType>> coplanarGroup;
 
     // look for connected coplanar faces
     while (!queue.empty()) {
-      FaceIndex currentFace = queue.front();
+      FaceIndex<MeshType> currentFace = queue.front();
       queue.pop();
       coplanarGroup.emplace_back(currentFace);
 
       // Iterate over all neighboring faces
       for (const auto &halfedge :
-           CGAL::halfedges_around_face(mesh.halfedge(currentFace), mesh)) {
-        FaceIndex oppositeFace = mesh.face(mesh.opposite(halfedge));
-        if (oppositeFace == Surface_mesh_3::null_face() ||
+           CGAL::halfedges_around_face(halfedge(currentFace, mesh), mesh)) {
+
+        FaceIndex<MeshType> oppositeFace = face(opposite(halfedge, mesh), mesh);
+
+        if (oppositeFace == boost::graph_traits<MeshType>::null_face() ||
             visited[oppositeFace]) {
           continue;
         }
@@ -126,14 +134,16 @@ groupCoplanarFaces(const Surface_mesh_3 &mesh, const Kernel::FT &epsAngle,
   return result;
 }
 
+template <typename MeshType>
 auto
-createRing(const Surface_mesh_3                            &mesh,
-           const CGAL::Face_filtered_graph<Surface_mesh_3> &filteredMesh,
-           const HalfedgeIndex &ringIdx, const Kernel::Vector_3 &faceNormal,
-           LineString &ring) -> Kernel::FT
+createRing(const MeshType                            &mesh,
+           const CGAL::Face_filtered_graph<MeshType> &filteredMesh,
+           const HalfedgeIndex<MeshType>             &ringIdx,
+           const Kernel::Vector_3 &faceNormal, LineString &ring) -> Kernel::FT
 {
-  for (const VertexIndex vertex : vertices_around_face(ringIdx, filteredMesh)) {
-    ring.addPoint(Point(mesh.point(vertex)));
+  for (const VertexIndex<MeshType> vertex :
+       vertices_around_face(ringIdx, filteredMesh)) {
+    ring.addPoint(Point(get(CGAL::vertex_point, mesh, vertex)));
   }
 
   Vector_3          sum        = CGAL::NULL_VECTOR;
@@ -148,5 +158,19 @@ createRing(const Surface_mesh_3                            &mesh,
 
   return sum * faceNormal;
 }
+
+// Explicit instantiations
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+template std::vector<
+    std::vector<typename boost::graph_traits<Surface_mesh_3>::face_descriptor>>
+groupCoplanarFaces<Surface_mesh_3>(const Surface_mesh_3 &, const Kernel::FT &,
+                                   const Kernel::FT &);
+
+template Kernel::FT
+createRing<Surface_mesh_3>(const Surface_mesh_3 &,
+                           const CGAL::Face_filtered_graph<Surface_mesh_3> &,
+                           const HalfedgeIndex<Surface_mesh_3> &,
+                           const Kernel::Vector_3 &, LineString &);
+#endif
 
 } // namespace SFCGAL::detail::algorithm

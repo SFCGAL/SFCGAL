@@ -25,22 +25,27 @@ namespace SFCGAL::algorithm {
 /// @{
 /// @privatesection
 
-using FaceIndex     = Surface_mesh_3::Face_index;
-using HalfedgeIndex = Surface_mesh_3::Halfedge_index;
+template <typename MeshType>
+using FaceIndex = typename boost::graph_traits<MeshType>::face_descriptor;
+
+template <typename MeshType>
+using HalfedgeIndex =
+    typename boost::graph_traits<MeshType>::halfedge_descriptor;
 
 /// @} end of private section
 
 // NOLINTBEGIN(readability-function-cognitive-complexity)
+template <typename MeshType>
 auto
-meshToPolyhedralSurface(const Surface_mesh_3 &mesh, const Kernel::FT &epsAngle,
+meshToPolyhedralSurface(const MeshType &mesh, const Kernel::FT &epsAngle,
                         const Kernel::FT &epsDist)
     -> std::unique_ptr<PolyhedralSurface>
 {
   auto result = std::make_unique<PolyhedralSurface>();
 
   // extract planar surfaces from the mesh
-  std::vector<std::vector<FaceIndex>> coplanarGroups =
-      detail::algorithm::groupCoplanarFaces(mesh, epsAngle, epsDist);
+  std::vector<std::vector<FaceIndex<MeshType>>> coplanarGroups =
+      detail::algorithm::groupCoplanarFaces<MeshType>(mesh, epsAngle, epsDist);
 
   // Extract the vertices of a face, constructs the corresponding ring,
   // and computes its signed area projected onto the face normal.
@@ -54,8 +59,8 @@ meshToPolyhedralSurface(const Surface_mesh_3 &mesh, const Kernel::FT &epsAngle,
     Polygon patch;
 
     // extract mesh cycles
-    std::vector<HalfedgeIndex>                cyclesIdx;
-    CGAL::Face_filtered_graph<Surface_mesh_3> filteredMesh(mesh, planarIdx);
+    std::vector<HalfedgeIndex<MeshType>> cyclesIdx;
+    CGAL::Face_filtered_graph<MeshType>  filteredMesh(mesh, planarIdx);
 #if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 2, 0)
     CGAL::extract_boundary_cycles(filteredMesh, std::back_inserter(cyclesIdx));
 #else
@@ -70,7 +75,7 @@ meshToPolyhedralSurface(const Surface_mesh_3 &mesh, const Kernel::FT &epsAngle,
     // can directly set exteriorRing
     if (cyclesIdx.size() == 1) {
       LineString       exteriorRing;
-      const Kernel::FT signedArea = detail::algorithm::createRing(
+      const Kernel::FT signedArea = detail::algorithm::createRing<MeshType>(
           mesh, filteredMesh, cyclesIdx[0], faceNormal, exteriorRing);
       if (signedArea < Kernel::FT(0)) {
         exteriorRing.reverse();
@@ -85,7 +90,7 @@ meshToPolyhedralSurface(const Surface_mesh_3 &mesh, const Kernel::FT &epsAngle,
       std::vector<std::pair<LineString, Kernel::FT>> rings;
       for (const auto &cycleHalfedge : cyclesIdx) {
         LineString       ring;
-        const Kernel::FT signedArea = detail::algorithm::createRing(
+        const Kernel::FT signedArea = detail::algorithm::createRing<MeshType>(
             mesh, filteredMesh, cycleHalfedge, faceNormal, ring);
         rings.emplace_back(ring, signedArea);
       }
@@ -118,5 +123,9 @@ meshToPolyhedralSurface(const Surface_mesh_3 &mesh, const Kernel::FT &epsAngle,
   return result;
 }
 // NOLINTEND(readability-function-cognitive-complexity)
+
+template std::unique_ptr<PolyhedralSurface>
+meshToPolyhedralSurface<Surface_mesh_3>(const Surface_mesh_3 &,
+                                        const Kernel::FT &, const Kernel::FT &);
 
 } // namespace SFCGAL::algorithm
