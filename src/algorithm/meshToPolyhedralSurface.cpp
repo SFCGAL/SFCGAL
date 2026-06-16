@@ -27,7 +27,6 @@ namespace SFCGAL::algorithm {
 
 using FaceIndex     = Surface_mesh_3::Face_index;
 using HalfedgeIndex = Surface_mesh_3::Halfedge_index;
-using VertexIndex   = Surface_mesh_3::Vertex_index;
 
 /// @} end of private section
 
