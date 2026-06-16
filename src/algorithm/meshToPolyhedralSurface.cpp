@@ -125,6 +125,14 @@ meshToPolyhedralSurface(const MeshType &mesh, const Kernel::FT &epsAngle,
 // NOLINTEND(readability-function-cognitive-complexity)
 
 template std::unique_ptr<PolyhedralSurface>
+meshToPolyhedralSurface<Polyhedron_3>(const Polyhedron_3 &, const Kernel::FT &,
+                                      const Kernel::FT &);
+
+template std::unique_ptr<PolyhedralSurface>
+meshToPolyhedralSurface<detail::MarkedPolyhedron>(
+    const detail::MarkedPolyhedron &, const Kernel::FT &, const Kernel::FT &);
+
+template std::unique_ptr<PolyhedralSurface>
 meshToPolyhedralSurface<Surface_mesh_3>(const Surface_mesh_3 &,
                                         const Kernel::FT &, const Kernel::FT &);
 

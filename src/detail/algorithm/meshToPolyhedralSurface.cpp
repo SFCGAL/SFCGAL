@@ -151,9 +151,33 @@ createRing(const MeshType                            &mesh,
 // Explicit instantiations
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 template std::vector<
+    std::vector<typename boost::graph_traits<Polyhedron_3>::face_descriptor>>
+groupCoplanarFaces<Polyhedron_3>(const Polyhedron_3 &, const Kernel::FT &,
+                                 const Kernel::FT &);
+
+template std::vector<std::vector<
+    typename boost::graph_traits<detail::MarkedPolyhedron>::face_descriptor>>
+groupCoplanarFaces<detail::MarkedPolyhedron>(const detail::MarkedPolyhedron &,
+                                             const Kernel::FT &,
+                                             const Kernel::FT &);
+
+template std::vector<
     std::vector<typename boost::graph_traits<Surface_mesh_3>::face_descriptor>>
 groupCoplanarFaces<Surface_mesh_3>(const Surface_mesh_3 &, const Kernel::FT &,
                                    const Kernel::FT &);
+
+template Kernel::FT
+createRing<Polyhedron_3>(const Polyhedron_3 &,
+                         const CGAL::Face_filtered_graph<Polyhedron_3> &,
+                         const HalfedgeIndex<Polyhedron_3> &,
+                         const Kernel::Vector_3 &, LineString &);
+
+template Kernel::FT
+createRing<detail::MarkedPolyhedron>(
+    const detail::MarkedPolyhedron &,
+    const CGAL::Face_filtered_graph<detail::MarkedPolyhedron> &,
+    const HalfedgeIndex<detail::MarkedPolyhedron> &, const Kernel::Vector_3 &,
+    LineString &);
 
 template Kernel::FT
 createRing<Surface_mesh_3>(const Surface_mesh_3 &,

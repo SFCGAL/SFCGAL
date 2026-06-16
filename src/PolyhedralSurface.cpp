@@ -50,6 +50,33 @@ PolyhedralSurface::PolyhedralSurface(const PolyhedralSurface &other)
   }
 }
 
+template <typename Polyhedron>
+PolyhedralSurface::PolyhedralSurface(const Polyhedron &poly,
+                                     bool              simplifyTriangulation)
+{
+  if (!simplifyTriangulation) {
+    // Directly convert all faces to patches
+    for (typename Polyhedron::Facet_const_iterator fit = poly.facets_begin();
+         fit != poly.facets_end(); ++fit) {
+      auto face = std::make_unique<LineString>();
+      typename Polyhedron::Halfedge_around_facet_const_circulator hit =
+          fit->facet_begin();
+      do {
+        face->addPoint(hit->vertex()->point());
+        ++hit;
+      } while (hit != fit->facet_begin());
+      // close the ring
+      face->addPoint(hit->vertex()->point());
+      _polygons.push_back(std::make_unique<Polygon>(std::move(face)));
+    }
+  } else {
+    // Simplify triangulation and then convert faces to patches
+    std::unique_ptr<PolyhedralSurface> phs =
+        algorithm::meshToPolyhedralSurface<Polyhedron>(poly);
+    swap(*phs);
+  }
+}
+
 PolyhedralSurface::PolyhedralSurface(const Mesh &sm, bool simplifyTriangulation)
 {
   using VertexIndex = Mesh::Vertex_index;
@@ -325,9 +352,10 @@ PolyhedralSurface::numEdges() const -> size_t
 
 // Explicit instantiations
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-template PolyhedralSurface::PolyhedralSurface(const detail::MarkedPolyhedron &);
+template PolyhedralSurface::PolyhedralSurface(const detail::MarkedPolyhedron &,
+                                              bool);
 template PolyhedralSurface::PolyhedralSurface(
-    const CGAL::Polyhedron_3<Kernel> &);
+    const CGAL::Polyhedron_3<Kernel> &, bool);
 #endif
 
 } // namespace SFCGAL
