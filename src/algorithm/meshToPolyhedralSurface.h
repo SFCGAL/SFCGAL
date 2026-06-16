@@ -11,8 +11,6 @@
 
 namespace SFCGAL::algorithm {
 
-using VertexIndex = Surface_mesh_3::Vertex_index;
-
 /**
  * @brief Converts a surface mesh into a polyhedral surface by grouping coplanar
  * faces.
