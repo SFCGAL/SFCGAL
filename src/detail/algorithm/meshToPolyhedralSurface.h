@@ -17,8 +17,12 @@ namespace SFCGAL::detail::algorithm {
 /// @{
 /// @privatesection
 
-using FaceIndex     = Surface_mesh_3::Face_index;
-using HalfedgeIndex = Surface_mesh_3::Halfedge_index;
+template <typename MeshType>
+using FaceIndex = typename boost::graph_traits<MeshType>::face_descriptor;
+
+template <typename MeshType>
+using HalfedgeIndex =
+    typename boost::graph_traits<MeshType>::halfedge_descriptor;
 
 /// @} end of private section
 
@@ -37,11 +41,12 @@ using HalfedgeIndex = Surface_mesh_3::Halfedge_index;
  * @return A vector of face groups, where each group is a vector of face indices
  *         representing a connected coplanar component.
  */
+template <typename MeshType>
 auto
-groupCoplanarFaces(const Surface_mesh_3 &mesh,
-                   const Kernel::FT     &epsAngle = Kernel::FT(0.5),
-                   const Kernel::FT     &epsDist  = Kernel::FT(1e-8))
-    -> std::vector<std::vector<FaceIndex>>;
+groupCoplanarFaces(const MeshType   &mesh,
+                   const Kernel::FT &epsAngle = Kernel::FT(0.5),
+                   const Kernel::FT &epsDist  = Kernel::FT(1e-8))
+    -> std::vector<std::vector<FaceIndex<MeshType>>>;
 
 /**
  * Builds a polygonal ring from a face and computes its oriented area.
@@ -60,11 +65,12 @@ groupCoplanarFaces(const Surface_mesh_3 &mesh,
  * @return Kernel::FT   the signed area of the ring projected onto the normal
  * direction.
  */
+template <typename MeshType>
 auto
-createRing(const Surface_mesh_3                            &mesh,
-           const CGAL::Face_filtered_graph<Surface_mesh_3> &filteredMesh,
-           const HalfedgeIndex &ringIdx, const Kernel::Vector_3 &faceNormal,
-           LineString &ring) -> Kernel::FT;
+createRing(const MeshType                            &mesh,
+           const CGAL::Face_filtered_graph<MeshType> &filteredMesh,
+           const HalfedgeIndex<MeshType>             &ringIdx,
+           const Kernel::Vector_3 &faceNormal, LineString &ring) -> Kernel::FT;
 
 } // namespace SFCGAL::detail::algorithm
 

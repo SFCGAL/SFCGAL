@@ -31,11 +31,11 @@ namespace SFCGAL::algorithm {
  *
  * @since 2.3
  */
-SFCGAL_API
+template <typename MeshType>
 auto
-meshToPolyhedralSurface(const Surface_mesh_3 &mesh,
-                        const Kernel::FT     &epsAngle = Kernel::FT(0.5),
-                        const Kernel::FT     &epsDist  = Kernel::FT(1e-8))
+meshToPolyhedralSurface(const MeshType   &mesh,
+                        const Kernel::FT &epsAngle = Kernel::FT(0.5),
+                        const Kernel::FT &epsDist  = Kernel::FT(1e-8))
     -> std::unique_ptr<PolyhedralSurface>;
 
 } // namespace SFCGAL::algorithm
