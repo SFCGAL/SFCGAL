@@ -112,14 +112,17 @@ Cylinder::generateSurfaceMesh() const -> Surface_mesh_3
   std::vector<Surface_mesh_3::Vertex_index> base_vertices;
   std::vector<Surface_mesh_3::Vertex_index> top_vertices;
 
+  const Kernel::FT zMin = -height() / 2.0;
+  const Kernel::FT zMax = height() / 2.0;
+
   // Create vertices for the base and top
   for (unsigned int i = 0; i < numRadial(); ++i) {
     const double angle = 2.0 * M_PI * i / numRadial();
     const double x     = CGAL::to_double(radius()) * std::cos(angle);
     const double y     = CGAL::to_double(radius()) * std::sin(angle);
 
-    base_vertices.push_back(mesh.add_vertex(Point_3(x, y, 0)));
-    top_vertices.push_back(mesh.add_vertex(Point_3(x, y, height())));
+    base_vertices.push_back(mesh.add_vertex(Point_3(x, y, zMin)));
+    top_vertices.push_back(mesh.add_vertex(Point_3(x, y, zMax)));
   }
 
   // Add side faces
@@ -130,9 +133,9 @@ Cylinder::generateSurfaceMesh() const -> Surface_mesh_3
   }
 
   // Add base and top faces
-  Surface_mesh_3::Vertex_index origin = mesh.add_vertex(Point_3(0, 0, 0));
+  Surface_mesh_3::Vertex_index origin = mesh.add_vertex(Point_3(0, 0, zMin));
   Surface_mesh_3::Vertex_index top_origin =
-      mesh.add_vertex(Point_3(0, 0, height()));
+      mesh.add_vertex(Point_3(0, 0, zMax));
 
   for (unsigned int i = 0; i < numRadial(); ++i) {
     unsigned int next = (i + 1) % numRadial();
