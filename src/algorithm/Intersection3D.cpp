@@ -298,6 +298,12 @@ _intersection_solid_solid(const MarkedPolyhedron &polyhedron_a,
       if (CGAL::Polygon_mesh_processing::corefine_and_compute_intersection(
               polya, polyb, polya)) {
         if (std::next(vertices(polya).first) != vertices(polya).second) {
+          // corefine_and_compute_intersection can produce almost-degenerate
+          // faces on coplanar input faces, causing validity failures after WKT
+          // serialization.
+          // CGAL::PMP::remove_almost_degenerate_faces collapses those faces.
+          // This does not create any hole.
+          CGAL::Polygon_mesh_processing::remove_almost_degenerate_faces(polya);
           output.addPrimitive(polya);
         }
       }
