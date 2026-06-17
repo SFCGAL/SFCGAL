@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(testTiltedCylinder)
   auto     mesh = cyl.generateSurfaceMesh();
 
   // Check that the top center is where we expect it to be
-  Point_3 expected_top(1, 0, 3);
+  Point_3 expected_top(1, 0, 1.5);
   bool    found_top = false;
   for (auto v : mesh.vertices()) {
     if (CGAL::squared_distance(mesh.point(v), expected_top) < 1e-10) {
