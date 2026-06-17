@@ -11,6 +11,7 @@
 #include "SFCGAL/detail/transform/AffineTransform3.h"
 #include "SFCGAL/primitive3d/Cone.h"
 #include "SFCGAL/primitive3d/Primitive.h"
+#include "SFCGAL/primitive3d/PrimitiveSnap.h"
 
 namespace SFCGAL {
 
@@ -149,6 +150,23 @@ Cone::generatePolyhedralSurface() const -> PolyhedralSurface
   if (m_transform != Kernel::Aff_transformation_3(CGAL::IDENTITY)) {
     SFCGAL::transform::AffineTransform3 visitor(m_transform);
     m_polyhedral_surface->accept(visitor);
+  }
+
+  // snap coordinates
+  for (auto &patch : *m_polyhedral_surface) {
+    auto &exterior = patch.exteriorRing();
+
+    for (size_t idx = 0; idx < exterior.numPoints(); ++idx) {
+      snapPoint(exterior.pointN(idx));
+    }
+
+    for (size_t idx = 0; idx < patch.numInteriorRings(); ++idx) {
+      auto &hole = patch.interiorRingN(idx);
+
+      for (size_t i = 0; i < hole.numPoints(); ++i) {
+        snapPoint(hole.pointN(i));
+      }
+    }
   }
 
   return *m_polyhedral_surface;

@@ -8,6 +8,7 @@
 #include "SFCGAL/algorithm/area.h"
 #include "SFCGAL/numeric.h"
 #include "SFCGAL/primitive3d/Cylinder.h"
+#include "SFCGAL/primitive3d/PrimitiveSnap.h"
 
 #include <CGAL/Polygon_mesh_processing/transform.h>
 
@@ -143,6 +144,13 @@ Cylinder::generateSurfaceMesh() const -> Surface_mesh_3
   // handle affine transformation
   if (m_transform != Kernel::Aff_transformation_3(CGAL::IDENTITY)) {
     PMP::transform(m_transform, mesh);
+  }
+
+  for (auto v : mesh.vertices()) {
+    auto p = mesh.point(v);
+
+    mesh.point(v) = Point_3(snapCoordinate(p.x()), snapCoordinate(p.y()),
+                            snapCoordinate(p.z()));
   }
 
   m_surface_mesh = mesh;
