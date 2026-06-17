@@ -88,6 +88,9 @@ Cone::generatePolyhedralSurface() const -> PolyhedralSurface
   // faces
   m_polyhedral_surface = PolyhedralSurface();
 
+  const Kernel::FT zMin = -height() / 2.0;
+  const Kernel::FT zMax = height() / 2.0;
+
   // bottom face
   std::vector<Point> bottom_points;
   if (bottomRadius() > 0) {
@@ -95,7 +98,7 @@ Cone::generatePolyhedralSurface() const -> PolyhedralSurface
       double     angle = -2.0 * CGAL_PI * i / numRadial();
       Kernel::FT x     = bottomRadius() * std::cos(angle);
       Kernel::FT y     = bottomRadius() * std::sin(angle);
-      bottom_points.emplace_back(x, y, 0);
+      bottom_points.emplace_back(x, y, zMin);
     }
     bottom_points.push_back(bottom_points[0]);
     m_polyhedral_surface->addPatch(LineString(bottom_points));
@@ -108,7 +111,7 @@ Cone::generatePolyhedralSurface() const -> PolyhedralSurface
       double     angle = 2.0 * CGAL_PI * i / numRadial();
       Kernel::FT x     = topRadius() * std::cos(angle);
       Kernel::FT y     = topRadius() * std::sin(angle);
-      top_points.emplace_back(x, y, height());
+      top_points.emplace_back(x, y, zMax);
     }
     top_points.push_back(top_points[0]);
     m_polyhedral_surface->addPatch(LineString(top_points));
@@ -118,8 +121,8 @@ Cone::generatePolyhedralSurface() const -> PolyhedralSurface
   if (topRadius() == 0 && bottomRadius() > 0) {
     for (unsigned int i = 0; i < numRadial(); ++i) {
       m_polyhedral_surface->addPatch(
-          LineString({bottom_points[i], Point(0, 0, height()),
-                      bottom_points[i + 1], bottom_points[i]}));
+          LineString({bottom_points[i], Point(0, 0, zMax), bottom_points[i + 1],
+                      bottom_points[i]}));
     }
   }
 
@@ -128,7 +131,7 @@ Cone::generatePolyhedralSurface() const -> PolyhedralSurface
     for (unsigned int i = 0; i < numRadial(); ++i) {
       m_polyhedral_surface->addPatch(LineString({
           top_points[i],
-          Point(0, 0, 0),
+          Point(0, 0, zMin),
           top_points[i + 1],
           top_points[i],
       }));
