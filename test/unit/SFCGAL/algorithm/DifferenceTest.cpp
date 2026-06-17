@@ -16,6 +16,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "../../../test_config.h"
+
 using namespace SFCGAL;
 using namespace boost::unit_test;
 
@@ -523,6 +525,42 @@ BOOST_AUTO_TEST_CASE(testDifference3DDivideByZeroCrash)
     } catch (...) {
     }
   }
+}
+
+BOOST_AUTO_TEST_CASE(testDifferenceCylinders)
+{
+  std::string inputData1(SFCGAL_TEST_DIRECTORY);
+  inputData1 += "/data/big_cylinder.wkt";
+  std::ifstream ifs1(inputData1.c_str());
+  BOOST_REQUIRE(ifs1.good());
+
+  std::string inputWkt1;
+  std::getline(ifs1, inputWkt1);
+  const std::unique_ptr<Geometry> bigCylinder(io::readWkt(inputWkt1));
+  BOOST_CHECK(!bigCylinder->isEmpty());
+
+  std::string inputData2(SFCGAL_TEST_DIRECTORY);
+  inputData2 += "/data/medium_cylinder.wkt";
+  std::ifstream ifs2(inputData2.c_str());
+  BOOST_REQUIRE(ifs2.good());
+
+  std::string inputWkt2;
+  std::getline(ifs2, inputWkt2);
+  const std::unique_ptr<Geometry> mediumCylinder(io::readWkt(inputWkt2));
+  BOOST_CHECK(!mediumCylinder->isEmpty());
+  BOOST_CHECK(algorithm::isValid(*mediumCylinder));
+
+  std::unique_ptr<Geometry> result =
+      algorithm::difference3D(Solid(bigCylinder->as<PolyhedralSurface>()),
+                              Solid(mediumCylinder->as<PolyhedralSurface>()));
+  BOOST_CHECK(!result->isEmpty());
+  BOOST_CHECK(algorithm::isValid(*result));
+
+  // Verify that WKT export/import preserves a valid geometry despite
+  // floating-point precision and numerical rounding effects.
+  std::unique_ptr<Geometry> resultFromWkt = io::readWkt(result->asText(16));
+  BOOST_CHECK(!resultFromWkt->isEmpty());
+  BOOST_CHECK(algorithm::isValid(*resultFromWkt));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

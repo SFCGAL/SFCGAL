@@ -16,6 +16,7 @@
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Polygon_mesh_processing/corefinement.h>
+#include <CGAL/Polygon_mesh_processing/repair.h>
 #include <CGAL/Side_of_triangle_mesh.h>
 #include <CGAL/box_intersection_d.h>
 #include <CGAL/exceptions.h>
@@ -526,6 +527,12 @@ difference(const MarkedPolyhedron &polyA, const MarkedPolyhedron &polyB,
     if (CGAL::Polygon_mesh_processing::corefine_and_compute_difference(
             meshP, meshQ, meshP)) {
       if (std::next(vertices(meshP).first) != vertices(meshP).second) {
+        // corefine_and_compute_difference can produce almost-degenerate faces
+        // on coplanar input faces, causing validity failures after WKT
+        // serialization.
+        // CGAL::PMP::remove_almost_degenerate_faces collapses those faces.
+        // This does not create any hole.
+        CGAL::Polygon_mesh_processing::remove_almost_degenerate_faces(meshP);
         *out++ = meshP;
       }
     }
