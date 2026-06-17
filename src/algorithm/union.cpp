@@ -8,6 +8,7 @@
 #include "SFCGAL/algorithm/intersection.h"
 #include "SFCGAL/algorithm/isValid.h"
 #include "SFCGAL/triangulate/triangulate2DZ.h"
+#include <CGAL/Polygon_mesh_processing/repair.h>
 
 #include <CGAL/exceptions.h>
 
@@ -870,6 +871,12 @@ union_volume_volume(Handle<3> a, Handle<3> b)
                                                                     output);
 
       if (res && std::next(vertices(output).first) != vertices(output).second) {
+        // corefine_and_compute_union can produce almost-degenerate faces
+        // on coplanar input faces, causing validity failures after WKT
+        // serialization.
+        // CGAL::PMP::remove_almost_degenerate_faces collapses those faces.
+        // This does not create any hole.
+        CGAL::Polygon_mesh_processing::remove_almost_degenerate_faces(output);
         Handle<3> merged(output);
         // @todo check that the volume is valid (connection on one point isn't)
         merged.registerObservers(a);

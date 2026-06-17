@@ -22,6 +22,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "../../../test_config.h"
+
 #define DEBUG_OUT                                                              \
   if (0)                                                                       \
   std::cerr << __FILE__ << ":" << __LINE__ << " debug: "
@@ -411,6 +413,42 @@ BOOST_AUTO_TEST_CASE(VolumeVolume)
     BOOST_CHECK(u->geometryTypeId() == TYPE_MULTISOLID);
     BOOST_CHECK(algorithm::volume(*u) == 2);
   }
+}
+
+BOOST_AUTO_TEST_CASE(testUnionPrimitives)
+{
+  std::string inputDataCyl(SFCGAL_TEST_DIRECTORY);
+  inputDataCyl += "/data/cylinder_for_union.wkt";
+  std::ifstream ifsCyl(inputDataCyl.c_str());
+  BOOST_REQUIRE(ifsCyl.good());
+
+  std::string inputWkt1;
+  std::getline(ifsCyl, inputWkt1);
+  const std::unique_ptr<Geometry> cylinder(io::readWkt(inputWkt1));
+  BOOST_CHECK(!cylinder->isEmpty());
+
+  std::string inputDataCone(SFCGAL_TEST_DIRECTORY);
+  inputDataCone += "/data/cone_for_union.wkt";
+  std::ifstream ifsCone(inputDataCone.c_str());
+  BOOST_REQUIRE(ifsCone.good());
+
+  std::string inputWktCone;
+  std::getline(ifsCone, inputWktCone);
+  const std::unique_ptr<Geometry> cone(io::readWkt(inputWktCone));
+  BOOST_CHECK(!cone->isEmpty());
+  BOOST_CHECK(algorithm::isValid(*cone));
+
+  std::unique_ptr<Geometry> result =
+      algorithm::union3D(Solid(cylinder->as<PolyhedralSurface>()),
+                         Solid(cone->as<PolyhedralSurface>()));
+  BOOST_CHECK(!result->isEmpty());
+  BOOST_CHECK(algorithm::isValid(*result));
+
+  // Verify that WKT export/import preserves a valid geometry despite
+  // floating-point precision and numerical rounding effects.
+  std::unique_ptr<Geometry> resultFromWkt = io::readWkt(result->asText(16));
+  BOOST_CHECK(!resultFromWkt->isEmpty());
+  BOOST_CHECK(algorithm::isValid(*resultFromWkt));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
