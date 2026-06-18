@@ -48,7 +48,6 @@ option( SFCGAL_BUILD_EXAMPLES "build examples" OFF )
 option( SFCGAL_BUILD_TESTS "build unit and regress tests" OFF )
 option( SFCGAL_BUILD_DOC "Build documentation" OFF )
 
-option( SFCGAL_WITH_OSG "Compile with OpenSceneGraph support" OFF )
 option( SFCGAL_WITH_EIGEN "Compile with Eigen support for advanced simplification strategies" OFF )
 option( SFCGAL_VALGRIND "Compile with Valgrind support" OFF )
 #-- Sanitizers (mutually exclusive: ASAN/TSAN/MSAN cannot be combined)
@@ -255,7 +254,7 @@ endif()
 #-- minimalist build allowed with boost version 1.69 or newer
 set( SFCGAL_Boost_COMPONENTS thread serialization )
 #-- program_options
-if ( SFCGAL_BUILD_TESTS OR SFCGAL_BUILD_EXAMPLES OR SFCGAL_BUILD_OSG )
+if ( SFCGAL_BUILD_TESTS OR SFCGAL_BUILD_EXAMPLES )
 	set( SFCGAL_Boost_COMPONENTS unit_test_framework program_options ${SFCGAL_Boost_COMPONENTS} )
 endif()
 find_package( Boost 1.69.0 COMPONENTS ${SFCGAL_Boost_COMPONENTS} REQUIRED )
@@ -269,17 +268,6 @@ endif()
 
 #-- nlohmann/json -----------------------------------------
 find_package( nlohmann_json 3.11 REQUIRED )
-
-#-- OpenScenegraph -----------------------------------------
-if ( SFCGAL_WITH_OSG )
-  find_package( OpenSceneGraph COMPONENTS osgDB osgUtil )
-  if( ${OPENSCENEGRAPH_FOUND} )
-    message( STATUS "OPENSCENEGRAPH_INCLUDE_DIRS = ${OPENSCENEGRAPH_INCLUDE_DIRS}" )
-    message( STATUS "OPENSCENEGRAPH_LIBRARIES = ${OPENSCENEGRAPH_LIBRARIES}" )
-
-    include_directories( SYSTEM ${OPENSCENEGRAPH_INCLUDE_DIRS} )
-  endif()
-endif()
 
 #-- Eigen3 -----------------------------------------
 if ( SFCGAL_WITH_EIGEN )

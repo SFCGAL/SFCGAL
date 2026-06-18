@@ -27,11 +27,6 @@
 
 #include "SFCGAL/export.h"
 
-/**
- * indicates if OpenSceneGraph dependency is activated
- */
-#cmakedefine SFCGAL_WITH_OSG
-
 #define SFCGAL_MAX_GMP_LIMBS (@SFCGAL_MAX_GMP_LIMBS@)
 #define SFCGAL_MAX_RECURSION_DEPTH (@SFCGAL_MAX_RECURSION_DEPTH@)
 #define SFCGAL_MAX_TOTAL_COORDINATES (@SFCGAL_MAX_TOTAL_COORDINATES@)
