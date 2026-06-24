@@ -1,10 +1,26 @@
 {
-  "name": "main",
-  "version-string": "latest",
+  "name": "sfcgal",
+  "version-string": "3.0.0",
   "dependencies": [
     "cgal",
     "nlohmann-json",
-    "eigen3"
+    "eigen3",
+    "boost-thread",
+    "boost-serialization"
   ],
+  "features": {
+    "tests": {
+      "description": "Dependencies for unit tests",
+      "dependencies": [
+        "boost-unit-test-framework"
+      ]
+    },
+    "cli": {
+      "description": "Dependencies for the command line interface",
+      "dependencies": [
+        "boost-program-options"
+      ]
+    }
+  },
   "builtin-baseline": "cea592f4772491abdb7c483387a59ea89889f4be"
 }
