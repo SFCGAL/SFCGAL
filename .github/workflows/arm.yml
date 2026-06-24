@@ -1,0 +1,66 @@
+name: Build ARM64
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    env:
+      CI_PROJECT_DIR: ${{ github.workspace }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-26.04-arm, windows-11-arm, windows-11-vs2026-arm]
+        include:
+          - os: ubuntu-26.04-arm
+            triplet: arm64-linux
+          - os: windows-11-arm
+            triplet: arm64-windows
+          - os: windows-11-vs2026-arm
+            triplet: arm64-windows
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-26.04-arm'
+        run: |
+          CGAL_VERSION="6.2"
+          sudo CI_PROJECT_DIR=${{ github.workspace }} ./ci/debian/before_install.sh $CGAL_VERSION
+
+      - name: Setup vcpkg (Windows)
+        if: matrix.os != 'ubuntu-26.04-arm'
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgTriplet: ${{ matrix.triplet }}
+
+      - name: Build (Ubuntu)
+        if: matrix.os == 'ubuntu-26.04-arm'
+        run: |
+          cmake -B build -G Ninja -DSFCGAL_WITH_EIGEN=ON -DSFCGAL_BUILD_TESTS=ON -DCGAL_DIR=$CI_PROJECT_DIR/CGAL/lib/cmake/CGAL
+          cmake --build build --config Release
+
+      - name: Test (Ubuntu)
+        if: matrix.os == 'ubuntu-26.04-arm'
+        run: |
+          ctest --test-dir build -V
+
+      - name: Build (Windows)
+        if: matrix.os != 'ubuntu-26.04-arm'
+        uses: lukka/run-cmake@v10
+        with:
+          cmakeListsTxtPath: '${{ github.workspace }}/CMakeLists.txt'
+          configurePreset: 'ninja-multi-vcpkg'
+          buildPreset: 'ninja-multi-vcpkg'
+          buildPresetAdditionalArgs: '[`--config Release`]'
+          configurePresetAdditionalArgs: '["-DSFCGAL_WITH_EIGEN=ON", "-DSFCGAL_BUILD_TESTS=ON", "-DVCPKG_MANIFEST_FEATURES=tests,cli"]'
+
+      - name: Test (Windows)
+        if: matrix.os != 'ubuntu-26.04-arm'
+        run: |
+          cd builds/ninja-multi-vcpkg
+          ctest -C Release -V
+        shell: bash
