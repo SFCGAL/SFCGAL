@@ -1103,4 +1103,20 @@ BOOST_AUTO_TEST_CASE(testStraightSkeletonTriangleDispatch)
   BOOST_CHECK_GT(result->numGeometries(), 0U);
 }
 
+BOOST_AUTO_TEST_CASE(TestExtrudeObtuseRoof)
+{
+  const std::unique_ptr<Geometry> footprint =
+      io::readWkt("POLYGON ((0.0 0.0,4.0 0.0,4.0 3.0,7.0 3.0,9.0 5.0,9.0 "
+                  "10.0,0.0 10.0,0.0 0.0))");
+
+  std::vector<std::vector<Kernel::FT>> anglesVec = {
+      {Kernel::FT(100.0), Kernel::FT(90.0), Kernel::FT(145.0),
+       Kernel::FT(145.0), Kernel::FT(145.0), Kernel::FT(145.0),
+       Kernel::FT(145.0)}};
+  std::unique_ptr<PolyhedralSurface> out =
+      SFCGAL::algorithm::extrudeStraightSkeleton(*footprint, 10.0, {{}},
+                                                 anglesVec);
+  std::cout << "OUTPUT OBTUSE ROOF" << out->asText(6);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
