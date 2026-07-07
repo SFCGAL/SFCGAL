@@ -31,6 +31,18 @@ class Sfcgal < Formula
     lib.install Dir["lib/*"]
     include.install Dir["include/*"]
     bin.install Dir["bin/*"]
+
+    # The pkg-config file is generated with a fixed installation prefix.
+    # Rewrite it so that it points to the actual Homebrew installation prefix.
+    pc = lib/"pkgconfig/sfcgal.pc"
+    if pc.exist?
+      inreplace pc do |s|
+        s.gsub!(/^prefix=.*/, "prefix=#{prefix}")
+        s.gsub!(/^exec_prefix=.*/, "exec_prefix=#{prefix}")
+        s.gsub!(/^libdir=.*/, "libdir=#{lib}")
+        s.gsub!(/^includedir=.*/, "includedir=#{include}")
+      end
+    end
   end
 
   test do
