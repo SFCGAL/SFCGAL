@@ -156,14 +156,14 @@ main(int argc, char *argv[]) -> int
     boost::algorithm::split(tokens, line, boost::is_any_of("|"));
 
     std::string const &wkt = tokens.back();
-    std::string        id;
+    std::string        id_;
 
     if (tokens.size() > 1) {
-      id = tokens.front();
+      id_ = tokens.front();
     } else {
       std::ostringstream oss;
       oss << lineNumber;
-      id = oss.str();
+      id_ = oss.str();
     }
 
     // std::cout << "process " << id << std::endl;
@@ -190,7 +190,7 @@ main(int argc, char *argv[]) -> int
                            std::max(areaPolygons, areaTriangles);
 
       if (ratio > 0.1) {
-        std::cerr << filename << ":" << lineNumber << " error:" << id << "|"
+        std::cerr << filename << ":" << lineNumber << " error:" << id_ << "|"
                   << "area(polygon) != area(tin) ( " << areaPolygons
                   << " !=" << areaTriangles << ")"
                   << "|" << g->asText() << "|" << triangulatedSurface.asText()
@@ -200,10 +200,10 @@ main(int argc, char *argv[]) -> int
       numSuccess++;
       failed = false;
     } catch (InappropriateGeometryException &e) {
-      inapropriateGeom.push_back(id);
+      inapropriateGeom.push_back(id_);
       numFailed++;
     } catch (GeometryInvalidityException &e) {
-      invalidGeom.push_back(id);
+      invalidGeom.push_back(id_);
       numFailed++;
     } catch (std::exception &e) {
       BOOST_ASSERT_MSG(false,
@@ -219,7 +219,7 @@ main(int argc, char *argv[]) -> int
     }
 
     // output triangulated surface
-    tri_ofs << id << "|" << failed << "|" << triangulatedSurface.asText(5)
+    tri_ofs << id_ << "|" << failed << "|" << triangulatedSurface.asText(5)
             << '\n';
   } // end for each line
 
@@ -230,12 +230,12 @@ main(int argc, char *argv[]) -> int
   const auto seconds =
       std::chrono::duration_cast<std::chrono::duration<double>>(elapsed);
 
-  for (auto &i : invalidGeom) {
-    std::cout << "    " << i << " is invalid\n";
+  for (auto &geom : invalidGeom) {
+    std::cout << "    " << geom << " is invalid\n";
   }
 
-  for (auto &i : inapropriateGeom) {
-    std::cout << "    " << i << " is inapropriate for triangulation\n";
+  for (auto &geom : inapropriateGeom) {
+    std::cout << "    " << geom << " is inapropriate for triangulation\n";
   }
 
   std::cout << filename << " complete (" << seconds.count() << " s)---" << '\n';
