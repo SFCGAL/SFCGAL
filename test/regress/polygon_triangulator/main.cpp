@@ -42,6 +42,7 @@ namespace po = boost::program_options;
  * Triangulate each polygon in an input file containing lines in the following
  * format : <id> "|" ( <wkt polygon> | <wkt multipolygon> )
  */
+// NOLINTBEGIN(readability-function-cognitive-complexity)
 auto
 main(int argc, char *argv[]) -> int
 {
@@ -247,3 +248,4 @@ main(int argc, char *argv[]) -> int
   }
   return EXIT_FAILURE;
 }
+// NOLINTEND(readability-function-cognitive-complexity)
