@@ -29,7 +29,10 @@ jobs:
                 ;;
               netbsd)
                 sudo pkgin -y update
-                sudo pkgin -y install gmp mpfr boost cmake ninja-build curl nlohmann-json eigen3                ;;
+                sudo pkgin -y install gmp mpfr boost cmake ninja-build curl nlohmann-json eigen3 gcc13
+                export CC=/usr/pkg/gcc13/bin/gcc
+                export CXX=/usr/pkg/gcc13/bin/g++
+                ;;
               openbsd)
                 sudo pkg_add gmp gmpxx mpfr boost cmake ninja curl nlohmann-json math/eigen3
                 ;;
@@ -44,7 +47,13 @@ jobs:
             patch -p1 < ../bsd_minor.patch
             cd ..
 
-            cmake -GNinja -S . -B build -DSFCGAL_WITH_EIGEN=ON -DSFCGAL_BUILD_TESTS=ON -DCGAL_DIR=cgal-${CGAL_VERSION} -DCMAKE_CXX_FLAGS="-DCGAL_NO_GDB_AUTOLOAD"
+            cmake -GNinja -S . -B build \
+              -DSFCGAL_WITH_EIGEN=ON \
+              -DSFCGAL_BUILD_TESTS=ON \
+              -DCGAL_DIR=cgal-${CGAL_VERSION} \
+              -DCMAKE_CXX_FLAGS="-DCGAL_NO_GDB_AUTOLOAD" \
+              ${CC:+-DCMAKE_C_COMPILER=$CC} \
+              ${CXX:+-DCMAKE_CXX_COMPILER=$CXX}
             cmake --build build -j `sysctl -n hw.ncpu`
             ctest -VV --test-dir build
 
