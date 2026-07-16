@@ -71,7 +71,12 @@ public:
 
     // wkbOrder
     std::byte wkbOrder{read<std::byte>()};
-    _swapEndian = std::endian::native == std::endian(wkbOrder);
+    if (wkbOrder != std::byte{0} && wkbOrder != std::byte{1}) {
+      BOOST_THROW_EXCEPTION(WkbParseException("invalid WKB byte order marker"));
+    }
+    const bool wkbIsLittleEndian = (wkbOrder == std::byte{1});
+    const bool cpuIsLittleEndian = (std::endian::native == std::endian::little);
+    _swapEndian                  = (cpuIsLittleEndian != wkbIsLittleEndian);
 
     _geometry = readGeometry();
   }
