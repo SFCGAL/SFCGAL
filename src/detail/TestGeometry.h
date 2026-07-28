@@ -6,6 +6,9 @@
 #ifndef SFCGAL_TESTGEOMETRY_H_
 #define SFCGAL_TESTGEOMETRY_H_
 
+#include <string>
+#include <vector>
+
 namespace SFCGAL {
 
 /**
