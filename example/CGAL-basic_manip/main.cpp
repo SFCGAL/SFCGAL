@@ -21,7 +21,7 @@
 
 /**
  * Defines the default Kernel used by SFCGAL
- * @todo allow to choose between differents Kernels
+ * @todo allow to choose between different Kernels
  */
 // typedef CGAL::Cartesian< double > Kernel ;
 typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;

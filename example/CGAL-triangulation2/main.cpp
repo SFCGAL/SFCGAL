@@ -26,7 +26,7 @@ typedef CGAL::Polygon_with_holes_2<Kernel> Polygon_with_holes_2;
 #include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
-//-- Info on vertex (unsigned int, an idenfier)
+//-- Info on vertex (unsigned int, an identifier)
 typedef CGAL::Triangulation_vertex_base_with_info_2<unsigned int, Kernel> Vb;
 typedef CGAL::Triangulation_data_structure_2<Vb>                          Tds;
 
