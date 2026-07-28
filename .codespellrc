@@ -1,0 +1,8 @@
+[codespell]
+skip = .git,.venv,build,cmake,./sfcgalop/test/CMakeFiles,venv,xml,*.svg,*.pdf,LICENSE,NEWS
+count = true
+# Words to be ignored, put one word per line and sort alphabetically
+ignore-words-list =
+ lineZ,
+ normaly,
+ planeD,

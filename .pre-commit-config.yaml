@@ -73,6 +73,12 @@ repos:
         require_serial: true
         stages: [pre-commit]
 
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.3
+    hooks:
+      - id: codespell
+        stages: [pre-commit]
+
   # - repo: https://github.com/pocc/pre-commit-hooks
   #   rev: v1.3.5
   #   hooks:
