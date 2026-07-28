@@ -104,7 +104,7 @@
 // sub-class from a parameter, it must also be down casted. For instance,
 // static_cast<SFCGAL::Point*>(reinterpret_cast<SFCGAL::Geometry*>(p))
 //
-// SFCGAL::PreparedGeometry has no vtable and can thus be manipuled through
+// SFCGAL::PreparedGeometry has no vtable and can thus be manipulated through
 // reinterpret_cast without problem
 
 // ----------------------------------------------------------------------------------
@@ -1431,8 +1431,9 @@ SFCGAL_GEOMETRY_FUNCTION_UNARY_CONSTRUCTION(straight_skeleton,
                                             SFCGAL::algorithm::straightSkeleton)
 SFCGAL_GEOMETRY_FUNCTION_UNARY_CONSTRUCTION(
     approximate_medial_axis, SFCGAL::algorithm::approximateMedialAxis)
-SFCGAL_GEOMETRY_FUNCTION_UNARY_CONSTRUCTION(tesselate,
-                                            SFCGAL::algorithm::tessellate)
+SFCGAL_GEOMETRY_FUNCTION_UNARY_CONSTRUCTION(
+    tesselate, // codespell:ignore tesselate
+    SFCGAL::algorithm::tessellate)
 SFCGAL_GEOMETRY_FUNCTION_UNARY_CONSTRUCTION(tessellate,
                                             SFCGAL::algorithm::tessellate)
 

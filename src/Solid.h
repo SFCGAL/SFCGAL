@@ -260,7 +260,7 @@ public:
    * @brief Returns the n-th shell, 0 is exteriorShell
    * @param index Index of the shell to get
    * @return Const reference to the nth shell
-   * @warning not standard, avoid conditionnal to access rings
+   * @warning not standard, avoid conditional to access rings
    */
   [[nodiscard]] auto
   shellN(const size_t &index) const -> const PolyhedralSurface &
@@ -272,7 +272,7 @@ public:
    * @brief Returns the n-th shell, 0 is exteriorShell
    * @param index Index of the shell to get
    * @return Reference to the nth shell
-   * @warning not standard, avoid conditionnal to access rings
+   * @warning not standard, avoid conditional to access rings
    */
   auto
   shellN(const size_t &index) -> PolyhedralSurface &

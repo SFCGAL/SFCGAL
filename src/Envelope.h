@@ -27,7 +27,7 @@ class PolyhedralSurface;
 /**
  * Represents a bounding box
  * @todo add asText instead of "print"?
- * @todo add basic operations (especialy intersects/intersects3D)
+ * @todo add basic operations (especially intersects/intersects3D)
  */
 class SFCGAL_API Envelope {
 public:

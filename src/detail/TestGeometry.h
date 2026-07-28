@@ -59,7 +59,7 @@ createTestGeometries()
        true, "with interior ring"},
       {"POLYGON((-1.0 -1.0,1.0 -1.0,1.0 1.0,-1.0 1.0,-1.0 -1.0),(-0.5 "
        "-0.5,-0.5 0.5,0.5 0.5,1.0 -0.5,-0.5 -0.5))",
-       true, "one contact point between interior ans exterior"},
+       true, "one contact point between interior and exterior"},
       {"POLYGON((-1.0 -1.0,1.0 -1.0,1.0 1.0,-1.0 1.0,-1.0 -1.0),(-0.5 "
        "-0.5,-0.5 0.5,-0.1 0.5,-0.1 -0.5,-0.5 -0.5),(0.1 -0.5,0.1 0.5,0.5 "
        "0.5,0.5 -0.5,0.1 -0.5))",
@@ -108,7 +108,7 @@ createTestGeometries()
        false, "interior ring intersection with exterior"},
       {"POLYGON((-1.0 -1.0,1.0 -1.0,1.0 1.0,-1.0 1.0,-1.0 -1.0),(1.5 -0.5,2.0 "
        "-0.5,2.0 0.5,1.5 0.5,1.5 -0.5))",
-       false, "interior ring is ouside exterior"},
+       false, "interior ring is outside exterior"},
       {"POLYGON((-1.0 -1.0,1.0 -1.0,1.0 1.0,-1.0 1.0,-1.0 -1.0),(-0.5 -0.5,0.0 "
        "-0.5,0.0 0.5,-0.5 0.5,-0.5 -0.5),(0.0 -0.5,0.5 -0.5,0.5 0.5,0.0 "
        "0.5,0.0 -0.5))",
@@ -196,7 +196,7 @@ createTestGeometries()
       {"POLYGON((1.0 -1.0 -1.0,1.0 1.0 -1.0,1.0 1.0 1.0,1.0 -1.0 1.0,1.0 -1.0 "
        "-1.0),(1.0 1.5 -0.5,1.0 2.0 -0.5,1.0 2.0 0.5,1.0 1.5 0.5,1.0 1.5 "
        "-0.5))",
-       false, "interior ring is ouside exterior"},
+       false, "interior ring is outside exterior"},
       {"POLYGON((1.0 -1.0 -1.0,1.0 1.0 -1.0,1.0 1.0 1.0,1.0 -1.0 1.0,1.0 -1.0 "
        "-1.0),(1.0 -0.5 -0.5,1.0 0.0 -0.5,1.0 0.0 0.5,1.0 -0.5 0.5,1.0 -0.5 "
        "-0.5),(1.0 0.0 -0.5,1.0 0.5 -0.5,1.0 0.5 0.5,1.0 0.0 0.5,1.0 0.0 "
@@ -317,7 +317,7 @@ createTestGeometries()
        false, "second triangle is invalid"},
       {"TIN(((-1.0 -1.0,1.0 -1.0,-1.0 1.0,-1.0 -1.0)),((1.0 -1.0,-1.0 1.0,1.0 "
        "1.0,1.0 -1.0)))",
-       false, "inconsitent orientation"},
+       false, "inconsistent orientation"},
       {"TIN(((-1.0 -1.0,1.0 -1.0,-1.0 1.0,-1.0 -1.0)),((0.0 1.0,2.0 -1.0,2.0 "
        "1.0,0.0 1.0)))",
        false, "not connected"},
@@ -332,7 +332,7 @@ createTestGeometries()
        false, "second triangle is invalid"},
       {"TIN(((1.0 -1.0 -1.0,1.0 1.0 -1.0,1.0 -1.0 1.0,1.0 -1.0 -1.0)),((1.0 "
        "1.0 -1.0,1.0 -1.0 1.0,1.0 1.0 1.0,1.0 1.0 -1.0)))",
-       false, "inconsitent orientation"},
+       false, "inconsistent orientation"},
       {"TIN(((1.0 -1.0 -1.0,1.0 1.0 -1.0,1.0 -1.0 1.0,1.0 -1.0 -1.0)),((1.0 "
        "0.0 1.0,1.0 2.0 -1.0,1.0 2.0 1.0,1.0 0.0 1.0)))",
        false, "not connected"},
@@ -351,7 +351,7 @@ createTestGeometries()
        false, "second polygon is invalid"},
       {"POLYHEDRALSURFACE(((-1.0 -1.0,1.0 -1.0,-1.0 1.0,-1.0 -1.0)),((1.0 "
        "-1.0,-1.0 1.0,1.0 1.0,1.0 -1.0)))",
-       false, "inconsitent orientation"},
+       false, "inconsistent orientation"},
       {"POLYHEDRALSURFACE(((-1.0 -1.0,1.0 -1.0,-1.0 1.0,-1.0 -1.0)),((0.0 "
        "1.0,2.0 -1.0,2.0 1.0,0.0 1.0)))",
        false, "not connected"},
@@ -373,7 +373,7 @@ createTestGeometries()
        false, "second polygon is invalid"},
       {"POLYHEDRALSURFACE(((1.0 -1.0 -1.0,1.0 1.0 -1.0,1.0 -1.0 1.0,1.0 -1.0 "
        "-1.0)),((1.0 1.0 -1.0,1.0 -1.0 1.0,1.0 1.0 1.0,1.0 1.0 -1.0)))",
-       false, "inconsitent orientation"},
+       false, "inconsistent orientation"},
       {"POLYHEDRALSURFACE(((1.0 -1.0 -1.0,1.0 1.0 -1.0,1.0 -1.0 1.0,1.0 -1.0 "
        "-1.0)),((1.0 0.0 1.0,1.0 2.0 -1.0,1.0 2.0 1.0,1.0 0.0 1.0)))",
        false, "not connected"},

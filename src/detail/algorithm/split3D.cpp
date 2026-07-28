@@ -101,7 +101,7 @@ split3D(const geomType &geometry, const CGAL::Plane_3<Kernel> &plane,
   return result;
 }
 
-// explicit instanciation
+// explicit instantiation
 template auto
 split3D<PolyhedralSurface>(const PolyhedralSurface &,
                            const CGAL::Plane_3<Kernel> &, bool)

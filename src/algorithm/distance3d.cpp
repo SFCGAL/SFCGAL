@@ -292,7 +292,7 @@ distanceLineStringGeometry3D(const LineString &gA, const Geometry &gB) -> double
 
   switch (gB.geometryTypeId()) {
   case TYPE_POINT:
-    return distancePointLineString3D(gB.as<Point>(), gA); // symetric
+    return distancePointLineString3D(gB.as<Point>(), gA); // symmetric
 
   case TYPE_LINESTRING:
     return distanceLineStringLineString3D(gA, gB.as<LineString>());
@@ -468,17 +468,17 @@ distanceTriangleGeometry3D(const Triangle &gA, const Geometry &gB) -> double
 
   switch (gB.geometryTypeId()) {
   case TYPE_POINT:
-    return distancePointTriangle3D(gB.as<Point>(), gA); // symetric
+    return distancePointTriangle3D(gB.as<Point>(), gA); // symmetric
 
   case TYPE_LINESTRING:
-    return distanceLineStringTriangle3D(gB.as<LineString>(), gA); // symetric
+    return distanceLineStringTriangle3D(gB.as<LineString>(), gA); // symmetric
 
   case TYPE_NURBSCURVE: {
     auto lineString = gB.as<NURBSCurve>().toLineString(); // default parameters
     if (!lineString || lineString->isEmpty()) {
       return std::numeric_limits<double>::infinity();
     }
-    return distanceLineStringTriangle3D(*lineString, gA); // symetric
+    return distanceLineStringTriangle3D(*lineString, gA); // symmetric
   }
 
   case TYPE_TRIANGLE:
@@ -489,11 +489,11 @@ distanceTriangleGeometry3D(const Triangle &gA, const Geometry &gB) -> double
 
   case TYPE_POLYHEDRALSURFACE:
     return distancePolyhedralSurfaceGeometry3D(gB.as<PolyhedralSurface>(),
-                                               gA); // symetric
+                                               gA); // symmetric
 
   case TYPE_TRIANGULATEDSURFACE:
     return distanceTriangulatedSurfaceGeometry3D(gB.as<TriangulatedSurface>(),
-                                                 gA); // symetric
+                                                 gA); // symmetric
 
   case TYPE_SOLID:
     return distanceTriangleSolid3D(gA, gB.as<Solid>());
@@ -644,32 +644,32 @@ distanceSolidGeometry3D(const Solid &gA, const Geometry &gB) -> double
 
   switch (gB.geometryTypeId()) {
   case TYPE_POINT:
-    return distancePointSolid3D(gB.as<Point>(), gA); // symetric
+    return distancePointSolid3D(gB.as<Point>(), gA); // symmetric
 
   case TYPE_LINESTRING:
-    return distanceLineStringSolid3D(gB.as<LineString>(), gA); // symetric
+    return distanceLineStringSolid3D(gB.as<LineString>(), gA); // symmetric
 
   case TYPE_NURBSCURVE: {
     auto lineString = gB.as<NURBSCurve>().toLineString(); // default parameters
     if (!lineString || lineString->isEmpty()) {
       return std::numeric_limits<double>::infinity();
     }
-    return distanceLineStringSolid3D(*lineString, gA); // symetric
+    return distanceLineStringSolid3D(*lineString, gA); // symmetric
   }
 
   case TYPE_TRIANGLE:
-    return distanceTriangleSolid3D(gB.as<Triangle>(), gA); // symetric
+    return distanceTriangleSolid3D(gB.as<Triangle>(), gA); // symmetric
 
   case TYPE_POLYGON:
-    return distancePolygonGeometry3D(gB.as<Polygon>(), gA); // symetric
+    return distancePolygonGeometry3D(gB.as<Polygon>(), gA); // symmetric
 
   case TYPE_POLYHEDRALSURFACE:
     return distancePolyhedralSurfaceGeometry3D(gB.as<PolyhedralSurface>(),
-                                               gA); // symetric
+                                               gA); // symmetric
 
   case TYPE_TRIANGULATEDSURFACE:
     return distanceTriangulatedSurfaceGeometry3D(gB.as<TriangulatedSurface>(),
-                                                 gA); // symetric
+                                                 gA); // symmetric
 
   case TYPE_SOLID:
     return distanceSolidSolid3D(gA, gB.as<Solid>());
@@ -804,7 +804,7 @@ boundingSphere(const Geometry &geom) -> const Sphere
   BOOST_ASSERT(numPoint);
   c = c / numPoint;
 
-  // farest point from centroid
+  // farthest point from centroid
   Vector_3   f             = c;
   Kernel::FT maxDistanceSq = 0;
 
@@ -834,7 +834,7 @@ distanceGeometryCollectionToGeometry3D(const Geometry &gA, const Geometry &gB)
   }
 
   // if bounding spheres (BS) of gB and gAi don't intersect and
-  // if the closest point of BS(gAj) is further than the farest
+  // if the closest point of BS(gAj) is further than the farthest
   // point of BS(gAi) there is no need to compute the distance(gAj, gB)
   // since it will be greater than distance(gAi, gB)
   //

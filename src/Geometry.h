@@ -129,7 +129,7 @@ public:
   Geometry(const Geometry &) = default;
 
   /**
-   * @brief Copy assignemnt operator.
+   * @brief Copy assignment operator.
    */
   auto
   operator=(const Geometry &other) -> Geometry & = default;
@@ -479,7 +479,7 @@ SFCGAL_API auto
 operator==(const Geometry &geomA, const Geometry &geomB) -> bool;
 
 /**
- * @brief Downcasts a std::unique_ptr Geomety to a derived class.
+ * @brief Downcasts a std::unique_ptr Geometry to a derived class.
  *
  * @tparam Derived The derived class to cast to.
  *

@@ -485,7 +485,7 @@ public:
   registerObservers(const Handle &a)
   {
     if (*a._p == *_p) {
-      return; // both aready observing the same primitive
+      return; // both already observing the same primitive
     }
 
     ObservablePrimitive                *observed = *(a._p);
@@ -678,7 +678,7 @@ union_segment_surface(Handle<2> a, Handle<2> b)
   // order point according to the distance from source
   std::sort(points.begin() + 1, points.end() - 1, Nearer<Point_2>(points[0]));
 
-  // cut segment with pieces that have length and wich midpoint is inside
+  // cut segment with pieces that have length and which midpoint is inside
   // polygon
   for (auto p = points.begin(), q = p + 1; q != points.end(); ++p, ++q) {
     if (*p != *q && do_intersect(CGAL::midpoint(*p, *q), b.asSurface())) {
@@ -740,7 +740,7 @@ union_segment_volume(Handle<3> a, Handle<3> b)
     std::vector<Triangle_3> triangles;
     collidingTriangles(collisions, std::back_inserter(triangles));
 
-    // first step, substract faces
+    // first step, subtract faces
     for (auto &triangle : triangles) {
       Handle<3> const h(triangle);
       union_segment_surface(a, h);
@@ -763,7 +763,7 @@ union_segment_volume(Handle<3> a, Handle<3> b)
       std::sort(points.begin(), points.end(),
                 Nearer<Point_3>(segment.source()));
 
-      // mark segments pieces that have length and wich midpoint is inside
+      // mark segments pieces that have length and which midpoint is inside
       // polyhedron
       for (auto p = points.begin(), q = p + 1; q != points.end(); ++p, ++q) {
         if (*p != *q &&

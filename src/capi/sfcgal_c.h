@@ -597,7 +597,7 @@ sfcgal_linestring_num_points(const sfcgal_geometry_t *linestring);
  * @param linestring the input SFCGAL::LineString
  * @param index is the point index in the SFCGAL::LineString
  * @pre linestring must be a SFCGAL::LineString
- * @pre index >= 0 and indx < sfcgal_linestring_num_points
+ * @pre index >= 0 and index < sfcgal_linestring_num_points
  * @post the returned SFCGAL::Point is not writable and must not be deallocated
  * by the caller
  * @return the ith point of linestring
@@ -1163,7 +1163,7 @@ sfcgal_solid_num_shells(const sfcgal_geometry_t *solid);
  * @param solid the input geometry
  * @param index index of the shell in the solid
  * @pre solid must be a SFCGAL::Solid
- * @pre indx >= 0 and index < sfcgal_solid_num_shells( tin )
+ * @pre index >= 0 and index < sfcgal_solid_num_shells( tin )
  * @post the returned SFCGAL::PolyhedralSurface is not writable and must not be
  * deallocated by the caller
  * @return The ith shell of solid
@@ -2747,7 +2747,7 @@ typedef enum {
 } sfcgal_primitive_type_t;
 
 /**
- * Returns the type of a given primtive
+ * Returns the type of a given primitive
  * @param primitive the input primitive
  * @return the type of primitive
  * @ingroup capi

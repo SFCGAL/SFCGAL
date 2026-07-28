@@ -230,11 +230,11 @@ auto
 difference(const Segment_2 &segment, const Polygon_with_holes_2 &polygon,
            SegmentOutputIteratorType out) -> SegmentOutputIteratorType
 {
-  // we could triangulate the polygon and substract each triangle
+  // we could triangulate the polygon and subtract each triangle
   //
   // we could also cut the line by polygon contours and test if the middle of
   // the segment is inside but if the segment lies on the contour it's a special
-  // case we first substract the contours to take care of this special case, we
+  // case we first subtract the contours to take care of this special case, we
   // obtain a vector of segments, for each segment of this vector, we subdivide
   // it with the intersection points with the rings once done, we check, for
   // each subdivision that has distinct end-points if the middle is in or out.
@@ -284,7 +284,7 @@ difference(const Segment_2 &segment, const Polygon_with_holes_2 &polygon,
     const Nearer<Point_2> nearer(seg.source());
     std::sort(points.begin() + 1, points.end() - 1, nearer);
 
-    // append segments that has length and wich midpoint is outside polygon to
+    // append segments that has length and which midpoint is outside polygon to
     // result
     for (auto pit = points.begin(); pit != points.end() - 1; ++pit) {
       auto qit = pit + 1;
@@ -658,7 +658,7 @@ difference(const Segment_3 &segment, const MarkedPolyhedron &polyhedron,
     std::vector<Triangle_3> triangles;
     collidingTriangles(collisions, std::back_inserter(triangles));
 
-    // first step, substract faces
+    // first step, subtract faces
     std::vector<Segment_3> res1(1, segment);
 
     for (const auto &tri : triangles) {
@@ -694,8 +694,8 @@ difference(const Segment_3 &segment, const MarkedPolyhedron &polyhedron,
       CGAL::Side_of_triangle_mesh<MarkedPolyhedron, Kernel> is_in_poly(
           polyhedron);
 
-      // append segments that has length and wich midpoint is outside polyhedron
-      // to result
+      // append segments that has length and which midpoint is outside
+      // polyhedron to result
       for (auto pit = points.begin(); pit != points.end() - 1; ++pit) {
         auto qit = pit + 1;
 
@@ -795,7 +795,7 @@ difference(const Triangle_3 &triangle, const MarkedPolyhedron &polyhedron,
           //
           // we need to convert the resulting segments to a multipolygon of sort
           //
-          // finally we triangulate the result and substract those triangles
+          // finally we triangulate the result and subtract those triangles
           //
           std::vector< Triangle_3 > interTriangles;
           collidingTriangles( collisions, std::back_inserter( interTriangles )

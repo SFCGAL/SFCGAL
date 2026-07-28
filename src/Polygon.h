@@ -258,7 +258,7 @@ public:
    * Returns the n-th ring, 0 is exteriorRing
    * @param n The ring index (0 for exterior ring)
    * @return Const reference to the nth ring
-   * @warning not standard, avoid conditionnal to access rings
+   * @warning not standard, avoid conditional to access rings
    */
   [[nodiscard]] auto
   ringN(const size_t &n) const -> const LineString &
@@ -270,7 +270,7 @@ public:
    * Returns the n-th ring, 0 is exteriorRing
    * @param n The ring index (0 for exterior ring)
    * @return Reference to the nth ring
-   * @warning not standard, avoid conditionnal to access rings
+   * @warning not standard, avoid conditional to access rings
    */
   auto
   ringN(const size_t &n) -> LineString &

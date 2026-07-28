@@ -214,7 +214,7 @@ lineSubstring(const LineString &ls, double start, double end)
     // direction of the original line. A set reversed
     // flag indicates that we are going to cross the
     // join, and hence we add N to the end_idx and
-    // use modulus operation when dereferncing the points
+    // use modulus operation when dereferencing the points
     // to be added to the desired line substring.
 
     std::swap(start_idx, end_idx);

@@ -211,7 +211,7 @@ public:
   almostEqual(const Primitive &other, double epsilon) const -> bool;
 
   /**
-   * Returns string representation of this object. Can be overriden by
+   * Returns string representation of this object. Can be overridden by
    * sub-classes.
    *
    * \return string representation of this object

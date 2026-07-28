@@ -224,7 +224,7 @@ distanceLineStringGeometry(const LineString &lineString,
   switch (geometry.geometryTypeId()) {
   case TYPE_POINT:
     return distancePointLineString(geometry.as<Point>(),
-                                   lineString); // symetric
+                                   lineString); // symmetric
 
   case TYPE_LINESTRING:
     return distanceLineStringLineString(lineString, geometry.as<LineString>());
@@ -331,11 +331,11 @@ distancePolygonGeometry(const Polygon &polygon, const Geometry &geometry)
 
   switch (geometry.geometryTypeId()) {
   case TYPE_POINT:
-    return distancePointPolygon(geometry.as<Point>(), polygon); // symetric
+    return distancePointPolygon(geometry.as<Point>(), polygon); // symmetric
 
   case TYPE_LINESTRING:
     return distanceLineStringPolygon(geometry.as<LineString>(),
-                                     polygon); // symetric
+                                     polygon); // symmetric
 
   case TYPE_NURBSCURVE: {
     auto lineString =
@@ -343,7 +343,7 @@ distancePolygonGeometry(const Polygon &polygon, const Geometry &geometry)
     if (!lineString || lineString->isEmpty()) {
       return std::numeric_limits<double>::infinity();
     }
-    return distanceLineStringPolygon(*lineString, polygon); // symetric
+    return distanceLineStringPolygon(*lineString, polygon); // symmetric
   }
 
   case TYPE_POLYGON:
@@ -506,7 +506,7 @@ boundingCircle(const Geometry &geom) -> const Circle
   BOOST_ASSERT(numPoint);
   c = c / numPoint;
 
-  // farest point from centroid
+  // farthest point from centroid
   Vector_2   f             = c;
   Kernel::FT maxDistanceSq = 0;
 
@@ -534,7 +534,7 @@ distanceGeometryCollectionToGeometry(const Geometry &geometryCollection,
 
   // if bounding spheres (BS) of geometry and geometryCollectioni don't
   // intersect and if the closest point of BS(geometryCollectionj) is further
-  // than the farest point of BS(geometryCollectioni) there is no need to
+  // than the farthest point of BS(geometryCollectioni) there is no need to
   // compute the distance(geometryCollectionj, geometry) since it will be
   // greater than distance(geometryCollectioni, geometry)
   //

@@ -16,7 +16,7 @@
 namespace SFCGAL::algorithm {
 
 /**
- * Represents a polyhedral surface as a graph where faces are nodes and egde are
+ * Represents a polyhedral surface as a graph where faces are nodes and edge are
  * graph edges
  * @pre the polygons are valid
  * @todo unittest

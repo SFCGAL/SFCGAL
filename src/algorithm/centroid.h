@@ -54,7 +54,7 @@ public:
  * @brief Returns the 2D centroid for a Geometry
  *
  * The result is the weighted centroid of a geometry. The implementation follows
- * PostGIS one (https://postgis.net/docs/ST_Centroid.html). The weigth is
+ * PostGIS one (https://postgis.net/docs/ST_Centroid.html). The weight is
  * computed in the XY space.
  *
  * @warning Z component is ignored, geometries must be valid when projected in
@@ -70,7 +70,7 @@ centroid(const Geometry &geom) -> std::unique_ptr<Point>;
  * @brief Returns the 3D centroid for a Geometry
  *
  * The result is the weighted centroid of a geometry. The implementation follows
- * PostGIS one (https://postgis.net/docs/ST_Centroid.html). The weigth is
+ * PostGIS one (https://postgis.net/docs/ST_Centroid.html). The weight is
  * computed in the 3D space.
  *
  * @param geom the input geometry

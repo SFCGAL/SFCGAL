@@ -191,8 +191,8 @@ isPlane3D(const Geometry &geom, const double &toleranceAbs) -> bool
 
   // the present approach is to find a good plane by:
   // - computing the centroid C of the point set
-  // - finding the farest point F from C
-  // - finding the farest point G from (CF)
+  // - finding the farthest point F from C
+  // - finding the farthest point G from (CF)
   // - we define the unit normal N to the plane from CFxCG
   // - we check that points Xi are in the plane CXi.N < tolerance
   //
@@ -215,8 +215,8 @@ isPlane3D(const Geometry &geom, const double &toleranceAbs) -> bool
   BOOST_ASSERT(numPoint);
   centroid = centroid / numPoint;
 
-  // farest point from centroid
-  Vector_3            farest        = centroid;
+  // farthest point from centroid
+  Vector_3            farthest      = centroid;
   typename Kernel::FT maxDistanceSq = 0;
 
   for (auto x = visitor.points.begin(); x != end; ++x) {
@@ -224,7 +224,7 @@ isPlane3D(const Geometry &geom, const double &toleranceAbs) -> bool
     const typename Kernel::FT dSq = cx * cx;
 
     if (dSq > maxDistanceSq) {
-      farest        = (*x)->toVector_3();
+      farthest      = (*x)->toVector_3();
       maxDistanceSq = dSq;
     }
   }
@@ -234,16 +234,16 @@ isPlane3D(const Geometry &geom, const double &toleranceAbs) -> bool
     return true;
   }
 
-  // farest point from line
-  Vector_3       g              = centroid;
-  const Vector_3 centroidFarest = farest - centroid; // direction of (CF)
-  maxDistanceSq                 = 0; // watch out, we reuse the variable
+  // farthest point from line
+  Vector_3       g                = centroid;
+  const Vector_3 centroidFarthest = farthest - centroid; // direction of (CF)
+  maxDistanceSq                   = 0; // watch out, we reuse the variable
 
   for (auto x = visitor.points.begin(); x != end; ++x) {
     const Vector_3 cx = (*x)->toVector_3() - centroid;
     const Vector_3 centroidProjected =
-        (cx * centroidFarest) * centroidFarest /
-        centroidFarest.squared_length(); // projection of x on line (CF)
+        (cx * centroidFarthest) * centroidFarthest /
+        centroidFarthest.squared_length(); // projection of x on line (CF)
     const typename Kernel::FT dSq = (cx - centroidProjected).squared_length();
 
     if (dSq > maxDistanceSq) {
@@ -257,7 +257,7 @@ isPlane3D(const Geometry &geom, const double &toleranceAbs) -> bool
     return true;
   }
 
-  const Vector_3 normal = CGAL::cross_product(centroidFarest, g - centroid);
+  const Vector_3 normal = CGAL::cross_product(centroidFarthest, g - centroid);
 
   const Vector_3 nNormed =
       normal / std::sqrt(CGAL::to_double(normal.squared_length()));

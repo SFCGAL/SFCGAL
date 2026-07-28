@@ -48,7 +48,7 @@ namespace SFCGAL::algorithm {
  *
  * boundary( MultiPoint )      : GEOMETRYCOLLECTION EMPTY
  * boundary( MultiLineString ) : either GEOMETRYCOLLECTION EMPTY or single
- * occurance points
+ * occurrence points
  *
  * @warning GeometryCollection are not supported in the general case
  *

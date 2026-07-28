@@ -255,7 +255,7 @@ polygonToNef(const Polygon &polygon) -> Nef_polyhedron_3
   } catch (...) {
     // If triangulation fails, try to use convex hull as fallback
     // This maintains backward compatibility for simple convex polygons
-    // But, may considred to be removed in the next version
+    // But, may considered to be removed in the next version
     std::vector<Kernel::Point_3> points;
     points.reserve(polygon.exteriorRing().numPoints() - 1);
     for (size_t i = 0; i < polygon.exteriorRing().numPoints() - 1; ++i) {
