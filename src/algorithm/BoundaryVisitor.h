@@ -119,7 +119,15 @@ public:
   visit(const NURBSCurve &g) override;
 
   /**
-   * get the boundary
+   * @brief Releases and returns the visitor's current boundary geometry.
+   *
+   * If the visitor holds an internal boundary, ownership of that Geometry
+   * is transferred to the caller and the visitor no longer retains it. If
+   * no internal boundary exists, a newly allocated empty GeometryCollection
+   * is returned.
+   *
+   * @return Geometry* Pointer to a non-null Geometry instance owned by the
+   * caller. The caller is responsible for deleting the returned object.
    */
   Geometry *
   releaseBoundary();
