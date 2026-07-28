@@ -237,7 +237,7 @@ Use `sfcgalop --list` to list all operations
 ℹ Use --help-op=<operation> for detailed help on a specific operation
 ```
 
-### explenation
+### explanation
 
 `sfcgalop --help-op=extrude`
 
