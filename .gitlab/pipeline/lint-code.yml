@@ -98,3 +98,14 @@ lint:commitizen:
   only:
     refs:
       - merge_requests
+
+lint:codespell:
+  stage: lint
+  image: debian:stable-slim
+  before_script:
+    - apt update && apt install -y codespell
+  script:
+    - codespell
+  only:
+    refs:
+      - merge_requests
