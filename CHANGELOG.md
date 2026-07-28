@@ -78,14 +78,14 @@ Sponsored by: Oslandia
 
 ### Polygon Repair
 
-Polygon repair is a 2D polygon repair algorith. It uses several repair rules:
+Polygon repair is a 2D polygon repair algorithm. It uses several repair rules:
 
 - Even/odd (requires CGAL 6.0+)
 - Non zero (requires CGAL 6.1+)
 - Union (requires CGAL 6.1+)
 - Intersection (requires CGAL 6.1+)
 
-More informations on [CGAL package](https://doc.cgal.org/6.1.2/Polygon_repair/)
+More information on [CGAL package](https://doc.cgal.org/6.1.2/Polygon_repair/)
 
 Sponsored by: Oslandia
 
@@ -97,7 +97,7 @@ In addition to the new straight skeleton modes from CGAL, it is now possible to 
 
 - flat roof (simple extrusion)
 - hipped roof (classical straight skeleton extrusion)
-- gable roof (with horizonal ridge)
+- gable roof (with horizontal ridge)
 - skillion roof ()
 
 ![Flat](images/changelog/2.3.0/cg_generateflatroof01.png)
