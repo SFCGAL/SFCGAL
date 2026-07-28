@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_SUITE(SFCGAL_SolidTest)
 
 BOOST_AUTO_TEST_CASE(solidReadTest)
 {
-  // the unit cube where half of a cube has been substracted
+  // the unit cube where half of a cube has been subtracted
   std::string const gstr =
       "SOLID ("
       // exterior shell

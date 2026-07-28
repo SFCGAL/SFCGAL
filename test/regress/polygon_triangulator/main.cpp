@@ -104,7 +104,7 @@ main(int argc, char *argv[]) -> int
   const auto start = std::chrono::system_clock::now();
 
   std::vector<std::string> invalidGeom;
-  std::vector<std::string> inapropriateGeom;
+  std::vector<std::string> inappropriateGeom;
   /*
    * process file
    */
@@ -188,7 +188,7 @@ main(int argc, char *argv[]) -> int
       numSuccess++;
       failed = false;
     } catch (InappropriateGeometryException &e) {
-      inapropriateGeom.push_back(id_);
+      inappropriateGeom.push_back(id_);
       numFailed++;
     } catch (GeometryInvalidityException &e) {
       invalidGeom.push_back(id_);
@@ -222,8 +222,8 @@ main(int argc, char *argv[]) -> int
     std::cout << "    " << geom << " is invalid\n";
   }
 
-  for (auto &geom : inapropriateGeom) {
-    std::cout << "    " << geom << " is inapropriate for triangulation\n";
+  for (auto &geom : inappropriateGeom) {
+    std::cout << "    " << geom << " is inappropriate for triangulation\n";
   }
 
   std::cout << filename << " complete (" << seconds.count() << " s)---" << '\n';

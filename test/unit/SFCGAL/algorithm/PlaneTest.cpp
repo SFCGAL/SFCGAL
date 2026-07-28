@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(testPlane)
       {"LINESTRING (1 2 3,4 5 6)", true}, // only two points
       {"LINESTRING (1 2 3,1 2 3,1 2 3,1 2 3)",
        true}, // all points in the same place
-      {"LINESTRING (1 2 3,2 4 6,3 6 9,4 8 12)", true}, // all points aliged
+      {"LINESTRING (1 2 3,2 4 6,3 6 9,4 8 12)", true}, // all points aligned
       {"LINESTRING (1 2 3,6 5 4,7 8 9)", true},        // triangle must be plane
       {"LINESTRING (0 0 0,1 0 0,1 1 0,0 1 0,0 0 0)",
        true}, // all point in the plane z=0

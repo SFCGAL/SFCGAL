@@ -1,4 +1,4 @@
-#-- contains trimed WKT geometries with 1 decimals
+#-- contains trimmed WKT geometries with 1 decimals
 POINT(2.0 3.0)
 POINT Z(2.0 3.0 4.0)
 POINT(123.4 543.2)
@@ -26,4 +26,3 @@ POINT ZM(13.2 47.2 0.2 1000.8)
 LINESTRING ZM(15.2 57.6 0.3 1000.0,15.8 57.1 0.3 1100.0)
 POLYGON M((0.0 0.0 0.0,1.0 0.0 1.0,1.0 1.0 2.0,0.0 1.0 3.0,0.0 0.0 4.0))
 MULTIPOINT M((0.0 0.0 0.0),(1.0 1.0 1.0))
-

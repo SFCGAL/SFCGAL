@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(testDifferencePolygonPolygon2D)
     BOOST_CHECK(*diff == *io::readWkt("GEOMETRYCOLLECTION EMPTY"));
   }
 
-  // two polygons, one of wich is invalid for CGAL but valid for SFS
+  // two polygons, one of which is invalid for CGAL but valid for SFS
   {
     std::unique_ptr<Geometry> const ls1 =
         io::readWkt("POLYGON ((-1 -1,1 -1,1 1,-1 1,-1 -1))");
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(testDifferenceLinePolygon)
             "MULTILINESTRING ((-10 0,-1 0),(-0.5 0,0 0,0.5 0),(1 0,10 0))"));
   }
 
-  // segment - polygon in 2D, with sement lying on hole border
+  // segment - polygon in 2D, with segment lying on hole border
   {
     std::unique_ptr<Geometry> const ls1 =
         io::readWkt("LINESTRING (-10 0,10 0)");
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(testDifferencePoinVolume)
 
 BOOST_AUTO_TEST_CASE(testDifferenceTriangleTriangle3D)
 {
-  // triangle - trangle in 3D don't share the same plane
+  // triangle - triangle in 3D don't share the same plane
   {
     std::unique_ptr<Geometry> const ls1 =
         io::readWkt("TRIANGLE ((0 0 0,0 1 1,1 0 0,0 0 0))");
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(testDifferenceTriangleTriangle3D)
     std::unique_ptr<Geometry> const diff = algorithm::difference3D(*ls1, *ls2);
     BOOST_CHECK(*diff == *io::readWkt("TRIANGLE ((0 0 0,0 1 1,1 0 0,0 0 0))"));
   }
-  // triangle - trangle in 3D don't intersect
+  // triangle - triangle in 3D don't intersect
   {
     std::unique_ptr<Geometry> const ls1 =
         io::readWkt("TRIANGLE ((0 0 0,0 1 1,1 0 0,0 0 0))");

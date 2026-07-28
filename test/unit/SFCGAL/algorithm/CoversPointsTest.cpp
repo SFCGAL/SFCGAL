@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(testPolygonPolygonCoversPoints)
   }
 
   {
-    // a square with a substracted triangle => concave shape
+    // a square with a subtracted triangle => concave shape
     std::unique_ptr<Geometry> const p1 =
         io::readWkt("POLYGON ((0.4 0,0 0,0 1,1 1,1 0,0.6 0,0.5 0.4,0.4 0))");
     // a smaller square

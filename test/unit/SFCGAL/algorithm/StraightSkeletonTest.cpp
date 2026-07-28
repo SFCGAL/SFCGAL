@@ -892,7 +892,7 @@ BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonWeightsVsAngles)
   std::unique_ptr<PolyhedralSurface> outAngles(
       algorithm::extrudeStraightSkeleton(*geom, 3.0, {{}}, angles));
 
-  std::unique_ptr<PolyhedralSurface> outWeights(
+  std::unique_ptr<PolyhedralSurface> outWeights( // codespell:ignore outweights
       algorithm::extrudeStraightSkeleton(*geom, 3.0, weights));
 
   // Both should produce the same geometry (within precision)
