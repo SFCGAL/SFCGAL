@@ -174,13 +174,21 @@ Point::accept(ConstGeometryVisitor &visitor) const
 auto
 Point::operator<(const Point &other) const -> bool
 {
-  return _coordinate < other._coordinate;
+  bool result = (_coordinate < other._coordinate);
+  if (isMeasured() || other.isMeasured()) {
+    result &= (m() < other.m());
+  }
+  return result;
 }
 
 auto
 Point::operator==(const Point &other) const -> bool
 {
-  return _coordinate == other._coordinate;
+  bool result = (_coordinate == other._coordinate);
+  if (isMeasured() || other.isMeasured()) {
+    result &= (m() == other.m());
+  }
+  return result;
 }
 
 auto
@@ -192,7 +200,20 @@ Point::operator!=(const Point &other) const -> bool
 auto
 Point::almostEqual(const Point &other, const double tolerance) const -> bool
 {
-  return _coordinate.almostEqual(other._coordinate, tolerance);
+  bool result = _coordinate.almostEqual(other._coordinate, tolerance);
+
+  // no mixed dimension comparison
+  if ((isMeasured() && !other.isMeasured()) ||
+      (!isMeasured() && other.isMeasured())) {
+    BOOST_THROW_EXCEPTION(
+        Exception("try to compare points with different coordinate "
+                  "dimension using a.almostEqual(b)"));
+  }
+
+  if (isMeasured()) {
+    result &= SFCGAL::almostEqual(m(), other.m(), tolerance);
+  }
+  return result;
 }
 
 /// @{
