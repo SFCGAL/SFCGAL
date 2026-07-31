@@ -106,23 +106,82 @@ BOOST_AUTO_TEST_CASE(testToString)
 
 BOOST_AUTO_TEST_CASE(testEqualPoints)
 {
+  // 3D
   auto gA = io::readWkt("POINT (1 2 3)");
   auto gB = io::readWkt("POINT (1 2 3)");
   BOOST_CHECK(algorithm::almostEqual(*gA, *gB, 0.0));
+
+  // M
+  auto gAM = io::readWkt("POINT M (1 2 3)");
+  auto gBM = io::readWkt("POINT M (1 2 3)");
+  BOOST_CHECK(!gAM->isEmpty());
+  BOOST_CHECK(!gBM->isEmpty());
+  BOOST_CHECK(gAM->isMeasured());
+  BOOST_CHECK(gBM->isMeasured());
+  BOOST_CHECK(algorithm::almostEqual(*gAM, *gBM, 0.0));
+
+  // ZM
+  auto gAZM = io::readWkt("POINT ZM (1 2 3 4)");
+  auto gBZM = io::readWkt("POINT ZM (1 2 3 4)");
+  BOOST_CHECK(!gAZM->isEmpty());
+  BOOST_CHECK(!gBZM->isEmpty());
+  BOOST_CHECK(gAZM->isMeasured());
+  BOOST_CHECK(gBZM->isMeasured());
+  BOOST_CHECK(algorithm::almostEqual(*gAZM, *gBZM, 0.0));
 }
 
 BOOST_AUTO_TEST_CASE(testUnequalPoints)
 {
+  // 3D
   auto gA = io::readWkt("POINT (1 2 3)");
   auto gB = io::readWkt("POINT (4 5 6)");
   BOOST_CHECK(!algorithm::almostEqual(*gA, *gB, 0.0));
+
+  // M
+  auto gAM = io::readWkt("POINT M (1 2 3)");
+  auto gBM = io::readWkt("POINT M (1 2 4)");
+  BOOST_CHECK(!gAM->isEmpty());
+  BOOST_CHECK(!gBM->isEmpty());
+  BOOST_CHECK(gAM->isMeasured());
+  BOOST_CHECK(gBM->isMeasured());
+  BOOST_CHECK(!algorithm::almostEqual(*gAM, *gBM, 0.0));
+
+  // ZM
+  auto gAZM = io::readWkt("POINT ZM (1 2 3 4)");
+  auto gBZM = io::readWkt("POINT ZM (1 2 3 5)");
+  BOOST_CHECK(!gAZM->isEmpty());
+  BOOST_CHECK(!gBZM->isEmpty());
+  BOOST_CHECK(gAZM->isMeasured());
+  BOOST_CHECK(gBZM->isMeasured());
+  BOOST_CHECK(!algorithm::almostEqual(*gAZM, *gBZM, 0.0));
 }
 
 BOOST_AUTO_TEST_CASE(testEqualPointsWithTolerance)
 {
+  // 2D
   auto gA = io::readWkt("POINT (1.0 2.0)");
   auto gB = io::readWkt("POINT (1.0001 2.0001)");
   BOOST_CHECK(algorithm::almostEqual(*gA, *gB, 1e-3));
+
+  // M
+  auto gAM = io::readWkt("POINT M (1.0 2.0 3.0)");
+  auto gBM = io::readWkt("POINT M (1.0 2.0 3.0001)");
+  BOOST_CHECK(!gAM->isEmpty());
+  BOOST_CHECK(!gBM->isEmpty());
+  BOOST_CHECK(gAM->isMeasured());
+  BOOST_CHECK(gBM->isMeasured());
+  BOOST_CHECK(algorithm::almostEqual(*gAM, *gBM, 1e-3));
+  BOOST_CHECK(!algorithm::almostEqual(*gAM, *gBM, 1e-5));
+
+  // ZM
+  auto gAZM = io::readWkt("POINT ZM (1.0 2.0 3.0 4.0)");
+  auto gBZM = io::readWkt("POINT ZM (1.0 2.0 3.0 4.0001)");
+  BOOST_CHECK(!gAZM->isEmpty());
+  BOOST_CHECK(!gBZM->isEmpty());
+  BOOST_CHECK(gAZM->isMeasured());
+  BOOST_CHECK(gBZM->isMeasured());
+  BOOST_CHECK(algorithm::almostEqual(*gAZM, *gBZM, 1e-3));
+  BOOST_CHECK(!algorithm::almostEqual(*gAZM, *gBZM, 1e-5));
 }
 
 BOOST_AUTO_TEST_CASE(testUnequalPointsTypeMismatch)
