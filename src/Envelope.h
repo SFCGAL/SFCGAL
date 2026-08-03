@@ -103,7 +103,7 @@ public:
    * @brief Get minimum X value
    * @return The minimum X coordinate
    */
-  [[nodiscard]] inline auto
+  [[nodiscard]] auto
   xMin() const -> const double &
   {
     return _bounds[0].lower();
@@ -112,7 +112,7 @@ public:
    * @brief Get minimum Y value
    * @return The minimum Y coordinate
    */
-  inline const double &
+  const double &
   yMin() const
   {
     return _bounds[1].lower();
@@ -121,7 +121,7 @@ public:
    * @brief Get minimum Z value
    * @return The minimum Z coordinate
    */
-  inline const double &
+  const double &
   zMin() const
   {
     return _bounds[2].lower();
@@ -131,7 +131,7 @@ public:
    * @brief Get maximum X value
    * @return The maximum X coordinate
    */
-  inline const double &
+  const double &
   xMax() const
   {
     return _bounds[0].upper();
@@ -140,7 +140,7 @@ public:
    * @brief Get maximum Y value
    * @return The maximum Y coordinate
    */
-  inline const double &
+  const double &
   yMax() const
   {
     return _bounds[1].upper();
@@ -149,7 +149,7 @@ public:
    * @brief Get maximum Z value
    * @return The maximum Z coordinate
    */
-  inline const double &
+  const double &
   zMax() const
   {
     return _bounds[2].upper();
@@ -160,7 +160,7 @@ public:
    * @param n The index of the bound (0=X, 1=Y, 2=Z)
    * @return Reference to the nth interval bound
    */
-  inline detail::Interval &
+  detail::Interval &
   boundsN(const size_t &n)
   {
     BOOST_ASSERT(n < 3);
@@ -171,7 +171,7 @@ public:
    * @param n The index of the bound (0=X, 1=Y, 2=Z)
    * @return Const reference to the nth interval bound
    */
-  inline const detail::Interval &
+  const detail::Interval &
   boundsN(const size_t &n) const
   {
     BOOST_ASSERT(n < 3);
@@ -182,7 +182,7 @@ public:
    * Convenience function. Convert to CGAL::BBox_2
    * @return CGAL 2D bounding box
    */
-  inline CGAL::Bbox_2
+  CGAL::Bbox_2
   toBbox_2() const
   {
     BOOST_ASSERT(!isEmpty());
@@ -195,7 +195,7 @@ public:
    * Convenience function. Convert to CGAL::BBox_3
    * @return CGAL 3D bounding box
    */
-  inline CGAL::Bbox_3
+  CGAL::Bbox_3
   toBbox_3() const
   {
     if (is3D()) {
