@@ -109,9 +109,10 @@ public:
   void
   visit(const NURBSCurve &g) override;
 
-  typedef std::vector<const Point *>::const_iterator
-                             const_iterator; ///< Const iterator type for points
-  std::vector<const Point *> points;         ///< Collection of collected points
+  using const_iterator =
+      std::vector<const Point *>::const_iterator; ///< Const iterator type for
+                                                  ///< points
+  std::vector<const Point *> points; ///< Collection of collected points
 };
 
 } // namespace SFCGAL::detail
