@@ -112,7 +112,7 @@ public:
    * @brief Get minimum Y value
    * @return The minimum Y coordinate
    */
-  auto
+  [[nodiscard]] auto
   yMin() const -> const double &
   {
     return _bounds[1].lower();
@@ -121,7 +121,7 @@ public:
    * @brief Get minimum Z value
    * @return The minimum Z coordinate
    */
-  auto
+  [[nodiscard]] auto
   zMin() const -> const double &
   {
     return _bounds[2].lower();
@@ -131,7 +131,7 @@ public:
    * @brief Get maximum X value
    * @return The maximum X coordinate
    */
-  auto
+  [[nodiscard]] auto
   xMax() const -> const double &
   {
     return _bounds[0].upper();
@@ -140,7 +140,7 @@ public:
    * @brief Get maximum Y value
    * @return The maximum Y coordinate
    */
-  auto
+  [[nodiscard]] auto
   yMax() const -> const double &
   {
     return _bounds[1].upper();
@@ -149,7 +149,7 @@ public:
    * @brief Get maximum Z value
    * @return The maximum Z coordinate
    */
-  auto
+  [[nodiscard]] auto
   zMax() const -> const double &
   {
     return _bounds[2].upper();
@@ -171,7 +171,7 @@ public:
    * @param n The index of the bound (0=X, 1=Y, 2=Z)
    * @return Const reference to the nth interval bound
    */
-  auto
+  [[nodiscard]] auto
   boundsN(const size_t &n) const -> const detail::Interval &
   {
     BOOST_ASSERT(n < 3);
@@ -182,7 +182,7 @@ public:
    * Convenience function. Convert to CGAL::BBox_2
    * @return CGAL 2D bounding box
    */
-  auto
+  [[nodiscard]] auto
   toBbox_2() const -> CGAL::Bbox_2
   {
     BOOST_ASSERT(!isEmpty());
@@ -195,7 +195,7 @@ public:
    * Convenience function. Convert to CGAL::BBox_3
    * @return CGAL 3D bounding box
    */
-  auto
+  [[nodiscard]] auto
   toBbox_3() const -> CGAL::Bbox_3
   {
     if (is3D()) {
@@ -235,14 +235,14 @@ public:
    * @return A LineString representing the envelope boundary
    * @warning empty LineString for empty Envelope, may be X or Y collapsed
    */
-  auto
+  [[nodiscard]] auto
   toRing() const -> std::unique_ptr<LineString>;
   /**
    * @brief convenience method to convert to 2D Polygon
    * @return A Polygon representing the envelope
    * @warning empty Polygon for empty Envelope, may be X or Y collapsed
    */
-  auto
+  [[nodiscard]] auto
   toPolygon() const -> std::unique_ptr<Polygon>;
 
   /**
@@ -251,7 +251,7 @@ public:
    * @warning empty Solid for empty or non 3D Envelope, may be X, Y or Z
    * collapsed
    */
-  auto
+  [[nodiscard]] auto
   toShell() const -> std::unique_ptr<PolyhedralSurface>;
   /**
    * @brief convenience method to convert to 3D Solid
@@ -259,7 +259,7 @@ public:
    * @warning empty Solid for empty or non 3D Envelope, may be X, Y or Z
    * collapsed
    */
-  auto
+  [[nodiscard]] auto
   toSolid() const -> std::unique_ptr<Solid>;
 
   /**
