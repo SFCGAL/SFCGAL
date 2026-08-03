@@ -112,8 +112,8 @@ public:
    * @brief Get minimum Y value
    * @return The minimum Y coordinate
    */
-  const double &
-  yMin() const
+  auto
+  yMin() const -> const double &
   {
     return _bounds[1].lower();
   }
@@ -121,8 +121,8 @@ public:
    * @brief Get minimum Z value
    * @return The minimum Z coordinate
    */
-  const double &
-  zMin() const
+  auto
+  zMin() const -> const double &
   {
     return _bounds[2].lower();
   }
@@ -131,8 +131,8 @@ public:
    * @brief Get maximum X value
    * @return The maximum X coordinate
    */
-  const double &
-  xMax() const
+  auto
+  xMax() const -> const double &
   {
     return _bounds[0].upper();
   }
@@ -140,8 +140,8 @@ public:
    * @brief Get maximum Y value
    * @return The maximum Y coordinate
    */
-  const double &
-  yMax() const
+  auto
+  yMax() const -> const double &
   {
     return _bounds[1].upper();
   }
@@ -149,8 +149,8 @@ public:
    * @brief Get maximum Z value
    * @return The maximum Z coordinate
    */
-  const double &
-  zMax() const
+  auto
+  zMax() const -> const double &
   {
     return _bounds[2].upper();
   }
@@ -160,8 +160,8 @@ public:
    * @param n The index of the bound (0=X, 1=Y, 2=Z)
    * @return Reference to the nth interval bound
    */
-  detail::Interval &
-  boundsN(const size_t &n)
+  auto
+  boundsN(const size_t &n) -> detail::Interval &
   {
     BOOST_ASSERT(n < 3);
     return _bounds[n];
@@ -171,8 +171,8 @@ public:
    * @param n The index of the bound (0=X, 1=Y, 2=Z)
    * @return Const reference to the nth interval bound
    */
-  const detail::Interval &
-  boundsN(const size_t &n) const
+  auto
+  boundsN(const size_t &n) const -> const detail::Interval &
   {
     BOOST_ASSERT(n < 3);
     return _bounds[n];
@@ -182,8 +182,8 @@ public:
    * Convenience function. Convert to CGAL::BBox_2
    * @return CGAL 2D bounding box
    */
-  CGAL::Bbox_2
-  toBbox_2() const
+  auto
+  toBbox_2() const -> CGAL::Bbox_2
   {
     BOOST_ASSERT(!isEmpty());
 
@@ -195,8 +195,8 @@ public:
    * Convenience function. Convert to CGAL::BBox_3
    * @return CGAL 3D bounding box
    */
-  CGAL::Bbox_3
-  toBbox_3() const
+  auto
+  toBbox_3() const -> CGAL::Bbox_3
   {
     if (is3D()) {
       return {_bounds[0].lower(), _bounds[1].lower(), _bounds[2].lower(),
@@ -215,8 +215,8 @@ public:
    * @return true if envelope envelopeA contains envelope envelopeB
    * FIXME: consider moving that outside of the class
    */
-  static bool
-  contains(const Envelope &envelopeA, const Envelope &envelopeB);
+  static auto
+  contains(const Envelope &envelopeA, const Envelope &envelopeB) -> bool;
 
   /**
    * @brief Global binary operator on Envelopes. Test if A's bounding box
@@ -225,8 +225,8 @@ public:
    * @param envelopeB Second envelope
    * @return true if envelope envelopeA overlaps envelope envelopeB
    */
-  static bool
-  overlaps(const Envelope &envelopeA, const Envelope &envelopeB);
+  static auto
+  overlaps(const Envelope &envelopeA, const Envelope &envelopeB) -> bool;
 
   //-- helpers
 
@@ -235,15 +235,15 @@ public:
    * @return A LineString representing the envelope boundary
    * @warning empty LineString for empty Envelope, may be X or Y collapsed
    */
-  std::unique_ptr<LineString>
-  toRing() const;
+  auto
+  toRing() const -> std::unique_ptr<LineString>;
   /**
    * @brief convenience method to convert to 2D Polygon
    * @return A Polygon representing the envelope
    * @warning empty Polygon for empty Envelope, may be X or Y collapsed
    */
-  std::unique_ptr<Polygon>
-  toPolygon() const;
+  auto
+  toPolygon() const -> std::unique_ptr<Polygon>;
 
   /**
    * @brief convenience method to convert to 3D Shell
@@ -251,24 +251,24 @@ public:
    * @warning empty Solid for empty or non 3D Envelope, may be X, Y or Z
    * collapsed
    */
-  std::unique_ptr<PolyhedralSurface>
-  toShell() const;
+  auto
+  toShell() const -> std::unique_ptr<PolyhedralSurface>;
   /**
    * @brief convenience method to convert to 3D Solid
    * @return A Solid representing the envelope
    * @warning empty Solid for empty or non 3D Envelope, may be X, Y or Z
    * collapsed
    */
-  std::unique_ptr<Solid>
-  toSolid() const;
+  auto
+  toSolid() const -> std::unique_ptr<Solid>;
 
   /**
    * @brief Display method
    * @param ostr Output stream to print to
    * @return Reference to the output stream
    */
-  std::ostream &
-  print(std::ostream &ostr) const;
+  auto
+  print(std::ostream &ostr) const -> std::ostream &;
 
 private:
   /**
@@ -283,8 +283,8 @@ private:
  * @param rhs Right envelope to compare
  * @return true if envelopes are equal, false otherwise
  */
-SFCGAL_API bool
-operator==(const Envelope &lhs, const Envelope &rhs);
+SFCGAL_API auto
+operator==(const Envelope &lhs, const Envelope &rhs) -> bool;
 
 } // namespace SFCGAL
 
