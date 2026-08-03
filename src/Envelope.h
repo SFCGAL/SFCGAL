@@ -6,6 +6,7 @@
 #ifndef SFCGAL_ENVELOPE_H_
 #define SFCGAL_ENVELOPE_H_
 
+#include <array>
 #include <boost/assert.hpp>
 #include <memory>
 
@@ -274,7 +275,7 @@ private:
   /**
    * bounds of the interval ((xmin,xmax),(ymin,ymax),(zmin,zmax))
    */
-  detail::Interval _bounds[3];
+  std::array<detail::Interval, 3> _bounds;
 };
 
 /**
