@@ -109,7 +109,6 @@ public:
   void
   visit(const NURBSCurve &g) override;
 
-public:
   typedef std::vector<const Point *>::const_iterator
                              const_iterator; ///< Const iterator type for points
   std::vector<const Point *> points;         ///< Collection of collected points
