@@ -228,7 +228,7 @@ correct_holonomy(std::vector<Frame> &frames)
   const double     cos_angle   = CGAL::to_double(dot_product);
 
   // If frames are already aligned, no correction needed
-  if (SFCGAL::almostEqual(cos_angle, 1.0, TOLERANCE_ALIGNMENT)) {
+  if (SFCGAL::almostEqualAbsolute(cos_angle, 1.0, TOLERANCE_ALIGNMENT)) {
     return;
   }
 

@@ -212,7 +212,8 @@ Primitive::almostEqual(const Primitive &other, double epsilon) const -> bool
           const T &value2 = std::get<T>(primValue2);
 
           if constexpr (std::is_same_v<T, FT>) {
-            return SFCGAL::almostEqual(value1, value2, Kernel::FT(epsilon));
+            return SFCGAL::almostEqualAbsolute(value1, value2,
+                                               Kernel::FT(epsilon));
           } else { // unsigned int
             const auto diff =
                 static_cast<int>(value2) - static_cast<int>(value1);

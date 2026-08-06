@@ -436,10 +436,11 @@ Coordinate::almostEqual(const Coordinate &other, const double tolerance) const
                   "dimension using a.almostEqual(b)"));
   }
 
-  result = SFCGAL::almostEqual(x(), other.x(), Kernel::FT(tolerance)) &&
-           SFCGAL::almostEqual(y(), other.y(), Kernel::FT(tolerance));
+  result = SFCGAL::almostEqualAbsolute(x(), other.x(), Kernel::FT(tolerance)) &&
+           SFCGAL::almostEqualAbsolute(y(), other.y(), Kernel::FT(tolerance));
   if (is3D()) {
-    result &= SFCGAL::almostEqual(z(), other.z(), Kernel::FT(tolerance));
+    result &=
+        SFCGAL::almostEqualAbsolute(z(), other.z(), Kernel::FT(tolerance));
   }
   return result;
 }
