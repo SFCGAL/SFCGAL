@@ -211,7 +211,7 @@ Point::almostEqual(const Point &other, const double tolerance) const -> bool
   }
 
   if (isMeasured()) {
-    result &= SFCGAL::almostEqual(m(), other.m(), tolerance);
+    result &= SFCGAL::almostEqualAbsolute(m(), other.m(), tolerance);
   }
   return result;
 }

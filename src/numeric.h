@@ -33,15 +33,16 @@ using isNumericValue = std::enable_if_t<std::is_same_v<T, double> ||
                                         std::is_same_v<T, CGAL::Epeck::FT>>;
 
 /**
- * @brief Check if two values are almost equal within epsilon
+ * @brief Check if two values are almost equal within tolerance
  * @param first First value to compare
  * @param second Second value to compare
- * @param epsilon Tolerance for comparison
+ * @param absoluteTolerance Tolerance for comparison
  * @return true if values are almost equal, false otherwise
  */
 template <typename T, typename = isNumericValue<T>>
 inline auto
-almostEqual(const T first, const T second, const T epsilon) -> bool
+almostEqualAbsolute(const T first, const T second, const T absoluteTolerance)
+    -> bool
 {
   // shortcut and handles inf values
   if (first == second) {
@@ -59,15 +60,39 @@ almostEqual(const T first, const T second, const T epsilon) -> bool
   // - CGAL::abs for Kernel::FT
   using std::abs;
 
-  const T diff = abs(first - second);
-  // fixed epsilon
-  if (diff <= epsilon) {
+  return abs(first - second) <= absoluteTolerance;
+}
+
+/**
+ * @brief Check if two values are almost equal within tolerance
+ * @param first First value to compare
+ * @param second Second value to compare
+ * @param relativeTolerance Tolerance for comparison
+ * @return true if values are almost equal, false otherwise
+ */
+template <typename T, typename = isNumericValue<T>>
+inline auto
+almostEqualRelative(const T first, const T second, const T relativeTolerance)
+    -> bool
+{
+  // shortcut and handles inf values
+  if (first == second) {
     return true;
   }
 
-  const T absFirst  = abs(first);
-  const T absSecond = abs(second);
-  return diff <= epsilon * std::max(absFirst, absSecond); // adaptative epsilon
+  if constexpr (std::is_same_v<T, double>) {
+    if (std::isnan(first) || std::isnan(second)) {
+      return std::isnan(first) && std::isnan(second);
+    }
+  }
+
+  // enable ADL:
+  // - std::abs for double
+  // - CGAL::abs for Kernel::FT
+  using std::abs;
+
+  return abs(first - second) <=
+         relativeTolerance * std::max(abs(first), abs(second));
 }
 
 #if defined(__clang__)
