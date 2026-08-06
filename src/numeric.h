@@ -25,61 +25,48 @@ constexpr double EPSILON = 1e-8;
   #pragma gcc diagnostic push
   #pragma gcc diagnostic ignored "-Wfloat-equal"
 #endif
+
+// TODO: switch to concept once c++20 support is enabled
+/// @private
+template <typename T>
+using isNumericValue = std::enable_if_t<std::is_same_v<T, double> ||
+                                        std::is_same_v<T, CGAL::Epeck::FT>>;
+
 /**
- * @brief Check if two double values are almost equal within epsilon
+ * @brief Check if two values are almost equal within epsilon
  * @param first First value to compare
  * @param second Second value to compare
  * @param epsilon Tolerance for comparison
  * @return true if values are almost equal, false otherwise
  */
+template <typename T, typename = isNumericValue<T>>
 inline auto
-almostEqual(const double first, const double second, const double epsilon)
-    -> bool
+almostEqual(const T first, const T second, const T epsilon) -> bool
 {
   // shortcut and handles inf values
   if (first == second) {
     return true;
   }
 
-  if (std::isnan(first) || std::isnan(second)) {
-    return std::isnan(first) && std::isnan(second);
+  if constexpr (std::is_same_v<T, double>) {
+    if (std::isnan(first) || std::isnan(second)) {
+      return std::isnan(first) && std::isnan(second);
+    }
   }
 
-  const double absFirst  = std::fabs(first);
-  const double absSecond = std::fabs(second);
-  const double diff      = std::fabs(first - second);
+  // enable ADL:
+  // - std::abs for double
+  // - CGAL::abs for Kernel::FT
+  using std::abs;
+
+  const T diff = abs(first - second);
   // fixed epsilon
   if (diff <= epsilon) {
     return true;
   }
 
-  return diff <= epsilon * std::max(absFirst, absSecond); // adaptative epsilon
-}
-
-/**
- * @brief Check if two Kernel::FT values are almost equal within epsilon
- * @param first First value to compare
- * @param second Second value to compare
- * @param epsilon Tolerance for comparison
- * @return true if values are almost equal, false otherwise
- */
-inline auto
-almostEqual(const Kernel::FT &first, const Kernel::FT &second,
-            const Kernel::FT &epsilon) -> bool
-{
-  // shortcut and handles inf values
-  if (first == second) {
-    return true;
-  }
-
-  const Kernel::FT absFirst  = abs(first);
-  const Kernel::FT absSecond = abs(second);
-  const Kernel::FT diff      = abs(first - second);
-  // fixed epsilon
-  if (diff <= epsilon) {
-    return true;
-  }
-
+  const T absFirst  = abs(first);
+  const T absSecond = abs(second);
   return diff <= epsilon * std::max(absFirst, absSecond); // adaptative epsilon
 }
 
