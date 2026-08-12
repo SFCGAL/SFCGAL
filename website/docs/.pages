@@ -1,8 +1,0 @@
-nav:
-  - Home: index.md
-  - Authors: authors.md
-  - History: history.md
-  - Sponsors: sponsors.md
-  - Installation: installation.md
-  - Development: development.md
-  - Screencast: screencast.md
