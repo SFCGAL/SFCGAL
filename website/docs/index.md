@@ -4,57 +4,44 @@ hide:
   - toc
 ---
 
-# SFCGAL
+# SFCGAL { .visually-hidden }
 
-![logo SFCGAL](assets/img/logo.svg)
+<div class="hero-page" markdown>
 
-## Downloads
+<img src="assets/img/logo.svg" alt="logo SFCGAL" class="logo-light hero-logo" />
+<img src="assets/img/logo_dark_mode.svg" alt="logo SFCGAL" class="logo-dark hero-logo" />
 
-<!-- markdownlint-disable MD034 -->
-[Download this project as a .zip file](https://gitlab.com/sfcgal/SFCGAL/-/archive/v{{ get_project_version() }}/SFCGAL-v{{ get_project_version() }}.zip){ .md-button .md-button--primary }
-[Download this project as a tar.gz file](https://gitlab.com/sfcgal/SFCGAL/-/archive/v{{ get_project_version() }}/SFCGAL-v{{ get_project_version() }}.tar.gz){ .md-button .md-button--primary }
-<!-- markdownlint-enable MD034 -->
+<div class="hero-buttons" markdown>
+[Get SFCGAL →](installation.md){ .md-button .md-button--primary }
+[Read the docs →](documentation/){ .md-button }
+</div>
 
 ## About
 
-SFCGAL is a C++ wrapper library around [CGAL](http://www.cgal.org) with the aim of supporting ISO 19107:2013 and [OGC Simple Features Access 1.2](https://www.ogc.org/publications/standard/sfa/) for 3D operations.
+SFCGAL is a C++ wrapper library around [CGAL](http://www.cgal.org) with the aim of supporting ISO 19107:2013 and [OGC Simple Features Access 1.2](https://www.ogc.org/publications/standard/sfa/) for 3D operations.
 
 SFCGAL provides standard compliant geometry types and operations. PostGIS uses the C API, to expose some SFCGAL's functions in spatial databases (cf. [PostGIS manual](https://postgis.net/docs/reference_sfcgal.html)).
 
-[PySFCGAL](https://sfcgal.gitlab.io/pysfcgal) is a Python wrapper for SFCGAL, enabling seamless use of the library’s 3D geometric functions and operations directly within Python scripts or applications. It is accessible on the [Python Package Index (PyPI)](https://pypi.org/project/PySFCGAL/) (cf. [PySFCGAL manual](https://sfcgal.gitlab.io/pysfcgal)).
+[PySFCGAL](https://sfcgal.gitlab.io/pysfcgal) is a Python wrapper for SFCGAL, enabling seamless use of the library's 3D geometric functions and operations directly within Python scripts or applications. It is accessible on the [Python Package Index (PyPI)](https://pypi.org/project/PySFCGAL/) (cf. [PySFCGAL manual](https://sfcgal.gitlab.io/pysfcgal)).
 
-### Supported Geometry Types
+## Clients
 
-Geometry coordinates have an exact rational number representation and can be either 2D or 3D. Among supported geometry types are:
+<div class="grid cards" markdown>
 
-- Points
-- LineStrings
-- Polygons
-- TriangulatedSurfaces
-- PolyhedralSurfaces
-- GeometryCollections
-- Solids
+- :simple-python: __Python__
 
-### Supported Operations
+    [:octicons-arrow-right-24: PySFCGAL](https://sfcgal.gitlab.io/pysfcgal/)
 
-Supported operations include:
+- :material-map: __QGIS Plugin__
 
-- WKT reading and writing with exact rational number representation for coordinates
-- Intersection operations and predicates
-- Convex hull computation
-- Tessellation
-- Extrusion
-- Area and distance computation
-- Minkowski sums
-- Contour offsets
-- Straight skeleton generations
+    [:octicons-arrow-right-24: QSFCGAL](https://gitlab.com/sfcgal/qsfcgal)
 
-## License
+- :octicons-terminal-16: __CLI__
 
-SFCGAL is distributed under the terms of the [GNU Lesser General Public License 2+](http://www.gnu.org/licenses/old-licenses/lgpl-2.0.html).
+    [:octicons-arrow-right-24: SFCGALOP](https://gitlab.com/sfcgal/SFCGAL/-/tree/master/sfcgalop?ref_type=heads)
 
-!!! warning License
+</div>
 
-**Note** that the main dependency for **SFCGAL** is the **CGAL** library, and SFCGAL uses CGAL modules that are licensed under **GPLv3+**. Whenever you compile and distribute **SFCGAL** with the GPL-licensed version of **CGAL**, the entire packaged result is automatically considered to be under **GPL version 3 or later**, due to the GPL’s “viral” property.
+</div>
 
-If you link and distribute **SFCGAL** with another software package, make sure you fully understand the implications and verify any legal and technical requirements implied by the license.
+</div>

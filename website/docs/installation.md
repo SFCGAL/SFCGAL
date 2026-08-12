@@ -1,5 +1,53 @@
 # Installation
 
+## Bindings and Tools
+
+SFCGAL can be used directly through several bindings and tools, depending on your workflow.
+
+<div class="grid cards" markdown>
+
+- :simple-python: __PySFCGAL__
+
+    ----
+
+    Python bindings for SFCGAL, exposing its 3D geometric functions and operations directly in Python.
+
+    [:octicons-arrow-right-24: Documentation](https://sfcgal.gitlab.io/pysfcgal/)
+
+    [:octicons-arrow-right-24: Repository](https://gitlab.com/sfcgal/pysfcgal)
+
+- :material-map: __QSFCGAL__
+
+    ----
+
+    QGIS plugin bringing SFCGAL's 3D processing algorithms directly into QGIS Processing.
+
+    [:octicons-arrow-right-24: Documentation](https://sfcgal.gitlab.io/qsfcgal/)
+
+    [:octicons-arrow-right-24: Repository](https://gitlab.com/sfcgal/qsfcgal)
+
+- :octicons-terminal-16: __SFCGALOP__
+
+    ----
+
+    Command-line tool (CLI) for running SFCGAL operations directly from the terminal.
+
+    [:octicons-arrow-right-24: Repository](https://gitlab.com/sfcgal/SFCGAL/-/tree/master/sfcgalop?ref_type=heads)
+
+</div>
+
+## Downloads
+
+<!-- markdownlint-disable MD034 -->
+<div class="hero-downloads" markdown>
+[Download this project as a .zip file](https://gitlab.com/sfcgal/SFCGAL/-/archive/v{{ get_project_version() }}/SFCGAL-v{{ get_project_version() }}.zip){ .md-button .md-button--primary }
+[Download this project as a tar.gz file](https://gitlab.com/sfcgal/SFCGAL/-/archive/v{{ get_project_version() }}/SFCGAL-v{{ get_project_version() }}.tar.gz){ .md-button .md-button--primary }
+</div>
+<!-- markdownlint-enable MD034 -->
+
+<div class="hero-content" markdown>
+
+
 ## Source code
 
 SFCGAL source code is available on the corresponding [GitLab repository](https://gitlab.com/sfcgal/SFCGAL).

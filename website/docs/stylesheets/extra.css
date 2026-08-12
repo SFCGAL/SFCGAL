@@ -69,3 +69,133 @@
 [data-md-component="palette"] {
   order: 10;
 }
+
+/* Boutons hero (page d'accueil) aux couleurs SFCGAL */
+/* .md-typeset a une spécificité plus forte que .md-button seul dans le thème,
+   il faut matcher cette spécificité pour que le border-radius s'applique vraiment */
+.md-typeset .md-button {
+  border-radius: 2rem;
+  padding: 0.5rem 1.4rem;
+  font-weight: 600;
+}
+
+.md-typeset .md-button--primary {
+  background-color: var(--md-primary-fg-color);
+  color: var(--md-primary-bg-color);
+  border-color: var(--md-primary-fg-color);
+}
+
+.md-typeset .md-button--primary:hover {
+  background-color: var(--md-accent-bg-color);
+  border-color: var(--md-accent-bg-color);
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.hero-buttons .md-button {
+  margin: 0;
+}
+
+/* Page d'accueil centrée (hero) */
+.hero-page {
+  text-align: center;
+}
+
+.hero-page img {
+  display: block;
+  margin: 1.5rem auto;
+}
+
+.hero-page .hero-buttons {
+  justify-content: center;
+}
+
+.hero-page .hero-downloads {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  flex-wrap: wrap;
+}
+
+.hero-page .hero-downloads .md-button {
+  margin: 0;
+}
+
+/* Les sections après le hero reprennent un alignement normal à gauche,
+   dans une colonne centrée sur la page */
+.hero-page .hero-content {
+  text-align: left;
+  max-width: 45rem;
+  margin: 2rem auto 0;
+}
+
+/* H1 présent pour l'accessibilité/SEO, mais invisible visuellement */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Carte "outils & bindings" façon DuckDB : icône + titre + pastilles cliquables */
+.tool-card {
+  display: inline-block;
+  text-align: left;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  max-width: 22rem;
+  margin: 1rem auto;
+}
+
+.tool-card__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+}
+
+.tool-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tool-pill {
+  display: inline-block;
+  padding: 0.3rem 0.9rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 2rem;
+  font-size: 0.7rem;
+  color: var(--md-default-fg-color);
+  text-decoration: none;
+  background: var(--md-default-bg-color);
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.tool-pill:hover {
+  border-color: var(--md-primary-fg-color);
+  color: var(--md-primary-fg-color);
+}
+
+.logo-light,
+.logo-dark {
+  display: none !important;
+}
+
+[data-md-color-scheme="default"] .logo-light,
+[data-md-color-scheme="slate"] .logo-dark {
+  display: block !important;
+}
