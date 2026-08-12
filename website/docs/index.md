@@ -1,3 +1,9 @@
+---
+hide:
+  - navigation
+  - toc
+---
+
 # SFCGAL
 
 ![logo SFCGAL](assets/img/logo.svg)

@@ -1,0 +1,90 @@
+{#-
+  Override du header materialx : place la barre d'onglets (.md-tabs) DIRECTEMENT
+  à l'intérieur de .md-header__inner, juste après le titre, au lieu de la laisser
+  en tant que 2e bandeau séparé sous le header. Ça permet un vrai alignement sur
+  une seule ligne (logo -> onglets -> search -> repo -> toggle) sans bricolage CSS
+  fragile, puisque tous les éléments deviennent des enfants directs du même
+  conteneur flex.
+-#}
+{% import "partials/tabs-item.html" as item with context %}
+{% set class = "md-header" %}
+{% if "navigation.tabs" in features %}
+  {% set class = class ~ " md-header--shadow md-header--lifted" %}
+{% endif %}
+<header class="{{ class }}" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="{{ lang.t('header') }}">
+
+    <a href="{{ config.extra.homepage | d(nav.homepage.url, true) | url }}" title="{{ config.site_name | e }}" class="md-header__button md-logo" aria-label="{{ config.site_name }}" data-md-component="logo">
+      {% include "partials/logo.html" %}
+    </a>
+
+    <label class="md-header__button md-icon" for="__drawer">
+      {% set icon = config.theme.icon.menu or "material/menu" %}
+      {% include ".icons/" ~ icon ~ ".svg" %}
+    </label>
+
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            {{ config.site_name }}
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            {% if page.meta and page.meta.title %}
+              {{ page.meta.title }}
+            {% else %}
+              {{ page.title }}
+            {% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    {# Onglets de navigation déplacés ici, entre le titre et la recherche.
+       On garde "md-tabs" + data-md-component="tabs" (identiques à l'original)
+       pour que le script JS de navigation.instant sache retrouver et mettre à
+       jour ce bloc lors des navigations AJAX - sinon l'indicateur d'onglet
+       actif reste figé sur la 1ère page chargée. #}
+    {% if "navigation.tabs" in features %}
+      <nav class="md-tabs md-header__tabs-inline" aria-label="{{ lang.t('tabs') }}" data-md-component="tabs">
+        <ul class="md-tabs__list">
+          {% for nav_item in nav.items %}
+            {{ item.render(nav_item) }}
+          {% endfor %}
+        </ul>
+      </nav>
+    {% endif %}
+
+    {% if config.theme.palette %}
+      {% if not config.theme.palette is mapping %}
+        {% include "partials/palette.html" %}
+      {% endif %}
+    {% endif %}
+    {% if not config.theme.palette is mapping %}
+      {% include "partials/javascripts/palette.html" %}
+    {% endif %}
+    {% if config.extra.alternate %}
+      {% include "partials/alternate.html" %}
+    {% endif %}
+
+    {% set search_plugin = config.plugins.get("materialx/search") or config.plugins.get("material/search") or config.plugins.get("search") %}
+    {% if search_plugin %}
+      {% set search = search_plugin | attr("config") %}
+      {% if search.enabled %}
+        <label class="md-header__button md-icon" for="__search">
+          {% set icon = config.theme.icon.search or "material/magnify" %}
+          {% include ".icons/" ~ icon ~ ".svg" %}
+        </label>
+        {% include "partials/search.html" %}
+      {% endif %}
+    {% endif %}
+
+    {% if config.repo_url %}
+      <div class="md-header__source">
+        {% include "partials/source.html" %}
+      </div>
+    {% endif %}
+  </nav>
+</header>

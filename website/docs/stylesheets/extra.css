@@ -3,4 +3,69 @@
     --md-primary-bg-color: #ffffff;
     --md-accent-fg-color: #ffff00ff;
     --md-accent-bg-color: #3a74acff;
-  }
+}
+
+/* Tout est maintenant enfant direct de .md-header__inner (grâce à l'override
+   de template) : un simple centrage flex suffit, plus besoin de "order". */
+.md-header__inner {
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.md-header__title,
+.md-header__source,
+.md-search {
+  flex-grow: 0;
+}
+
+/* Style des onglets, désormais inline dans le header (au lieu d'un 2e bandeau).
+   On neutralise les styles par défaut de .md-tabs (pensés pour un bandeau
+   pleine largeur séparé) pour les adapter à l'usage inline, tout en gardant
+   un peu de hauteur/padding pour que le trait actif ne colle pas au texte. */
+.md-header__tabs-inline.md-tabs {
+  width: auto;
+  overflow: visible;
+  background-color: transparent;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  z-index: auto;
+}
+
+.md-header__tabs-inline .md-tabs__list {
+  gap: 1.2rem;
+  margin-inline-start: 0;
+}
+
+.md-header__tabs-inline .md-tabs__item {
+  height: auto;
+  display: flex;
+  align-items: center;
+}
+
+.md-header__tabs-inline .md-tabs__link {
+  margin-top: 0;
+  padding: 0.35rem 0;   /* symétrique haut/bas : garde le texte centré verticalement */
+  display: flex;
+  align-items: center;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.7rem;
+  opacity: 1;
+  text-decoration: none;
+}
+
+.md-header__tabs-inline .md-tabs__item--active .md-tabs__link {
+  color: var(--md-primary-fg-color);
+  font-weight: 700;
+}
+
+/* Search placé après le toggle clair/sombre (tout à droite) */
+.md-search {
+  order: 11;
+  flex-grow: 0;
+}
+
+/* Pousse le bouton clair/sombre tout à la fin du header */
+[data-md-component="palette"] {
+  order: 10;
+}

@@ -1,9 +1,11 @@
 site_name: SFCGAL
 repo_name: "SFCGAL"
+site_url: https://sfcgal.gitlab.io/SFCGAL/
 repo_url: "https://gitlab.com/sfcgal/SFCGAL/"
 
 theme:
   name: materialx
+  custom_dir: overrides
   features:
     - navigation.hide
     - navigation.instant
@@ -16,11 +18,25 @@ theme:
     - toc.follow
     - toc.integrate
     - content.code.copy
+    - search.highlight
+    - search.share
+    # - search.suggest    # retiré : incompatible avec Pagefind (provider par défaut de search)
+
   logo: assets/img/logo.png
   favicon: assets/img/logo.png
   palette:
-    primary: custom
-    accent: custom
+    - scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Passer au mode sombre
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Passer au mode clair
   icon:
     repo: fontawesome/brands/gitlab
 
@@ -59,36 +75,38 @@ plugins:
             BUILTIN_STL_SUPPORT: True
             MULTILINE_CPP_IS_BRIEF: False
             SORT_GROUP_NAMES: True
-  - search
+  - search:
+      lang: en
 
 nav:
   - Home: index.md
-  - Authors: authors.md
-  - History: history.md
-  - Sponsors: sponsors.md
-  - Installation: installation.md
-  - Development: development.md
-  # - Screencast: screencast.md
-  - API:
-      - "Modules": "API/modules.md"
-      - "Links": "API/links.md"
-      - "Classes":
-          - "Class List": "API/annotated.md"
-          - "Class Index": "API/classes.md"
-          - "Class Hierarchy": "API/hierarchy.md"
-          - "Class Members": "API/class_members.md"
-          - "Class Member Functions": "API/class_member_functions.md"
-          - "Class Member Variables": "API/class_member_variables.md"
-          - "Class Member Typedefs": "API/class_member_typedefs.md"
-          - "Class Member Enumerations": "API/class_member_enums.md"
-      - "Namespaces":
-          - "Namespace List": "API/namespaces.md"
-          - "Namespace Members": "API/namespace_members.md"
-          - "Namespace Member Functions": "API/namespace_member_functions.md"
-          - "Namespace Member Variables": "API/namespace_member_variables.md"
-          - "Namespace Member Typedefs": "API/namespace_member_typedefs.md"
-          - "Namespace Member Enumerations": "API/namespace_member_enums.md"
-      - "Functions": "API/functions.md"
-      - "Variables": "API/variables.md"
-      - "Macros": "API/macros.md"
-      - "Files": "API/files.md"
+  - Documentation:
+      - Installation: installation.md
+      - Development: development.md
+      - API:
+          - "Modules": "API/modules.md"
+          - "Links": "API/links.md"
+          - "Classes":
+              - "Class List": "API/annotated.md"
+              - "Class Index": "API/classes.md"
+              - "Class Hierarchy": "API/hierarchy.md"
+              - "Class Members": "API/class_members.md"
+              - "Class Member Functions": "API/class_member_functions.md"
+              - "Class Member Variables": "API/class_member_variables.md"
+              - "Class Member Typedefs": "API/class_member_typedefs.md"
+              - "Class Member Enumerations": "API/class_member_enums.md"
+          - "Namespaces":
+              - "Namespace List": "API/namespaces.md"
+              - "Namespace Members": "API/namespace_members.md"
+              - "Namespace Member Functions": "API/namespace_member_functions.md"
+              - "Namespace Member Variables": "API/namespace_member_variables.md"
+              - "Namespace Member Typedefs": "API/namespace_member_typedefs.md"
+              - "Namespace Member Enumerations": "API/namespace_member_enums.md"
+          - "Functions": "API/functions.md"
+          - "Variables": "API/variables.md"
+          - "Macros": "API/macros.md"
+          - "Files": "API/files.md"
+  - Resources:
+      - Authors: authors.md
+      - History: history.md
+      - Sponsors: sponsors.md
