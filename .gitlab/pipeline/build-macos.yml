@@ -18,6 +18,20 @@ build:macos_clang:
       when: always
     # on a MR if previous jobs are successful
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      changes:
+      - "src/**/*"
+      - "sfcgalop/**/*"
+      - "test/**/*"
+      - "example/**/*"
+      - "cmake/**/*"
+      - "**/CMakeLists.txt"
+      - "CMakePresets.json"
+      - "vcpkg.json"
+      - "*.cmake.in"
+      - "*.pc.in"
+      - "ci/**/*"
+      - ".gitlab/**/*"
+      - "docker/**/*"
       when: manual
   before_script:
     - brew install boost cgal cmake gmp mpfr ninja nlohmann-json eigen
@@ -53,6 +67,20 @@ homebrew:generate:
     # on a MR if previous jobs are successful
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
       when: manual
+      changes:
+      - "src/**/*"
+      - "sfcgalop/**/*"
+      - "test/**/*"
+      - "example/**/*"
+      - "cmake/**/*"
+      - "**/CMakeLists.txt"
+      - "CMakePresets.json"
+      - "vcpkg.json"
+      - "*.cmake.in"
+      - "*.pc.in"
+      - "ci/**/*"
+      - ".gitlab/**/*"
+      - "docker/**/*"
       variables:
         PACKAGE_VERSION: "latest"
   script:

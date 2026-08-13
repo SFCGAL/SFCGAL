@@ -13,6 +13,20 @@ docker:build:windows-image:
       allow_failure: true
     # on a MR if previous jobs are successful
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      changes:
+      - "src/**/*"
+      - "sfcgalop/**/*"
+      - "test/**/*"
+      - "example/**/*"
+      - "cmake/**/*"
+      - "**/CMakeLists.txt"
+      - "CMakePresets.json"
+      - "vcpkg.json"
+      - "*.cmake.in"
+      - "*.pc.in"
+      - "ci/**/*"
+      - ".gitlab/**/*"
+      - "docker/**/*"
       when: manual
       allow_failure: true
   needs: []

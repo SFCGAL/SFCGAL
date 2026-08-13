@@ -5,6 +5,20 @@ opensuse_gcc:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: always
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+      - "src/**/*"
+      - "sfcgalop/**/*"
+      - "test/**/*"
+      - "example/**/*"
+      - "cmake/**/*"
+      - "**/CMakeLists.txt"
+      - "CMakePresets.json"
+      - "vcpkg.json"
+      - "*.cmake.in"
+      - "*.pc.in"
+      - "ci/**/*"
+      - ".gitlab/**/*"
+      - "docker/**/*"
       when: manual
   image: opensuse/tumbleweed
 
