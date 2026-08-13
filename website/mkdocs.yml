@@ -20,7 +20,6 @@ theme:
     - content.code.copy
     - search.highlight
     - search.share
-    # - search.suggest    # retiré : incompatible avec Pagefind (provider par défaut de search)
 
   logo: assets/img/logo.png
   favicon: assets/img/logo.png
