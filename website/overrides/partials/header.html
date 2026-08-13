@@ -1,10 +1,10 @@
 {#-
-  Override du header materialx : place la barre d'onglets (.md-tabs) DIRECTEMENT
-  à l'intérieur de .md-header__inner, juste après le titre, au lieu de la laisser
-  en tant que 2e bandeau séparé sous le header. Ça permet un vrai alignement sur
-  une seule ligne (logo -> onglets -> search -> repo -> toggle) sans bricolage CSS
-  fragile, puisque tous les éléments deviennent des enfants directs du même
-  conteneur flex.
+  Override of the materialx header: places the tab bar (.md-tabs) DIRECTLY
+  inside .md-header__inner, right after the title, instead of leaving it
+  as a 2nd separate banner below the header. This allows true alignment on
+  a single line (logo -> tabs -> search -> repo -> toggle) without fragile
+  CSS hacks, since all elements become direct children of the same flex
+  container.
 -#}
 {% import "partials/tabs-item.html" as item with context %}
 {% set class = "md-header" %}
@@ -42,11 +42,11 @@
       </div>
     </div>
 
-    {# Onglets de navigation déplacés ici, entre le titre et la recherche.
-       On garde "md-tabs" + data-md-component="tabs" (identiques à l'original)
-       pour que le script JS de navigation.instant sache retrouver et mettre à
-       jour ce bloc lors des navigations AJAX - sinon l'indicateur d'onglet
-       actif reste figé sur la 1ère page chargée. #}
+    {# Navigation tabs moved here, between the title and the search bar.
+       We keep "md-tabs" + data-md-component="tabs" (same as the original)
+       so that the navigation.instant JS script can find and update this
+       block during AJAX navigations - otherwise the active tab indicator
+       stays stuck on the first page loaded. #}
     {% if "navigation.tabs" in features %}
       <nav class="md-tabs md-header__tabs-inline" aria-label="{{ lang.t('tabs') }}" data-md-component="tabs">
         <ul class="md-tabs__list">

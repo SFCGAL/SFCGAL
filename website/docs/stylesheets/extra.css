@@ -5,8 +5,9 @@
     --md-accent-bg-color: #3a74acff;
 }
 
-/* Tout est maintenant enfant direct de .md-header__inner (grâce à l'override
-   de template) : un simple centrage flex suffit, plus besoin de "order". */
+/* Everything is now a direct child of .md-header__inner (thanks to the
+   template override): a simple flex centering is enough, no need for
+   "order" anymore. */
 .md-header__inner {
   justify-content: center;
   gap: 1.5rem;
@@ -18,10 +19,10 @@
   flex-grow: 0;
 }
 
-/* Style des onglets, désormais inline dans le header (au lieu d'un 2e bandeau).
-   On neutralise les styles par défaut de .md-tabs (pensés pour un bandeau
-   pleine largeur séparé) pour les adapter à l'usage inline, tout en gardant
-   un peu de hauteur/padding pour que le trait actif ne colle pas au texte. */
+/* Tab styling, now inline in the header (instead of a 2nd banner).
+   We neutralize the default .md-tabs styles (designed for a separate
+   full-width banner) to adapt them for inline use, while keeping a bit
+   of height/padding so the active indicator doesn't stick to the text. */
 .md-header__tabs-inline.md-tabs {
   width: auto;
   overflow: visible;
@@ -45,7 +46,7 @@
 
 .md-header__tabs-inline .md-tabs__link {
   margin-top: 0;
-  padding: 0.35rem 0;   /* symétrique haut/bas : garde le texte centré verticalement */
+  padding: 0.35rem 0;   /* symmetric top/bottom: keeps the text vertically centered */
   display: flex;
   align-items: center;
   color: var(--md-default-fg-color--light);
@@ -59,20 +60,20 @@
   font-weight: 700;
 }
 
-/* Search placé après le toggle clair/sombre (tout à droite) */
+/* Search placed after the light/dark toggle (far right) */
 .md-search {
   order: 11;
   flex-grow: 0;
 }
 
-/* Pousse le bouton clair/sombre tout à la fin du header */
+/* Pushes the light/dark toggle button to the very end of the header */
 [data-md-component="palette"] {
   order: 10;
 }
 
-/* Boutons hero (page d'accueil) aux couleurs SFCGAL */
-/* .md-typeset a une spécificité plus forte que .md-button seul dans le thème,
-   il faut matcher cette spécificité pour que le border-radius s'applique vraiment */
+/* Hero buttons (home page) in SFCGAL colors */
+/* .md-typeset has higher specificity than .md-button alone in the theme,
+   we need to match this specificity for border-radius to actually apply */
 .md-typeset .md-button {
   border-radius: 2rem;
   padding: 0.5rem 1.4rem;
@@ -100,7 +101,7 @@
   margin: 0;
 }
 
-/* Page d'accueil centrée (hero) */
+/* Centered home page (hero) */
 .hero-page {
   text-align: center;
 }
@@ -126,15 +127,15 @@
   margin: 0;
 }
 
-/* Les sections après le hero reprennent un alignement normal à gauche,
-   dans une colonne centrée sur la page */
+/* Sections after the hero go back to normal left alignment,
+   in a column centered on the page */
 .hero-page .hero-content {
   text-align: left;
   max-width: 45rem;
   margin: 2rem auto 0;
 }
 
-/* H1 présent pour l'accessibilité/SEO, mais invisible visuellement */
+/* H1 present for accessibility/SEO, but visually hidden */
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -147,7 +148,7 @@
   border: 0;
 }
 
-/* Carte "outils & bindings" façon DuckDB : icône + titre + pastilles cliquables */
+/* DuckDB-style "tools & bindings" card: icon + title + clickable pills */
 .tool-card {
   display: inline-block;
   text-align: left;
