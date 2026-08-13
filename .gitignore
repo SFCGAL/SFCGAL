@@ -57,3 +57,6 @@ __pycache__/
 # properdocs
 .cache
 website/site
+
+# IDE settings
+.vscode/*
