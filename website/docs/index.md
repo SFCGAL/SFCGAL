@@ -22,8 +22,6 @@ SFCGAL is a C++ wrapper library around [CGAL](http://www.cgal.org) with the aim 
 
 SFCGAL provides standard compliant geometry types and operations. PostGIS uses the C API, to expose some SFCGAL's functions in spatial databases (cf. [PostGIS manual](https://postgis.net/docs/reference_sfcgal.html)).
 
-[PySFCGAL](https://sfcgal.gitlab.io/pysfcgal) is a Python wrapper for SFCGAL, enabling seamless use of the library's 3D geometric functions and operations directly within Python scripts or applications. It is accessible on the [Python Package Index (PyPI)](https://pypi.org/project/PySFCGAL/) (cf. [PySFCGAL manual](https://sfcgal.gitlab.io/pysfcgal)).
-
 ## Clients
 
 <div class="grid cards" markdown>
