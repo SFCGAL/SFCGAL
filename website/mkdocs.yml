@@ -30,13 +30,13 @@ theme:
       accent: custom
       toggle:
         icon: material/brightness-7
-        name: Passer au mode sombre
+        name: Switch to dark mode
     - scheme: slate
       primary: custom
       accent: custom
       toggle:
         icon: material/brightness-4
-        name: Passer au mode clair
+        name: Switch to light mode
   icon:
     repo: fontawesome/brands/gitlab
 
