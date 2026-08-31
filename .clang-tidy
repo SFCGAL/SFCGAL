@@ -4,6 +4,7 @@ Checks:
   - '-bugprone-easily-swappable-parameters'
   - 'cert-*'
   - 'clang-analyzer-*'
+  - 'cppcoreguidelines-owning-memory'
   - 'modernize-*'
   - 'performance-*'
   - 'portability-*'
