@@ -1,9 +1,9 @@
 Checks:
   - '-*'
-  - 'clang-analyzer-*'
-  - 'cert-*'
   - 'bugprone-*'
   - '-bugprone-easily-swappable-parameters'
+  - 'cert-*'
+  - 'clang-analyzer-*'
   - 'modernize-*'
   - 'performance-*'
   - 'portability-*'
