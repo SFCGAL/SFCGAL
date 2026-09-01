@@ -131,10 +131,6 @@ public:
 
 private:
   /**
-   * static instance of the Singleton
-   */
-  static Registry *_instance;
-  /**
    * prototypes of the geometries
    */
   std::vector<std::unique_ptr<Geometry>> _prototypes;

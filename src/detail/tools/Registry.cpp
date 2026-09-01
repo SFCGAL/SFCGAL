@@ -24,8 +24,6 @@
 
 namespace SFCGAL::tools {
 
-Registry *Registry::_instance = nullptr;
-
 void
 Registry::addPrototype(const Geometry &g)
 {
@@ -92,11 +90,8 @@ Registry::newGeometryByTypeId(int typeId) const -> std::unique_ptr<Geometry>
 auto
 Registry::instance() -> Registry &
 {
-  if (Registry::_instance == nullptr) {
-    Registry::_instance = new Registry();
-  }
-
-  return *_instance;
+  static Registry instance;
+  return instance;
 }
 
 Registry::Registry()
