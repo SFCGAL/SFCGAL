@@ -328,6 +328,8 @@ operator<<(std::ostream &out, std::set<T *> &obs) -> std::ostream &
 
 template <int Dim>
 class Handle {
+  struct HandleState;
+
   struct ObservablePrimitive
       : std::variant<typename detail::Point_d<Dim>::Type, Segment_d<Dim>,
                      Surface_d<Dim>, typename detail::Volume_d<Dim>::Type,
@@ -347,7 +349,7 @@ class Handle {
       return std::get<T &>(*this);
     }
 
-    std::set<ObservablePrimitive **>
+    std::set<HandleState *>
         _observers; // this is for ref counting and handle updating
 
   private:
@@ -357,121 +359,126 @@ class Handle {
     operator=(const ObservablePrimitive &) -> ObservablePrimitive & = delete;
   };
 
+  struct HandleState {
+    HandleState(std::shared_ptr<ObservablePrimitive> primitive)
+        : primitive(std::move(primitive))
+    {
+    }
+
+    std::shared_ptr<ObservablePrimitive> primitive;
+  };
+
 public:
   Handle()
-      : _p(new ObservablePrimitive *(new ObservablePrimitive(EmptyPrimitive())))
+      : _p(std::make_unique<HandleState>(
+            std::make_shared<ObservablePrimitive>(EmptyPrimitive())))
   {
-    (*_p)->_observers.insert(_p);
-    BOOST_ASSERT((*_p)->_observers.count(_p));
+    _p->primitive->_observers.insert(_p.get());
+    BOOST_ASSERT(_p->primitive->_observers.count(_p.get()));
   }
 
   ~Handle()
   {
-    BOOST_ASSERT((*_p)->_observers.count(_p));
-    (*_p)->_observers.erase(_p);
-
-    if ((*_p)->_observers.empty()) {
-      delete (*_p);
-    }
-
-    delete _p;
+    BOOST_ASSERT(_p->primitive->_observers.count(_p.get()));
+    _p->primitive->_observers.erase(_p.get());
   }
 
-  Handle(const Handle &other) : _p(new ObservablePrimitive *(*other._p))
+  Handle(const Handle &other) : _p(std::make_unique<HandleState>(*other._p))
   {
-    (*_p)->_observers.insert(_p);
-    BOOST_ASSERT((*_p)->_observers.count(_p));
+    _p->primitive->_observers.insert(_p.get());
+    BOOST_ASSERT(_p->primitive->_observers.count(_p.get()));
   }
 
   template <class PrimitiveType>
   explicit Handle(const PrimitiveType &primitive)
-      : _p(new ObservablePrimitive *(new ObservablePrimitive(primitive)))
+      : _p(std::make_unique<HandleState>(
+            std::make_shared<ObservablePrimitive>(primitive)))
   {
-    (*_p)->_observers.insert(_p);
-    BOOST_ASSERT((*_p)->_observers.count(_p));
+    _p->primitive->_observers.insert(_p.get());
+    BOOST_ASSERT(_p->primitive->_observers.count(_p.get()));
   }
 
   void
   swap(Handle &other) noexcept
   {
-    (*_p)->_observers.erase(_p);
-    (*other._p)->_observers.erase(other._p);
+    _p->primitive->_observers.erase(_p.get());
+    other._p->primitive->_observers.erase(other._p.get());
     std::swap(_p, other._p);
-    (*_p)->_observers.insert(_p);
-    (*other._p)->_observers.insert(other._p);
-    BOOST_ASSERT((*_p)->_observers.count(_p));
-    BOOST_ASSERT((*other._p)->_observers.count(other._p));
+    _p->primitive->_observers.insert(_p.get());
+    other._p->primitive->_observers.insert(other._p.get());
+    BOOST_ASSERT(_p->primitive->_observers.count(_p.get()));
+    BOOST_ASSERT(other._p->primitive->_observers.count(other._p.get()));
   }
 
   auto
   operator=(Handle other) -> Handle &
   {
     this->swap(other);
-    BOOST_ASSERT((*_p)->_observers.count(_p));
+    BOOST_ASSERT(_p->primitive->_observers.count(_p.get()));
     return *this;
   }
 
   auto
   operator*() const -> const ObservablePrimitive &
   {
-    BOOST_ASSERT((*_p)->_observers.count(_p));
-    return *(*_p);
+    BOOST_ASSERT(_p->primitive->_observers.count(_p.get()));
+    return *(_p->primitive);
   }
   auto
   operator*() -> ObservablePrimitive &
   {
-    BOOST_ASSERT((*_p)->_observers.count(_p));
-    return *(*_p);
+    BOOST_ASSERT(_p->primitive->_observers.count(_p.get()));
+    return *(_p->primitive);
   }
   auto
   operator->() const -> const ObservablePrimitive *
   {
-    BOOST_ASSERT((*_p)->_observers.count(_p));
-    return (*_p);
+    BOOST_ASSERT(_p->primitive->_observers.count(_p.get()));
+    return _p->primitive;
   }
   auto
   operator->() -> ObservablePrimitive *
   {
-    BOOST_ASSERT((*_p)->_observers.count(_p));
-    return (*_p);
+    BOOST_ASSERT(_p->primitive->_observers.count(_p.get()));
+    return _p->primitive;
   }
 
   auto
   asPoint() -> typename detail::Point_d<Dim>::Type &
   {
-    BOOST_ASSERT((*_p)->_observers.count(_p));
+    BOOST_ASSERT(_p->primitive->_observers.count(_p.get()));
     BOOST_ASSERT(index() == PrimitivePoint);
-    return std::get<typename detail::Point_d<Dim>::Type>(*(*_p));
+    return std::get<typename detail::Point_d<Dim>::Type>(*(_p->primitive));
   }
 
   auto
   asSegment() -> Segment_d<Dim> &
   {
-    BOOST_ASSERT((*_p)->_observers.count(_p));
+    BOOST_ASSERT(_p->primitive->_observers.count(_p.get()));
     BOOST_ASSERT(index() == PrimitiveSegment);
-    return std::get<Segment_d<Dim>>(*(*_p));
+    return std::get<Segment_d<Dim>>(*(_p->primitive));
   }
 
   auto
   asSurface() -> Surface_d<Dim> &
   {
-    BOOST_ASSERT((*_p)->_observers.count(_p));
+    BOOST_ASSERT(_p->primitive->_observers.count(_p.get()));
     BOOST_ASSERT(index() == PrimitiveSurface);
-    return std::get<Surface_d<Dim>>(*(*_p));
+    return std::get<Surface_d<Dim>>(*(_p->primitive));
   }
 
   auto
   asVolume() -> typename detail::Volume_d<Dim>::Type &
   {
-    BOOST_ASSERT((*_p)->_observers.count(_p));
+    BOOST_ASSERT(_p->primitive->_observers.count(_p.get()));
     BOOST_ASSERT(index() == PrimitiveVolume);
-    return std::get<typename detail::Volume_d<Dim>::Type>(*(*_p));
+    return std::get<typename detail::Volume_d<Dim>::Type>(*(_p->primitive));
   }
 
   auto
   index() -> PrimitiveType
   {
-    return PrimitiveType((*_p)->index());
+    return PrimitiveType(_p->primitive->index());
   }
 
   auto
@@ -484,37 +491,33 @@ public:
   void
   registerObservers(const Handle &a)
   {
-    if (*a._p == *_p) {
+    if (a._p->primitive == _p->primitive) {
       return; // both already observing the same primitive
     }
 
-    ObservablePrimitive                *observed = *(a._p);
-    std::vector<ObservablePrimitive **> observers(observed->_observers.begin(),
-                                                  observed->_observers.end());
+    const std::shared_ptr<ObservablePrimitive> &observed = a._p->primitive;
+    std::vector<HandleState *> observers(observed->_observers.begin(),
+                                         observed->_observers.end());
 
-    for (auto h = observers.begin(); h != observers.end(); ++h) {
-      *(*h) = *_p;
-      (*(*h))->_observers.insert(*h);
+    for (auto *observer : observers) {
+      observer->primitive = _p->primitive;
+      observer->primitive->_observers.insert(observer);
     }
 
-    BOOST_ASSERT(*a._p == *_p);
+    BOOST_ASSERT(a._p->primitive == _p->primitive);
 
-    delete observed; // we removed all observers
-    BOOST_ASSERT((*_p)->_observers.count(_p));
+    BOOST_ASSERT(_p->primitive->_observers.count(_p.get()));
 #ifdef DEBUG
 
-    for (typename std::vector<ObservablePrimitive **>::iterator h =
-             observers.begin();
-         h != observers.end(); ++h) {
-      BOOST_ASSERT((*(*h))->_observers.count(*h));
+    for (auto *observer : observers) {
+      BOOST_ASSERT(observer->primitive->_observers.count(observer));
     }
 
 #endif
   }
 
 private:
-  ObservablePrimitive *
-      *_p; // mutable because no non const cpy ctor en template classes
+  std::unique_ptr<HandleState> _p;
 };
 
 template <int Dim>
