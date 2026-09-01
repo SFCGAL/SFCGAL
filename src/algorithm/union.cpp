@@ -773,8 +773,7 @@ union_segment_volume(Handle<3> a, Handle<3> b)
     }
 
     if (static_cast<unsigned int>(!points.empty()) != 0U) {
-      std::sort(points.begin(), points.end(),
-                Nearer<Point_3>(segment.source()));
+      std::ranges::sort(points, Nearer<Point_3>(segment.source()));
 
       // mark segments pieces that have length and which midpoint is inside
       // polyhedron
