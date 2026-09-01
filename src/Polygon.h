@@ -49,13 +49,6 @@ public:
   Polygon(const LineString &exteriorRing);
   /**
    * Constructor with an exterior ring (takes ownership)
-   * @param exteriorRing The exterior ring of the polygon
-   * @deprecated The unique_ptr version should be used instead
-   */
-  [[deprecated("The unique_ptr version should be used instead")]]
-  Polygon(LineString *exteriorRing);
-  /**
-   * Constructor with an exterior ring (takes ownership)
    * @param exteriorRing A unique pointer to the exterior ring of the exterior
    * ring
    */
@@ -181,17 +174,6 @@ public:
     setExteriorRing(std::unique_ptr<LineString>(ring.clone()));
   }
   /**
-   * Sets the exterior ring (takes ownership)
-   * @param ring The new exterior ring
-   * @deprecated The unique_ptr version should be used instead
-   */
-  [[deprecated("The unique_ptr version should be used instead")]]
-  void
-  setExteriorRing(LineString *ring)
-  {
-    setExteriorRing(std::unique_ptr<LineString>(ring));
-  }
-  /**
    * @brief Sets the exterior ring.
    *
    * Replaces the exterior ring with the provided one.
@@ -287,17 +269,6 @@ public:
   addInteriorRing(const LineString &ls)
   {
     addInteriorRing(ls.clone());
-  }
-  /**
-   * append a ring to the Polygon (take ownership)
-   * @param ls The line string to add as interior ring
-   * @deprecated The unique_ptr version should be used instead
-   */
-  [[deprecated("The unique_ptr version should be used instead")]]
-  void
-  addInteriorRing(LineString *ls)
-  {
-    addInteriorRing(std::unique_ptr<LineString>(ls));
   }
   /**
    * @brief Adds a ring to the Polygon.

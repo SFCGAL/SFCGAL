@@ -236,17 +236,6 @@ public:
   /**
    * @brief Adds a polygonal patch to the PolyhedralSurface.
    *
-   * @param patch A raw pointer to the Polygon object representing the new
-   * patch to add. Ownership of this patch is moved into the PolyhedralSurface.
-   *
-   * @deprecated The unique_ptr version should be used instead
-   */
-  [[deprecated("The unique_ptr version should be used instead")]]
-  void
-  addPatch(Polygon *patch);
-  /**
-   * @brief Adds a polygonal patch to the PolyhedralSurface.
-   *
    * @param patch A unique pointer to the Polygon object representing the new
    * patch to add. Ownership of this patch is moved into the PolyhedralSurface.
    */
@@ -319,18 +308,6 @@ public:
   setPatchN(const Geometry &geometry, size_t const &idx);
 
   /**
-   * @brief Sets the n-th Geometry, starting at zero
-   * @param geometry Pointer to geometry (must be a polygon)
-   * @param idx Index of the patch to set
-   * @note The ownership of the polygon is taken. The caller is not responsible
-   * anymore of its deallocation.
-   * @deprecated The unique_ptr version should be used instead
-   */
-  [[deprecated("The unique_ptr version should be used instead")]]
-  void
-  setPatchN(Geometry *geometry, size_t const &idx);
-
-  /**
    * @brief Sets the n-th patch in the PolyhedralSurface.
    *
    * Replaces the patch at the specified index with the provided one.
@@ -351,18 +328,6 @@ public:
    */
   void
   setPatchN(const Polygon &patch, size_t const &idx);
-
-  /**
-   * @brief Sets the n-th Patch, starting at zero
-   * @param patch Pointer to polygon patch
-   * @param idx Index of the patch to set
-   * @note The ownership of the polygon is taken. The caller is not responsible
-   * anymore of its deallocation.
-   * @deprecated The unique_ptr version should be used instead
-   */
-  [[deprecated("The unique_ptr version should be used instead")]]
-  void
-  setPatchN(Polygon *patch, size_t const &idx);
 
   /**
    * @brief Sets the n-th patch in the PolyhedralSurface.

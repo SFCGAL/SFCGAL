@@ -203,12 +203,6 @@ PolyhedralSurface::addPatch(const Polygon &patch)
 }
 
 void
-PolyhedralSurface::addPatch(Polygon *patch)
-{
-  addPatch(std::unique_ptr<Polygon>(patch));
-}
-
-void
 PolyhedralSurface::addPatch(std::unique_ptr<Polygon> patch)
 {
   BOOST_ASSERT(patch != nullptr);
@@ -240,12 +234,6 @@ void
 PolyhedralSurface::addPolygons(const PolyhedralSurface &polyhedralSurface)
 {
   addPatches(polyhedralSurface);
-}
-
-void
-PolyhedralSurface::setPatchN(Polygon *patch, size_t const &idx)
-{
-  setPatchN(std::unique_ptr<Polygon>(patch), idx);
 }
 
 void
@@ -282,12 +270,6 @@ PolyhedralSurface::setPatchN(std::unique_ptr<Geometry> geometry,
   }
 
   setPatchN(geom_unique_ptr_as<Polygon>(std::move(geometry)), idx);
-}
-
-void
-PolyhedralSurface::setPatchN(Geometry *geometry, size_t const &idx)
-{
-  setPatchN(std::unique_ptr<Geometry>(geometry), idx);
 }
 
 void

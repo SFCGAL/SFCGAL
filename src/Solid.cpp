@@ -17,11 +17,6 @@ Solid::Solid(const PolyhedralSurface &exteriorShell)
 {
 }
 
-Solid::Solid(PolyhedralSurface *exteriorShell)
-    : Solid(std::unique_ptr<PolyhedralSurface>(exteriorShell))
-{
-}
-
 Solid::Solid(std::unique_ptr<PolyhedralSurface> exteriorShell)
 {
   _shells.emplace_back(std::move(exteriorShell));

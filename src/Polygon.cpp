@@ -30,11 +30,6 @@ Polygon::Polygon(const LineString &exteriorRing) : Polygon(exteriorRing.clone())
 {
 }
 
-Polygon::Polygon(LineString *exteriorRing)
-    : Polygon(std::unique_ptr<LineString>(exteriorRing))
-{
-}
-
 Polygon::Polygon(std::unique_ptr<LineString> exteriorRing)
 {
   _rings.emplace_back(std::move(exteriorRing));

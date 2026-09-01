@@ -48,13 +48,6 @@ public:
   Solid(const PolyhedralSurface &exteriorShell);
   /**
    * Constructor with an exterior shell (takes ownership)
-   * @param exteriorShell The exterior shell of the solid
-   * @deprecated The unique_ptr version should be used instead
-   */
-  [[deprecated("The unique_ptr version should be used instead")]]
-  Solid(PolyhedralSurface *exteriorShell);
-  /**
-   * Constructor with an exterior shell (takes ownership)
    * @param exteriorShell A unique_ptr to the exterior shell of the solid
    */
   Solid(std::unique_ptr<PolyhedralSurface> exteriorShell);
@@ -188,17 +181,6 @@ public:
     addInteriorShell(shell.clone());
   }
   /**
-   * adds an interior shell to the Solid
-   * @param shell The polyhedral surface to add as interior shell
-   * @deprecated The unique_ptr version should be used instead
-   */
-  [[deprecated("The unique_ptr version should be used instead")]]
-  void
-  addInteriorShell(PolyhedralSurface *shell)
-  {
-    addInteriorShell(std::unique_ptr<PolyhedralSurface>(shell));
-  }
-  /**
    * @brief Adds an interior shell to the Solid.
    *
    * @param shell A unique pointer to the PolyhedralSurface object representing
@@ -231,20 +213,6 @@ public:
   setExteriorShell(const PolyhedralSurface &shell)
   {
     setExteriorShell(shell.clone());
-  }
-
-  /**
-   * @brief Sets the Solid exterior shell
-   * @param shell Pointer to PolyhedralSurface to set as exterior shell
-   * @note The ownership of the shell is taken. The caller is not responsible
-   * anymore of its deallocation.
-   * @deprecated The unique_ptr version should be used instead
-   */
-  [[deprecated("The unique_ptr version should be used instead")]]
-  void
-  setExteriorShell(PolyhedralSurface *shell)
-  {
-    setExteriorShell(std::unique_ptr<PolyhedralSurface>(shell));
   }
 
   /**

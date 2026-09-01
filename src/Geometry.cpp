@@ -119,13 +119,6 @@ Geometry::setGeometryN(const Geometry &geometry, size_t const &idx)
 }
 
 void
-Geometry::setGeometryN(Geometry *geometry, size_t const &idx)
-{
-  (void)geometry;
-  (void)idx;
-}
-
-void
 Geometry::setGeometryN([[maybe_unused]] std::unique_ptr<Geometry> geometry,
                        [[maybe_unused]] size_t const             &idx)
 {

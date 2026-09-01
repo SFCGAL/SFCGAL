@@ -180,12 +180,6 @@ GeometryCollection::setGeometryN(std::unique_ptr<Geometry> geometry,
 }
 
 void
-GeometryCollection::setGeometryN(Geometry *geometry, size_t const &idx)
-{
-  setGeometryN(std::unique_ptr<Geometry>(geometry), idx);
-}
-
-void
 GeometryCollection::setGeometryN(const Geometry &geometry, size_t const &idx)
 {
   setGeometryN(geometry.clone(), idx);
@@ -204,12 +198,6 @@ GeometryCollection::addGeometry(std::unique_ptr<Geometry> geometry)
   }
 
   _geometries.emplace_back(std::move(geometry));
-}
-
-void
-GeometryCollection::addGeometry(Geometry *geometry)
-{
-  addGeometry(std::unique_ptr<Geometry>(geometry));
 }
 
 void

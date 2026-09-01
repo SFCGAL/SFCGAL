@@ -217,19 +217,6 @@ public:
     addPoint(point.clone());
   }
   /**
-   * @brief Appends a Point to the LineString and takes ownership
-   *
-   * @param point A raw pointer to the Point object to append. Ownership of
-   * this point is moved into the LineString.
-   * @deprecated The unique_ptr version should be used instead
-   */
-  [[deprecated("The unique_ptr version should be used instead")]]
-  void
-  addPoint(Point *point)
-  {
-    addPoint(std::unique_ptr<Point>(point));
-  }
-  /**
    * @brief Appends a Point to the LineString
    *
    * @param point A unique pointer to the Point object to append. Ownership of

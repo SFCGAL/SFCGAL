@@ -125,14 +125,6 @@ public:
   /// @param idx Index where to set the geometry
   void
   setGeometryN(const Geometry &geometry, size_t const &idx) override;
-  //-- SFCGAL::Geometry
-  /// @brief Set the geometry at the given index (pointer version)
-  /// @param geometry Pointer to geometry to set
-  /// @param idx Index where to set the geometry
-  /// @deprecated The unique_ptr version should be used instead
-  [[deprecated("The unique_ptr version should be used instead")]]
-  void
-  setGeometryN(Geometry *geometry, size_t const &idx) override;
   /**
    * @brief [SFA/OGC] Sets the n-th geometry using unique_ptr
    * @param geometry Unique pointer to geometry to set
@@ -149,14 +141,6 @@ public:
    */
   void
   addGeometry(std::unique_ptr<Geometry> geometry);
-  /**
-   * @brief [SFA/OGC]add a geometry to the collection (takes ownership)
-   * @param geometry Pointer to geometry to add
-   * @deprecated The unique_ptr version should be used instead
-   */
-  [[deprecated("The unique_ptr version should be used instead")]]
-  void
-  addGeometry(Geometry *geometry);
   /**
    * @brief [SFA/OGC]add a geometry to the collection (clone instance)
    * @param geometry Const reference to geometry to clone and add

@@ -187,12 +187,6 @@ TriangulatedSurface::setPatchN(std::unique_ptr<Triangle> triangle,
 }
 
 void
-TriangulatedSurface::setPatchN(Triangle *triangle, size_t const &idx)
-{
-  setPatchN(std::unique_ptr<Triangle>(triangle), idx);
-}
-
-void
 TriangulatedSurface::setPatchN(const Triangle &triangle, size_t const &idx)
 {
   setPatchN(triangle.clone(), idx);
@@ -210,12 +204,6 @@ TriangulatedSurface::setPatchN(std::unique_ptr<Geometry> geometry,
   }
 
   setPatchN(geom_unique_ptr_as<Triangle>(std::move(geometry)), idx);
-}
-
-void
-TriangulatedSurface::setPatchN(Geometry *geometry, size_t const &idx)
-{
-  setPatchN(std::unique_ptr<Geometry>(geometry), idx);
 }
 
 void

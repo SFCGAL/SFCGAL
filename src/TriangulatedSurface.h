@@ -151,21 +151,6 @@ public:
   /**
    * @brief Adds a patch to the TriangulatedSurface.
    *
-   * @param patch A raw pointer to the Triangle object representing the new
-   * patch to add. Ownership of this patch is transferred to the
-   * TriangulatedSurface.
-   *
-   * @deprecated The unique_ptr version should be used instead
-   */
-  [[deprecated("The unique_ptr version should be used instead")]]
-  void
-  addPatch(Triangle *patch)
-  {
-    addPatch(std::unique_ptr<Triangle>(patch));
-  }
-  /**
-   * @brief Adds a patch to the TriangulatedSurface.
-   *
    * @param patch A unique pointer to the Triangle object representing the new
    * patch to add. Ownership of this patch is moved into the
    * TriangulatedSurface.
@@ -306,18 +291,6 @@ public:
    */
   void
   setPatchN(const Triangle &triangle, size_t const &idx);
-
-  /**
-   * Sets the n-th Patch, starting at zero
-   * The ownership of the polygon is taken. The caller is not responsible
-   * anymore of its deallocation.
-   * @param triangle Pointer to the triangle to set
-   * @param idx The index of the patch to set
-   * @deprecated The unique_ptr version should be used instead
-   */
-  [[deprecated("The unique_ptr version should be used instead")]]
-  void
-  setPatchN(Triangle *triangle, size_t const &idx);
 
   /**
    * @brief Sets the n-th patch in the TriangulatedSurface.
