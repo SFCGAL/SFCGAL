@@ -986,7 +986,7 @@ BOOST_AUTO_TEST_CASE(testBoundaryAlgorithm)
   // Use BoundaryVisitor directly following SFCGAL patterns
   algorithm::BoundaryVisitor visitor;
   openCurve.accept(visitor);
-  std::unique_ptr<Geometry> boundary(visitor.releaseBoundary());
+  std::unique_ptr<Geometry> boundary = visitor.releaseBoundary();
 
   BOOST_REQUIRE(boundary != nullptr);
   BOOST_CHECK(boundary->is<MultiPoint>());
@@ -1013,7 +1013,7 @@ BOOST_AUTO_TEST_CASE(testBoundaryAlgorithm)
 
   algorithm::BoundaryVisitor closedVisitor;
   closedCurve.accept(closedVisitor);
-  std::unique_ptr<Geometry> closedBoundary(closedVisitor.releaseBoundary());
+  std::unique_ptr<Geometry> closedBoundary = closedVisitor.releaseBoundary();
   BOOST_REQUIRE(closedBoundary != nullptr);
   BOOST_CHECK(closedBoundary->isEmpty() ||
               (closedBoundary->is<MultiPoint>() &&

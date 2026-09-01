@@ -126,11 +126,12 @@ public:
    * no internal boundary exists, a newly allocated empty GeometryCollection
    * is returned.
    *
-   * @return Geometry* Pointer to a non-null Geometry instance owned by the
-   * caller. The caller is responsible for deleting the returned object.
+   * @return std::unique_ptr<Geometry> A non-null Geometry instance, with
+   * ownership transferred to the caller. The returned unique_ptr manages
+   * the object's lifetime automatically; no manual deletion is needed.
    */
-  Geometry *
-  releaseBoundary();
+  auto
+  releaseBoundary() -> std::unique_ptr<Geometry>;
 
 protected:
   /**

@@ -205,12 +205,12 @@ BoundaryVisitor::visit(const NURBSCurve &g)
 }
 
 auto
-BoundaryVisitor::releaseBoundary() -> Geometry *
+BoundaryVisitor::releaseBoundary() -> std::unique_ptr<Geometry>
 {
   if (_boundary != nullptr) {
-    return _boundary.release();
+    return std::move(_boundary);
   }
-  return new GeometryCollection();
+  return std::make_unique<GeometryCollection>();
 }
 
 void
