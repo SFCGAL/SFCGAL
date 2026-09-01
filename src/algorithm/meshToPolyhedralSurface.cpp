@@ -91,10 +91,9 @@ meshToPolyhedralSurface(const Surface_mesh_3 &mesh, const Kernel::FT &epsAngle,
         rings.emplace_back(ring, signedArea);
       }
 
-      std::sort(rings.begin(), rings.end(),
-                [](const auto &a, const auto &b) -> auto {
-                  return CGAL::abs(a.second) > CGAL::abs(b.second);
-                });
+      std::ranges::sort(rings, [](const auto &a, const auto &b) -> auto {
+        return CGAL::abs(a.second) > CGAL::abs(b.second);
+      });
 
       for (std::size_t i = 0; i < rings.size(); ++i) {
         LineString       ring       = rings[i].first;
