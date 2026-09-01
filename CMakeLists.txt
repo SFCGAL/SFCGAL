@@ -9,6 +9,7 @@ project( SFCGAL VERSION ${SFCGAL_VERSION} )
 
 set( CMAKE_DEBUG_POSTFIX "d" )
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ignore system installed SFCGAL to avoid conflicts during build/edit
 list(APPEND CMAKE_IGNORE_PREFIX_PATH "/usr/include/SFCGAL")
