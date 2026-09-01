@@ -12,6 +12,7 @@
 #include <CGAL/exceptions.h>
 
 #include <algorithm>
+#include <array>
 #include <cstdio>
 
 inline auto
@@ -153,10 +154,11 @@ struct Surface_d<3> : Triangle_3 {
   }
 
   void
-  splitAt(const Triangle_3 &t)
+  splitAt(const Triangle_3 &triangle)
   {
-    const SFCGAL::Point_3 v[3] = {t.vertex(0), t.vertex(1), t.vertex(2)};
-    this->splitAt(v, v + 3);
+    const std::array<SFCGAL::Point_3, 3> vertices = {
+        triangle.vertex(0), triangle.vertex(1), triangle.vertex(2)};
+    this->splitAt(vertices.begin(), vertices.end());
   }
 
   void
@@ -190,10 +192,11 @@ struct Surface_d<3> : Triangle_3 {
   }
 
   void
-  remove(const Triangle_3 &t)
+  remove(const Triangle_3 &triangle)
   {
-    const SFCGAL::Point_3 v[3] = {t.vertex(0), t.vertex(1), t.vertex(2)};
-    this->remove(v, v + 3);
+    const std::array<SFCGAL::Point_3, 3> vertices = {
+        triangle.vertex(0), triangle.vertex(1), triangle.vertex(2)};
+    this->remove(vertices.begin(), vertices.end());
   }
 
   auto
