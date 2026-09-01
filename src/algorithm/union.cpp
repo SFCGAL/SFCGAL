@@ -13,7 +13,7 @@
 
 #include <algorithm>
 #include <array>
-#include <cstdio>
+#include <cstdint>
 
 inline auto
 DEBUG_OUT(std::source_location loc = std::source_location::current())
@@ -38,12 +38,12 @@ namespace SFCGAL::algorithm {
 
 struct EmptyPrimitive {};
 
-enum PrimitiveType {
-  PrimitivePoint   = 0,
-  PrimitiveSegment = 1,
-  PrimitiveSurface = 2,
-  PrimitiveVolume  = 3,
-  PrimitiveEmpty   = 4
+enum PrimitiveType : std::uint8_t {
+  PrimitivePoint,
+  PrimitiveSegment,
+  PrimitiveSurface,
+  PrimitiveVolume,
+  PrimitiveEmpty,
 };
 
 template <int Dim>
