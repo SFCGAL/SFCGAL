@@ -4,12 +4,18 @@
 #ifndef SFCGAL_DETAIL_ALGORITHM_SPLIT_3D_H_
 #define SFCGAL_DETAIL_ALGORITHM_SPLIT_3D_H_
 
+#include <concepts>
 #include <memory>
 
 #include "SFCGAL/GeometryCollection.h"
 #include "SFCGAL/Kernel.h"
 
 namespace SFCGAL::algorithm::detail {
+
+template <typename T>
+concept SurfaceMeshable = requires(const T &geometry) {
+  { geometry.toSurfaceMesh() } -> std::same_as<Surface_mesh_3>;
+};
 
 /**
  * Split the given geometry with a plane.
@@ -24,7 +30,7 @@ namespace SFCGAL::algorithm::detail {
  * @return A unique pointer to a GeometryCollection of the split parts
  * or the original geometry if the plane does not intersect it.
  */
-template <typename geomType>
+template <SurfaceMeshable geomType>
 auto
 split3D(const geomType &geometry, const CGAL::Plane_3<Kernel> &plane,
         bool closeGeometries) -> std::unique_ptr<GeometryCollection>;

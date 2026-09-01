@@ -12,7 +12,6 @@
 #include <CGAL/Polygon_mesh_processing/clip.h>
 #include <CGAL/Polygon_mesh_processing/connected_components.h>
 #include <CGAL/intersections.h>
-#include <memory>
 
 namespace PMP = CGAL::Polygon_mesh_processing;
 
@@ -46,7 +45,7 @@ isPlaneIntersectingGeometryBBox(const CGAL::Plane_3<Kernel> &plane,
          plane.oriented_side(normalVertex) != CGAL::ON_NEGATIVE_SIDE;
 }
 
-template <typename geomType>
+template <SurfaceMeshable geomType>
 auto
 split3D(const geomType &geometry, const CGAL::Plane_3<Kernel> &plane,
         bool closeGeometries) -> std::unique_ptr<GeometryCollection>
@@ -90,7 +89,7 @@ split3D(const geomType &geometry, const CGAL::Plane_3<Kernel> &plane,
     std::vector<Mesh> parts;
     PMP::split_connected_components(*resultMesh, parts);
     for (const auto &splitMesh : parts) {
-      if constexpr (std::is_same_v<geomType, Solid>) {
+      if constexpr (std::same_as<geomType, Solid>) {
         result->addGeometry(Solid(splitMesh));
       } else {
         result->addGeometry(PolyhedralSurface(splitMesh));
