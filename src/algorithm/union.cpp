@@ -354,6 +354,11 @@ class Handle {
     {
     }
 
+    // non copyable
+    ObservablePrimitive(const ObservablePrimitive &) = delete;
+    auto
+    operator=(const ObservablePrimitive &) -> ObservablePrimitive & = delete;
+
     template <class T>
     auto
     as() -> T &
@@ -363,12 +368,6 @@ class Handle {
 
     std::set<HandleState *>
         _observers; // this is for ref counting and handle updating
-
-  private:
-    // non copyable
-    ObservablePrimitive(const ObservablePrimitive &) = delete;
-    auto
-    operator=(const ObservablePrimitive &) -> ObservablePrimitive & = delete;
   };
 
   struct HandleState {
