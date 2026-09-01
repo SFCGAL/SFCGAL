@@ -704,8 +704,7 @@ simplifyMultiLineString(const MultiLineString &multiLine, double threshold,
     PS::simplify(ct, Cost(), Stop(threshold));
 
     // Sort constraints by original order
-    std::sort(constraintInfos.begin(), constraintInfos.end(),
-              ConstraintInfoCompare<Constraint_id>());
+    std::ranges::sort(constraintInfos, ConstraintInfoCompare<Constraint_id>());
 
     // Reconstruct simplified MultiLineString
     auto result = std::make_unique<MultiLineString>();
@@ -814,8 +813,7 @@ simplifyMultiPolygon(const MultiPolygon &multiPolygon, double threshold,
     PS::simplify(ct, Cost(), Stop(threshold));
 
     // Sort constraints by original order
-    std::sort(constraintInfos.begin(), constraintInfos.end(),
-              ConstraintInfoCompare<Constraint_id>());
+    std::ranges::sort(constraintInfos, ConstraintInfoCompare<Constraint_id>());
 
     // Create a GeometryCollection to use our reconstructAllGeometries function
     GeometryCollection tempCollection;
@@ -902,8 +900,7 @@ simplifyPolyhedralSurface(const PolyhedralSurface &polySurface,
     PS::simplify(ct, Cost(), Stop(threshold));
 
     // Sort constraints by original order
-    std::sort(constraintInfos.begin(), constraintInfos.end(),
-              ConstraintInfoCompare<Constraint_id>());
+    std::ranges::sort(constraintInfos, ConstraintInfoCompare<Constraint_id>());
 
     // Create a GeometryCollection to use our reconstructAllGeometries function
     GeometryCollection tempCollection;
@@ -1008,8 +1005,7 @@ simplifyGeometryCollectionTopology(const GeometryCollection &collection,
   PS::simplify(ct, Cost(), Stop(threshold));
 
   // Step 3: Sort constraints by original order
-  std::sort(constraintInfos.begin(), constraintInfos.end(),
-            ConstraintInfoCompare<Constraint_id>());
+  std::ranges::sort(constraintInfos, ConstraintInfoCompare<Constraint_id>());
 
   // Step 4: Create structures to hold matched geometry components
   std::map<size_t, std::unique_ptr<LineString>>  linestrings;
