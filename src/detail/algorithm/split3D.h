@@ -30,9 +30,9 @@ concept SurfaceMeshable = requires(const T &geometry) {
  * @return A unique pointer to a GeometryCollection of the split parts
  * or the original geometry if the plane does not intersect it.
  */
-template <SurfaceMeshable geomType>
+template <SurfaceMeshable GeomType>
 auto
-split3D(const geomType &geometry, const CGAL::Plane_3<Kernel> &plane,
+split3D(const GeomType &geometry, const CGAL::Plane_3<Kernel> &plane,
         bool closeGeometries) -> std::unique_ptr<GeometryCollection>;
 
 } // namespace SFCGAL::algorithm::detail

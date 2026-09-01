@@ -23,10 +23,10 @@ namespace SFCGAL::algorithm::detail {
 /// @{
 /// @privatesection
 
-template <typename geomType>
+template <typename GeomType>
 auto
 isPlaneIntersectingGeometryBBox(const CGAL::Plane_3<Kernel> &plane,
-                                const geomType              &geometry) -> bool
+                                const GeomType              &geometry) -> bool
 {
   const Envelope geomEnvelope = geometry.envelope();
 
@@ -45,9 +45,9 @@ isPlaneIntersectingGeometryBBox(const CGAL::Plane_3<Kernel> &plane,
          plane.oriented_side(normalVertex) != CGAL::ON_NEGATIVE_SIDE;
 }
 
-template <SurfaceMeshable geomType>
+template <SurfaceMeshable GeomType>
 auto
-split3D(const geomType &geometry, const CGAL::Plane_3<Kernel> &plane,
+split3D(const GeomType &geometry, const CGAL::Plane_3<Kernel> &plane,
         bool closeGeometries) -> std::unique_ptr<GeometryCollection>
 {
   if (geometry.isEmpty()) {
@@ -89,7 +89,7 @@ split3D(const geomType &geometry, const CGAL::Plane_3<Kernel> &plane,
     std::vector<Mesh> parts;
     PMP::split_connected_components(*resultMesh, parts);
     for (const auto &splitMesh : parts) {
-      if constexpr (std::same_as<geomType, Solid>) {
+      if constexpr (std::same_as<GeomType, Solid>) {
         result->addGeometry(Solid(splitMesh));
       } else {
         result->addGeometry(PolyhedralSurface(splitMesh));
