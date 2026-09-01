@@ -7,6 +7,7 @@
 #define SFCGAL_NUMERIC_H_
 
 #include <cmath>
+#include <concepts>
 #include <limits>
 
 #include "SFCGAL/export.h"
@@ -26,11 +27,10 @@ constexpr double EPSILON = 1e-8;
   #pragma gcc diagnostic ignored "-Wfloat-equal"
 #endif
 
-// TODO: switch to concept once c++20 support is enabled
 /// @private
 template <typename T>
-using isNumericValue = std::enable_if_t<std::is_same_v<T, double> ||
-                                        std::is_same_v<T, CGAL::Epeck::FT>>;
+concept NumericValue =
+    std::same_as<T, double> || std::same_as<T, CGAL::Epeck::FT>;
 
 /**
  * @brief Check if two values are almost equal within tolerance
@@ -39,7 +39,7 @@ using isNumericValue = std::enable_if_t<std::is_same_v<T, double> ||
  * @param absoluteTolerance Tolerance for comparison
  * @return true if values are almost equal, false otherwise
  */
-template <typename T, typename = isNumericValue<T>>
+template <NumericValue T>
 inline auto
 almostEqualAbsolute(const T first, const T second, const T absoluteTolerance)
     -> bool
@@ -70,7 +70,7 @@ almostEqualAbsolute(const T first, const T second, const T absoluteTolerance)
  * @param relativeTolerance Tolerance for comparison
  * @return true if values are almost equal, false otherwise
  */
-template <typename T, typename = isNumericValue<T>>
+template <NumericValue T>
 inline auto
 almostEqualRelative(const T first, const T second, const T relativeTolerance)
     -> bool
