@@ -158,25 +158,25 @@ public:
 
   /**
    * returns the n-th bound
-   * @param n The index of the bound (0=X, 1=Y, 2=Z)
+   * @param idx The index of the bound (0=X, 1=Y, 2=Z)
    * @return Reference to the nth interval bound
    */
   auto
-  boundsN(const size_t &n) -> detail::Interval &
+  boundsN(const size_t &idx) -> detail::Interval &
   {
-    BOOST_ASSERT(n < 3);
-    return _bounds[n];
+    BOOST_ASSERT(idx < 3);
+    return _bounds[idx];
   }
   /**
    * returns the n-th bound
-   * @param n The index of the bound (0=X, 1=Y, 2=Z)
+   * @param idx The index of the bound (0=X, 1=Y, 2=Z)
    * @return Const reference to the nth interval bound
    */
   [[nodiscard]] auto
-  boundsN(const size_t &n) const -> const detail::Interval &
+  boundsN(const size_t &idx) const -> const detail::Interval &
   {
-    BOOST_ASSERT(n < 3);
-    return _bounds[n];
+    BOOST_ASSERT(idx < 3);
+    return _bounds[idx];
   }
 
   /**
