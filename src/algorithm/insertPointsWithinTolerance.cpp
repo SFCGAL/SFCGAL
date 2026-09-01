@@ -142,11 +142,11 @@ insertPointsIntoLineString(const LineString         &lineString,
   }
 
   // Sort points by distance to ensure closer points are inserted first
-  std::sort(pointsToInsert.begin(), pointsToInsert.end(),
-            [](const std::pair<Point, double> &a,
-               const std::pair<Point, double> &b) -> bool {
-              return a.second < b.second;
-            });
+  std::ranges::sort(pointsToInsert,
+                    [](const std::pair<Point, double> &a,
+                       const std::pair<Point, double> &b) -> bool {
+                      return a.second < b.second;
+                    });
 
   // Insert points one by one
   for (const auto &pointPair : pointsToInsert) {
