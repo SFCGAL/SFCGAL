@@ -72,6 +72,7 @@ lint:clang-tidy:
       | python3 "$TIDY_DIFF" -p1 \
           -path=build \
           -use-color \
+          -j "$(nproc)" \
           -clang-tidy-binary /usr/bin/clang-tidy-19 \
           -export-fixes=errors.yml || true
     - test -f errors.yml || touch errors.yml
