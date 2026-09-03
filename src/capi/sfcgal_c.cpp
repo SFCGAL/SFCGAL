@@ -84,6 +84,7 @@
 #include "SFCGAL/algorithm/visibility.h"
 #include "SFCGAL/algorithm/volume.h"
 #include "SFCGAL/detail/transform/AffineTransform3.h"
+#include "SFCGAL/numeric.h"
 #include "SFCGAL/triangulate/triangulate2DZ.h"
 
 #include "SFCGAL/detail/transform/ForceOrderPoints.h"
@@ -1478,7 +1479,7 @@ sfcgal_geometry_is_planar(const sfcgal_geometry_t *geom) -> int
 
   try {
     isPlanar = SFCGAL::algorithm::isPlane3D<SFCGAL::Kernel>(
-        g->as<const SFCGAL::Polygon>(), 1e-9);
+        g->as<const SFCGAL::Polygon>(), SFCGAL::EPSILON_VALIDITY);
   } catch (std::exception &e) {
     SFCGAL_WARNING("During is_planar(A) :");
     SFCGAL_WARNING(
