@@ -185,10 +185,11 @@ isPlane3D(const Geometry &geom, const double &toleranceAbs) -> bool
 
   // the present approach is to find a good plane by:
   // - computing the centroid C of the point set
-  // - finding the farthest point F from C
-  // - finding the farthest point G from (CF)
-  // - we define the unit normal N to the plane from CFxCG
+  // - computing the unit normal N of the point sequence by Newell's formula
   // - we check that points Xi are in the plane CXi.N < tolerance
+  //
+  // F and G are still computed: they rule out the degenerate cases and give
+  // the fallback normal when Newell's sum vanishes
   //
   // note that we could compute the covarence matrix of the points and use SVD
   // but we would need a lib for that, and it may be overkill
@@ -198,16 +199,15 @@ isPlane3D(const Geometry &geom, const double &toleranceAbs) -> bool
   const auto end = visitor.points.end();
 
   // centroid
-  Vector_3 centroid(0, 0, 0);
-  int      numPoint = 0;
+  Vector_3          centroid(0, 0, 0);
+  const std::size_t numPoints = visitor.points.size();
 
   for (auto x = visitor.points.begin(); x != end; ++x) {
     centroid = centroid + (*x)->toVector_3();
-    ++numPoint;
   }
 
-  BOOST_ASSERT(numPoint);
-  centroid = centroid / numPoint;
+  BOOST_ASSERT(numPoints);
+  centroid = centroid / typename Kernel::FT(numPoints);
 
   // farthest point from centroid
   Vector_3            farthest      = centroid;
@@ -224,7 +224,6 @@ isPlane3D(const Geometry &geom, const double &toleranceAbs) -> bool
   }
 
   if (std::sqrt(CGAL::to_double(maxDistanceSq)) < toleranceAbs) {
-    // std::cout << "all points in the same location\n";
     return true;
   }
 
@@ -247,11 +246,35 @@ isPlane3D(const Geometry &geom, const double &toleranceAbs) -> bool
   }
 
   if (std::sqrt(CGAL::to_double(maxDistanceSq)) < toleranceAbs) {
-    // std::cout << "all points aligned\n";
     return true;
   }
 
-  const Vector_3 normal = CGAL::cross_product(centroidFarthest, g - centroid);
+  // Newell's formula: every edge contributes, which is exact on a planar
+  // outline and a least squares fit on a noisy one. A cross product uses three
+  // points only, and degrades as soon as they approach collinearity.
+  Vector_3 normal(0, 0, 0);
+  Vector_3 previous = visitor.points[numPoints - 1]->toVector_3();
+
+  for (std::size_t i = 0; i < numPoints; ++i) {
+    const Vector_3 current = visitor.points[i]->toVector_3();
+    normal =
+        normal +
+        Vector_3((previous.y() - current.y()) * (previous.z() + current.z()),
+                 (previous.z() - current.z()) * (previous.x() + current.x()),
+                 (previous.x() - current.x()) * (previous.y() + current.y()));
+    previous = current;
+  }
+
+  // Newell's sum vanishes when the outline encloses no area, for instance when
+  // it is traversed back and forth. Fall back on the three point estimate.
+  if (normal == CGAL::NULL_VECTOR) {
+    normal = CGAL::cross_product(centroidFarthest, g - centroid);
+  }
+
+  if (normal == CGAL::NULL_VECTOR) {
+    // points are collinear, hence trivially coplanar
+    return true;
+  }
 
   const Vector_3 nNormed =
       normal / std::sqrt(CGAL::to_double(normal.squared_length()));
@@ -260,12 +283,10 @@ isPlane3D(const Geometry &geom, const double &toleranceAbs) -> bool
     const Vector_3 cx = (*x)->toVector_3() - centroid;
 
     if (std::abs(CGAL::to_double(cx * nNormed)) > toleranceAbs) {
-      // std::cout << "point out of plane\n";
       return false;
     }
   }
 
-  // std::cout << "plane general case\n";
   return true;
 }
 
