@@ -5,6 +5,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <array>
+
 #include "SFCGAL/GeometryCollection.h"
 #include "SFCGAL/Kernel.h"
 #include "SFCGAL/LineString.h"
@@ -43,25 +45,36 @@ BOOST_AUTO_TEST_CASE(testPlane)
     const std::string _wkt;
     const bool        _isPlane;
   };
-  const TestCase test[] = {
-      {"LINESTRING (1 2 3,4 5 6)", true}, // only two points
-      {"LINESTRING (1 2 3,1 2 3,1 2 3,1 2 3)",
-       true}, // all points in the same place
-      {"LINESTRING (1 2 3,2 4 6,3 6 9,4 8 12)", true}, // all points aligned
-      {"LINESTRING (1 2 3,6 5 4,7 8 9)", true},        // triangle must be plane
-      {"LINESTRING (0 0 0,1 0 0,1 1 0,0 1 0,0 0 0)",
-       true}, // all point in the plane z=0
-      {"LINESTRING (2 1 0,2 0 0,2 1 0,2 1 0,2 0 3)",
-       true}, // all points in the plane x=2
-      {"LINESTRING (2 1 0,2 0 0,2 1 1,2 1 0,1 0 3)",
-       false}, // one point out of plane
-      {"LINESTRING (0 0 0, 1e-5 0 0, 1e-5 1e-5 0, 0 1e-5 1e-5)",
-       false}, // fix #247
-  };
-  const size_t numTest = sizeof(test) / sizeof(TestCase);
+  const std::array<TestCase, 11> test = {{
+      // only two points
+      {._wkt = "LINESTRING (1 2 3,4 5 6)", ._isPlane = true},
+      // all points in the same place
+      {._wkt = "LINESTRING (1 2 3,1 2 3,1 2 3,1 2 3)", ._isPlane = true},
+      // all points aligned
+      {._wkt = "LINESTRING (1 2 3,2 4 6,3 6 9,4 8 12)", ._isPlane = true},
+      // triangle must be plane
+      {._wkt = "LINESTRING (1 2 3,6 5 4,7 8 9)", ._isPlane = true},
+      // all point in the plane z=0
+      {._wkt = "LINESTRING (0 0 0,1 0 0,1 1 0,0 1 0,0 0 0)", ._isPlane = true},
+      // all points in the plane x=2
+      {._wkt = "LINESTRING (2 1 0,2 0 0,2 1 0,2 1 0,2 0 3)", ._isPlane = true},
+      // one point out of plane
+      {._wkt = "LINESTRING (2 1 0,2 0 0,2 1 1,2 1 0,1 0 3)", ._isPlane = false},
+      // fix #247
+      {._wkt     = "LINESTRING (0 0 0, 1e-5 0 0, 1e-5 1e-5 0, 0 1e-5 1e-5)",
+       ._isPlane = false},
+      // self crossing outline: Newell's sum vanishes, the three point estimate
+      // takes over
+      {._wkt = "LINESTRING (0 0 0,1 1 0,1 0 0,0 1 0,0 0 0)", ._isPlane = true},
+      // tilted plane x = z, with three nearly collinear vertices
+      {._wkt = "LINESTRING (0 0 0,4 0 4,4 1 4,3 1 3,2 1 2,1 1 1,0 1 0,0 0 0)",
+       ._isPlane = true},
+      // same outline, one vertex pushed out of the plane
+      {._wkt = "LINESTRING (0 0 0,4 0 4,4 1 4,3 1 3,2 1 2.5,1 1 1,0 1 0,0 0 0)",
+       ._isPlane = false},
+  }};
 
-  for (size_t t = 0; t != numTest; ++t) {
-    // std::cout << "test = " << t << "\n";
+  for (size_t t = 0; t != test.size(); ++t) {
     std::unique_ptr<Geometry> const g(io::readWkt(test[t]._wkt));
     const LineString               *l = dynamic_cast<LineString *>(g.get());
     BOOST_CHECK_MESSAGE(
