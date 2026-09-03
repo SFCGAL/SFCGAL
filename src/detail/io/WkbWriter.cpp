@@ -21,6 +21,7 @@
 #include "SFCGAL/Solid.h"
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/TriangulatedSurface.h"
+#include "SFCGAL/numeric.h"
 
 #include <boost/exception/all.hpp>
 #include <exception>
@@ -319,8 +320,9 @@ WkbWriter::writeInner(const NURBSCurve &geometry, boost::endian::order wkbOrder)
   // Write each control point with ISO WKB standard structure: [byte
   // order][coordinates][flag][weight?]
   for (size_t i = 0; i < geometry.numControlPoints(); i++) {
-    auto weight          = geometry.weight(i);
-    bool hasCustomWeight = (std::abs(CGAL::to_double(weight) - 1.0) > 1e-10);
+    auto weight = geometry.weight(i);
+    bool hasCustomWeight =
+        (std::abs(CGAL::to_double(weight) - 1.0) > EPSILON_DEGENERATE);
 
     // Write byte order for this control point (required by ISO/IEC
     // 13249-3:2016)
