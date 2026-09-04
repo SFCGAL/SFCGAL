@@ -53,7 +53,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-          sudo CI_PROJECT_DIR=/ ./ci/debian/before_install.sh 6.2
+          sudo CI_PROJECT_DIR=/ ./ci/debian/before_install.sh 6.2.1
 
     - name: Build
       run: |
