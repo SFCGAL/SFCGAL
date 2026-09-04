@@ -252,13 +252,13 @@ else()
 	message( STATUS "Boost_USE_MULTITHREAD=OFF" )
 endif()
 
-#-- minimalist build allowed with boost version 1.69 or newer
 set( SFCGAL_Boost_COMPONENTS thread serialization )
 #-- program_options
 if ( SFCGAL_BUILD_TESTS OR SFCGAL_BUILD_EXAMPLES )
 	set( SFCGAL_Boost_COMPONENTS unit_test_framework program_options ${SFCGAL_Boost_COMPONENTS} )
 endif()
-find_package( Boost 1.69.0 COMPONENTS ${SFCGAL_Boost_COMPONENTS} REQUIRED )
+#-- Boost 1.75 or newer is required for proper C++20 support in Boost.Numeric.uBLAS
+find_package( Boost 1.75.0 COMPONENTS ${SFCGAL_Boost_COMPONENTS} REQUIRED )
 
 if( SFCGAL_USE_STATIC_LIBS )
   add_definitions( "-DSFCGAL_USE_STATIC_LIBS" )
