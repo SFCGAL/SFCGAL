@@ -1,7 +1,27 @@
 # This image is used by pysfcgal to generate linux wheels
 # The wheels need to be compatible with glibc 2.35 (ubuntu 22.04 and forward)
 # Keep bookworm to ensure it
+FROM debian:bookworm-slim AS gcc-builder
+RUN apt update -qq && \
+    apt install --no-install-recommends --yes build-essential ca-certificates libgmp-dev libmpc-dev libmpfr-dev wget
+
+ARG GCC_VERSION=13.3.0
+WORKDIR /tmp
+RUN wget https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz && \
+    tar xf gcc-${GCC_VERSION}.tar.xz
+
+WORKDIR /tmp/gcc-${GCC_VERSION}/build
+RUN ../configure \
+    --prefix=/opt/gcc-13 \
+    --enable-languages=c,c++ \
+    --disable-multilib \
+    --disable-bootstrap && \
+    make -j$(nproc) && \
+    make install-strip
+
 FROM debian:bookworm-slim AS builder
+
+COPY --from=gcc-builder /opt/gcc-13 /opt/gcc-13
 
 WORKDIR /SFCGAL
 
@@ -16,19 +36,20 @@ RUN apt update -qq && \
 ARG CGAL_VERSION
 ENV CI_PROJECT_DIR=/opt
 RUN ./before_install.sh $CGAL_VERSION
+RUN apt install --no-install-recommends --yes libboost-serialization1.81-dev libboost-test1.81-dev libboost-thread1.81-dev
 
 RUN CGAL_DIR=${CI_PROJECT_DIR}/CGAL cmake -B build \
     -DSFCGAL_BUILD_TESTS=ON \
     -DSFCGAL_WITH_EIGEN=ON \
-    -DCMAKE_C_COMPILER=/usr/bin/gcc \
-    -DCMAKE_CXX_COMPILER=/usr/bin/g++ \
+    -DCMAKE_C_COMPILER=/opt/gcc-13/bin/gcc \
+    -DCMAKE_CXX_COMPILER=/opt/gcc-13/bin/g++ \
     -DCMAKE_BUILD_TYPE=Release && \
     cmake --build build -j$(nproc)
 
 FROM debian:bookworm-slim AS run
 
 RUN apt update -qq && \
-    apt install --no-install-recommends --yes libmpfr-dev libgmp-dev libboost-serialization-dev
+    apt install --no-install-recommends --yes libmpfr-dev libgmp-dev libboost-serialization1.81-dev
 
 WORKDIR /SFCGAL
 COPY --from=builder /SFCGAL/build /SFCGAL/build
