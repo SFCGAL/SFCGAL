@@ -32,19 +32,19 @@ using TEV =
     CGAL::Triangular_expansion_visibility_2<Arrangement_2, CGAL::Tag_true>;
 
 static auto
-query_visibility(Face_handle fh, Halfedge_const_handle he)
+query_visibility(Face_handle face, Halfedge_const_handle edge)
     -> std::unique_ptr<Polygon>
 {
 
   auto extRing = std::make_unique<LineString>();
   // Make sure the visibility polygon we find has an outer boundary
-  if (fh->has_outer_ccb()) {
-    Arrangement_2::Ccb_halfedge_circulator curr = fh->outer_ccb();
+  if (face->has_outer_ccb()) {
+    Arrangement_2::Ccb_halfedge_circulator curr = face->outer_ccb();
 
     // find the right halfedge first
-    if (he != Halfedge_const_handle()) {
-      while (++curr != fh->outer_ccb()) {
-        if (curr->source()->point() == he->source()->point()) {
+    if (edge != Halfedge_const_handle()) {
+      while (++curr != face->outer_ccb()) {
+        if (curr->source()->point() == edge->source()->point()) {
           break;
         }
       }
@@ -107,55 +107,56 @@ visibility(const Geometry &polygon, const Geometry &point,
   }
 
   // Find the face
-  CGAL::Arr_naive_point_location<Arrangement_2> const  pl(arr);
+  CGAL::Arr_naive_point_location<Arrangement_2> const  pointLocation(arr);
   CGAL::Arr_point_location_result<Arrangement_2>::Type obj =
-      pl.locate(queryPoint);
+      pointLocation.locate(queryPoint);
 
   Arrangement_2 output_arr;
-  Face_handle   fh;
+  Face_handle   face;
 
   // Create Triangular Expansion Visibility object.
   TEV const tev(arr);
   switch (obj.index()) {
   case 0: {
-    Halfedge_const_handle he = Halfedge_const_handle();
+    Halfedge_const_handle edge = Halfedge_const_handle();
 
     // If the point is in a boundary segment, find the corresponding half edge
-    he        = arr.halfedges_begin();
-    bool cont = !Segment_2(he->source()->point(), he->target()->point())
+    edge      = arr.halfedges_begin();
+    bool cont = !Segment_2(edge->source()->point(), edge->target()->point())
                      .has_on(queryPoint) ||
-                he->source()->point() == queryPoint ||
-                he->face()->is_unbounded();
+                edge->source()->point() == queryPoint ||
+                edge->face()->is_unbounded();
     // While we are not in the right half edge, or while q is the source,
     // continue
     while (cont) {
-      he++;
-      if (he == arr.halfedges_end()) {
+      edge++;
+      if (edge == arr.halfedges_end()) {
         throw Exception("Can not find corresponding half edge (from vertex).");
       }
 
-      cont = !Segment_2(he->source()->point(), he->target()->point())
+      cont = !Segment_2(edge->source()->point(), edge->target()->point())
                   .has_on(queryPoint) ||
-             he->source()->point() == queryPoint || he->face()->is_unbounded();
+             edge->source()->point() == queryPoint ||
+             edge->face()->is_unbounded();
     }
 
     // Use the half edge to compute the visibility
-    fh = tev.compute_visibility(queryPoint, he, output_arr);
+    face = tev.compute_visibility(queryPoint, edge, output_arr);
     break;
   }
   case 1: {
-    auto *he = std::get_if<Arrangement_2::Halfedge_const_handle>(&obj);
-    if (he != nullptr) {
-      fh = tev.compute_visibility(queryPoint, *he, output_arr);
+    auto *edge = std::get_if<Arrangement_2::Halfedge_const_handle>(&obj);
+    if (edge != nullptr) {
+      face = tev.compute_visibility(queryPoint, *edge, output_arr);
     } else {
       throw Exception("Can not find corresponding hedge.");
     }
     break;
   }
   case 2: {
-    auto *face = std::get_if<Arrangement_2::Face_const_handle>(&obj);
-    if ((face != nullptr) && !((*face)->is_unbounded())) {
-      fh = tev.compute_visibility(queryPoint, *face, output_arr);
+    auto *maybeFace = std::get_if<Arrangement_2::Face_const_handle>(&obj);
+    if ((maybeFace != nullptr) && !((*maybeFace)->is_unbounded())) {
+      face = tev.compute_visibility(queryPoint, *maybeFace, output_arr);
     } else {
       throw Exception("Can not find corresponding face.");
     }
@@ -165,7 +166,7 @@ visibility(const Geometry &polygon, const Geometry &point,
     break;
   }
 
-  return query_visibility(fh, fh->outer_ccb());
+  return query_visibility(face, face->outer_ccb());
 }
 auto
 visibility(const Geometry &polygon, const Geometry &pointA,
@@ -205,30 +206,33 @@ visibility(const Geometry &polygon, const Geometry &pointA,
   }
 
   // If the point is in a boundary segment, find the corresponding half edge
-  Halfedge_const_handle he = arr.halfedges_begin();
-  bool cont = !Segment_2(he->source()->point(), he->target()->point())
+  Halfedge_const_handle edge = arr.halfedges_begin();
+  bool cont = !Segment_2(edge->source()->point(), edge->target()->point())
                    .has_on(queryPoint) ||
-              he->source()->point() == startPoint ||
-              he->target()->point() == endPoint || he->face()->is_unbounded();
+              edge->source()->point() == startPoint ||
+              edge->target()->point() == endPoint ||
+              edge->face()->is_unbounded();
   // While we are not in the right half edge, or while q is the source,
   // continue
   while (cont) {
-    he++;
-    if (he == arr.halfedges_end()) {
+    edge++;
+    if (edge == arr.halfedges_end()) {
       throw Exception("Can not find corresponding half edge.");
     }
 
-    cont = !Segment_2(he->source()->point(), he->target()->point())
+    cont = !Segment_2(edge->source()->point(), edge->target()->point())
                 .has_on(queryPoint) ||
-           he->source()->point() == queryPoint || he->face()->is_unbounded();
+           edge->source()->point() == queryPoint ||
+           edge->face()->is_unbounded();
   }
 
   // visibility query
   Arrangement_2     output_arr;
   TEV const         tev(arr);
-  Face_handle const fh = tev.compute_visibility(endPoint, he, output_arr);
+  Face_handle const outFace =
+      tev.compute_visibility(endPoint, edge, output_arr);
 
-  return query_visibility(fh, he);
+  return query_visibility(outFace, edge);
 }
 
 } // namespace SFCGAL::algorithm
