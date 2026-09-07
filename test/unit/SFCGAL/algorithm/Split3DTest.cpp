@@ -87,10 +87,8 @@ BOOST_AUTO_TEST_CASE(testSplit_UShape)
 
 #if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 1, 0)
     const std::string cgal_version = "61";
-#elif SFCGAL_CGAL_VERSION_NUM == SFCGAL_CGAL_MAKE_VERSION(6, 0, 0)
-    const std::string cgal_version = "60";
 #else
-    const std::string cgal_version = "57";
+    const std::string cgal_version = "60";
 #endif
 
     componentData += "/data/split3D/ushapeComponent" + std::to_string(i) +

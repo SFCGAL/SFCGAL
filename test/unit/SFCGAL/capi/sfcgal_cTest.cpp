@@ -1744,15 +1744,8 @@ BOOST_AUTO_TEST_CASE(testAlphaWrapping3DTest)
       sfcgal_geometry_alpha_wrapping_3d(geomInput.get(), 20, 0);
 
   BOOST_REQUIRE(sfcgal_geometry_is_3d(geomAlphaWrapping));
-#if SFCGAL_CGAL_VERSION_MAJOR < 6
-  // 2304 on Linux
-  // 2306 on Mac/FreeBSD maybe other
-  BOOST_CHECK_GE(sfcgal_polyhedral_surface_num_patches(geomAlphaWrapping),
-                 2304);
-#else
   BOOST_CHECK_EQUAL(sfcgal_polyhedral_surface_num_patches(geomAlphaWrapping),
                     2386);
-#endif
 
   sfcgal_geometry_delete(geomAlphaWrapping);
 }
