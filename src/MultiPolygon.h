@@ -16,9 +16,7 @@
 #include "SFCGAL/Polygon.h"
 #include "SFCGAL/version.h"
 
-#if SFCGAL_CGAL_VERSION_MAJOR >= 6
-  #include <CGAL/Multipolygon_with_holes_2.h>
-#endif
+#include <CGAL/Multipolygon_with_holes_2.h>
 #include <CGAL/Polygon_with_holes_2.h>
 
 namespace SFCGAL {
@@ -40,13 +38,11 @@ public:
    */
   MultiPolygon(MultiPolygon const &other);
 
-#if SFCGAL_CGAL_VERSION_MAJOR >= 6
   /**
    * Constructor from CGAL::Multipolygon_with_holes_2<K>
    * @param other The CGAL multi-polygon to convert
    */
   MultiPolygon(const CGAL::Multipolygon_with_holes_2<Kernel> &other);
-#endif
 
   /**
    * assign operator
@@ -92,7 +88,6 @@ public:
     return geometryN(n).as<Polygon>();
   }
 
-#if SFCGAL_CGAL_VERSION_MAJOR >= 6
   /**
    * @brief Convert to CGAL::Multipolygon_with_holes_2
    * @param fixOrientation force exterior ring orientation to counter
@@ -102,7 +97,6 @@ public:
   [[nodiscard]] auto
   toMultipolygon_with_holes_2(bool fixOrientation = true) const
       -> CGAL::Multipolygon_with_holes_2<Kernel>;
-#endif
 
   //-- visitors
 
