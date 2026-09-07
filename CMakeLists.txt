@@ -190,7 +190,7 @@ if( ${CGAL_USE_AUTOLINK} )
 	add_definitions( "-DCGAL_NO_AUTOLINK" )
 endif()
 
-find_package( CGAL 5.6 COMPONENTS Core REQUIRED )
+find_package( CGAL 6.0 COMPONENTS Core REQUIRED )
 message( STATUS "CGAL ${CGAL_VERSION} found" )
 
 set(CGAL_3RD_PARTY_LIBRARIES CGAL::CGAL CGAL::CGAL_Core)

@@ -116,12 +116,7 @@ visibility(const Geometry &polygon, const Geometry &point,
 
   // Create Triangular Expansion Visibility object.
   TEV const tev(arr);
-#if CGAL_VERSION_MAJOR < 6
-  switch (obj.which())
-#else
-  switch (obj.index())
-#endif
-  {
+  switch (obj.index()) {
   case 0: {
     Halfedge_const_handle he = Halfedge_const_handle();
 
@@ -149,12 +144,7 @@ visibility(const Geometry &polygon, const Geometry &point,
     break;
   }
   case 1: {
-    auto *he =
-#if CGAL_VERSION_MAJOR < 6
-        boost::get<Arrangement_2::Halfedge_const_handle>(&obj);
-#else
-        std::get_if<Arrangement_2::Halfedge_const_handle>(&obj);
-#endif
+    auto *he = std::get_if<Arrangement_2::Halfedge_const_handle>(&obj);
     if (he != nullptr) {
       fh = tev.compute_visibility(queryPoint, *he, output_arr);
     } else {
@@ -163,12 +153,7 @@ visibility(const Geometry &polygon, const Geometry &point,
     break;
   }
   case 2: {
-    auto *face =
-#if CGAL_VERSION_MAJOR < 6
-        boost::get<Arrangement_2::Face_const_handle>(&obj);
-#else
-        std::get_if<Arrangement_2::Face_const_handle>(&obj);
-#endif
+    auto *face = std::get_if<Arrangement_2::Face_const_handle>(&obj);
     if ((face != nullptr) && !((*face)->is_unbounded())) {
       fh = tev.compute_visibility(queryPoint, *face, output_arr);
     } else {

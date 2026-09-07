@@ -50,14 +50,6 @@ namespace SFCGAL::algorithm {
 using Straight_skeleton_2 = CGAL::Straight_skeleton_2<Kernel>;
 using Arrangement_2 = CGAL::Arrangement_2<CGAL::Arr_segment_traits_2<Kernel>>;
 
-#if CGAL_VERSION_MAJOR < 6
-template <class T>
-using SHARED_PTR = boost::shared_ptr<T>;
-#else
-template <class T>
-using SHARED_PTR = std::shared_ptr<T>;
-#endif
-
 namespace { // anonymous
 
 template <class K, bool outputDistanceInM>
@@ -322,14 +314,14 @@ straightSkeletonToMedialAxis(const CGAL::Straight_skeleton_2<K> &skeleton,
 
 auto
 straightSkeleton(const Polygon_with_holes_2 &poly)
-    -> SHARED_PTR<Straight_skeleton_2>
+    -> std::shared_ptr<Straight_skeleton_2>
 {
-  SHARED_PTR<CGAL::Straight_skeleton_2<CGAL::Epick>> const skeletonEpick =
+  std::shared_ptr<CGAL::Straight_skeleton_2<CGAL::Epick>> const skeletonEpick =
       CGAL::create_interior_straight_skeleton_2(
           poly.outer_boundary().vertices_begin(),
           poly.outer_boundary().vertices_end(), poly.holes_begin(),
           poly.holes_end(), CGAL::Epick());
-  SHARED_PTR<Straight_skeleton_2> ret;
+  std::shared_ptr<Straight_skeleton_2> ret;
   if (skeletonEpick) {
     ret =
         CGAL::convert_straight_skeleton_2<Straight_skeleton_2>(*skeletonEpick);
@@ -465,9 +457,10 @@ straightSkeleton(const Polygon &geom, bool /*autoOrientation*/, bool innerOnly,
     return result;
   }
 
-  Kernel::Vector_2                      trans;
-  Polygon_with_holes_2 const            polygon  = preparePolygon(geom, trans);
-  SHARED_PTR<Straight_skeleton_2> const skeleton = straightSkeleton(polygon);
+  Kernel::Vector_2           trans;
+  Polygon_with_holes_2 const polygon = preparePolygon(geom, trans);
+  std::shared_ptr<Straight_skeleton_2> const skeleton =
+      straightSkeleton(polygon);
 
   if (skeleton == nullptr) {
     throw Exception("CGAL failed to create straightSkeleton");
@@ -494,7 +487,8 @@ straightSkeleton(const MultiPolygon &geom, bool /*autoOrientation*/,
     Kernel::Vector_2           trans;
     Polygon_with_holes_2 const polygon =
         preparePolygon(geom.polygonN(i), trans);
-    SHARED_PTR<Straight_skeleton_2> const skeleton = straightSkeleton(polygon);
+    std::shared_ptr<Straight_skeleton_2> const skeleton =
+        straightSkeleton(polygon);
 
     if (skeleton == nullptr) {
       throw Exception("CGAL failed to create straightSkeleton");
@@ -531,7 +525,7 @@ approximateMedialAxis(const Geometry &geom, bool projectToEdges)
     Kernel::Vector_2 trans;
     try {
       Polygon_with_holes_2 const polygon = preparePolygon(poly, trans);
-      SHARED_PTR<Straight_skeleton_2> const skeleton =
+      std::shared_ptr<Straight_skeleton_2> const skeleton =
           straightSkeleton(polygon);
 
       if (skeleton == nullptr) {
@@ -811,9 +805,10 @@ straightSkeletonPartition(const Polygon &geom, bool /*autoOrientation*/)
     return result;
   }
 
-  Kernel::Vector_2                      trans;
-  Polygon_with_holes_2 const            polygon  = preparePolygon(geom, trans);
-  SHARED_PTR<Straight_skeleton_2> const skeleton = straightSkeleton(polygon);
+  Kernel::Vector_2           trans;
+  Polygon_with_holes_2 const polygon = preparePolygon(geom, trans);
+  std::shared_ptr<Straight_skeleton_2> const skeleton =
+      straightSkeleton(polygon);
 
   if (skeleton == nullptr) {
     throw Exception("CGAL failed to create straightSkeleton");
