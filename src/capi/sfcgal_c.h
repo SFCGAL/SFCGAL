@@ -2998,7 +2998,6 @@ SFCGAL_API sfcgal_primitive_t *
 sfcgal_primitive_scale(const sfcgal_primitive_t *primitive, double sx,
                        double sy, double sz, double cx, double cy, double cz);
 
-#if SFCGAL_CGAL_VERSION_MAJOR >= 6
 /**
  * Polygon repair rules
  * @ingroup capi
@@ -3022,15 +3021,12 @@ typedef enum {
  * @pre geom must be a Polygon or MultiPolygon
  * @post The returned geometry must be deallocated by the caller
  * @note Returns NULL on error
- * @note CGAL 6.0+ required for polygon repair functionality
  * @note CGAL 6.1+ required for NON_ZERO, UNION, and INTERSECTION rules
  * @ingroup capi
  */
 SFCGAL_API sfcgal_geometry_t *
 sfcgal_geometry_polygon_repair(const sfcgal_geometry_t     *geom,
                                sfcgal_polygon_repair_rule_t repair_rule);
-
-#endif // SFCGAL_CGAL_VERSION_MAJOR >= 6
 
 /**
  * Splits the given geometry with a plane defined by a point and a normal

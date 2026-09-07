@@ -7,11 +7,9 @@
 #include "SFCGAL/config.h"
 #include "SFCGAL/version.h"
 
-#if SFCGAL_CGAL_VERSION_MAJOR >= 6
-
-  #include "SFCGAL/Geometry.h"
-  #include <cstdint>
-  #include <memory>
+#include "SFCGAL/Geometry.h"
+#include <cstdint>
+#include <memory>
 
 namespace SFCGAL {
 
@@ -68,7 +66,5 @@ polygonRepair(const Geometry   &geometry,
 
 } // namespace algorithm
 } // namespace SFCGAL
-
-#endif // SFCGAL_CGAL_VERSION_MAJOR >= 6
 
 #endif // SFCGAL_ALGORITHM_POLYGONREPAIR_H_

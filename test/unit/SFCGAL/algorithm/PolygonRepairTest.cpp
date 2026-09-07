@@ -5,20 +5,18 @@
 #include "SFCGAL/config.h"
 #include "SFCGAL/version.h"
 
-#if SFCGAL_CGAL_VERSION_MAJOR >= 6
+#include <memory>
 
-  #include <memory>
+#include <SFCGAL/Exception.h>
+#include <SFCGAL/LineString.h>
+#include <SFCGAL/MultiPolygon.h>
+#include <SFCGAL/Point.h>
+#include <SFCGAL/Polygon.h>
+#include <SFCGAL/Triangle.h>
+#include <SFCGAL/algorithm/polygonRepair.h>
+#include <SFCGAL/io/wkt.h>
 
-  #include <SFCGAL/Exception.h>
-  #include <SFCGAL/LineString.h>
-  #include <SFCGAL/MultiPolygon.h>
-  #include <SFCGAL/Point.h>
-  #include <SFCGAL/Polygon.h>
-  #include <SFCGAL/Triangle.h>
-  #include <SFCGAL/algorithm/polygonRepair.h>
-  #include <SFCGAL/io/wkt.h>
-
-  #include <boost/test/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 using namespace boost::unit_test;
 
 using namespace SFCGAL;
@@ -149,7 +147,7 @@ BOOST_AUTO_TEST_CASE(testRepairRules)
                     "MULTIPOLYGON (((0.00 0.00,1.00 1.00,0.00 2.00,0.00 "
                     "0.00)),((1.00 1.00,2.00 0.00,2.00 2.00,1.00 1.00)))");
 
-  #if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 1, 0)
+#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 1, 0)
   // Test non-zero rule
   auto non_zero = polygonRepair(*polygon, PolygonRepairRule::NON_ZERO_RULE);
   BOOST_CHECK_EQUAL(non_zero->asText(2),
@@ -168,7 +166,7 @@ BOOST_AUTO_TEST_CASE(testRepairRules)
   BOOST_CHECK_EQUAL(
       intersection->asText(2),
       "MULTIPOLYGON (((0.00 0.00,1.00 1.00,0.00 2.00,0.00 0.00)))");
-  #endif
+#endif
 }
 
 /**
@@ -181,7 +179,7 @@ BOOST_AUTO_TEST_CASE(testUnsupportedGeometry)
   BOOST_CHECK_THROW(polygonRepair(*point), SFCGAL::Exception);
 }
 
-  #if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 1, 0)
+#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 1, 0)
 /**
  * Test overlapping polygons in multipolygon
  */
@@ -198,7 +196,7 @@ BOOST_AUTO_TEST_CASE(testOverlappingMultiPolygon)
       "MULTIPOLYGON (((0.00 0.00,2.00 0.00,2.00 1.00,3.00 1.00,3.00 "
       "3.00,1.00 3.00,1.00 2.00,0.00 2.00,0.00 0.00)))");
 }
-  #endif
+#endif
 
 /**
  * Test with invalid orientation
@@ -240,5 +238,3 @@ BOOST_AUTO_TEST_CASE(testPolygonWithDuplicates)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif // SFCGAL_CGAL_VERSION_MAJOR >= 6

@@ -4,19 +4,17 @@
 #include "SFCGAL/config.h"
 #include "SFCGAL/version.h"
 
-#if SFCGAL_CGAL_VERSION_MAJOR >= 6
+#include "SFCGAL/Exception.h"
+#include "SFCGAL/Geometry.h"
+#include "SFCGAL/Kernel.h"
+#include "SFCGAL/MultiPolygon.h"
+#include "SFCGAL/Polygon.h"
+#include "SFCGAL/algorithm/polygonRepair.h"
 
-  #include "SFCGAL/Exception.h"
-  #include "SFCGAL/Geometry.h"
-  #include "SFCGAL/Kernel.h"
-  #include "SFCGAL/MultiPolygon.h"
-  #include "SFCGAL/Polygon.h"
-  #include "SFCGAL/algorithm/polygonRepair.h"
-
-  #include <CGAL/Multipolygon_with_holes_2.h>
-  #include <CGAL/Polygon_2.h>
-  #include <CGAL/Polygon_repair/repair.h>
-  #include <CGAL/Polygon_with_holes_2.h>
+#include <CGAL/Multipolygon_with_holes_2.h>
+#include <CGAL/Polygon_2.h>
+#include <CGAL/Polygon_repair/repair.h>
+#include <CGAL/Polygon_with_holes_2.h>
 
 using Kernel                    = SFCGAL::Kernel;
 using Point_2                   = Kernel::Point_2;
@@ -50,7 +48,7 @@ repairWithRule(const Multipolygon_with_holes_2     &mp,
   case SFCGAL::algorithm::PolygonRepairRule::EVEN_ODD_RULE:
     return applyRepairWithRule(mp, CGAL::Polygon_repair::Even_odd_rule());
 
-  #if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 1, 0)
+#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 1, 0)
   case SFCGAL::algorithm::PolygonRepairRule::NON_ZERO_RULE:
     return applyRepairWithRule(mp, CGAL::Polygon_repair::Non_zero_rule());
 
@@ -59,7 +57,7 @@ repairWithRule(const Multipolygon_with_holes_2     &mp,
 
   case SFCGAL::algorithm::PolygonRepairRule::INTERSECTION_RULE:
     return applyRepairWithRule(mp, CGAL::Polygon_repair::Intersection_rule());
-  #endif
+#endif
   default:
     throw SFCGAL::Exception("Unknown polygon repair rule");
   }
@@ -129,5 +127,3 @@ polygonRepair(const Geometry &geometry, PolygonRepairRule repairRule)
 }
 
 } // namespace SFCGAL::algorithm
-
-#endif // SFCGAL_CGAL_VERSION_MAJOR >= 6

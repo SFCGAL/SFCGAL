@@ -2553,7 +2553,6 @@ BOOST_AUTO_TEST_CASE(testPrimitiveTransformTest)
   }
 }
 
-#if SFCGAL_CGAL_VERSION_MAJOR >= 6
 BOOST_AUTO_TEST_CASE(testPolygonRepairTest)
 {
   // Test with a self-intersecting (bowtie) polygon
@@ -2583,7 +2582,6 @@ BOOST_AUTO_TEST_CASE(testPolygonRepairTest)
 
   sfcgal_geometry_delete(repaired);
 }
-#endif // SFCGAL_CGAL_VERSION_MAJOR >= 6
 
 BOOST_AUTO_TEST_CASE(testProjectedMedialAxis)
 {

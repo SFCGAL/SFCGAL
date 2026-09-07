@@ -70,9 +70,7 @@
 #include "SFCGAL/algorithm/offset.h"
 #include "SFCGAL/algorithm/partition_2.h"
 #include "SFCGAL/algorithm/plane.h"
-#if SFCGAL_CGAL_VERSION_MAJOR >= 6
-  #include "SFCGAL/algorithm/polygonRepair.h"
-#endif
+#include "SFCGAL/algorithm/polygonRepair.h"
 #include "SFCGAL/algorithm/roofGeneration.h"
 #include "SFCGAL/algorithm/rotate.h"
 #include "SFCGAL/algorithm/scale.h"
@@ -3649,7 +3647,6 @@ sfcgal_nurbs_curve_to_linestring_adaptive(const sfcgal_geometry_t *curve,
       return static_cast<SFCGAL::Geometry *>(lineString.release());)
 }
 
-#if SFCGAL_CGAL_VERSION_MAJOR >= 6
 extern "C" auto
 sfcgal_geometry_polygon_repair(const sfcgal_geometry_t     *geom,
                                sfcgal_polygon_repair_rule_t repair_rule)
@@ -3674,30 +3671,30 @@ sfcgal_geometry_polygon_repair(const sfcgal_geometry_t     *geom,
       break;
 
     case SFCGAL_POLYGON_REPAIR_NON_ZERO:
-  #if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 1, 0)
+#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 1, 0)
       rule = SFCGAL::algorithm::PolygonRepairRule::NON_ZERO_RULE;
-  #else
+#else
       SFCGAL_ERROR("NON_ZERO rule requires CGAL 6.1 or later");
       return nullptr;
-  #endif
+#endif
       break;
 
     case SFCGAL_POLYGON_REPAIR_UNION:
-  #if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 1, 0)
+#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 1, 0)
       rule = SFCGAL::algorithm::PolygonRepairRule::UNION_RULE;
-  #else
+#else
       SFCGAL_ERROR("UNION rule requires CGAL 6.1 or later");
       return nullptr;
-  #endif
+#endif
       break;
 
     case SFCGAL_POLYGON_REPAIR_INTERSECTION:
-  #if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 1, 0)
+#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 1, 0)
       rule = SFCGAL::algorithm::PolygonRepairRule::INTERSECTION_RULE;
-  #else
+#else
       SFCGAL_ERROR("INTERSECTION rule requires CGAL 6.1 or later");
       return nullptr;
-  #endif
+#endif
       break;
 
     default:
@@ -3717,7 +3714,6 @@ sfcgal_geometry_polygon_repair(const sfcgal_geometry_t     *geom,
 
   return reinterpret_cast<sfcgal_geometry_t *>(result.release());
 }
-#endif // SFCGAL_CGAL_VERSION_MAJOR >= 6
 
 extern "C" auto
 sfcgal_geometry_projected_medial_axis(const sfcgal_geometry_t *geom)

@@ -8,9 +8,7 @@
 #include "SFCGAL/algorithm/force2D.h"
 #include "SFCGAL/algorithm/force3D.h"
 #include "SFCGAL/algorithm/forceMeasured.h"
-#if SFCGAL_CGAL_VERSION_MAJOR >= 6
-  #include "SFCGAL/algorithm/polygonRepair.h"
-#endif
+#include "SFCGAL/algorithm/polygonRepair.h"
 #include "SFCGAL/algorithm/rotate.h"
 #include "SFCGAL/algorithm/scale.h"
 #include "SFCGAL/algorithm/simplification.h"
@@ -152,7 +150,6 @@ const std::vector<Operation> operations_transformations = {
        return result;
      }},
 
-#if SFCGAL_CGAL_VERSION_MAJOR >= 6
     {"polygon_repair", "Transformations", "Repair invalid polygons with rules",
      false,
      "Parameters:\n  method=0|1|2|3 (default: 0)\n\nMethods:\n  0 = "
@@ -184,7 +181,6 @@ const std::vector<Operation> operations_transformations = {
 
        return SFCGAL::algorithm::polygonRepair(*geom_a, rule);
      }},
-#endif // SFCGAL_CGAL_VERSION_MAJOR >= 6
 
     {"rotate", "Transformations", "Rotate geometry around specified axis",
      false,
