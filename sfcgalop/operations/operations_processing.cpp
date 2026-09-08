@@ -3,6 +3,7 @@
 
 #include "operations_processing.hpp"
 #include "SFCGAL/algorithm/Chamfer.h"
+#include "SFCGAL/algorithm/eliminateSlivers.h"
 
 #include "SFCGAL/Geometry.h"
 
@@ -72,6 +73,30 @@ get_operations_processing() -> const std::vector<Operation> &
            std::cerr << "chamfer error: " << e.what() << "\n";
            return std::nullopt;
          }
+       }},
+
+      {"eliminate_slivers", "Processing",
+       "Collapse the sliver faces of a volumic geometry", false,
+       "A boolean operation on coordinates that were rounded beforehand leaves "
+       "needle faces as large as that rounding. They are valid, and degenerate "
+       "as soon as the geometry is written with a coarser precision. This "
+       "operation collapses the former and drops the latter.\n\n"
+       "Parameters:\n"
+       "  tolerance=VALUE: Longest edge a collapse may consume, in the unit of "
+       "the coordinates\n"
+       "                   (default: 1e-10 of the diagonal of the bounding "
+       "box)\n\n"
+       "Examples:\n"
+       "  sfcgalop -a \"SOLID Z (...)\" eliminate_slivers\n"
+       "  # a difference of geometries written with 6 decimals\n"
+       "  sfcgalop -a \"SOLID Z (...)\" eliminate_slivers \"tolerance=1e-6\"",
+       "A, params", "G",
+       [](const std::string &args, const SFCGAL::Geometry *geom_a,
+          const SFCGAL::Geometry *) -> std::optional<OperationResult> {
+         auto         params = parse_params(args);
+         const double tolerance =
+             params.count("tolerance") != 0 ? params["tolerance"] : 0.0;
+         return SFCGAL::algorithm::eliminateSlivers(*geom_a, tolerance);
        }}};
 
   return operations_processing;
