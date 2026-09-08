@@ -18,6 +18,7 @@
 #include "SFCGAL/algorithm/intersection.h"
 #include "SFCGAL/algorithm/intersects.h"
 #include "SFCGAL/detail/GeometrySet.h"
+#include "SFCGAL/detail/algorithm/collapseSlivers.h"
 #include "SFCGAL/detail/triangulate/triangulateInGeometrySet.h"
 
 #include <CGAL/IO/Polyhedron_iostream.h>
@@ -297,6 +298,7 @@ _intersection_solid_solid(const MarkedPolyhedron &polyhedron_a,
     try {
       if (CGAL::Polygon_mesh_processing::corefine_and_compute_intersection(
               polya, polyb, polya)) {
+        detail::algorithm::collapseSlivers(polya);
         if (std::next(vertices(polya).first) != vertices(polya).second) {
           output.addPrimitive(polya);
         }

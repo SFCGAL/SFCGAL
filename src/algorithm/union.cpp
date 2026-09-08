@@ -7,6 +7,7 @@
 #include "SFCGAL/algorithm/differencePrimitives.h"
 #include "SFCGAL/algorithm/intersection.h"
 #include "SFCGAL/algorithm/isValid.h"
+#include "SFCGAL/detail/algorithm/collapseSlivers.h"
 #include "SFCGAL/triangulate/triangulate2DZ.h"
 
 #include <CGAL/exceptions.h>
@@ -872,6 +873,10 @@ union_volume_volume(Handle<3> a, Handle<3> b)
       bool const res =
           CGAL::Polygon_mesh_processing::corefine_and_compute_union(p, q,
                                                                     output);
+
+      if (res) {
+        detail::algorithm::collapseSlivers(output);
+      }
 
       if (res && std::next(vertices(output).first) != vertices(output).second) {
         Handle<3> merged(output);

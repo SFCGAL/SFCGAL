@@ -10,6 +10,7 @@
 #include "SFCGAL/Polygon.h"
 #include "SFCGAL/TriangulatedSurface.h"
 #include "SFCGAL/detail/GeometrySet.h"
+#include "SFCGAL/detail/algorithm/collapseSlivers.h"
 #include "SFCGAL/triangulate/triangulatePolygon.h"
 
 #include <CGAL/Boolean_set_operations_2.h>
@@ -525,6 +526,7 @@ difference(const MarkedPolyhedron &polyA, const MarkedPolyhedron &polyB,
   try {
     if (CGAL::Polygon_mesh_processing::corefine_and_compute_difference(
             meshP, meshQ, meshP)) {
+      detail::algorithm::collapseSlivers(meshP);
       if (std::next(vertices(meshP).first) != vertices(meshP).second) {
         *out++ = meshP;
       }
