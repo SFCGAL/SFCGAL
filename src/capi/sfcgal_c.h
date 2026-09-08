@@ -1816,6 +1816,37 @@ SFCGAL_API sfcgal_geometry_t *
 sfcgal_geometry_insert_points_within_tolerance(const sfcgal_geometry_t *base,
                                                const sfcgal_geometry_t *source,
                                                double tolerance);
+
+/**
+ * Collapses the sliver faces of a volumic geometry.
+ *
+ * A boolean operation is computed exactly, on geometries that are not: a
+ * geometry built in floating point only touches its neighbour approximately,
+ * so the intersection points land a rounding error away from the vertices they
+ * should coincide with. The needle faces between them are valid on their own,
+ * and fail later, when the shell is triangulated again or written with a
+ * precision coarser than their own size. Coordinates rounded before the
+ * operation widen those needles to the scale of that rounding.
+ *
+ * A geometry already written with such a coarser precision is repaired too:
+ * both ends of a needle then share the same coordinates, which folds its ring
+ * onto itself and leaves a patch without a plane. Those patches are dropped
+ * first, they carried no area.
+ *
+ * Solids, polyhedral surfaces and triangulated surfaces are repaired, in place
+ * for every shell; collections are walked through. Any other geometry is
+ * returned unchanged. The result is triangulated.
+ *
+ * @param geom The geometry to repair
+ * @param max_edge_length Longest edge a collapse may consume, in the unit of
+ * the coordinates. Zero or less asks for the default used by the boolean
+ * operations, 1e-10 of the diagonal of the bounding box.
+ * @return A repaired geometry, or NULL on error
+ * @ingroup capi
+ */
+SFCGAL_API sfcgal_geometry_t *
+sfcgal_geometry_eliminate_slivers(const sfcgal_geometry_t *geom,
+                                  double                   max_edge_length);
 /**
  * Returns the 3D minkowski sum geom1 + geom2
  *

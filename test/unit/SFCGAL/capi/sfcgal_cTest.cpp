@@ -4,8 +4,11 @@
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
 #include "SFCGAL/capi/sfcgal_c.h"
+#include "SFCGAL/PolyhedralSurface.h"
 #include "SFCGAL/Solid.h"
+#include "SFCGAL/algorithm/difference.h"
 #include "SFCGAL/io/wkt.h"
+#include "SFCGAL/primitive3d/Cylinder.h"
 
 #include "SFCGAL/config.h"
 #include "SFCGAL/version.h"
@@ -2721,6 +2724,53 @@ BOOST_AUTO_TEST_CASE(testInsertPointsWithinTolerance)
   BOOST_CHECK_EQUAL(std::string(wkt3), "POLYGON ((0 0,2 0,4 0,4 4,0 4,0 0))");
   sfcgal_free_buffer(wkt3);
   sfcgal_geometry_delete(result3);
+}
+
+BOOST_AUTO_TEST_CASE(testEliminateSlivers)
+{
+  sfcgal_set_error_handlers(printf, on_error);
+
+  // Two coaxial cylinders whose coordinates were rounded to six decimals: the
+  // rounding broke the incidences they had, so the difference holds needle
+  // faces of about 2.5e-7, and writing it back at six decimals folds them.
+  std::unique_ptr<Geometry> outer(
+      Cylinder(100.0, 30.0).generatePolyhedralSurface().clone());
+  std::unique_ptr<Geometry> inner(
+      Cylinder(70.0, 30.0).generatePolyhedralSurface().clone());
+  outer->round(1000000);
+  inner->round(1000000);
+
+  std::unique_ptr<Geometry> ring(
+      algorithm::difference3D(Solid(outer->as<PolyhedralSurface>()),
+                              Solid(inner->as<PolyhedralSurface>())));
+  ring->round(1000000);
+  BOOST_REQUIRE(sfcgal_geometry_is_valid(ring.get()) == 0);
+
+  hasError = false;
+  sfcgal_geometry_t *result =
+      sfcgal_geometry_eliminate_slivers(ring.get(), 0.0);
+
+  BOOST_CHECK(!hasError);
+  BOOST_REQUIRE(result != nullptr);
+  BOOST_CHECK(sfcgal_geometry_is_valid(result) == 1);
+  sfcgal_geometry_delete(result);
+
+  // A geometry without slivers comes back untouched
+  std::unique_ptr<Geometry> square(
+      io::readWkt("POLYGON ((0 0,1 0,1 1,0 1,0 0))"));
+
+  hasError = false;
+  sfcgal_geometry_t *plain =
+      sfcgal_geometry_eliminate_slivers(square.get(), 0.0);
+
+  BOOST_CHECK(!hasError);
+  BOOST_REQUIRE(plain != nullptr);
+  char  *wkt = nullptr;
+  size_t len = 0;
+  sfcgal_geometry_as_text_decim(plain, 0, &wkt, &len);
+  BOOST_CHECK_EQUAL(std::string(wkt), "POLYGON ((0 0,1 0,1 1,0 1,0 0))");
+  sfcgal_free_buffer(wkt);
+  sfcgal_geometry_delete(plain);
 }
 
 BOOST_AUTO_TEST_CASE(testMinkowskiSum3D)

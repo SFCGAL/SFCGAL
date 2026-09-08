@@ -54,6 +54,7 @@
 #include "SFCGAL/algorithm/difference.h"
 #include "SFCGAL/algorithm/distance.h"
 #include "SFCGAL/algorithm/distance3d.h"
+#include "SFCGAL/algorithm/eliminateSlivers.h"
 #include "SFCGAL/algorithm/extrude.h"
 #include "SFCGAL/algorithm/force3D.h"
 #include "SFCGAL/algorithm/forceMeasured.h"
@@ -1704,6 +1705,23 @@ sfcgal_geometry_insert_points_within_tolerance(const sfcgal_geometry_t *base,
   try {
     result = SFCGAL::algorithm::insertPointsWithinTolerance(
         *geomBase, *geomSource, tolerance);
+  } catch (std::exception &e) {
+    SFCGAL_ERROR("%s", e.what());
+    return nullptr;
+  }
+  return result.release();
+}
+
+extern "C" auto
+sfcgal_geometry_eliminate_slivers(const sfcgal_geometry_t *geom,
+                                  double max_edge_length) -> sfcgal_geometry_t *
+{
+  const auto *geometry = reinterpret_cast<const SFCGAL::Geometry *>(geom);
+
+  std::unique_ptr<SFCGAL::Geometry> result;
+
+  try {
+    result = SFCGAL::algorithm::eliminateSlivers(*geometry, max_edge_length);
   } catch (std::exception &e) {
     SFCGAL_ERROR("%s", e.what());
     return nullptr;
