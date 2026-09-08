@@ -1716,6 +1716,11 @@ extern "C" auto
 sfcgal_geometry_eliminate_slivers(const sfcgal_geometry_t *geom,
                                   double max_edge_length) -> sfcgal_geometry_t *
 {
+  if (geom == nullptr) {
+    SFCGAL_ERROR("%s", "sfcgal_geometry_eliminate_slivers: null geometry");
+    return nullptr;
+  }
+
   const auto *geometry = reinterpret_cast<const SFCGAL::Geometry *>(geom);
 
   std::unique_ptr<SFCGAL::Geometry> result;

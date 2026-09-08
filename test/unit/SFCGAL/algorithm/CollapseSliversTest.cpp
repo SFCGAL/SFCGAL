@@ -4,6 +4,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "SFCGAL/LineString.h"
+#include "SFCGAL/MultiSolid.h"
 #include "SFCGAL/Point.h"
 #include "SFCGAL/Polygon.h"
 #include "SFCGAL/PolyhedralSurface.h"
@@ -163,6 +164,63 @@ BOOST_AUTO_TEST_CASE(testEliminateSliversUnfoldsARoundedResult)
   BOOST_CHECK(algorithm::isValid(*repaired));
   BOOST_CHECK_LT(repaired->as<Solid>().exteriorShell().numPatches(),
                  ring->as<Solid>().exteriorShell().numPatches());
+}
+
+/// A cap is a flat triangle, not a needle: only the negligible ones may be
+/// flipped, so a wide one has to survive untouched.
+BOOST_AUTO_TEST_CASE(testEliminateSliversKeepsAWideCap)
+{
+  // Tetrahedron whose base is a cap: the middle vertex sits 1 mm off the line
+  // joining the two others, an angle of almost 180 degrees
+  std::unique_ptr<Geometry> const tetrahedron(
+      io::readWkt("SOLID Z ((((0 0 0,5 0.001 0,10 0 0,0 0 0)),"
+                  "((0 0 0,10 0 0,5 0.0005 1,0 0 0)),"
+                  "((10 0 0,5 0.001 0,5 0.0005 1,10 0 0)),"
+                  "((5 0.001 0,0 0 0,5 0.0005 1,5 0.001 0))))"));
+  BOOST_REQUIRE(algorithm::isValid(*tetrahedron));
+
+  std::unique_ptr<Geometry> const repaired =
+      algorithm::eliminateSlivers(*tetrahedron);
+
+  BOOST_CHECK_EQUAL(repaired->as<Solid>().exteriorShell().numPatches(),
+                    tetrahedron->as<Solid>().exteriorShell().numPatches());
+  BOOST_CHECK_EQUAL(algorithm::volume(repaired->as<Solid>()),
+                    algorithm::volume(tetrahedron->as<Solid>()));
+  BOOST_CHECK(algorithm::isValid(*repaired));
+}
+
+/// A collection keeps its type, a MultiSolid does not become a plain one.
+BOOST_AUTO_TEST_CASE(testEliminateSliversKeepsTheCollectionType)
+{
+  std::unique_ptr<Geometry> const multiSolid(io::readWkt(
+      "MULTISOLID Z (((((0 0 0,0 1 0,1 1 0,1 0 0,0 0 0)),"
+      "((0 0 1,1 0 1,1 1 1,0 1 1,0 0 1)),((0 0 0,1 0 0,1 0 1,0 0 1,0 0 0)),"
+      "((1 0 0,1 1 0,1 1 1,1 0 1,1 0 0)),((1 1 0,0 1 0,0 1 1,1 1 1,1 1 0)),"
+      "((0 1 0,0 0 0,0 0 1,0 1 1,0 1 0)))))"));
+  BOOST_REQUIRE(multiSolid->geometryTypeId() == TYPE_MULTISOLID);
+
+  std::unique_ptr<Geometry> const repaired =
+      algorithm::eliminateSlivers(*multiSolid);
+
+  BOOST_CHECK(repaired->geometryTypeId() == TYPE_MULTISOLID);
+  BOOST_CHECK_EQUAL(repaired->numGeometries(), 1U);
+  BOOST_CHECK(repaired->geometryN(0).geometryTypeId() == TYPE_SOLID);
+}
+
+/// Nothing to repair on a geometry that holds no face at all.
+BOOST_AUTO_TEST_CASE(testEliminateSliversLeavesOtherTypesAlone)
+{
+  const std::string wkts[] = {"POINT (1 2 3)", "LINESTRING (0 0,1 1)",
+                              "POLYGON ((0 0,1 0,1 1,0 1,0 0))",
+                              "GEOMETRYCOLLECTION EMPTY"};
+
+  for (const std::string &wkt : wkts) {
+    std::unique_ptr<Geometry> const geometry(io::readWkt(wkt));
+    std::unique_ptr<Geometry> const repaired =
+        algorithm::eliminateSlivers(*geometry);
+    BOOST_CHECK_MESSAGE(repaired->almostEqual(*geometry, -1),
+                        wkt << " came back as " << repaired->asText(1));
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

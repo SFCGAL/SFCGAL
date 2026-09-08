@@ -21,7 +21,7 @@ withoutRepeatedPoints(const LineString &ring) -> LineString
 {
   LineString result;
   for (std::size_t i = 0; i < ring.numPoints(); ++i) {
-    if (result.isEmpty() || !(result.endPoint() == ring.pointN(i))) {
+    if (result.isEmpty() || result.endPoint() != ring.pointN(i)) {
       result.addPoint(ring.pointN(i));
     }
   }
@@ -43,19 +43,35 @@ withoutFoldedPatches(const PolyhedralSurface &shell) -> PolyhedralSurface
   for (std::size_t p = 0; p < shell.numPatches(); ++p) {
     const Polygon &patch = shell.patchN(p);
 
-    LineString exteriorRing = withoutRepeatedPoints(patch.exteriorRing());
+    // A ring needs three distinct points plus the one closing it
+    const LineString exteriorRing = withoutRepeatedPoints(patch.exteriorRing());
     if (exteriorRing.numPoints() < 4) {
       continue;
     }
 
     Polygon repaired(exteriorRing);
     for (std::size_t r = 0; r < patch.numInteriorRings(); ++r) {
-      LineString interiorRing = withoutRepeatedPoints(patch.interiorRingN(r));
+      const LineString interiorRing =
+          withoutRepeatedPoints(patch.interiorRingN(r));
       if (interiorRing.numPoints() >= 4) {
         repaired.addInteriorRing(interiorRing);
       }
     }
     result.addPatch(repaired);
+  }
+  return result;
+}
+
+/// Repairs every member, keeping the collection type of the input.
+template <typename Collection>
+auto
+repairCollection(const GeometryCollection &collection, double maxEdgeLength)
+    -> std::unique_ptr<Geometry>
+{
+  auto result = std::make_unique<Collection>();
+  for (std::size_t i = 0; i < collection.numGeometries(); ++i) {
+    result->addGeometry(
+        eliminateSlivers(collection.geometryN(i), maxEdgeLength));
   }
   return result;
 }
@@ -84,8 +100,11 @@ eliminateSlivers(const Geometry &geometry, double maxEdgeLength)
     -> std::unique_ptr<Geometry>
 {
   switch (geometry.geometryTypeId()) {
-  case TYPE_TRIANGULATEDSURFACE:
-  case TYPE_POLYHEDRALSURFACE: {
+  case TYPE_POLYHEDRALSURFACE:
+    return std::make_unique<PolyhedralSurface>(
+        repairShell(geometry.as<PolyhedralSurface>(), maxEdgeLength));
+
+  case TYPE_TRIANGULATEDSURFACE: {
     const PolyhedralSurface shell(geometry.clone());
     return std::make_unique<PolyhedralSurface>(
         repairShell(shell, maxEdgeLength));
@@ -103,15 +122,12 @@ eliminateSlivers(const Geometry &geometry, double maxEdgeLength)
   }
 
   case TYPE_MULTISOLID:
-  case TYPE_GEOMETRYCOLLECTION: {
-    const auto &collection = geometry.as<GeometryCollection>();
-    auto        result     = std::make_unique<GeometryCollection>();
-    for (std::size_t i = 0; i < collection.numGeometries(); ++i) {
-      result->addGeometry(
-          eliminateSlivers(collection.geometryN(i), maxEdgeLength));
-    }
-    return result;
-  }
+    return repairCollection<MultiSolid>(geometry.as<GeometryCollection>(),
+                                        maxEdgeLength);
+
+  case TYPE_GEOMETRYCOLLECTION:
+    return repairCollection<GeometryCollection>(
+        geometry.as<GeometryCollection>(), maxEdgeLength);
 
   default:
     return std::unique_ptr<Geometry>(geometry.clone());
