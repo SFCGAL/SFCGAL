@@ -2017,9 +2017,8 @@ NURBSCurve::reverse() const -> std::unique_ptr<Curve>
     FT maxKnot = _knotVector.back();
 
     // Proper knot reflection: new_knot = maxKnot + minKnot - old_knot
-    for (auto knotIter = _knotVector.rbegin(); knotIter != _knotVector.rend();
-         ++knotIter) {
-      reversedKnots.push_back(maxKnot + minKnot - *knotIter);
+    for (const auto &knot : _knotVector | std::views::reverse) {
+      reversedKnots.push_back(maxKnot + minKnot - knot);
     }
   }
 
