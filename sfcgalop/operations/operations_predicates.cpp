@@ -71,17 +71,40 @@ const std::vector<Operation> operations_predicates = {
      }},
 
     {"is_simple", "Predicates", "Test if geometry has no self-intersections",
-     false, "", "A", "B",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
+     false,
+     "Parameters:\n"
+     "  tolerance=VALUE: Distance below which two points are considered equal "
+     "(default: 1e-9)\n\n"
+     "Examples:\n"
+     "  sfcgalop -a \"LINESTRING (0 0,1 1,2 0)\" is_simple\n"
+     "  sfcgalop -a \"LINESTRING (0 0,1 1,2 0)\" is_simple \"tolerance=1e-6\"",
+     "A, params", "B",
+     [](const std::string &args, const SFCGAL::Geometry *geom_a,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       return static_cast<bool>(SFCGAL::algorithm::isSimple(*geom_a));
+       const auto   params    = parse_params(args);
+       const auto   tolIt     = params.find("tolerance");
+       const double tolerance = tolIt != params.end() ? tolIt->second : 1e-9;
+       return static_cast<bool>(
+           SFCGAL::algorithm::isSimple(*geom_a, tolerance));
      }},
 
     {"is_valid", "Predicates", "Test if geometry is topologically valid", false,
-     "", "A", "B",
-     [](const std::string &, const SFCGAL::Geometry *geom_a,
+     "Checks the OGC validity rules, among them the planarity of every "
+     "polygon.\n\n"
+     "Parameters:\n"
+     "  tolerance=VALUE: Distance a vertex may leave the plane of its polygon "
+     "(default: 1e-9)\n\n"
+     "Examples:\n"
+     "  sfcgalop -a \"POLYGON ((0 0,1 0,1 1,0 1,0 0))\" is_valid\n"
+     "  # accept a geometry whose planarity suffers from a coarse rounding\n"
+     "  sfcgalop -a \"POLYHEDRALSURFACE Z (...)\" is_valid \"tolerance=1e-6\"",
+     "A, params", "B",
+     [](const std::string &args, const SFCGAL::Geometry *geom_a,
         const SFCGAL::Geometry *) -> std::optional<OperationResult> {
-       return static_cast<bool>(SFCGAL::algorithm::isValid(*geom_a));
+       const auto   params    = parse_params(args);
+       const auto   tolIt     = params.find("tolerance");
+       const double tolerance = tolIt != params.end() ? tolIt->second : 1e-9;
+       return static_cast<bool>(SFCGAL::algorithm::isValid(*geom_a, tolerance));
      }}};
 
 } // namespace Operations

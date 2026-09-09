@@ -755,7 +755,10 @@ const std::vector<Operation> operations_construction = {
      "Parameters:\n  auto_orientation=BOOL: Enable automatic orientation "
      "correction (default: false)\n"
      "                         Accepts: true/false, t/f, 1/0, TRUE/FALSE "
-     "(case-insensitive)\n\n"
+     "(case-insensitive)\n"
+     "  tolerance=VALUE: Shortest segment the skeleton may return, shorter "
+     "ones are dropped\n"
+     "                   (default: 1e-8)\n\n"
      "Example:\n  sfcgalop -a \"POLYGON((0 0,4 0,4 "
      "4,0 4,0 0))\" straight_skeleton \"auto_orientation=true\"",
      "A, params", "G",
@@ -764,7 +767,11 @@ const std::vector<Operation> operations_construction = {
        auto params = parse_params(args);
        bool autoOrientation =
            parse_boolean_param(params, "auto_orientation", args, false);
-       return SFCGAL::algorithm::straightSkeleton(*geom_a, autoOrientation);
+       const auto   tolIt = params.find("tolerance");
+       const double tolerance =
+           tolIt != params.end() ? tolIt->second : SFCGAL::EPSILON;
+       return SFCGAL::algorithm::straightSkeleton(*geom_a, autoOrientation,
+                                                  false, false, tolerance);
      }},
 
     {"tessellate", "Construction",

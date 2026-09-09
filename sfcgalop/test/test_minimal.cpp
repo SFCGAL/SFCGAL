@@ -172,3 +172,115 @@ BOOST_AUTO_TEST_CASE(test_is_valid)
   auto result = Operations::execute_operation("is_valid", "", &point, nullptr);
   BOOST_CHECK(result.has_value());
 }
+
+/// @brief A patch whose vertices leave the plane by more than the default
+/// tolerance is only accepted once tolerance is raised above that distance.
+BOOST_AUTO_TEST_CASE(test_is_valid_tolerance)
+{
+  auto geom = load_geometry(
+      "POLYHEDRALSURFACE Z (((0 0 0,1 0 0,1 1 0.0000001,0 1 0,0 0 0)))");
+  BOOST_REQUIRE(geom != nullptr);
+
+  auto tooStrict = Operations::execute_operation("is_valid", "tolerance=1e-8",
+                                                 geom.get(), nullptr);
+
+  if (!tooStrict.has_value()) {
+    BOOST_FAIL("is_valid returned an empty result for a strict tolerance");
+    return;
+  }
+
+  BOOST_CHECK_EQUAL(std::get<bool>(tooStrict.value()), false);
+
+  auto loose = Operations::execute_operation("is_valid", "tolerance=1e-6",
+                                             geom.get(), nullptr);
+
+  if (!loose.has_value()) {
+    BOOST_FAIL("is_valid returned an empty result for a loose tolerance");
+    return;
+  }
+
+  BOOST_CHECK_EQUAL(std::get<bool>(loose.value()), true);
+
+  // An unparsable value is silently converted to 0.0 by parse_double, which
+  // is stricter than the default and still rejects this geometry.
+  auto garbage = Operations::execute_operation("is_valid", "tolerance=abc",
+                                               geom.get(), nullptr);
+
+  if (!garbage.has_value()) {
+    BOOST_FAIL("is_valid returned an empty result for an invalid tolerance");
+    return;
+  }
+
+  BOOST_CHECK_EQUAL(std::get<bool>(garbage.value()), false);
+}
+
+/// @brief is_simple applies the same tolerance to the planarity of its patches.
+BOOST_AUTO_TEST_CASE(test_is_simple_tolerance)
+{
+  auto geom = load_geometry(
+      "POLYHEDRALSURFACE Z (((0 0 0,1 0 0,1 1 0.0000001,0 1 0,0 0 0)))");
+  BOOST_REQUIRE(geom != nullptr);
+
+  auto tooStrict = Operations::execute_operation("is_simple", "tolerance=1e-8",
+                                                 geom.get(), nullptr);
+
+  if (!tooStrict.has_value()) {
+    BOOST_FAIL("is_simple returned an empty result for a strict tolerance");
+    return;
+  }
+
+  BOOST_CHECK_EQUAL(std::get<bool>(tooStrict.value()), false);
+
+  auto loose = Operations::execute_operation("is_simple", "tolerance=1e-6",
+                                             geom.get(), nullptr);
+
+  if (!loose.has_value()) {
+    BOOST_FAIL("is_simple returned an empty result for a loose tolerance");
+    return;
+  }
+
+  BOOST_CHECK_EQUAL(std::get<bool>(loose.value()), true);
+}
+
+/// @brief straight_skeleton drops the segments shorter than the tolerance.
+BOOST_AUTO_TEST_CASE(test_straight_skeleton_tolerance)
+{
+  auto geom = load_geometry("POLYGON ((0 0,10 0,10 4,0 4,0 0))");
+  BOOST_REQUIRE(geom != nullptr);
+
+  auto kept = Operations::execute_operation("straight_skeleton", "tolerance=2",
+                                            geom.get(), nullptr);
+
+  if (!kept.has_value()) {
+    BOOST_FAIL("straight_skeleton returned an empty result for tolerance=2");
+    return;
+  }
+
+  const auto &keptGeometry =
+      std::get<std::unique_ptr<SFCGAL::Geometry>>(kept.value());
+
+  if (keptGeometry == nullptr) {
+    BOOST_FAIL("straight_skeleton returned a null geometry for tolerance=2");
+    return;
+  }
+
+  BOOST_CHECK_EQUAL(keptGeometry->numGeometries(), 5U);
+
+  auto filtered = Operations::execute_operation(
+      "straight_skeleton", "tolerance=3", geom.get(), nullptr);
+
+  if (!filtered.has_value()) {
+    BOOST_FAIL("straight_skeleton returned an empty result for tolerance=3");
+    return;
+  }
+
+  const auto &filteredGeometry =
+      std::get<std::unique_ptr<SFCGAL::Geometry>>(filtered.value());
+
+  if (filteredGeometry == nullptr) {
+    BOOST_FAIL("straight_skeleton returned a null geometry for tolerance=3");
+    return;
+  }
+
+  BOOST_CHECK_EQUAL(filteredGeometry->numGeometries(), 1U);
+}
