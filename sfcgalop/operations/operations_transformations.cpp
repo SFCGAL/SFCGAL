@@ -69,14 +69,12 @@ parseSimplificationStrategy(const std::string                   &args,
     return Strategy::EDGE_LENGTH;
   }
 
-#ifdef SFCGAL_WITH_EIGEN
   if (value == "garland_heckbert") {
     return Strategy::GARLAND_HECKBERT;
   }
   if (value == "lindstrom_turk") {
     return Strategy::LINDSTROM_TURK;
   }
-#endif
 
   return std::nullopt;
 }
@@ -304,10 +302,8 @@ const std::vector<Operation> operations_transformations = {
      "garland_heckbert, lindstrom_turk, default: edge_length)\n\n"
      "Strategies:\n"
      "  edge_length: Uses edge length cost with midpoint placement (default)\n"
-#ifdef SFCGAL_WITH_EIGEN
-     "  garland_heckbert: Uses quadric error metrics (requires Eigen)\n"
-     "  lindstrom_turk: Uses Lindstrom-Turk cost/placement (requires Eigen)\n"
-#endif
+     "  garland_heckbert: Uses quadric error metrics\n"
+     "  lindstrom_turk: Uses Lindstrom-Turk cost/placement\n"
      "\nExamples:\n"
      "  sfcgalop -a mesh.obj surface_simplification \"ratio=0.5\"\n"
      "  sfcgalop -a mesh.obj surface_simplification \"count=1000\"\n"

@@ -120,7 +120,6 @@ createCubePolyhedralSurface(const Point &origin = Point(0, 0, 0),
   return cube;
 }
 
-#ifdef SFCGAL_WITH_EIGEN
 // Test TriangulatedSurface simplification with Garland-Heckbert strategy
 BOOST_AUTO_TEST_CASE(testSimplify_TriangulatedSurface_GarlandHeckbert)
 {
@@ -190,7 +189,6 @@ BOOST_AUTO_TEST_CASE(testSimplify_PolyhedralSurface_LindstromTurk)
   BOOST_CHECK(simplified);
   BOOST_CHECK(simplified->is<PolyhedralSurface>());
 }
-#endif // SFCGAL_WITH_EIGEN
 
 // Test Solid simplification
 BOOST_AUTO_TEST_CASE(testSimplify_Solid)

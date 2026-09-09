@@ -21,13 +21,11 @@
 #include <CGAL/Surface_mesh_simplification/Policies/Edge_collapse/Midpoint_placement.h>
 #include <CGAL/Surface_mesh_simplification/edge_collapse.h>
 
-#ifdef SFCGAL_WITH_EIGEN
-  #include <CGAL/Cartesian_converter.h>
-  #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-  #include <CGAL/Surface_mesh_simplification/Policies/Edge_collapse/GarlandHeckbert_plane_policies.h>
-  #include <CGAL/Surface_mesh_simplification/Policies/Edge_collapse/LindstromTurk_cost.h>
-  #include <CGAL/Surface_mesh_simplification/Policies/Edge_collapse/LindstromTurk_placement.h>
-#endif // SFCGAL_WITH_EIGEN
+#include <CGAL/Cartesian_converter.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Surface_mesh_simplification/Policies/Edge_collapse/GarlandHeckbert_plane_policies.h>
+#include <CGAL/Surface_mesh_simplification/Policies/Edge_collapse/LindstromTurk_cost.h>
+#include <CGAL/Surface_mesh_simplification/Policies/Edge_collapse/LindstromTurk_placement.h>
 
 #include <map>
 #include <stdexcept>
@@ -54,7 +52,6 @@ defaultEdgeCollapser(Surface_mesh_3 &mesh, const StopPredicate &stop) -> size_t
       CGAL::parameters::get_cost(Cost()).get_placement(Placement()));
 }
 
-#ifdef SFCGAL_WITH_EIGEN
 // Inexact kernel types for advanced strategies
 using InexactKernel = CGAL::Exact_predicates_inexact_constructions_kernel;
 using InexactMesh   = CGAL::Surface_mesh<InexactKernel::Point_3>;
@@ -153,7 +150,6 @@ applyInexactEdgeCollapserWithStopPredicate(
 
   return result;
 }
-#endif // SFCGAL_WITH_EIGEN
 
 /**
  * @brief Call a simplification function on a mesh (exact or inexact) depending
@@ -220,11 +216,8 @@ applyEdgeCollapserWithStopPredicate(Mesh                              &mesh,
  *
  * This function encapsulates the selection of the accurate simplification
  * function depending on the chosen strategy. The regular edge length strategy
- * is used as a default case, whilst the Garland-Heckbert and Lindstrom-Turk
- * strategies require the SFCGAL_WITH_EIGEN compilation option. Both strategies
- * trigger a proxy function that deals with a copied mesh computed onto an
- * inexact CGAL kernel.
- *
+ * is used as a default case. Both strategies trigger a proxy function that
+ * deals with a copied mesh computed onto an inexact CGAL kernel.
  *
  */
 auto
@@ -234,7 +227,6 @@ simplifySurfaceMesh(Surface_mesh_3                    &mesh,
 {
 
   switch (strategy) {
-#ifdef SFCGAL_WITH_EIGEN
   case SimplificationStrategy::GARLAND_HECKBERT: {
     auto edgeCollapseFn = [&](auto &mesh_, auto &predicate) {
       return garlandHeckbertEdgeCollapser(mesh_, predicate);
@@ -249,9 +241,6 @@ simplifySurfaceMesh(Surface_mesh_3                    &mesh,
     return applyInexactEdgeCollapserWithStopPredicate(mesh, stop,
                                                       edgeCollapseFn);
   }
-#else
-    (void)strategy;
-#endif // SFCGAL_WITH_EIGEN
   default: {
     auto edgeCollapseFn = [&](Surface_mesh_3 &mesh_, const auto &predicate) {
       return defaultEdgeCollapser(mesh_, predicate);

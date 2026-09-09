@@ -47,7 +47,6 @@ enum class SimplificationStrategy : unsigned char {
    */
   EDGE_LENGTH,
 
-#ifdef SFCGAL_WITH_EIGEN
   /**
    * @brief Garland-Heckbert strategy
    *
@@ -62,7 +61,6 @@ enum class SimplificationStrategy : unsigned char {
    * - Memory overhead: Higher due to quadric error matrices
    * - Best for: High-quality simplification preserving surface properties
    *
-   * @note Requires SFCGAL_WITH_EIGEN compilation flag
    * @see https://doc.cgal.org/latest/Surface_mesh_simplification/index.html
    */
   GARLAND_HECKBERT,
@@ -81,11 +79,9 @@ enum class SimplificationStrategy : unsigned char {
    * - Memory overhead: Higher due to volume preservation calculations
    * - Best for: Volume preservation and feature-aware simplification
    *
-   * @note Requires SFCGAL_WITH_EIGEN compilation flag
    * @see https://doc.cgal.org/latest/Surface_mesh_simplification/index.html
    */
   LINDSTROM_TURK
-#endif // SFCGAL_WITH_EIGEN
 };
 
 /**

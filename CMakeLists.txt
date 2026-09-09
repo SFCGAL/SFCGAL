@@ -49,7 +49,6 @@ option( SFCGAL_BUILD_EXAMPLES "build examples" OFF )
 option( SFCGAL_BUILD_TESTS "build unit and regress tests" OFF )
 option( SFCGAL_BUILD_DOC "Build documentation" OFF )
 
-option( SFCGAL_WITH_EIGEN "Compile with Eigen support for advanced simplification strategies" OFF )
 option( SFCGAL_VALGRIND "Compile with Valgrind support" OFF )
 #-- Sanitizers (mutually exclusive: ASAN/TSAN/MSAN cannot be combined)
 option( SFCGAL_ASAN "Enable AddressSanitizer (memory errors)" OFF )
@@ -271,17 +270,14 @@ endif()
 find_package( nlohmann_json 3.11 REQUIRED )
 
 #-- Eigen3 -----------------------------------------
-if ( SFCGAL_WITH_EIGEN )
-  find_package( Eigen3 REQUIRED NO_MODULE )
-  if( ${Eigen3_FOUND} )
-    message( STATUS "Eigen3 ${Eigen3_VERSION} found" )
-    if(Eigen3_VERSION VERSION_LESS 3.3)
-      message(FATAL_ERROR "Eigen3 version ${Eigen3_VERSION} is too old. Require >= 3.3")
-    endif()
-    get_target_property(EIGEN3_INCLUDE_DIR Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
-    message( STATUS "EIGEN3_INCLUDE_DIR = ${EIGEN3_INCLUDE_DIR}" )
-  endif()
+find_package(Eigen3 REQUIRED NO_MODULE)
+message(STATUS "Eigen3 ${Eigen3_VERSION} found")
+if(Eigen3_VERSION VERSION_LESS 3.3)
+  message(FATAL_ERROR "Eigen3 version ${Eigen3_VERSION} is too old. Require >= 3.3")
 endif()
+get_target_property(EIGEN3_INCLUDE_DIR Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
+message(STATUS "EIGEN3_INCLUDE_DIR = ${EIGEN3_INCLUDE_DIR}")
+include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 
 #-- note that SYSTEM turns -I/path to -isystem and avoid warnings in CGAL and Boost
 include_directories( SYSTEM
@@ -289,10 +285,6 @@ include_directories( SYSTEM
 	${Boost_INCLUDE_DIRS}
 )
 
-if ( SFCGAL_WITH_EIGEN AND Eigen3_FOUND )
-  include_directories( SYSTEM ${EIGEN3_INCLUDE_DIR} )
-  add_definitions( "-DSFCGAL_WITH_EIGEN" )
-endif()
 link_directories(
 	${CGAL_LIBRARY_DIRS}
 	${Boost_LIBRARY_DIRS}

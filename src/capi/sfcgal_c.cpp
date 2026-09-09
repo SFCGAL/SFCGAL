@@ -2757,18 +2757,10 @@ cSimplificationStrategyToCpp(sfcgal_simplification_strategy_t strategy)
   switch (strategy) {
   case SFCGAL_SIMPLIFICATION_STRATEGY_EDGE_LENGTH:
     return SFCGAL::algorithm::SimplificationStrategy::EDGE_LENGTH;
-#ifdef SFCGAL_WITH_EIGEN
   case SFCGAL_SIMPLIFICATION_STRATEGY_GARLAND_HECKBERT:
     return SFCGAL::algorithm::SimplificationStrategy::GARLAND_HECKBERT;
   case SFCGAL_SIMPLIFICATION_STRATEGY_LINDSTROM_TURK:
     return SFCGAL::algorithm::SimplificationStrategy::LINDSTROM_TURK;
-#else
-  case SFCGAL_SIMPLIFICATION_STRATEGY_GARLAND_HECKBERT:
-  case SFCGAL_SIMPLIFICATION_STRATEGY_LINDSTROM_TURK:
-    throw SFCGAL::Exception(
-        "The chosen simplification strategy requires SFCGAL "
-        "to be built with -DSFCGAL_WITH_EIGEN=ON.");
-#endif // SFCGAL_WITH_EIGEN
   default:
     return SFCGAL::algorithm::SimplificationStrategy::EDGE_LENGTH;
   }

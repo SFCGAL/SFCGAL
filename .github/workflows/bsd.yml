@@ -43,7 +43,6 @@ jobs:
             tar xzf CGAL-${CGAL_VERSION}.tar.gz
 
             cmake -GNinja -S . -B build \
-              -DSFCGAL_WITH_EIGEN=ON \
               -DSFCGAL_BUILD_TESTS=ON \
               -DCGAL_DIR=cgal-${CGAL_VERSION} \
               -DCMAKE_CXX_FLAGS="-DCGAL_NO_GDB_AUTOLOAD" \

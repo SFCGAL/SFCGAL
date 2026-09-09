@@ -81,6 +81,7 @@ SFCGAL has been successfully compiled and tested on the following platforms:
 - [MPFR](https://www.mpfr.org) version ≥ 2.2.1
 - [GMP](https://gmplib.org) version ≥ 4.2
 - [nlohmann_json](https://github.com/nlohmann/json) version 3.11.x
+- [Eigen](https://gitlab.com/libeigen/eigen) version >= 3.3
 
 __Optional dependencies for viewer and 3D format export:__
 
@@ -124,7 +125,6 @@ Default building options should work out-of-the-box. You may want to fine-tune t
 | `SFCGAL_USE_STATIC_LIBS`  | OFF        | Turn to `ON` to compile as a static library                                                                           |
 | `SFCGAL_VALGRIND`         | OFF        | Turn to `ON` to compile with Valgrind support (Debug only)                                                            |
 | `SFCGAL_WARNING_AS_ERROR` | OFF        | Turn to `ON` to convert build warnings into errors                                                                    |
-| `SFCGAL_WITH_EIGEN`         | OFF        | Turn to `ON` to build with Eigen support for advanced surface simplification strategies                             |
 
 ## Installation with PostGIS
 
