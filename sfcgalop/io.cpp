@@ -150,12 +150,10 @@ load_geometry(const std::string &source) -> std::unique_ptr<SFCGAL::Geometry>
                             static_cast<unsigned char>(data[0]) == 0x01)) {
         return SFCGAL::io::readWkb(data);
       }
-      if (std::any_of(data.begin(), data.end(),
-                      [](unsigned char character) -> bool {
-                        return character < 0x09 ||
-                               (character < 0x20 && character != '\n' &&
-                                character != '\r' && character != '\t');
-                      })) {
+      if (std::ranges::any_of(data, [](unsigned char character) -> bool {
+            return character < 0x09 || (character < 0x20 && character != '\n' &&
+                                        character != '\r' && character != '\t');
+          })) {
         return SFCGAL::io::readWkb(data);
       }
 
@@ -169,10 +167,9 @@ load_geometry(const std::string &source) -> std::unique_ptr<SFCGAL::Geometry>
         }
         // Plain hex digits (even length)
         else if (data.length() % 2 == 0 &&
-                 std::all_of(data.begin(), data.end(),
-                             [](unsigned char character) -> bool {
-                               return std::isxdigit(character) != 0;
-                             })) {
+                 std::ranges::all_of(data, [](unsigned char character) -> bool {
+                   return std::isxdigit(character) != 0;
+                 })) {
           is_hex = true;
         }
       }
@@ -312,7 +309,7 @@ parse_output_format(const char *format_str, OutputFormat &format) -> bool
   }
 
   std::string fmt(format_str);
-  std::transform(fmt.begin(), fmt.end(), fmt.begin(), ::tolower);
+  std::ranges::transform(fmt, fmt.begin(), ::tolower);
 
   if (fmt == "wkt") {
     format = OutputFormat::WKT;
