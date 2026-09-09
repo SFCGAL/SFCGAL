@@ -57,6 +57,8 @@ The `master` branch is the development branch and has a tag for each released ve
 Source code of the {{ get_project_version() }} release can be found with the tag v{{ get_project_version() }}. You can directly download a [zip](https://gitlab.com/sfcgal/SFCGAL/-/archive/v{{ get_project_version() }}/SFCGAL-v{{ get_project_version() }}.zip) or [tarball](https://gitlab.com/sfcgal/SFCGAL/-/archive/v{{ get_project_version() }}/SFCGAL-v{{ get_project_version() }}.tar.gz).
 <!-- markdownlint-enable MD034 -->
 
+</div>
+
 ## Supported platforms
 
 SFCGAL has been successfully compiled and tested on the following platforms:
