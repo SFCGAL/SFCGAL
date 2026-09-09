@@ -3,6 +3,7 @@
 
 #include "SFCGAL/detail/algorithm/meshToPolyhedralSurface.h"
 
+#include <CGAL/Dynamic_property_map.h>
 #include <CGAL/Polygon_mesh_processing/compute_normal.h>
 
 namespace PMP = CGAL::Polygon_mesh_processing;
@@ -82,25 +83,26 @@ groupCoplanarFaces(const MeshType &mesh, const Kernel::FT &epsAngle,
                    const Kernel::FT &epsDist)
     -> std::vector<std::vector<FaceIndex<MeshType>>>
 {
-  std::unordered_map<FaceIndex<MeshType>, bool>     visited;
-  std::unordered_map<FaceIndex<MeshType>, Vector_3> normals;
+  // A Polyhedron_3 face carries no index, so it cannot key a vector; the
+  // dynamic property map falls back to a hash map only for those meshes.
+  auto visited = get(CGAL::dynamic_face_property_t<bool>(), mesh);
+  auto normals = get(CGAL::dynamic_face_property_t<Vector_3>(), mesh);
 
   for (FaceIndex<MeshType> face : faces(mesh)) {
-    visited[face] = false;
-    normals[face] = PMP::compute_face_normal(face, mesh);
+    put(normals, face, PMP::compute_face_normal(face, mesh));
   }
 
   std::vector<std::vector<FaceIndex<MeshType>>> result;
 
   // Iterate over all faces to look for coplanar components
   for (const auto &seedFace : faces(mesh)) {
-    if (visited[seedFace]) {
+    if (get(visited, seedFace)) {
       continue;
     }
 
     std::queue<FaceIndex<MeshType>> queue;
     queue.push(seedFace);
-    visited[seedFace] = true;
+    put(visited, seedFace, true);
     std::vector<FaceIndex<MeshType>> coplanarGroup;
 
     // look for connected coplanar faces
@@ -116,14 +118,15 @@ groupCoplanarFaces(const MeshType &mesh, const Kernel::FT &epsAngle,
         FaceIndex<MeshType> oppositeFace = face(opposite(halfedge, mesh), mesh);
 
         if (oppositeFace == boost::graph_traits<MeshType>::null_face() ||
-            visited[oppositeFace]) {
+            get(visited, oppositeFace)) {
           continue;
         }
 
-        if (areCoplanarFaces(mesh, seedFace, oppositeFace, normals[seedFace],
-                             normals[oppositeFace], epsAngle, epsDist)) {
+        if (areCoplanarFaces(mesh, seedFace, oppositeFace,
+                             get(normals, seedFace), get(normals, oppositeFace),
+                             epsAngle, epsDist)) {
           queue.push(oppositeFace);
-          visited[oppositeFace] = true;
+          put(visited, oppositeFace, true);
         }
       }
     }
