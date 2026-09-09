@@ -84,7 +84,6 @@ SFCGAL has been successfully compiled and tested on the following platforms:
 
 __Optional dependencies for viewer and 3D format export:__
 
-- [OpenSceneGraph](https://openscenegraph.github.io/openscenegraph.io/) version ≥ 3.1
 - [Qt5](https://contribute.qt-project.org/)
 
 ## Compilation
