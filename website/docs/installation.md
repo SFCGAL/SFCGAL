@@ -4,6 +4,7 @@
 
 SFCGAL can be used directly through several bindings and tools, depending on your workflow.
 
+<!-- markdownlint-disable MD033 -->
 <div class="grid cards" markdown>
 
 - :simple-python: __PySFCGAL__
@@ -35,16 +36,18 @@ SFCGAL can be used directly through several bindings and tools, depending on you
     [:octicons-arrow-right-24: Repository](https://gitlab.com/sfcgal/SFCGAL/-/tree/master/sfcgalop?ref_type=heads)
 
 </div>
+<!-- markdownlint-enable MD033 -->
 
 ## Downloads
 
-<!-- markdownlint-disable MD034 -->
+<!-- markdownlint-disable MD033 MD034 -->
 <div class="hero-downloads" markdown>
 [Download this project as a .zip file](https://gitlab.com/sfcgal/SFCGAL/-/archive/v{{ get_project_version() }}/SFCGAL-v{{ get_project_version() }}.zip){ .md-button .md-button--primary }
 [Download this project as a tar.gz file](https://gitlab.com/sfcgal/SFCGAL/-/archive/v{{ get_project_version() }}/SFCGAL-v{{ get_project_version() }}.tar.gz){ .md-button .md-button--primary }
 </div>
-<!-- markdownlint-enable MD034 -->
+<!-- markdownlint-enable MD033 MD034 -->
 
+<!-- markdownlint-disable MD033 -->
 <div class="hero-content" markdown>
 
 ## Source code
@@ -58,6 +61,7 @@ Source code of the {{ get_project_version() }} release can be found with the tag
 <!-- markdownlint-enable MD034 -->
 
 </div>
+<!-- markdownlint-enable MD033 -->
 
 ## Supported platforms
 
