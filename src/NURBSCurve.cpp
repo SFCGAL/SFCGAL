@@ -2250,7 +2250,7 @@ NURBSCurve::isRational() const -> bool
   const FT tolerance   = EPSILON;
 
   return std::ranges::any_of(
-      _weights, [firstWeight, tolerance](const auto &weight) {
+      _weights, [firstWeight, tolerance](const auto &weight) -> auto {
         return CGAL::abs(weight - firstWeight) > tolerance;
       });
 }
@@ -2768,7 +2768,7 @@ NURBSCurve::checkDimensionalConsistency() const -> bool
   bool firstMeasured = _controlPoints[0].isMeasured();
 
   return std::ranges::all_of(
-      _controlPoints, [first3D, firstMeasured](const auto &point) {
+      _controlPoints, [first3D, firstMeasured](const auto &point) -> auto {
         return point.is3D() == first3D && point.isMeasured() == firstMeasured;
       });
 }
