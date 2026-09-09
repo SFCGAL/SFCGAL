@@ -233,11 +233,10 @@ straightSkeletonToMedialAxis(const CGAL::Straight_skeleton_2<K> &skeleton,
   //
   // TODO: take as parameter ?
   //
-  // NOTE: I'm adding some tolerance here to include those angles
-  //       of exactly 45 degrees that are otherwise cut out due
-  //       to rounding precision
-  //
-  const double maxTouchingAngle = CGAL_PI / 8.0 + 1e-13;
+  // Small margin to include angles of exactly 45 degrees that floating-point
+  // rounding would otherwise push just past the bound
+  constexpr double ANGLE_ROUNDING_MARGIN = 1e-13;
+  const double     maxTouchingAngle = CGAL_PI / 8.0 + ANGLE_ROUNDING_MARGIN;
 
   // Build connectivity graph to identify free endpoints (degree 1 vertices)
   std::map<Vertex_const_handle, int> vertexDegree;
