@@ -5,6 +5,7 @@
 #define SFCGAL_DETAIL_ALGORITHM_COLLAPSE_SLIVERS_H_
 
 #include "SFCGAL/detail/TypeForDimension.h"
+#include "SFCGAL/numeric.h"
 
 namespace SFCGAL::detail::algorithm {
 
@@ -13,14 +14,6 @@ namespace SFCGAL::detail::algorithm {
 // ----------------------------------------------------------------------------------
 /// @{
 /// @privatesection
-
-/**
- * Default bound of collapseSlivers(), relative to the diagonal of the bounding
- * box. It has to cover the rounding error of a mesh built in double precision,
- * about 1e-16 relative, and to stay far below anything a user models: on a
- * 100 m object it allows 10 nm.
- */
-constexpr double SLIVER_RELATIVE_LENGTH = 1e-10;
 
 /**
  * Collapses the sliver faces a boolean operation leaves behind.
@@ -40,8 +33,8 @@ constexpr double SLIVER_RELATIVE_LENGTH = 1e-10;
  *
  * @param mesh The triangulated mesh to clean up, modified in place.
  * @param maxEdgeLength Longest edge a collapse may consume. A value below or
- * equal to zero asks for the default, SLIVER_RELATIVE_LENGTH times the
- * diagonal of the bounding box.
+ * equal to zero asks for the default, EPSILON_RELATIVE times the diagonal of
+ * the bounding box.
  */
 void
 collapseSlivers(MarkedPolyhedron &mesh, double maxEdgeLength = 0.0);

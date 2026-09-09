@@ -1840,7 +1840,8 @@ sfcgal_geometry_insert_points_within_tolerance(const sfcgal_geometry_t *base,
  * @param geom The geometry to repair
  * @param max_edge_length Longest edge a collapse may consume, in the unit of
  * the coordinates. Zero or less asks for the default used by the boolean
- * operations, 1e-10 of the diagonal of the bounding box.
+ * operations, a fraction of the diagonal of the bounding box small enough to
+ * only catch the rounding error of a double precision construction.
  * @return A repaired geometry, or NULL on error
  * @ingroup capi
  */

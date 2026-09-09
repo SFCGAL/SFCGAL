@@ -71,7 +71,7 @@ collapseSlivers(MarkedPolyhedron &mesh, double maxEdgeLength)
 {
   const double maxCollapsedLength =
       maxEdgeLength > 0.0 ? maxEdgeLength
-                          : SLIVER_RELATIVE_LENGTH * boundingBoxDiagonal(mesh);
+                          : EPSILON_RELATIVE * boundingBoxDiagonal(mesh);
 
   // Leave a clean mesh strictly alone: no copy, no repair, no warning.
   if (!hasSliver(mesh, maxCollapsedLength)) {

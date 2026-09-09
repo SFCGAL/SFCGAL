@@ -36,6 +36,13 @@ static_assert(EPSILON_COPLANARITY < EPSILON_VALIDITY,
 /// reference value.
 constexpr double EPSILON_DEGENERATE = 1e-10;
 
+/// @brief Tolerance expressed as a fraction of the extent of a geometry,
+/// meant to be multiplied by the diagonal of its bounding box. The constants
+/// above are absolute lengths, this one is not. It covers the rounding error
+/// of a construction carried out in double precision, about 1e-16 relative,
+/// and stays far below any modelled feature: 10 nm on a 100 m object.
+constexpr double EPSILON_RELATIVE = 1e-10;
+
 #if defined(__clang__)
   #pragma clang diagnostic push
   #pragma clang diagnostic ignored "-Wfloat-equal"

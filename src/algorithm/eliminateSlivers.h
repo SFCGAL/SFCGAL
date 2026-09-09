@@ -38,7 +38,7 @@ namespace SFCGAL::algorithm {
  * @param geometry      The geometry to repair.
  * @param maxEdgeLength Longest edge a collapse may consume, in the unit of the
  * coordinates. Zero or less asks for the default used by the boolean
- * operations, 1e-10 of the diagonal of the bounding box.
+ * operations, EPSILON_RELATIVE times the diagonal of the bounding box.
  *
  * @return A repaired copy of @p geometry.
  *
