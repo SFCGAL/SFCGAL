@@ -413,21 +413,21 @@ extractPolygons(const Geometry &geom, std::vector<Polygon> &vect)
 auto
 straightSkeleton(const Geometry &geom, bool       autoOrientation,
                  NoValidityCheck /*unused*/, bool innerOnly,
-                 bool outputDistanceInM, const double & /*toleranceAbs*/)
+                 bool outputDistanceInM, const double &toleranceAbs)
     -> std::unique_ptr<MultiLineString>
 {
   switch (geom.geometryTypeId()) {
   case TYPE_TRIANGLE:
     return straightSkeleton(geom.as<Triangle>().toPolygon(), autoOrientation,
-                            innerOnly, outputDistanceInM);
+                            innerOnly, outputDistanceInM, toleranceAbs);
 
   case TYPE_POLYGON:
     return straightSkeleton(geom.as<Polygon>(), autoOrientation, innerOnly,
-                            outputDistanceInM);
+                            outputDistanceInM, toleranceAbs);
 
   case TYPE_MULTIPOLYGON:
     return straightSkeleton(geom.as<MultiPolygon>(), autoOrientation, innerOnly,
-                            outputDistanceInM);
+                            outputDistanceInM, toleranceAbs);
 
   default:
     return std::make_unique<MultiLineString>();
@@ -436,13 +436,14 @@ straightSkeleton(const Geometry &geom, bool       autoOrientation,
 
 auto
 straightSkeleton(const Geometry &geom, bool autoOrientation, bool innerOnly,
-                 bool outputDistanceInM, const double & /*toleranceAbs*/)
+                 bool outputDistanceInM, const double &toleranceAbs)
     -> std::unique_ptr<MultiLineString>
 {
   SFCGAL_ASSERT_GEOMETRY_VALIDITY_2D(geom);
 
-  std::unique_ptr<MultiLineString> result(straightSkeleton(
-      geom, autoOrientation, NoValidityCheck(), innerOnly, outputDistanceInM));
+  std::unique_ptr<MultiLineString> result(
+      straightSkeleton(geom, autoOrientation, NoValidityCheck(), innerOnly,
+                       outputDistanceInM, toleranceAbs));
   propagateValidityFlag(*result, true);
   return result;
 }

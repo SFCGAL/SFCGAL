@@ -1103,4 +1103,26 @@ BOOST_AUTO_TEST_CASE(testStraightSkeletonTriangleDispatch)
   BOOST_CHECK_GT(result->numGeometries(), 0U);
 }
 
+// The Geometry overloads used to swallow toleranceAbs instead of handing it to
+// the Polygon one, so the skeleton of this rectangle always kept its four
+// 2 * sqrt(2) long diagonals.
+BOOST_AUTO_TEST_CASE(testStraightSkeletonToleranceReachesPolygon)
+{
+  std::unique_ptr<Geometry> const g(
+      io::readWkt("POLYGON ((0 0, 10 0, 10 4, 0 4, 0 0))"));
+
+  std::unique_ptr<MultiLineString> const kept(
+      algorithm::straightSkeleton(*g, true, false, false, 2.0));
+  BOOST_CHECK_EQUAL(kept->numGeometries(), 5U);
+
+  // Above the diagonal length, only the 6 unit long ridge survives
+  std::unique_ptr<MultiLineString> const filtered(
+      algorithm::straightSkeleton(*g, true, false, false, 3.0));
+  BOOST_CHECK_EQUAL(filtered->numGeometries(), 1U);
+
+  std::unique_ptr<MultiLineString> const empty(
+      algorithm::straightSkeleton(*g, true, false, false, 7.0));
+  BOOST_CHECK(empty->isEmpty());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

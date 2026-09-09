@@ -48,8 +48,8 @@ approximateMedialAxis(const Geometry &geom, bool projectToEdges = false)
  * @param autoOrientation check and fix polygon orientation
  * @param innerOnly Skip non-inner edges if requested
  * @param outputDistanceInM whether to output the distance to border as M
- * @param toleranceAbs Distance tolerance between returned points. A line must
- * have a maximum distance of toleranceAbs.
+ * @param toleranceAbs Shortest segment the skeleton may return. Segments not
+ * longer than this are dropped.
  * @return 2D straight skeleton as a MultiLineString
  * @pre geom is a valid geometry
  * @throws NotImplementedException If geom is a Polygon with point touching
@@ -67,8 +67,8 @@ straightSkeleton(const Geometry &geom, bool autoOrientation = true,
  * @param autoOrientation check and fix polygon orientation
  * @param innerOnly Skip non-inner edges if requested
  * @param outputDistanceInM whether to output the distance to border as M
- * @param toleranceAbs Distance tolerance between returned points. A line must
- * have a maximum distance of toleranceAbs.
+ * @param toleranceAbs Shortest segment the skeleton may return. Segments not
+ * longer than this are dropped.
  * @return 2D straight skeleton as a MultiLineString
  * @pre geom is a valid geometry
  * @warning No actual validity check is done
@@ -87,7 +87,8 @@ straightSkeleton(const Geometry &geom, bool autoOrientation, NoValidityCheck,
  * @param autoOrientation check and fix polygon orientation
  * @param innerOnly Skip non-inner edges if requested
  * @param outputDistanceInM whether to output the distance to border as M
- * @param toleranceAbs Distance tolerance between returned points
+ * @param toleranceAbs Shortest segment the skeleton may return. Segments not
+ * longer than this are dropped.
  * @return 2D straight skeleton as a MultiLineString
  * @throws NotImplementedException If geom is a Polygon with point touching
  * rings.
@@ -104,7 +105,8 @@ straightSkeleton(const Polygon &geom, bool autoOrientation = true,
  * @param autoOrientation check and fix polygon orientation
  * @param innerOnly Skip non-inner edges if requested
  * @param outputDistanceInM whether to output the distance to border as M
- * @param toleranceAbs Distance tolerance between returned points
+ * @param toleranceAbs Shortest segment the skeleton may return. Segments not
+ * longer than this are dropped.
  * @return 2D straight skeleton as a MultiLineString
  * @throws NotImplementedException If geom is a Polygon with point touching
  * rings.
