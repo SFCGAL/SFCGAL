@@ -6,8 +6,8 @@
 #include "SFCGAL/Exception.h"
 #include "SFCGAL/GeometryVisitor.h"
 #include "SFCGAL/algorithm/distance.h"
-#include "SFCGAL/detail/ublas.h"
 #include <CGAL/Bbox_3.h>
+#include <Eigen/Dense>
 #include <algorithm>
 #include <cmath>
 #include <map>
@@ -538,10 +538,8 @@ NURBSCurve::interpolateClampedCurve(const std::vector<Point>     &points,
                                     const std::vector<Knot>      &knots)
     -> std::vector<Point>
 {
-  using namespace detail::ublas;
-
-  size_t numPoints = points.size();
-  if (numPoints < degree + 1) {
+  int numPoints = static_cast<int>(points.size());
+  if (numPoints < static_cast<int>(degree + 1)) {
     throw Exception("Not enough points for clamped interpolation");
   }
 
@@ -550,10 +548,10 @@ NURBSCurve::interpolateClampedCurve(const std::vector<Point>     &points,
   // points The clamped condition ensures the curve passes exactly through
   // endpoints
 
-  matrix<double> basisMatrix(numPoints, numPoints);
+  Eigen::MatrixXd basisMatrix = Eigen::MatrixXd::Zero(numPoints, numPoints);
 
   // Fill basis function matrix
-  for (size_t i = 0; i < numPoints; ++i) {
+  for (int i = 0; i < numPoints; ++i) {
     const FT &parameter = parameters[i];
 
     // Find knot span
@@ -562,13 +560,10 @@ NURBSCurve::interpolateClampedCurve(const std::vector<Point>     &points,
     // Compute basis functions at this parameter
     const auto basis = computeBasisFunctions(span, parameter, degree, knots);
 
-    // Initialize row to zero
-    std::fill(basisMatrix.data().begin() + (i * numPoints),
-              basisMatrix.data().begin() + ((i + 1) * numPoints), 0.0);
-
     // Fill non-zero entries in this row
-    size_t baseIdx = span - degree;
-    for (unsigned int j = 0; j <= degree && baseIdx + j < numPoints; ++j) {
+    int baseIdx = static_cast<int>(span - degree);
+    for (int j = 0; j <= static_cast<int>(degree) && baseIdx + j < numPoints;
+         ++j) {
       basisMatrix(i, baseIdx + j) = CGAL::to_double(basis[j]);
     }
   }
@@ -583,61 +578,44 @@ NURBSCurve::interpolateClampedCurve(const std::vector<Point>     &points,
 
   try {
     // Solve system using LU decomposition for each coordinate
-    permutation_matrix<std::size_t> pm(numPoints);
-    matrix<double>                  NCopy;
+    Eigen::PartialPivLU<Eigen::MatrixXd> luSolver(basisMatrix);
 
     // Solve for X coordinates
-    vector<double> qx(numPoints);
-    for (size_t i = 0; i < numPoints; ++i) {
+    Eigen::VectorXd qx(numPoints);
+    for (int i = 0; i < numPoints; ++i) {
       qx(i) = CGAL::to_double(points[i].x());
     }
-
-    NCopy = basisMatrix;
-    lu_factorize(NCopy, pm);
-    lu_substitute(NCopy, pm, qx);
-    vector<double> px = qx;
+    Eigen::VectorXd px = luSolver.solve(qx);
 
     // Solve for Y coordinates
-    vector<double> qy(numPoints);
-    for (size_t i = 0; i < numPoints; ++i) {
+    Eigen::VectorXd qy(numPoints);
+    for (int i = 0; i < numPoints; ++i) {
       qy(i) = CGAL::to_double(points[i].y());
     }
-
-    NCopy = basisMatrix;
-    lu_factorize(NCopy, pm);
-    lu_substitute(NCopy, pm, qy);
-    vector<double> py = qy;
+    Eigen::VectorXd py = luSolver.solve(qy);
 
     // Solve for Z coordinates if 3D
-    vector<double> pz(numPoints);
+    Eigen::VectorXd pz(numPoints);
     if (is3D) {
-      vector<double> qz(numPoints);
-      for (size_t i = 0; i < numPoints; ++i) {
+      Eigen::VectorXd qz(numPoints);
+      for (int i = 0; i < numPoints; ++i) {
         qz(i) = CGAL::to_double(points[i].z());
       }
-
-      NCopy = basisMatrix;
-      lu_factorize(NCopy, pm);
-      lu_substitute(NCopy, pm, qz);
-      pz = qz;
+      pz = luSolver.solve(qz);
     }
 
     // Solve for M coordinates if measured
-    vector<double> pm_coord(numPoints);
+    Eigen::VectorXd pm_coord(numPoints);
     if (isMeasured) {
-      vector<double> qm(numPoints);
-      for (size_t i = 0; i < numPoints; ++i) {
+      Eigen::VectorXd qm(numPoints);
+      for (int i = 0; i < numPoints; ++i) {
         qm(i) = CGAL::to_double(points[i].m());
       }
-
-      NCopy = basisMatrix;
-      lu_factorize(NCopy, pm);
-      lu_substitute(NCopy, pm, qm);
-      pm_coord = qm;
+      pm_coord = luSolver.solve(qm);
     }
 
     // Build control points
-    for (size_t i = 0; i < numPoints; ++i) {
+    for (int i = 0; i < numPoints; ++i) {
       FT x = FT(px(i));
       FT y = FT(py(i));
 
@@ -677,10 +655,8 @@ NURBSCurve::interpolateNaturalCurve(const std::vector<Point>     &points,
                                     const std::vector<Knot>      &knots)
     -> std::vector<Point>
 {
-  using namespace detail::ublas;
-
-  size_t numDataPoints = points.size();
-  if (numDataPoints < degree + 1) {
+  int numDataPoints = static_cast<int>(points.size());
+  if (numDataPoints < static_cast<int>(degree + 1)) {
     throw Exception("Not enough points for natural interpolation");
   }
 
@@ -688,10 +664,11 @@ NURBSCurve::interpolateNaturalCurve(const std::vector<Point>     &points,
   // where N is the basis function matrix, P are control points, Q are data
   // points
 
-  matrix<double> naturalBasisMatrix(numDataPoints, numDataPoints);
+  Eigen::MatrixXd naturalBasisMatrix =
+      Eigen::MatrixXd::Zero(numDataPoints, numDataPoints);
 
   // Fill basis function matrix
-  for (size_t i = 0; i < numDataPoints; ++i) {
+  for (int i = 0; i < numDataPoints; ++i) {
     const FT &parameter = parameters[i];
 
     // Find knot span
@@ -700,13 +677,9 @@ NURBSCurve::interpolateNaturalCurve(const std::vector<Point>     &points,
     // Compute basis functions
     const auto basis = computeBasisFunctions(span, parameter, degree, knots);
 
-    // Fill row of matrix
-    std::fill(naturalBasisMatrix.data().begin() + (i * numDataPoints),
-              naturalBasisMatrix.data().begin() + ((i + 1) * numDataPoints),
-              0.0);
-
-    size_t baseIdx = span - degree;
-    for (unsigned int j = 0; j <= degree && baseIdx + j < numDataPoints; ++j) {
+    int baseIdx = static_cast<int>(span - degree);
+    for (int j = 0;
+         j <= static_cast<int>(degree) && baseIdx + j < numDataPoints; ++j) {
       naturalBasisMatrix(i, baseIdx + j) = CGAL::to_double(basis[j]);
     }
   }
@@ -720,13 +693,8 @@ NURBSCurve::interpolateNaturalCurve(const std::vector<Point>     &points,
     // This is a simplified natural condition - full implementation would
     // minimize integral of curvature
 
-    std::fill(naturalBasisMatrix.data().begin(),
-              naturalBasisMatrix.data().begin() + numDataPoints, 0.0);
-    std::fill(naturalBasisMatrix.data().begin() +
-                  ((numDataPoints - 1) * numDataPoints),
-              naturalBasisMatrix.data().begin() +
-                  (numDataPoints * numDataPoints),
-              0.0);
+    naturalBasisMatrix.row(0).setZero();
+    naturalBasisMatrix.row(numDataPoints - 1).setZero();
 
     // Set up second derivative = 0 at start
     const FT  &startParam = parameters.front();
@@ -734,8 +702,9 @@ NURBSCurve::interpolateNaturalCurve(const std::vector<Point>     &points,
     const auto startBasis2nd =
         computeBasisDerivatives(startSpan, startParam, degree, knots, 2);
 
-    size_t startBaseIdx = startSpan - degree;
-    for (unsigned int j = 0; j <= degree && startBaseIdx + j < numDataPoints;
+    int startBaseIdx = static_cast<int>(startSpan - degree);
+    for (int j = 0;
+         j <= static_cast<int>(degree) && startBaseIdx + j < numDataPoints;
          ++j) {
       naturalBasisMatrix(0, startBaseIdx + j) =
           CGAL::to_double(startBasis2nd[2][j]);
@@ -747,9 +716,9 @@ NURBSCurve::interpolateNaturalCurve(const std::vector<Point>     &points,
     const auto endBasis2nd =
         computeBasisDerivatives(endSpan, endParam, degree, knots, 2);
 
-    size_t endBaseIdx = endSpan - degree;
-    for (unsigned int j = 0; j <= degree && endBaseIdx + j < numDataPoints;
-         ++j) {
+    int endBaseIdx = static_cast<int>(endSpan - degree);
+    for (int j = 0;
+         j <= static_cast<int>(degree) && endBaseIdx + j < numDataPoints; ++j) {
       naturalBasisMatrix(numDataPoints - 1, endBaseIdx + j) =
           CGAL::to_double(endBasis2nd[2][j]);
     }
@@ -769,74 +738,57 @@ NURBSCurve::interpolateNaturalCurve(const std::vector<Point>     &points,
     coordType = COORDINATE_XYM;
   }
 
+  Eigen::PartialPivLU<Eigen::MatrixXd> luSolver(naturalBasisMatrix);
+
   // Solve for X coordinates
-  vector<double> qx(numDataPoints);
-  vector<double> px(numDataPoints);
-  for (size_t i = 0; i < numDataPoints; ++i) {
+  Eigen::VectorXd qx(numDataPoints);
+  for (int i = 0; i < numDataPoints; ++i) {
     qx(i) = CGAL::to_double(points[i].x());
     if (degree >= 2 && (i == 0 || i == numDataPoints - 1)) {
       qx(i) = 0.0; // Natural end condition: zero second derivative
     }
   }
-
-  // Solve N * px = qx
-  permutation_matrix<size_t> pm(numDataPoints);
-  matrix<double>             NCopy = naturalBasisMatrix;
-  lu_factorize(NCopy, pm);
-  lu_substitute(NCopy, pm, qx);
-  px = qx; // qx now contains solution
+  Eigen::VectorXd px = luSolver.solve(qx);
 
   // Solve for Y coordinates
-  vector<double> qy(numDataPoints);
-  vector<double> py(numDataPoints);
-  for (size_t i = 0; i < numDataPoints; ++i) {
+  Eigen::VectorXd qy(numDataPoints);
+  for (int i = 0; i < numDataPoints; ++i) {
     qy(i) = CGAL::to_double(points[i].y());
     if (degree >= 2 && (i == 0 || i == numDataPoints - 1)) {
       qy(i) = 0.0; // Natural end condition
     }
   }
 
-  NCopy = naturalBasisMatrix;
-  lu_factorize(NCopy, pm);
-  lu_substitute(NCopy, pm, qy);
-  py = qy;
+  Eigen::VectorXd py = luSolver.solve(qy);
 
   // Solve for Z coordinates if 3D
-  vector<double> pz(numDataPoints);
+  Eigen::VectorXd pz(numDataPoints);
   if (points[0].is3D()) {
-    vector<double> qz(numDataPoints);
-    for (size_t i = 0; i < numDataPoints; ++i) {
+    Eigen::VectorXd qz(numDataPoints);
+    for (int i = 0; i < numDataPoints; ++i) {
       qz(i) = CGAL::to_double(points[i].z());
       if (degree >= 2 && (i == 0 || i == numDataPoints - 1)) {
         qz(i) = 0.0;
       }
     }
-
-    NCopy = naturalBasisMatrix;
-    lu_factorize(NCopy, pm);
-    lu_substitute(NCopy, pm, qz);
-    pz = qz;
+    pz = luSolver.solve(qz);
   }
 
   // Solve for M coordinates if measured
-  vector<double> pm_coord(numDataPoints);
+  Eigen::VectorXd pm_coord(numDataPoints);
   if (points[0].isMeasured()) {
-    vector<double> qm(numDataPoints);
-    for (size_t i = 0; i < numDataPoints; ++i) {
+    Eigen::VectorXd qm(numDataPoints);
+    for (int i = 0; i < numDataPoints; ++i) {
       qm(i) = CGAL::to_double(points[i].m());
       if (degree >= 2 && (i == 0 || i == numDataPoints - 1)) {
         qm(i) = 0.0;
       }
     }
-
-    NCopy = naturalBasisMatrix;
-    lu_factorize(NCopy, pm);
-    lu_substitute(NCopy, pm, qm);
-    pm_coord = qm;
+    pm_coord = luSolver.solve(qm);
   }
 
   // Build control points
-  for (size_t i = 0; i < numDataPoints; ++i) {
+  for (int i = 0; i < numDataPoints; ++i) {
     FT     x = FT(px(i));
     FT     y = FT(py(i));
     FT     z = points[0].is3D() ? FT(pz(i)) : FT(0);
@@ -1073,12 +1025,10 @@ NURBSCurve::approximateCurve(const std::vector<Point> &points,
    * where N_{i,j} = N_{j,p}(u_i) are the basis function values
    */
 
-  using namespace detail::ublas;
-
-  size_t numDataMinusOne =
-      points.size() - 1; // Number of data points - 1 (index range)
-  size_t numControlMinusOne =
-      numControlPoints - 1; // Number of control points - 1
+  int numDataMinusOne = static_cast<int>(
+      points.size() - 1); // Number of data points - 1 (index range)
+  int numControlMinusOne =
+      static_cast<int>(numControlPoints - 1); // Number of control points - 1
 
   // Step 1: Compute parameter values for data points (chord length
   // parameterization)
@@ -1114,27 +1064,28 @@ NURBSCurve::approximateCurve(const std::vector<Point> &points,
       // Build basis function matrix for INTERIOR data points only (like geomdl)
       // This excludes the first and last data points which are already
       // satisfied by the fixed control points
-      matrix<double> N_interior(numDataMinusOne - 1,
-                                numControlMinusOne -
-                                    1); // Interior data points (1 to n-1) x
-                                        // interior control points (1 to m-1)
+      Eigen::MatrixXd N_interior(numDataMinusOne - 1,
+                                 numControlMinusOne -
+                                     1); // Interior data points (1 to n-1) x
+                                         // interior control points (1 to m-1)
 
       // Fill basis function matrix for INTERIOR data points only
-      for (size_t i = 1; i < numDataMinusOne;
+      for (int i = 1; i < numDataMinusOne;
            ++i) { // Loop from 1 to n-1 (excluding endpoints)
         const Parameter &t     = parameters[i];
         size_t           span  = findKnotSpan(t, degree, knots);
         auto             basis = computeBasisFunctions(span, t, degree, knots);
 
         // Initialize row to zero
-        for (size_t j = 0; j < numControlMinusOne - 1; ++j) {
+        for (int j = 0; j < numControlMinusOne - 1; ++j) {
           N_interior(i - 1, j) = 0.0; // i-1 because matrix starts at 0
         }
 
         // Fill non-zero basis functions for interior control points only
-        size_t baseIdx = span - degree;
-        for (unsigned int k = 0;
-             k <= degree && baseIdx + k <= numControlMinusOne; ++k) {
+        int baseIdx = static_cast<int>(span - degree);
+        for (int k = 0;
+             k <= static_cast<int>(degree) && baseIdx + k <= numControlMinusOne;
+             ++k) {
           if (baseIdx + k >= 1 &&
               baseIdx + k < numControlMinusOne) { // Only interior control
                                                   // points (1 to m-1)
@@ -1145,13 +1096,12 @@ NURBSCurve::approximateCurve(const std::vector<Point> &points,
 
       // Compute modified RHS for interior points: Rk = Qk - N0*P0 - Nm*Pm
       // where P0 and Pm are fixed to data endpoints
-      vector<double> rk_x(numDataMinusOne - 1);
-      vector<double> rk_y(numDataMinusOne - 1);
-      vector<double> rk_z(numDataMinusOne - 1, 0.0);
-      vector<double> rk_m(numDataMinusOne - 1, 0.0);
+      Eigen::VectorXd rk_x(numDataMinusOne - 1);
+      Eigen::VectorXd rk_y(numDataMinusOne - 1);
+      Eigen::VectorXd rk_z = Eigen::VectorXd::Zero(numDataMinusOne - 1);
+      Eigen::VectorXd rk_m = Eigen::VectorXd::Zero(numDataMinusOne - 1);
 
-      for (size_t i = 1; i < numDataMinusOne;
-           ++i) { // Only interior data points
+      for (int i = 1; i < numDataMinusOne; ++i) { // Only interior data points
         const Parameter &t     = parameters[i];
         size_t           span  = findKnotSpan(t, degree, knots);
         auto             basis = computeBasisFunctions(span, t, degree, knots);
@@ -1167,9 +1117,10 @@ NURBSCurve::approximateCurve(const std::vector<Point> &points,
         }
 
         // Subtract contribution from fixed endpoints (like geomdl)
-        size_t baseIdx = span - degree;
-        for (unsigned int k = 0;
-             k <= degree && baseIdx + k <= numControlMinusOne; ++k) {
+        int baseIdx = static_cast<int>(span - degree);
+        for (int k = 0;
+             k <= static_cast<int>(degree) && baseIdx + k <= numControlMinusOne;
+             ++k) {
           if (baseIdx + k == 0) {
             // Contribution from first control point (fixed to points[0])
             double firstBasisValue = CGAL::to_double(basis[k]);
@@ -1200,59 +1151,43 @@ NURBSCurve::approximateCurve(const std::vector<Point> &points,
         }
       }
 
-      // Solve the reduced least-squares system: N_interior^T * N_interior * P =
-      // N_interior^T * Rk
-      matrix<double>                  NTN = prod(trans(N_interior), N_interior);
-      permutation_matrix<std::size_t> pm(numControlMinusOne - 1);
+      // Solve the least-squares system directly via QR
+      Eigen::ColPivHouseholderQR<Eigen::MatrixXd> qrSolver(N_interior);
 
       // Solve for X coordinates
-      vector<double> ntqx     = prod(trans(N_interior), rk_x);
-      matrix<double> NTN_copy = NTN;
-      lu_factorize(NTN_copy, pm);
-      lu_substitute(NTN_copy, pm, ntqx);
+      Eigen::VectorXd solved_x = qrSolver.solve(rk_x);
 
       // Solve for Y coordinates
-      vector<double> ntqy = prod(trans(N_interior), rk_y);
-      NTN_copy            = NTN;
-      lu_factorize(NTN_copy, pm);
-      lu_substitute(NTN_copy, pm, ntqy);
+      Eigen::VectorXd solved_y = qrSolver.solve(rk_y);
 
       // Solve for Z coordinates if 3D
-      vector<double> pz_solved(numControlMinusOne - 1, 0.0);
+      Eigen::VectorXd solved_z;
       if (is3D) {
-        vector<double> ntqz = prod(trans(N_interior), rk_z);
-        NTN_copy            = NTN;
-        lu_factorize(NTN_copy, pm);
-        lu_substitute(NTN_copy, pm, ntqz);
-        pz_solved = ntqz;
+        solved_z = qrSolver.solve(rk_z);
       }
 
       // Solve for M coordinates if measured
-      vector<double> pm_solved(numControlMinusOne - 1, 0.0);
+      Eigen::VectorXd solved_m;
       if (isMeasured) {
-        vector<double> ntqm = prod(trans(N_interior), rk_m);
-        NTN_copy            = NTN;
-        lu_factorize(NTN_copy, pm);
-        lu_substitute(NTN_copy, pm, ntqm);
-        pm_solved = ntqm;
+        solved_m = qrSolver.solve(rk_m);
       }
 
       // Fill interior control points
-      for (size_t i = 1; i < numControlMinusOne; ++i) {
-        FT x = FT(ntqx(i - 1));
-        FT y = FT(ntqy(i - 1));
+      for (int i = 1; i < numControlMinusOne; ++i) {
+        FT x = FT(solved_x(i - 1));
+        FT y = FT(solved_y(i - 1));
 
         if (is3D && isMeasured) {
-          FT     z         = FT(pz_solved(i - 1));
-          double m_val     = pm_solved(i - 1);
+          FT     z         = FT(solved_z(i - 1));
+          double m_val     = solved_m(i - 1);
           controlPoints[i] = Point(x, y, z, m_val);
         } else if (is3D) {
-          FT z             = FT(pz_solved(i - 1));
+          FT z             = FT(solved_z(i - 1));
           controlPoints[i] = Point(x, y, z);
         } else if (isMeasured) {
           double x_d       = CGAL::to_double(x);
           double y_d       = CGAL::to_double(y);
-          double m_val     = pm_solved(i - 1);
+          double m_val     = solved_m(i - 1);
           controlPoints[i] = Point(x_d, y_d, 0.0, m_val, COORDINATE_XYM);
         } else {
           controlPoints[i] = Point(x, y);
