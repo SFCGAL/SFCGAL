@@ -47,7 +47,6 @@ SFCGAL can be used directly through several bindings and tools, depending on you
 
 <div class="hero-content" markdown>
 
-
 ## Source code
 
 SFCGAL source code is available on the corresponding [GitLab repository](https://gitlab.com/sfcgal/SFCGAL).
@@ -77,7 +76,7 @@ SFCGAL has been successfully compiled and tested on the following platforms:
 - [GMP](https://gmplib.org) version ≥ 4.2
 - [nlohmann_json](https://github.com/nlohmann/json) version 3.11.x
 
-**Optional dependencies for viewer and 3D format export:**
+__Optional dependencies for viewer and 3D format export:__
 
 - [OpenSceneGraph](https://openscenegraph.github.io/openscenegraph.io/) version ≥ 3.1
 - [Qt5](https://contribute.qt-project.org/)
