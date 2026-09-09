@@ -10,6 +10,7 @@
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/unique_ptr.hpp>
 #include <memory>
+#include <type_traits>
 #include <vector>
 
 #include "SFCGAL/DereferenceIterator.h"
@@ -18,6 +19,7 @@
 #include "SFCGAL/Point.h"
 #include "SFCGAL/Polygon.h"
 #include "SFCGAL/TriangulatedSurface.h"
+#include "SFCGAL/detail/TypeForDimension.h"
 #include "SFCGAL/triangulate/triangulatePolygon.h"
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
@@ -61,15 +63,17 @@ public:
   PolyhedralSurface(const std::unique_ptr<Geometry> &geometry);
 
   /**
-   * Constructor from a Polyhedron (detail::MarkedPolyhedron or
-   * CGAL::Polyhedron_3)
-   * @tparam Polyhedron The CGAL polyhedron type
+   * Constructor from a Polyhedron
+   * @tparam Polyhedron detail::MarkedPolyhedron or CGAL::Polyhedron_3<Kernel>
    * @param poly The polyhedron to convert
    * @param simplifyTriangulation If set to true, the conversion reconstructs
    *        patches by merging adjacent triangles (i.e. removes the
    *        triangulation). Boundaries, including holes, are kept.
    */
-  template <typename Polyhedron>
+  template <typename Polyhedron,
+            typename = std::enable_if_t<
+                std::is_same_v<Polyhedron, detail::MarkedPolyhedron> ||
+                std::is_same_v<Polyhedron, Polyhedron_3>>>
   PolyhedralSurface(const Polyhedron &poly, bool simplifyTriangulation = true);
 
   /**

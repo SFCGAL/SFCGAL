@@ -6,6 +6,9 @@
 #ifndef SFCGAL_DETAIL_TYPE_FOR_DIMENSION_H
 #define SFCGAL_DETAIL_TYPE_FOR_DIMENSION_H
 
+#include "SFCGAL/Kernel.h"
+#include "SFCGAL/config.h"
+
 #include <CGAL/Polygon_with_holes_2.h>
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Segment_2.h>

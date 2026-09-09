@@ -34,11 +34,13 @@ using HalfedgeIndex =
 
 /// @} end of private section
 
+namespace {
+
 // NOLINTBEGIN(readability-function-cognitive-complexity)
 template <typename MeshType>
 auto
-meshToPolyhedralSurface(const MeshType &mesh, const Kernel::FT &epsAngle,
-                        const Kernel::FT &epsDist)
+meshToPolyhedralSurfaceImpl(const MeshType &mesh, const Kernel::FT &epsAngle,
+                            const Kernel::FT &epsDist)
     -> std::unique_ptr<PolyhedralSurface>
 {
   auto result = std::make_unique<PolyhedralSurface>();
@@ -124,16 +126,30 @@ meshToPolyhedralSurface(const MeshType &mesh, const Kernel::FT &epsAngle,
 }
 // NOLINTEND(readability-function-cognitive-complexity)
 
-template std::unique_ptr<PolyhedralSurface>
-meshToPolyhedralSurface<Polyhedron_3>(const Polyhedron_3 &, const Kernel::FT &,
-                                      const Kernel::FT &);
+} // namespace
 
-template std::unique_ptr<PolyhedralSurface>
-meshToPolyhedralSurface<detail::MarkedPolyhedron>(
-    const detail::MarkedPolyhedron &, const Kernel::FT &, const Kernel::FT &);
+auto
+meshToPolyhedralSurface(const Surface_mesh_3 &mesh, const Kernel::FT &epsAngle,
+                        const Kernel::FT &epsDist)
+    -> std::unique_ptr<PolyhedralSurface>
+{
+  return meshToPolyhedralSurfaceImpl(mesh, epsAngle, epsDist);
+}
 
-template std::unique_ptr<PolyhedralSurface>
-meshToPolyhedralSurface<Surface_mesh_3>(const Surface_mesh_3 &,
-                                        const Kernel::FT &, const Kernel::FT &);
+auto
+meshToPolyhedralSurface(const Polyhedron_3 &mesh, const Kernel::FT &epsAngle,
+                        const Kernel::FT &epsDist)
+    -> std::unique_ptr<PolyhedralSurface>
+{
+  return meshToPolyhedralSurfaceImpl(mesh, epsAngle, epsDist);
+}
+
+auto
+meshToPolyhedralSurface(const detail::MarkedPolyhedron &mesh,
+                        const Kernel::FT &epsAngle, const Kernel::FT &epsDist)
+    -> std::unique_ptr<PolyhedralSurface>
+{
+  return meshToPolyhedralSurfaceImpl(mesh, epsAngle, epsDist);
+}
 
 } // namespace SFCGAL::algorithm

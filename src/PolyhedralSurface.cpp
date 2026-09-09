@@ -50,7 +50,7 @@ PolyhedralSurface::PolyhedralSurface(const PolyhedralSurface &other)
   }
 }
 
-template <typename Polyhedron>
+template <typename Polyhedron, typename>
 PolyhedralSurface::PolyhedralSurface(const Polyhedron &poly,
                                      bool              simplifyTriangulation)
 {
@@ -72,7 +72,7 @@ PolyhedralSurface::PolyhedralSurface(const Polyhedron &poly,
   } else {
     // Simplify triangulation and then convert faces to patches
     std::unique_ptr<PolyhedralSurface> phs =
-        algorithm::meshToPolyhedralSurface<Polyhedron>(poly);
+        algorithm::meshToPolyhedralSurface(poly);
     swap(*phs);
   }
 }
