@@ -934,7 +934,12 @@ recompose_volumes(const GeometrySet<3>::VolumeCollection &volumes,
       }
     } else {
 
-      auto shell = std::make_unique<PolyhedralSurface>(volume.primitive());
+      // Keep the triangulation: a boolean operation emits vertices that are
+      // only nearly distinct, and merging the coplanar faces around them
+      // produces rings carrying collinear vertices that
+      // TriangulatedSurface::toPolyhedron_3 rejects.
+      auto shell =
+          std::make_unique<PolyhedralSurface>(volume.primitive(), false);
       // TODO: test open / closed
       output.push_back(std::make_unique<Solid>(std::move(shell)));
     }
