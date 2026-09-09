@@ -161,7 +161,7 @@ load_geometry(const std::string &source) -> std::unique_ptr<SFCGAL::Geometry>
       bool is_hex = false;
       if (data.length() >= 2) {
         // Check for "0x" prefix
-        if (data.substr(0, 2) == "0x" || data.substr(0, 2) == "0X") {
+        if (data.starts_with("0x") || data.starts_with("0X")) {
           data   = data.substr(2);
           is_hex = true;
         }
