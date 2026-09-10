@@ -6,8 +6,6 @@
 #ifndef SFCGAL_ALGORITHM_PLANE_H_
 #define SFCGAL_ALGORITHM_PLANE_H_
 
-// #include "SFCGAL/detail/ublas.h"
-
 #include "SFCGAL/Exception.h"
 #include "SFCGAL/Polygon.h"
 #include "SFCGAL/algorithm/normal.h"
