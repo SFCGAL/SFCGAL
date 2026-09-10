@@ -210,13 +210,13 @@ GeometryCollection::isAllowed(Geometry const & /*unused*/) -> bool
 void
 GeometryCollection::accept(GeometryVisitor &visitor)
 {
-  return visitor.visit(*this);
+  visitor.visit(*this);
 }
 
 void
 GeometryCollection::accept(ConstGeometryVisitor &visitor) const
 {
-  return visitor.visit(*this);
+  visitor.visit(*this);
 }
 
 } // namespace SFCGAL

@@ -42,13 +42,13 @@ MultiSolid::isAllowed(Geometry const &geometry) -> bool
 auto
 MultiSolid::accept(GeometryVisitor &visitor) -> void
 {
-  return visitor.visit(*this);
+  visitor.visit(*this);
 }
 
 auto
 MultiSolid::accept(ConstGeometryVisitor &visitor) const -> void
 {
-  return visitor.visit(*this);
+  visitor.visit(*this);
 }
 
 } // namespace SFCGAL

@@ -42,13 +42,13 @@ MultiPoint::isAllowed(Geometry const &geometry) -> bool
 void
 MultiPoint::accept(GeometryVisitor &visitor)
 {
-  return visitor.visit(*this);
+  visitor.visit(*this);
 }
 
 void
 MultiPoint::accept(ConstGeometryVisitor &visitor) const
 {
-  return visitor.visit(*this);
+  visitor.visit(*this);
 }
 
 } // namespace SFCGAL

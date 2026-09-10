@@ -44,13 +44,13 @@ MultiLineString::isAllowed(Geometry const &geometry) -> bool
 void
 MultiLineString::accept(GeometryVisitor &visitor)
 {
-  return visitor.visit(*this);
+  visitor.visit(*this);
 }
 
 void
 MultiLineString::accept(ConstGeometryVisitor &visitor) const
 {
-  return visitor.visit(*this);
+  visitor.visit(*this);
 }
 
 } // namespace SFCGAL

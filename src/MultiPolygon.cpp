@@ -85,13 +85,13 @@ MultiPolygon::isAllowed(Geometry const &geometry) -> bool
 void
 MultiPolygon::accept(GeometryVisitor &visitor)
 {
-  return visitor.visit(*this);
+  visitor.visit(*this);
 }
 
 void
 MultiPolygon::accept(ConstGeometryVisitor &visitor) const
 {
-  return visitor.visit(*this);
+  visitor.visit(*this);
 }
 
 auto
