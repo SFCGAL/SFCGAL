@@ -100,7 +100,7 @@ straightSkeleton(const Polygon &geom, bool autoOrientation = true,
     -> std::unique_ptr<MultiLineString>;
 
 /**
- * @brief build a 2D straight skeleton for a Polygon
+ * @brief build a 2D straight skeleton for a MultiPolygon
  * @param geom input multi-polygon
  * @param autoOrientation check and fix polygon orientation
  * @param innerOnly Skip non-inner edges if requested
