@@ -1,4 +1,4 @@
-docker:build:debian-image:
+docker:build:manylinux-image:
   stage: docker-build
   rules:
     # on default branch
@@ -18,19 +18,19 @@ docker:build:debian-image:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker pull $CI_REGISTRY_IMAGE:debian-latest || true
+    - docker pull $CI_REGISTRY_IMAGE:manylinux-latest || true
     - docker build
       --pull
-      --cache-from $CI_REGISTRY_IMAGE:debian-latest
-      --tag $CI_REGISTRY_IMAGE:debian-$CI_COMMIT_SHA
+      --cache-from $CI_REGISTRY_IMAGE:manylinux-latest
+      --tag $CI_REGISTRY_IMAGE:manylinux-$CI_COMMIT_SHA
       --build-arg CGAL_VERSION=${DOCKER_CGAL_VERSION}
-      -f docker/Dockerfile.debian
+      -f docker/Dockerfile.manylinux
       .
-    - docker push $CI_REGISTRY_IMAGE:debian-$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE:manylinux-$CI_COMMIT_SHA
   after_script:
     - docker logout $CI_REGISTRY
 
-docker:push:debian-latest:
+docker:push:manylinux-latest:
   stage: docker-push
   rules:
     # on default branch
@@ -41,17 +41,17 @@ docker:push:debian-latest:
     - name: docker:dind
   variables:
     GIT_STRATEGY: none
-  needs: ["docker:build:debian-image"]
+  needs: ["docker:build:manylinux-image"]
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker pull $CI_REGISTRY_IMAGE:debian-$CI_COMMIT_SHA
-    - docker tag $CI_REGISTRY_IMAGE:debian-$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:debian-latest
-    - docker push $CI_REGISTRY_IMAGE:debian-latest
+    - docker pull $CI_REGISTRY_IMAGE:manylinux-$CI_COMMIT_SHA
+    - docker tag $CI_REGISTRY_IMAGE:manylinux-$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:manylinux-latest
+    - docker push $CI_REGISTRY_IMAGE:manylinux-latest
   after_script:
     - docker logout $CI_REGISTRY
 
-docker:push:debian-tag:
+docker:push:manylinux-tag:
   stage: docker-push
   rules:
     # on a tag
@@ -62,12 +62,12 @@ docker:push:debian-tag:
     - name: docker:dind
   variables:
     GIT_STRATEGY: none
-  needs: ["docker:build:debian-image"]
+  needs: ["docker:build:manylinux-image"]
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker pull $CI_REGISTRY_IMAGE:debian-$CI_COMMIT_SHA
-    - docker tag $CI_REGISTRY_IMAGE:debian-$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:debian-$CI_COMMIT_REF_NAME
-    - docker push $CI_REGISTRY_IMAGE:debian-$CI_COMMIT_REF_NAME
+    - docker pull $CI_REGISTRY_IMAGE:manylinux-$CI_COMMIT_SHA
+    - docker tag $CI_REGISTRY_IMAGE:manylinux-$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:manylinux-$CI_COMMIT_REF_NAME
+    - docker push $CI_REGISTRY_IMAGE:manylinux-$CI_COMMIT_REF_NAME
   after_script:
     - docker logout $CI_REGISTRY

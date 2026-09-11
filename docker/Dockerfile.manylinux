@@ -1,0 +1,58 @@
+# This image is used by pysfcgal to generate linux wheels
+# Use manylinux to ensure good retrocompatibility
+FROM quay.io/pypa/manylinux_2_28_x86_64 AS builder
+
+WORKDIR /SFCGAL
+
+COPY src ./src
+COPY test ./test
+COPY sfcgalop ./sfcgalop
+COPY CMakeLists.txt SFCGALConfig.cmake.in sfcgal.pc.in sfcgal-config.in ./
+
+RUN dnf install --assumeyes boost1.78-devel eigen3-devel gcc-toolset-13-gcc gcc-toolset-13-gcc-c++ gmp-devel mpfr-devel
+
+# Install CGAL
+ARG CGAL_VERSION
+
+RUN curl -fsSL -o CGAL-"${CGAL_VERSION}".tar.xz https://github.com/CGAL/cgal/releases/download/v"${CGAL_VERSION}"/CGAL-"${CGAL_VERSION}".tar.xz && \
+    tar xJf CGAL-"${CGAL_VERSION}".tar.xz && \
+    cd CGAL-"${CGAL_VERSION}" && mkdir build && cd build && \
+    cmake -DCMAKE_INSTALL_PREFIX=/usr/local/ .. && \
+    make && \
+    make install
+
+# Install nlohmann-json
+ARG JSON_VERSION=3.12.0
+RUN curl -fsSL -o /tmp/json.tar.xz https://github.com/nlohmann/json/releases/download/v${JSON_VERSION}/json.tar.xz && \
+    tar xJf /tmp/json.tar.xz -C /tmp && \
+    cmake -S /tmp/json -B /tmp/json-build \
+        -DJSON_BuildTests=OFF -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build /tmp/json-build -j$(nproc) && \
+    cmake --install /tmp/json-build && \
+    rm -rf /tmp/json.tar.xz /tmp/json-${JSON_VERSION} /tmp/json-build
+
+RUN CGAL_DIR=/usr/local/ cmake -B build \
+    -DBoost_ROOT=/usr/lib64/boost1.78 \
+    -DCMAKE_C_COMPILER=/opt/rh/gcc-toolset-13/root/usr/bin/gcc \
+    -DCMAKE_CXX_COMPILER=/opt/rh/gcc-toolset-13/root/usr/bin/g++ \
+    -DSFCGAL_BUILD_TESTS=ON \
+    -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build build -j$(nproc) && \
+    cmake --install build
+
+FROM quay.io/pypa/manylinux_2_28_x86_64 AS run
+
+RUN dnf install --assumeyes boost1.78 gmp gmp-c++ mpfr
+
+WORKDIR /SFCGAL
+
+COPY --from=builder /usr/local/lib64 /usr/local/lib64
+COPY --from=builder /usr/local/lib /usr/local/lib
+COPY --from=builder /usr/local/include/ /usr/local/include/
+COPY docker/entrypoint.sh /entrypoint.sh
+
+RUN echo "/usr/local/lib64" > /etc/ld.so.conf.d/local.conf && \
+    echo "/usr/local/lib" >> /etc/ld.so.conf.d/local.conf && \
+    ldconfig
+
+ENTRYPOINT [ "/entrypoint.sh"]
