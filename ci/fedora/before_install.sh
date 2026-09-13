@@ -10,8 +10,8 @@ if [ -z "$CI_PROJECT_DIR" ]; then
 	exit 1
 fi
 
-sudo yum update -qy || exit 1
-sudo yum install -y \
+sudo dnf update -qy || exit 1
+sudo dnf install -y \
 	cmake boost boost-devel gmp gmp-c++ gmp-devel mpfr mpfr-devel make json-devel eigen3-devel \
 	xz || exit 1
 
