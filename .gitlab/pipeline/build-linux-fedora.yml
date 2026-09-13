@@ -13,8 +13,8 @@
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: manual
   script:
-    - yum update -qy
-    - yum install -y sudo wget ${PACKAGE}
+    - dnf update -qy
+    - dnf install -y sudo wget ${PACKAGE}
     - ./ci/fedora/before_install.sh $CGAL_VERSION
     - cd $CI_PROJECT_DIR
     - cmake  -DSFCGAL_BUILD_TESTS=ON -DSFCGAL_BUILD_CLI=ON -DCMAKE_C_COMPILER=/usr/bin/${C_COMPILER} -DCMAKE_CXX_COMPILER=/usr/bin/${CXX_COMPILER} -DCGAL_DIR=${CI_PROJECT_DIR}/CGAL-${CGAL_VERSION}
