@@ -23,30 +23,26 @@
 ##### 🐧 Debian Environments
 | Environment | Compiler | CGAL Version |
 |:------------|:---------|:-------------|
-| Debian Stable | Clang | CGAL 5.6.3 |
-| Debian Testing | Clang | CGAL 5.6.3 |
-| Debian Stable | Clang | CGAL 6.1 |
-| Debian Testing | Clang | CGAL 6.1 |
-| Debian Stable | GCC | CGAL 5.6.3 |
-| Debian Testing | GCC | CGAL 5.6.3 |
-| Debian Stable | GCC | CGAL 6.1 |
-| Debian Testing | GCC | CGAL 6.1 |
+| Debian Stable | Clang | CGAL 6.1.3 |
+| Debian Testing | Clang | CGAL 6.1.3 |
+| Debian Stable | Clang | CGAL 6.2.1 |
+| Debian Testing | Clang | CGAL 6.2.1 |
+| Debian Stable | GCC | CGAL 6.1.3 |
+| Debian Testing | GCC | CGAL 6.1.3 |
+| Debian Stable | GCC | CGAL 6.2.1 |
+| Debian Testing | GCC | CGAL 6.2.1 |
 
 ##### 🎩 Fedora Environments
 | Environment | Compiler | CGAL Version |
 |:------------|:---------|:-------------|
-| Fedora 41 | GCC | CGAL 5.6.3 |
-| Fedora 41 | GCC | CGAL 6.1 |
-| Fedora 41 | Clang | CGAL 5.6.3 |
-| Fedora 41 | Clang | CGAL 6.1 |
-| Fedora 42 | GCC | CGAL 5.6.3 |
-| Fedora 42 | GCC | CGAL 6.1 |
-| Fedora 42 | Clang | CGAL 5.6.3 |
-| Fedora 42 | Clang | CGAL 6.1 |
-| Fedora 43 | GCC | CGAL 5.6.3 |
-| Fedora 43 | GCC | CGAL 6.1 |
-| Fedora 43 | Clang | CGAL 5.6.3 |
-| Fedora 43 | Clang | CGAL 6.1 |
+| Fedora 43 | GCC | CGAL 6.1.3 |
+| Fedora 43 | GCC | CGAL 6.2.1 |
+| Fedora 43 | Clang | CGAL 6.1.3 |
+| Fedora 43 | Clang | CGAL 6.2.1 |
+| Fedora 44 | GCC | CGAL 6.1.3 |
+| Fedora 44 | GCC | CGAL 6.2.1 |
+| Fedora 44 | Clang | CGAL 6.1.3 |
+| Fedora 44 | Clang | CGAL 6.2.1 |
 
 ##### 🦎 OpenSUSE Environment
 | Environment | Compiler | CGAL Version |
@@ -70,7 +66,7 @@
 ##### 🔍 CodeQL Analysis
 | Platform | Badge | Environment |
 |:---------|:------|:------------|
-| CodeQL | [![CodeQL](https://github.com/Oslandia/SFCGAL_CI/actions/workflows/codeql.yml/badge.svg?branch=master)](https://github.com/Oslandia/SFCGAL_CI/actions/workflows/codeql.yml) | Debian GCC CGAL 6.1 |
+| CodeQL | [![CodeQL](https://github.com/Oslandia/SFCGAL_CI/actions/workflows/codeql.yml/badge.svg?branch=master)](https://github.com/Oslandia/SFCGAL_CI/actions/workflows/codeql.yml) | Debian GCC CGAL 6.2.1 |
 
 ##### 📦 VCPKG Build
 | Platform | Badge | Environment |
@@ -101,9 +97,9 @@
 
 | Environment | Compiler | CGAL Version |
 |:------------|:---------|:-------------|
-| 😈 FreeBSD 14.5 (quarterly) | Clang | CGAL 6.1 |
-| 🚩 NetBSD 10.1 | GCC | CGAL 6.1 |
-| 🐡 OpenBSD 7.7 | Clang | CGAL 6.1 |
+| 😈 FreeBSD 14.5 (quarterly) | Clang | CGAL 6.2.1 |
+| 🚩 NetBSD 11.0 | GCC | CGAL 6.2.1 |
+| 🐡 OpenBSD 7.9 | Clang | CGAL 6.2.1 |
 | 🍎 macOS | AppleClang | CGAL System* |
 
 \* *CGAL System refers to the CGAL version available through the system's package manager*
