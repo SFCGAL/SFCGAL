@@ -101,7 +101,7 @@
 
 | Environment | Compiler | CGAL Version |
 |:------------|:---------|:-------------|
-| 😈 FreeBSD 14.2 (quarterly) | Clang | CGAL 6.1 |
+| 😈 FreeBSD 14.5 (quarterly) | Clang | CGAL 6.1 |
 | 🚩 NetBSD 10.1 | GCC | CGAL 6.1 |
 | 🐡 OpenBSD 7.7 | Clang | CGAL 6.1 |
 | 🍎 macOS | AppleClang | CGAL System* |
