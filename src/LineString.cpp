@@ -128,7 +128,7 @@ LineString::clear()
 void
 LineString::reverse()
 {
-  std::reverse(_points.begin(), _points.end());
+  std::ranges::reverse(_points);
 }
 
 auto
