@@ -170,9 +170,10 @@ createGeometryFromObjData(const ObjData &obj_data) -> std::unique_ptr<Geometry>
     // Check if all faces are triangles
     // NOTE: for performance we could use only PolyhedralSurface and avoid this
     // "if" statement however, we could prefer TIN in most case
-    bool all_triangles = std::all_of(
-        faces.begin(), faces.end(),
-        [](const std::vector<size_t> &face) { return face.size() == 3; });
+    bool all_triangles =
+        std::ranges::all_of(faces, [](const std::vector<size_t> &face) -> bool {
+          return face.size() == 3;
+        });
 
     if (all_triangles) {
       // Create TriangulatedSurface
@@ -427,7 +428,7 @@ saveToBuffer(const Geometry &geom, char *buffer, size_t *size)
 {
   std::string result = saveToString(geom);
   if ((buffer != nullptr) && *size >= result.size()) {
-    std::copy(result.begin(), result.end(), buffer);
+    std::ranges::copy(result, buffer);
     *size = result.size();
   } else {
     *size = result.size();
