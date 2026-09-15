@@ -8,6 +8,8 @@
 #include "SFCGAL/LineString.h"
 #include "SFCGAL/Polygon.h"
 
+#include <numbers>
+
 namespace SFCGAL::generator {
 
 /// @private
@@ -28,7 +30,7 @@ _koch(const std::vector<Kernel::Vector_2> &points)
 
     result.push_back(a);
     result.push_back(a + ab / 3);
-    result.push_back(a + ab / 2 + normal * sqrt(3.0) / 6.0);
+    result.push_back(a + ab / 2 + normal * std::numbers::sqrt3 / 6.0);
     result.push_back(a + (ab * 2) / 3);
   }
 
@@ -39,7 +41,7 @@ auto
 koch(const unsigned int &order) -> std::unique_ptr<Polygon>
 {
   std::vector<Kernel::Vector_2> points;
-  points.emplace_back(1.0, sqrt(3.0));
+  points.emplace_back(1.0, std::numbers::sqrt3);
   points.emplace_back(2.0, 0.0);
   points.emplace_back(0.0, 0.0);
 
