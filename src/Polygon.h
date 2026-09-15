@@ -284,30 +284,6 @@ public:
   }
 
   /**
-   * @brief append a ring to the Polygon
-   * @param ls LineString to add as ring
-   * @deprecated addInteriorRing
-   */
-  [[deprecated("Use addInteriorRing instead")]]
-  void
-  addRing(const LineString &ls)
-  {
-    _rings.push_back(ls.clone());
-  }
-  /**
-   * @brief append a ring to the Polygon (take ownership)
-   * @param ls Pointer to LineString to add as ring
-   * @deprecated addInteriorRing
-   */
-  [[deprecated("Use addInteriorRing instead")]]
-  void
-  addRing(LineString *ls)
-  {
-    BOOST_ASSERT(ls != NULL);
-    _rings.push_back(std::unique_ptr<LineString>(ls));
-  }
-
-  /**
    * @brief Get iterator to beginning of rings
    * @return Iterator to first ring
    */
