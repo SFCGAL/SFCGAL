@@ -188,23 +188,6 @@ public:
   }
 
   /**
-   * @brief [SFA/OGC]Returns the number of polygons
-   * @return Number of polygons in the surface
-   * @warning PolyhedralSurface is treated as one geometry. numGeometries
-   * returns 1 or 0 for empty PolyhedralSurface
-   * @deprecated see numPatches
-   * @see numGeometries()
-   */
-  // clang-format off
-  [[deprecated("Use numPatches instead")]]
-  [[nodiscard]] auto
-  // clang-format on
-  numPolygons() const -> size_t
-  {
-    return numPatches();
-  }
-
-  /**
    * [SFA/OGC]Returns the n-th patch
    * @param index The index of the patch to get
    * @return Const reference to the nth patch
@@ -247,57 +230,6 @@ public:
    */
   void
   addPatches(const PolyhedralSurface &polyhedralSurface);
-
-  /**
-   * @brief [SFA/OGC]Returns the n-th polygon
-   * @param index Index of the polygon to get
-   * @return Const reference to the nth polygon
-   * @deprecated see patchN()
-   */
-  // clang-format off
-  [[deprecated("Use patchN instead")]]
-  [[nodiscard]] auto
-  // clang-format on
-  polygonN(size_t const &index) const -> const Polygon &
-  {
-    return patchN(index);
-  }
-  /**
-   * @brief [SFA/OGC]Returns the n-th polygon
-   * @param index Index of the polygon to get
-   * @return Reference to the nth polygon
-   * @deprecated see patchN()
-   */
-  [[deprecated("Use patchN instead")]]
-  auto
-  polygonN(size_t const &index) -> Polygon &
-  {
-    return patchN(index);
-  }
-  /**
-   * add a polygon to the PolyhedralSurface
-   * @param polygon The polygon to add
-   * @deprecated see addPatch()
-   */
-  [[deprecated("Use addPatch instead")]]
-  void
-  addPolygon(const Polygon &polygon);
-  /**
-   * add a polygon to the PolyhedralSurface
-   * @param polygon The polygon to add
-   * @deprecated see addPatch()
-   */
-  [[deprecated("Use addPatch instead")]]
-  void
-  addPolygon(Polygon *polygon);
-  /**
-   * @brief add polygons from an other PolyhedralSurface
-   * @param polyhedralSurface The polyhedral surface to add polygons from
-   * @deprecated see addPatches()
-   */
-  [[deprecated("Use addPatches instead")]]
-  void
-  addPolygons(const PolyhedralSurface &polyhedralSurface);
 
   /**
    * @brief Sets the n-th Geometry, starting at zero

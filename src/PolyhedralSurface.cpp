@@ -219,24 +219,6 @@ PolyhedralSurface::addPatches(const PolyhedralSurface &polyhedralSurface)
 }
 
 void
-PolyhedralSurface::addPolygon(const Polygon &polygon)
-{
-  addPatch(polygon);
-}
-
-void
-PolyhedralSurface::addPolygon(Polygon *polygon)
-{
-  addPatch(std::unique_ptr<Polygon>(polygon));
-}
-
-void
-PolyhedralSurface::addPolygons(const PolyhedralSurface &polyhedralSurface)
-{
-  addPatches(polyhedralSurface);
-}
-
-void
 PolyhedralSurface::setPatchN(std::unique_ptr<Polygon> patch, size_t const &idx)
 {
   BOOST_ASSERT(patch != nullptr);
