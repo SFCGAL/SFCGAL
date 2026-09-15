@@ -4,7 +4,7 @@
 #ifndef SFCGAL_DEREFERENCEITERATOR_H_
 #define SFCGAL_DEREFERENCEITERATOR_H_
 
-#include <cstddef>
+#include <iterator>
 #include <type_traits>
 
 namespace SFCGAL {
@@ -19,21 +19,25 @@ namespace SFCGAL {
  * @tparam BaseIterator the underlying iterator type
  */
 template <class BaseIterator>
-class DereferenceIterator : public BaseIterator {
+class DereferenceIterator {
 public:
   using value_type =
       typename BaseIterator::value_type::element_type; ///< Dereferenced
-  using pointer   = value_type *; ///< Pointer to value type
-  using reference = value_type &; ///< Reference to value type
+  using pointer         = value_type *; ///< Pointer to value type
+  using reference       = value_type &; ///< Reference to value type
+  using difference_type = typename std::iterator_traits<
+      BaseIterator>::difference_type; ///<  Distance between two iterators
+  using iterator_concept =
+      std::forward_iterator_tag; ///< Forward iterator concept
 
   /** @brief Default constructor. */
   DereferenceIterator() = default;
 
   /**
    * @brief Construct from a base iterator.
-   * @param other The underlying base iterator.
+   * @param it The underlying base iterator to wrap.
    */
-  explicit DereferenceIterator(BaseIterator other) : BaseIterator(other) {}
+  explicit DereferenceIterator(BaseIterator it) : base_(it) {}
 
   /**
    * @brief Conversion constructor from another compatible DereferenceIterator.
@@ -44,12 +48,21 @@ public:
    * @tparam OtherIterator Another iterator type convertible to BaseIterator.
    * @param other The other DereferenceIterator to copy.
    */
-  template <typename OtherIterator,
-            typename = std::enable_if_t<
-                std::is_convertible_v<OtherIterator, BaseIterator>>>
+  template <typename OtherIterator>
   DereferenceIterator(const DereferenceIterator<OtherIterator> &other)
-      : BaseIterator(other)
+    requires(std::is_convertible_v<OtherIterator, BaseIterator>)
+      : base_(other.base())
   {
+  }
+
+  /**
+   * @brief base iterator access
+   * @return base iterator
+   */
+  [[nodiscard]] auto
+  base() const -> BaseIterator
+  {
+    return base_;
   }
 
   /**
@@ -59,7 +72,7 @@ public:
   auto
   operator*() const -> reference
   {
-    return *(this->BaseIterator::operator*());
+    return *(*base_);
   }
 
   /**
@@ -69,7 +82,7 @@ public:
   auto
   operator->() const -> pointer
   {
-    return this->BaseIterator::operator*().get();
+    return base_->get();
   }
 
   /**
@@ -80,8 +93,64 @@ public:
   auto
   operator[](size_t idx) const -> reference
   {
-    return *(this->BaseIterator::operator[](idx));
+    return *(base_[idx]);
   }
+
+  /**
+   * @brief Pre-increment operator.
+   * @return Reference to this iterator, advanced by one position.
+   */
+  auto
+  operator++() -> DereferenceIterator &
+  {
+    ++base_;
+    return *this;
+  }
+
+  /**
+   * @brief Post-increment operator.
+   * @return A copy of this iterator before it was advanced.
+   */
+  auto
+  operator++(int) -> DereferenceIterator
+  {
+    auto tmp = *this;
+    ++base_;
+    return tmp;
+  }
+
+  /**
+   * @brief Pre-decrement operator.
+   * @return Reference to this iterator, moved back by one position.
+   */
+  auto
+  operator--() -> DereferenceIterator &
+  {
+    --base_;
+    return *this;
+  }
+
+  /**
+   * @brief Post-decrement operator.
+   * @return A copy of this iterator before it was moved back.
+   */
+  auto
+  operator--(int) -> DereferenceIterator
+  {
+    auto tmp = *this;
+    --base_;
+    return tmp;
+  }
+
+  /**
+   * @brief Equality comparison.
+   */
+  friend auto
+  operator==(const DereferenceIterator &, const DereferenceIterator &)
+      -> bool = default;
+
+private:
+  BaseIterator base_{};
 };
 
 /**
