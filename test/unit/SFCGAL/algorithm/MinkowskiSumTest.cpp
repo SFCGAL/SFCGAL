@@ -19,7 +19,6 @@
 #include "SFCGAL/Triangle.h"
 #include "SFCGAL/TriangulatedSurface.h"
 #include "SFCGAL/algorithm/minkowskiSum.h"
-#include "SFCGAL/detail/generator/hoch.h"
 #include "SFCGAL/io/wkt.h"
 
 #include "SFCGAL/detail/tools/Registry.h"
