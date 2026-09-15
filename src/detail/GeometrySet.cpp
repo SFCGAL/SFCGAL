@@ -296,8 +296,7 @@ GeometrySet<3>::addPrimitive(const CGAL::Object &object, bool pointsAsRing)
       Polygon const poly(ls);
       _decompose_polygon(poly, _surfaces, dim_t<3>());
     } else {
-      std::copy(pts->begin(), pts->end(),
-                std::inserter(_points, _points.end()));
+      std::ranges::copy(*pts, std::inserter(_points, _points.end()));
     }
   } else if (const auto *segment = CGAL::object_cast<TSegment>(&object)) {
     _segments.insert(TSegment(*segment));
@@ -338,8 +337,7 @@ GeometrySet<2>::addPrimitive(const CGAL::Object &object, bool pointsAsRing)
       CGAL::Polygon_with_holes_2<Kernel> const polyh(poly);
       _surfaces.emplace_back(polyh);
     } else {
-      std::copy(pts->begin(), pts->end(),
-                std::inserter(_points, _points.end()));
+      std::ranges::copy(*pts, std::inserter(_points, _points.end()));
     }
   } else if (const auto *tri =
                  CGAL::object_cast<CGAL::Triangle_2<Kernel>>(&object)) {
