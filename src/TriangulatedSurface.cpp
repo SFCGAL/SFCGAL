@@ -133,12 +133,6 @@ TriangulatedSurface::addPatches(const TriangulatedSurface &other)
   }
 }
 
-void
-TriangulatedSurface::addTriangles(const TriangulatedSurface &other)
-{
-  addPatches(other);
-}
-
 auto
 TriangulatedSurface::patchN(size_t const &index) const -> const Triangle &
 {
