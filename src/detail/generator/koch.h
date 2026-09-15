@@ -3,8 +3,8 @@
 // Copyright (c) 2024-2026, SFCGAL team.
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
-#ifndef SFCGAL_GENERATOR_HOCH_H_
-#define SFCGAL_GENERATOR_HOCH_H_
+#ifndef SFCGAL_GENERATOR_KOCH_H_
+#define SFCGAL_GENERATOR_KOCH_H_
 
 #include "SFCGAL/config.h"
 
@@ -17,13 +17,13 @@ class Polygon;
 namespace SFCGAL::generator {
 
 /**
- * @brief generate hoch snowflake
+ * @brief generate koch snowflake
  * @param order The order of the snowflake
  * @return A unique pointer to the generated polygon
  * @todo unittest
  */
 SFCGAL_API auto
-hoch(const unsigned int &order) -> std::unique_ptr<Polygon>;
+koch(const unsigned int &order) -> std::unique_ptr<Polygon>;
 
 } // namespace SFCGAL::generator
 

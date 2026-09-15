@@ -3,7 +3,7 @@
 // Copyright (c) 2024-2026, SFCGAL team.
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
-#include "SFCGAL/detail/generator/hoch.h"
+#include "SFCGAL/detail/generator/koch.h"
 
 #include "SFCGAL/LineString.h"
 #include "SFCGAL/Polygon.h"
@@ -12,7 +12,7 @@ namespace SFCGAL::generator {
 
 /// @private
 auto
-_hoch(const std::vector<Kernel::Vector_2> &points)
+_koch(const std::vector<Kernel::Vector_2> &points)
     -> std::vector<Kernel::Vector_2>
 {
   std::vector<Kernel::Vector_2> result;
@@ -36,7 +36,7 @@ _hoch(const std::vector<Kernel::Vector_2> &points)
 }
 
 auto
-hoch(const unsigned int &order) -> std::unique_ptr<Polygon>
+koch(const unsigned int &order) -> std::unique_ptr<Polygon>
 {
   std::vector<Kernel::Vector_2> points;
   points.emplace_back(1.0, sqrt(3.0));
@@ -44,7 +44,7 @@ hoch(const unsigned int &order) -> std::unique_ptr<Polygon>
   points.emplace_back(0.0, 0.0);
 
   for (unsigned int k = 0; k < order; k++) {
-    points = _hoch(points);
+    points = _koch(points);
   }
 
   auto result = std::make_unique<Polygon>();
