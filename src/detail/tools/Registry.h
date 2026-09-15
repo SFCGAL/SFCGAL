@@ -25,12 +25,11 @@ namespace SFCGAL::tools {
  */
 class SFCGAL_API Registry {
 public:
-  using prototype_iterator =
-      DereferenceIterator<std::vector<std::unique_ptr<Geometry>>>::
-          iterator; ///< Iterator type for prototypes
+  using prototype_iterator = DereferenceIterator<std::vector<
+      std::unique_ptr<Geometry>>::iterator>; ///< Iterator type for prototypes
   using const_prototype_iterator =
-      DereferenceIterator<std::vector<std::unique_ptr<Geometry>>>::
-          const_iterator; ///< Const iterator type for prototypes
+      DereferenceIterator<std::vector<std::unique_ptr<
+          Geometry>>::const_iterator>; ///< Const iterator type for prototypes
 
   /**
    * destructor
