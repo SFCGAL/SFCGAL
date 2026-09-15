@@ -162,7 +162,7 @@ saveToBuffer(const Geometry &geom, char *buffer, size_t *size) -> void
 {
   std::string result = saveToString(geom);
   if ((buffer != nullptr) && *size >= result.size()) {
-    std::copy(result.begin(), result.end(), buffer);
+    std::ranges::copy(result, buffer);
     *size = result.size();
   } else {
     *size = result.size();
