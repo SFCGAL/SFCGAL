@@ -729,9 +729,8 @@ extrudeStraightSkeleton(const Geometry &geom, double building_height,
     const LineString &exterior = patch.exteriorRing();
 
     // Check if any point has z != 0 (not a base face)
-    return std::any_of(
-        exterior.begin(), exterior.end(),
-        [](const Point &point) -> bool { return point.z() != 0.0; });
+    return std::ranges::any_of(
+        exterior, [](const Point &point) -> bool { return point.z() != 0.0; });
   };
 
   std::copy_if(completeRoof->begin(), completeRoof->end(),
