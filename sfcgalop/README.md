@@ -1,4 +1,4 @@
-#SFCGALOP - SFCGAL Geometry Operations CLI
+# SFCGALOP - SFCGAL Geometry Operations CLI
 
 A command-line interface for performing geometric operations using the SFCGAL library largely inspired by geosop.
 
