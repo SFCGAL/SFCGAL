@@ -8,10 +8,22 @@
 #include "SFCGAL/Point.h"
 #include "SFCGAL/export.h"
 #include "SFCGAL/numeric.h"
-#include <type_traits>
-#include <variant>
+#include <concepts>
 
 namespace SFCGAL {
+
+/// @{
+/// @privatesection
+
+template <typename T>
+concept CGALPointType =
+    std::is_same_v<T, Kernel::Point_2> || std::is_same_v<T, Kernel::Point_3>;
+
+template <typename T>
+concept CGALSegmentType = std::is_same_v<T, Kernel::Segment_2> ||
+                          std::is_same_v<T, Kernel::Segment_3>;
+
+/// @} end of private section
 
 /**
  * @class Segment
@@ -43,10 +55,7 @@ public:
    * @note For CGAL points, dimensional consistency is guaranteed by the type
    * system
    */
-  template <
-      typename PointType,
-      typename = std::enable_if_t<std::is_same_v<PointType, Kernel::Point_2> ||
-                                  std::is_same_v<PointType, Kernel::Point_3>>>
+  template <CGALPointType PointType>
   Segment(const PointType &point1, const PointType &point2)
       : _source(point1), _target(point2)
   {
@@ -58,10 +67,7 @@ public:
    * @note For CGAL segments, dimensional consistency is guaranteed by the type
    * system
    */
-  template <typename SegmentType,
-            typename = std::enable_if_t<
-                std::is_same_v<SegmentType, Kernel::Segment_2> ||
-                std::is_same_v<SegmentType, Kernel::Segment_3>>>
+  template <CGALSegmentType SegmentType>
   explicit Segment(const SegmentType &segment)
       : _source(segment.source()), _target(segment.target())
   {
@@ -140,10 +146,7 @@ public:
    * @param target The new second endpoint
    * @note Type safety ensures dimensional consistency
    */
-  template <
-      typename PointType,
-      typename = std::enable_if_t<std::is_same_v<PointType, Kernel::Point_2> ||
-                                  std::is_same_v<PointType, Kernel::Point_3>>>
+  template <CGALPointType PointType>
   auto
   setPoints(const PointType &source, const PointType &target) -> void
   {
