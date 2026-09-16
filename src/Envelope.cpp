@@ -13,27 +13,18 @@
 
 namespace SFCGAL {
 
-Envelope::Envelope()
-{
-  for (auto &_bound : _bounds) {
-    _bound = detail::Interval();
-  }
-}
-
 Envelope::Envelope(const double &xmin, const double &xmax, const double &ymin,
                    const double &ymax)
+    : _bounds{detail::Interval(xmin, xmax), detail::Interval(ymin, ymax),
+              detail::Interval()}
 {
-  _bounds[0] = detail::Interval(xmin, xmax);
-  _bounds[1] = detail::Interval(ymin, ymax);
-  _bounds[2] = detail::Interval();
 }
 
 Envelope::Envelope(const double &xmin, const double &xmax, const double &ymin,
                    const double &ymax, const double &zmin, const double &zmax)
+    : _bounds{detail::Interval(xmin, xmax), detail::Interval(ymin, ymax),
+              detail::Interval(zmin, zmax)}
 {
-  _bounds[0] = detail::Interval(xmin, xmax);
-  _bounds[1] = detail::Interval(ymin, ymax);
-  _bounds[2] = detail::Interval(zmin, zmax);
 }
 
 Envelope::Envelope(const Coordinate &coordinate)
@@ -47,18 +38,11 @@ Envelope::Envelope(const Coordinate &coordinate1, const Coordinate &coordinate2)
   expandToInclude(coordinate2);
 }
 
-Envelope::Envelope(const Envelope &other)
-{
-  for (size_t i = 0; i < 3; i++) {
-    _bounds[i] = other._bounds[i];
-  }
-}
-
 auto
 Envelope::operator=(const Envelope &other) -> Envelope &
 {
-  for (size_t i = 0; i < 3; i++) {
-    _bounds[i] = other._bounds[i];
+  if (this != &other) {
+    _bounds = other._bounds;
   }
 
   return *this;

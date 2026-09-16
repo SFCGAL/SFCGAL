@@ -35,7 +35,7 @@ public:
   /**
    * default constructor (empty bounding box)
    */
-  Envelope();
+  Envelope() = default;
   /**
    * 2D box constructor with min,max values
    * @param xmin Minimum X value
@@ -71,7 +71,7 @@ public:
    * copy constructor
    * @param other The envelope to copy from
    */
-  Envelope(const Envelope &other);
+  Envelope(const Envelope &other) = default;
   /**
    * assign operator
    * @param other The envelope to assign from
