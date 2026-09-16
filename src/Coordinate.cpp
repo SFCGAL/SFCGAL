@@ -256,7 +256,7 @@ private:
     ::mpq_class roundedValue(SFCGAL::round(value.exact() * _scaleFactor),
                              _scaleFactor);
     roundedValue.canonicalize();
-    return Kernel::FT(roundedValue);
+    return {roundedValue};
 #else
     return Kernel::FT(
         CGAL::Gmpq(SFCGAL::round(v.exact() * _scaleFactor), _scaleFactor));
@@ -283,7 +283,7 @@ struct ToPoint2Visitor {
   auto
   operator()(const Coordinate::Empty & /*unused*/) const -> Kernel::Point_2
   {
-    return Kernel::Point_2(CGAL::ORIGIN);
+    return {CGAL::ORIGIN};
   }
   /// @brief Convert 2D point to 2D point (identity)
   /// @param storage The 2D point
@@ -299,7 +299,7 @@ struct ToPoint2Visitor {
   auto
   operator()(const Kernel::Point_3 &storage) const -> Kernel::Point_2
   {
-    return Kernel::Point_2(storage.x(), storage.y());
+    return {storage.x(), storage.y()};
   }
 };
 
@@ -319,7 +319,7 @@ struct ToPoint3Visitor {
   auto
   operator()(const Coordinate::Empty & /*storage*/) const -> Kernel::Point_3
   {
-    return Kernel::Point_3(CGAL::ORIGIN);
+    return {CGAL::ORIGIN};
   }
   /// @brief Convert 2D point to 3D point (Z=0)
   /// @param storage The 2D point
@@ -327,7 +327,7 @@ struct ToPoint3Visitor {
   auto
   operator()(const Kernel::Point_2 &storage) const -> Kernel::Point_3
   {
-    return Kernel::Point_3(storage.x(), storage.y(), 0.0);
+    return {storage.x(), storage.y(), 0.0};
   }
   /// @brief Convert 3D point to 3D point (identity)
   /// @param storage The 3D point
