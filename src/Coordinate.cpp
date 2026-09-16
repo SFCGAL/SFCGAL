@@ -249,13 +249,14 @@ private:
   long _scaleFactor;
 
   [[nodiscard]] auto
-  _roundFT(const Kernel::FT &v) const -> Kernel::FT
+  _roundFT(const Kernel::FT &value) const -> Kernel::FT
   {
 
 #ifdef CGAL_USE_GMPXX
-    ::mpq_class q(SFCGAL::round(v.exact() * _scaleFactor), _scaleFactor);
-    q.canonicalize();
-    return Kernel::FT(q);
+    ::mpq_class roundedValue(SFCGAL::round(value.exact() * _scaleFactor),
+                             _scaleFactor);
+    roundedValue.canonicalize();
+    return Kernel::FT(roundedValue);
 #else
     return Kernel::FT(
         CGAL::Gmpq(SFCGAL::round(v.exact() * _scaleFactor), _scaleFactor));
