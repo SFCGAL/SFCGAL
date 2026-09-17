@@ -12,6 +12,7 @@
 
 namespace SFCGAL::algorithm {
 
+/// @brief Index identifying a vertex in a Surface_mesh_3.
 using VertexIndex = Surface_mesh_3::Vertex_index;
 
 /**
