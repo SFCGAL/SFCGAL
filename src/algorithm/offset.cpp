@@ -178,26 +178,11 @@ circleToPolygon(const Kernel::Circle_2 &circle) -> Offset_polygon_2
   Gps_traits_2 const   traits;
   Offset_curve_2 const curve(circle);
 
-#if CGAL_VERSION_MAJOR < 6
-  std::list<CGAL::Object> parts;
-  traits.make_x_monotone_2_object()(curve, std::back_inserter(parts));
-  BOOST_ASSERT(parts.size() == 2U);
-
-  // Construct the polygon.
-  Offset_polygon_2 result;
-
-  for (auto &part : parts) {
-    Offset_x_monotone_curve_2 arc;
-    CGAL::assign(arc, part);
-    result.push_back(arc);
-  }
-#else
   Offset_polygon_2 result;
 
   traits.make_x_monotone_2_object()(
       curve, CGAL::dispatch_or_drop_output<Offset_x_monotone_curve_2>(
                  std::back_inserter(result)));
-#endif
 
   return result;
 }
