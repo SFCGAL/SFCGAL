@@ -332,6 +332,12 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
         -Wwrite-strings -Wno-error=undef
     )
 
+    # -Wstringop-overflow gives false positives in CGAL
+    # See: https://github.com/CGAL/cgal/issues/9656
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        add_compile_options(-Wno-stringop-overflow)
+    endif()
+
     if (SFCGAL_WARNING_AS_ERROR)
         list(APPEND SFCGAL_WARNING_FLAGS -Werror -Wno-error=format)
     endif()
