@@ -46,15 +46,8 @@ BOOST_AUTO_TEST_CASE(testAlphaWrapping3D_MultiPoint)
 
   std::unique_ptr<Geometry> alphaWrappingResult(
       algorithm::alphaWrapping3D(inputGeom->as<const SFCGAL::Geometry>(), 20));
-#if CGAL_VERSION_MAJOR < 6
-  // 2304 on Linux
-  // 2306 on Mac/FreeBSD maybe other
-  BOOST_CHECK_GE(alphaWrappingResult->as<PolyhedralSurface>().numPatches(),
-                 2304);
-#else
   BOOST_CHECK_EQUAL(alphaWrappingResult->as<PolyhedralSurface>().numPatches(),
                     2386);
-#endif
 
   BOOST_REQUIRE(alphaWrappingResult->is3D());
 }
