@@ -8,6 +8,8 @@
 
 #include "SFCGAL/config.h"
 
+#include <CGAL/IO/io.h>
+
 #include <cctype>
 #include <sstream>
 #include <stack>
@@ -170,7 +172,7 @@ public:
       skipWhiteSpaces();
     }
 
-    if (_s >> CGAL::iformat(value)) {
+    if (_s >> CGAL::IO::iformat(value)) {
       commit();
       return true;
     } else {
