@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(testSplit_UShape)
 
     std::string componentData(SFCGAL_TEST_DIRECTORY);
 
-#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 1, 0)
+#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_COMPUTE_VERSION(6, 1, 0)
     const std::string cgal_version = "61";
 #else
     const std::string cgal_version = "60";

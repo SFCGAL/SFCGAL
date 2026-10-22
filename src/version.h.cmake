@@ -30,10 +30,10 @@ extern "C" {
 #define SFCGAL_CGAL_VERSION_PATCH @SFCGAL_CGAL_VERSION_PATCH@
 
 // compute CGAL integer version from major, minor and patch number
-#define SFCGAL_CGAL_MAKE_VERSION( major, minor, patch ) ( ( ( major ) * 10000 ) + ( ( minor ) * 100 ) + ( patch ) )
+#define SFCGAL_CGAL_COMPUTE_VERSION( major, minor, patch ) ( ( ( major ) * 10000 ) + ( ( minor ) * 100 ) + ( patch ) )
 
 // compute current SFCGAL_CGAL integer version
-#define SFCGAL_CGAL_VERSION_NUM SFCGAL_CGAL_MAKE_VERSION( @SFCGAL_CGAL_VERSION_MAJOR@, @SFCGAL_CGAL_VERSION_MINOR@, @SFCGAL_CGAL_VERSION_PATCH@ )
+#define SFCGAL_CGAL_VERSION_NUM SFCGAL_CGAL_COMPUTE_VERSION( @SFCGAL_CGAL_VERSION_MAJOR@, @SFCGAL_CGAL_VERSION_MINOR@, @SFCGAL_CGAL_VERSION_PATCH@ )
 
 #define SFCGAL_FULL_VERSION \
     "SFCGAL @SFCGAL_VERSION@, CGAL @CGAL_VERSION@, BOOST @Boost_VERSION_STRING@"

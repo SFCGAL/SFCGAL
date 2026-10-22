@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(testRepairRules)
                     "MULTIPOLYGON (((0.00 0.00,1.00 1.00,0.00 2.00,0.00 "
                     "0.00)),((1.00 1.00,2.00 0.00,2.00 2.00,1.00 1.00)))");
 
-#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 1, 0)
+#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_COMPUTE_VERSION(6, 1, 0)
   // Test non-zero rule
   auto non_zero = polygonRepair(*polygon, PolygonRepairRule::NON_ZERO_RULE);
   BOOST_CHECK_EQUAL(non_zero->asText(2),
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(testUnsupportedGeometry)
   BOOST_CHECK_THROW(polygonRepair(*point), SFCGAL::Exception);
 }
 
-#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 1, 0)
+#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_COMPUTE_VERSION(6, 1, 0)
 /**
  * Test overlapping polygons in multipolygon
  */

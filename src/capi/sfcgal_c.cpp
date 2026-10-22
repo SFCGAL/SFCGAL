@@ -3663,7 +3663,7 @@ sfcgal_geometry_polygon_repair(const sfcgal_geometry_t     *geom,
       break;
 
     case SFCGAL_POLYGON_REPAIR_NON_ZERO:
-#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 1, 0)
+#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_COMPUTE_VERSION(6, 1, 0)
       rule = SFCGAL::algorithm::PolygonRepairRule::NON_ZERO_RULE;
 #else
       SFCGAL_ERROR("NON_ZERO rule requires CGAL 6.1 or later");
@@ -3672,7 +3672,7 @@ sfcgal_geometry_polygon_repair(const sfcgal_geometry_t     *geom,
       break;
 
     case SFCGAL_POLYGON_REPAIR_UNION:
-#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 1, 0)
+#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_COMPUTE_VERSION(6, 1, 0)
       rule = SFCGAL::algorithm::PolygonRepairRule::UNION_RULE;
 #else
       SFCGAL_ERROR("UNION rule requires CGAL 6.1 or later");
@@ -3681,7 +3681,7 @@ sfcgal_geometry_polygon_repair(const sfcgal_geometry_t     *geom,
       break;
 
     case SFCGAL_POLYGON_REPAIR_INTERSECTION:
-#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_MAKE_VERSION(6, 1, 0)
+#if SFCGAL_CGAL_VERSION_NUM >= SFCGAL_CGAL_COMPUTE_VERSION(6, 1, 0)
       rule = SFCGAL::algorithm::PolygonRepairRule::INTERSECTION_RULE;
 #else
       SFCGAL_ERROR("INTERSECTION rule requires CGAL 6.1 or later");
