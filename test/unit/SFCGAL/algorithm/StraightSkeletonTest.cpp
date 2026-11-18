@@ -874,6 +874,18 @@ BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonWithWeights)
   BOOST_CHECK(!out->isEmpty());
   BOOST_CHECK(out->is3D());
   BOOST_CHECK_GT(out->numGeometries(), 0U);
+
+  std::unique_ptr<Geometry> expectedGeom(io::readWkt(
+      "POLYHEDRALSURFACE Z ("
+      "((0.00 2.00 0.00,4.00 2.00 0.00,4.00 0.00 0.00,0.00 0.00 0.00,0.00 2.00 "
+      "0.00)),"
+      "((0.00 2.00 0.00,0.00 0.00 0.00,0.00 1.00 1.00,0.00 2.00 0.00)),"
+      "((0.00 0.00 0.00,4.00 0.00 0.00,4.00 1.00 1.00,0.00 1.00 1.00,0.00 0.00 "
+      "0.00)),"
+      "((4.00 0.00 0.00,4.00 2.00 0.00,4.00 1.00 1.00,4.00 0.00 0.00)),"
+      "((4.00 2.00 0.00,0.00 2.00 0.00,0.00 1.00 1.00,4.00 1.00 1.00,4.00 2.00 "
+      "0.00)))"));
+  BOOST_CHECK_EQUAL(out->asText(2), expectedGeom->asText(2));
 }
 
 BOOST_AUTO_TEST_CASE(testExtrudeStraightSkeletonWeightsVsAngles)

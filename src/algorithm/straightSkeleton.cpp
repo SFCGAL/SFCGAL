@@ -665,6 +665,25 @@ extrudeStraightSkeleton(const Polygon &geom, double height,
 
   } else {
     // Use custom weights
+
+    // CGAL expects a counter-clockwise exterior ring and clockwise holes
+    // and associates the i-th weight to the edge that ends at vertex i,
+    // whereas SFCGAL associates it to segment i, which starts at vertex i.
+    for (size_t ringIdx = 0; ringIdx < geom.numRings(); ++ringIdx) {
+      std::vector<Kernel::FT> &ringWeights = finalWeights[ringIdx];
+
+      // 1. toPolygon_with_holes_2() reverses the rings that are not oriented
+      // as CGAL expects. Reversing a ring reverses the order of its
+      // segments, hence of its weights.
+      const bool isExterior = (ringIdx == 0);
+      if (isCounterClockWiseOriented(geom.ringN(ringIdx)) != isExterior) {
+        std::ranges::reverse(ringWeights);
+      }
+
+      // 2. Shift weights by one: SFCGAL segment i is CGAL edge i + 1.
+      std::ranges::rotate(ringWeights, ringWeights.end() - 1);
+    }
+
     if (height <= 0.0) {
       CGAL::extrude_skeleton(geom.toPolygon_with_holes_2(), sm,
                              CGAL::parameters::weights(finalWeights));
